@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Zips the skill for a release: dist/glyph-kit-<version>.zip with a glyph-kit/ root folder, the
-// same folder Claude Code and Codex expect in their skills directory. Needs the `zip` command.
+// Zips the skill for a release: dist/glyph-kit-<version>.zip and dist/glyph-kit.zip, each with a
+// glyph-kit/ root folder, the folder Claude Code and Codex expect in their skills directory.
+// Attach both to the GitHub release. Needs the `zip` command.
 import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -17,4 +18,6 @@ cpSync(join(root, "skills/glyph-kit"), join(stage, "glyph-kit"), { recursive: tr
 rmSync(zip, { force: true });
 execFileSync("zip", ["-qrX", zip, "glyph-kit", "-x", "*.DS_Store"], { cwd: stage });
 rmSync(stage, { recursive: true, force: true });
+// The same zip under a fixed name, so releases/latest/download/glyph-kit.zip always works.
+cpSync(zip, join(out, "glyph-kit.zip"));
 console.log(zip.replace(root, ""));

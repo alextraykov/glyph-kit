@@ -2,7 +2,7 @@
 // Builds traykov.cc/glyph-kit into site/dist with the kit's own renderers. No dependencies:
 // every figure on the site is drawn by the same code the skill runs.
 // Usage: node site/build.mjs
-import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -53,6 +53,11 @@ const stats = {
   tokensHigh: Math.max(...m.map((r) => r.imageTokens))
 };
 const kindCount = Object.keys(KINDS).length;
+// Size of the release zip, when it has been packed (node scripts/pack.mjs); otherwise left out.
+let zipSize = "about 0.5 MB";
+try {
+  zipSize = `${Math.round(statSync(join(root, "dist/glyph-kit.zip")).size / 1024)} KB`;
+} catch {}
 const figure = (spec) => `<pre class="grid-figure" role="img" aria-label="${esc(label(spec))}">${paint(body(spec))}</pre>`;
 const liveFigure = (mv) => `<figure class="demo">
   <div class="demo__bar"><span class="label">${esc(mv.spec.title)}</span><span class="label">Sample data</span></div>
@@ -98,6 +103,8 @@ const install = `<div class="install">
   <p class="cmd__for">Claude Code, as a plugin that updates</p>
   <div class="cmd"><code>/plugin marketplace add alextraykov/glyph-kit</code><button type="button" data-copy="/plugin marketplace add alextraykov/glyph-kit" hidden>Copy</button></div>
   <div class="cmd"><code>/plugin install glyph-kit@traykov</code><button type="button" data-copy="/plugin install glyph-kit@traykov" hidden>Copy</button></div>
+  <p class="cmd__for">Or by hand: unzip it into ~/.claude/skills/ (Claude Code) or ~/.agents/skills/ (Codex)</p>
+  <div class="actions"><a class="button" href="${REPO}/releases/latest/download/glyph-kit.zip">Download the kit <span aria-hidden="true">↓</span></a><span class="cmd__for">v${plugin.version} · zip · ${zipSize}</span></div>
 </div>`;
 
 // ── Home ───────────────────────────────────────────────────────────────────────────────────────
