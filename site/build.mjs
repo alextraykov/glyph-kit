@@ -207,6 +207,7 @@ const cmd = (text) => `<div class="cmd"><code>${esc(text)}</code><button type="b
 const install = `<div class="install" id="get" aria-label="Get the kit">
   <p class="label">Any agent</p>
   ${cmd("npx skills add alextraykov/glyph-kit")}
+  <p class="install__hand"><a class="text-link" href="https://www.skills.sh/?q=glyph-kit" target="_blank" rel="noopener">On skills.sh</a> <span>The open directory of agent skills.</span></p>
   <p class="label">Claude Code plugin</p>
   ${cmd("/plugin marketplace add alextraykov/glyph-kit")}
   ${cmd("/plugin install glyph-kit@traykov")}
