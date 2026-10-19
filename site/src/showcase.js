@@ -1,14 +1,26 @@
-// Hero showcase: one box that shows what the kit draws, view after view. Between views every
-// character with ink steps through the dither press (░ ▒ ▓ █ ▓ ▒ ░) and lands on the next one.
+// Hero showcase: one frame that shows what the kit draws, view after view. Between views the whole
+// frame takes the dither press, the same fill as the site's buttons: 8 px cells fill through levels
+// 2 → 4 → 6 → 8 in reading order (steps inside, a curve across), the next view swaps in while the
+// frame is covered, and the cells empty 6 → 4 → 2 → 0 to show it. The figures themselves don't move.
 // It only runs on screen, pauses while pointed at or focused, and stays on the first view for
 // reduced motion. The first view is already in the page, so nothing moves on load.
 import { STEP_MS } from "./kit/live/grid.mjs";
 import { live, stillGrid } from "./kit/live/kinds.mjs";
 import { classify } from "./kit/render/paint.mjs";
-import { TRANSITION_MS, between, cellsFromGrid, cellsFromText, centre, delays, toHtml } from "./showcase-core.mjs";
+import { cellsFromGrid, cellsFromText, centre, toHtml } from "./showcase-core.mjs";
 
 const HOLD_MS = 4200; // a still view
 const HOLD_LIVE_MS = 6000; // a moving view, long enough to see it move
+const CELL = 8; // px, like the button press
+const DOT = CELL / 4; // a 4 × 4 ordered-dither tile per cell
+const STEP = 40; // ms per level, the site's tick
+const SPREAD = 360; // ms from the first cell to the last
+const COVER = [2, 4, 6, 8];
+const REVEAL = [6, 4, 2, 0];
+const SWAP_AT = SPREAD + COVER.length * STEP; // every cell is solid here
+const PRESS_MS = SWAP_AT + SPREAD + REVEAL.length * STEP;
+const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+const curve = (x) => (1 - Math.pow(2, -8 * x)) / (1 - Math.pow(2, -8));
 
 const root = document.querySelector("[data-showcase]");
 const data = JSON.parse(document.getElementById("showcase")?.textContent || "null");
@@ -21,7 +33,58 @@ if (root && data && !reduce.matches) {
   const count = root.querySelector("[data-showcase-count]");
   const caption = root.querySelector("[data-showcase-caption]");
   const { H, W } = data;
-  const wait = delays(H, W);
+
+  // The press: a canvas over the whole frame, bar and caption included.
+  const press = document.createElement("canvas");
+  press.className = "showcase__press";
+  press.setAttribute("aria-hidden", "true");
+  root.append(press);
+  const ctx = press.getContext("2d");
+  let cells = null;
+  const layout = () => {
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    const w = root.clientWidth;
+    const h = root.clientHeight;
+    press.width = Math.round(w * dpr);
+    press.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cols = Math.ceil(w / CELL);
+    const rows = Math.ceil(h / CELL);
+    cells = { cols, rows, delay: Array.from({ length: cols }, (_, x) => curve(x / Math.max(1, cols - 1)) * SPREAD) };
+  };
+  const levelAt = (t, x) => {
+    const d = cells.delay[x];
+    if (t < SWAP_AT) {
+      const k = Math.floor((t - d) / STEP);
+      return k < 0 ? 0 : COVER[Math.min(k, COVER.length - 1)];
+    }
+    const k = Math.floor((t - SWAP_AT - d) / STEP);
+    return k < 0 ? 8 : REVEAL[Math.min(k, REVEAL.length - 1)];
+  };
+  // One repeating tile per level (2, 4 and 6 of 8), so a whole column fills in one call.
+  const tiles = {};
+  const tile = (level, ink) => {
+    const key = `${level}${ink}`;
+    if (tiles[key]) return tiles[key];
+    const c = document.createElement("canvas");
+    c.width = c.height = CELL;
+    const g = c.getContext("2d");
+    g.fillStyle = ink;
+    for (let k = 0; k < 16; k++) if (BAYER[k] < level * 2) g.fillRect((k % 4) * DOT, Math.floor(k / 4) * DOT, DOT, DOT);
+    return (tiles[key] = ctx.createPattern(c, "repeat"));
+  };
+  const paintPress = (t) => {
+    ctx.clearRect(0, 0, press.width, press.height);
+    if (t === null) return;
+    const ink = getComputedStyle(root).getPropertyValue("--ink").trim() || "#080808";
+    // Every cell in a column shares its level: reading order runs left to right.
+    for (let x = 0; x < cells.cols; x++) {
+      const level = levelAt(t, x);
+      if (!level) continue;
+      ctx.fillStyle = level >= 8 ? ink : tile(level, ink);
+      ctx.fillRect(x * CELL, 0, CELL, cells.rows * CELL);
+    }
+  };
 
   // Each view knows how to give its current box. Moving views keep their own clock.
   const views = data.views.map((v) => {
@@ -56,8 +119,6 @@ if (root && data && !reduce.matches) {
   let i = 0;
   let phase = "hold";
   let elapsed = 0;
-  let from = null;
-  let to = null;
   let swapped = false;
   let visible = false;
   let paused = false;
@@ -87,26 +148,30 @@ if (root && data && !reduce.matches) {
       }
       if (!paused) elapsed += dt;
       if (elapsed >= (view.live ? HOLD_LIVE_MS : HOLD_MS)) {
-        const next = (i + 1) % views.length;
-        views[next].reset();
-        from = view.box();
-        to = views[next].box();
-        phase = "swap";
+        layout();
+        phase = "press";
         elapsed = 0;
         swapped = false;
       }
     } else {
       elapsed += dt;
-      draw(between(from, to, elapsed, wait));
-      if (!swapped && elapsed >= TRANSITION_MS / 2) {
+      if (!swapped && elapsed >= SWAP_AT) {
+        // Covered: swap the view and its words underneath.
         swapped = true;
-        label((i + 1) % views.length);
-      }
-      if (elapsed >= TRANSITION_MS) {
         i = (i + 1) % views.length;
+        views[i].reset();
+        label(i);
+        draw(views[i].box());
+      }
+      if (swapped && views[i].live) {
+        views[i].advance(dt);
+        draw(views[i].box());
+      }
+      paintPress(elapsed);
+      if (elapsed >= PRESS_MS) {
+        paintPress(null);
         phase = "hold";
         elapsed = 0;
-        draw(views[i].box());
       }
     }
     raf = requestAnimationFrame(tick);

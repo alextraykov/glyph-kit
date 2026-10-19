@@ -1,15 +1,7 @@
-// The hero showcase: views of the kit in one fixed character box, and the dither transition between
-// them. Pure functions, shared by the build (the first frame is in the page) and the browser.
+// The hero showcase: views of the kit centred in one fixed character box. Pure functions, shared
+// by the build (the first view is in the page) and the browser (showcase.js).
 //
 // A view is a grid of cells: { ch: string[][], cl: string[][] } (characters and class names).
-// The transition is the site's dither press, in characters: every cell that has ink in either view
-// steps ░ → ▒ → ▓ → █ → ▓ → ▒ → ░ and lands on the next view. Each cell changes in steps; the start
-// times across the box follow a curve (fast at first, settling), in reading order.
-
-export const SEQ = ["░", "▒", "▓", "█", "▓", "▒", "░"];
-export const STEP_MS = 40;
-export const SPREAD_MS = 520;
-export const TRANSITION_MS = SPREAD_MS + SEQ.length * STEP_MS;
 
 const esc = (c) => (c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === "&" ? "&amp;" : c);
 
@@ -63,29 +55,4 @@ export function toHtml({ ch, cl }) {
       return open ? `${out}</span>` : out;
     })
     .join("\n");
-}
-
-const easeOut = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -8 * x)) / (1 - Math.pow(2, -8));
-
-/** When each cell starts its steps, in ms: reading order, across first, with a curve. */
-export function delays(H, W) {
-  return Array.from({ length: H }, (_, r) => Array.from({ length: W }, (_, c) => easeOut((c / W) * 0.7 + (r / H) * 0.3) * SPREAD_MS));
-}
-
-/** One frame of the transition from box A to box B, t ms after it began. */
-export function between(A, B, t, wait) {
-  const H = A.ch.length;
-  const W = A.ch[0].length;
-  const ch = Array.from({ length: H }, () => Array(W).fill(" "));
-  const cl = Array.from({ length: H }, () => Array(W).fill(""));
-  for (let r = 0; r < H; r++)
-    for (let c = 0; c < W; c++) {
-      const a = A.ch[r][c];
-      const b = B.ch[r][c];
-      const k = Math.floor((t - wait[r][c]) / STEP_MS);
-      if ((a === " " && b === " ") || k >= SEQ.length) [ch[r][c], cl[r][c]] = [b, B.cl[r][c]];
-      else if (k < 0) [ch[r][c], cl[r][c]] = [a, A.cl[r][c]];
-      else ch[r][c] = SEQ[k];
-    }
-  return { ch, cl };
 }

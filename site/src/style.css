@@ -103,6 +103,10 @@ main { display: grid; gap: var(--space-7); padding-block: var(--space-6) var(--s
 .gk-e { opacity: .45; } .gk-f { color: var(--text-caption); } .gk-x { color: var(--signal-fail); } .gk-ok { color: var(--signal-ok); }
 .gl-ok { color: var(--signal-ok); } .gl-fail { color: var(--signal-fail); } .gl-mute { color: var(--text-caption); }
 
+/* The hero showcase: the dither press covers the whole frame between views. */
+.showcase { position: relative; }
+.showcase__press { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
 /* Measured readings */
 .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: var(--hairline) solid var(--ink); }
 .stat { display: grid; align-content: start; gap: var(--space-3); padding: var(--space-5) var(--space-5) var(--space-5) 0; }
