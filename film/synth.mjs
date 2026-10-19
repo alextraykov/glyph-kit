@@ -83,16 +83,19 @@ const V = {
     [[0.006, 0.18], [0.013, 0.1]].forEach(([d, a]) => add(room, out, len(d), a));
     return add(out, biquad(room, "lp", 3000)).map((x) => x * g);
   },
-  /* The space bar. */
-  spacebar({ g = 1 } = {}) {
-    return V.key({ g, big: true });
-  },
   /* The space bar: its stabiliser rattle and a deeper clack. */
   spacebar({ g = 1 } = {}) {
     return V.key({ g, big: true });
   },
-  /* Typing as one gesture: words. Letters at a human pace, a space bar between words, a small pause. */
-  type({ d = 0.5, g = 1 }) {
+  /* Typing as one gesture: words. Letters at a human pace, a space bar between words, a small pause.
+     With `at` and `text`, one key lands exactly when each letter appears on screen, the space bar
+     under each space. */
+  type({ d = 0.5, g = 1, at = null, text = null }) {
+    if (at) {
+      const out = new Float32Array(len(at.at(-1) + 0.3));
+      at.forEach((o, i) => add(out, text?.[i] === " " ? V.key({ g: 0.75, big: true }) : V.key({ g: 0.55 + rnd() * 0.3 }), len(o)));
+      return out.map((v) => v * 0.7 * g);
+    }
     const n = len(d + 0.25), out = new Float32Array(n);
     let t = 0.01, inWord = 0, word = 3 + Math.floor(rnd() * 4);
     while (t < d) {
@@ -137,13 +140,15 @@ const V = {
     return lofi(speaker(len(0.12), hz(deg, oct), 18), 11025, 8).map((v) => v * 0.09);
   },
   /* Bars growing: the floppy drive's head stepping, four steps of sharp metal ticks over the motor. */
-  fill({ steps = 4, dir = 1, every = 0.12 }) {
-    const total = steps * every + 0.15, out = new Float32Array(len(total));
+  fill({ steps = 4, dir = 1, every = 0.12, at = null }) {
+    // `at`: the exact moment of each step, so the steps sit on the bar's own growth.
+    const times = at ?? Array.from({ length: steps }, (_, k) => k * every);
+    const total = times.at(-1) + every + 0.15, out = new Float32Array(len(total));
     const motor = mul(biquad(biquad(noise(len(total)), "lp", 320), "hp", 70), env(len(total), (t) => (0.75 + 0.25 * Math.sin(2 * Math.PI * 30 * t)) * Math.min(1, t / 0.04) * Math.min(1, (total - t) / 0.06)));
     add(out, motor, 0, 0.06);
-    for (let k = 0; k < steps; k++)
+    for (const step of times)
       for (let j = 0; j < 3; j++) {
-        const at = k * every + j * 0.009;
+        const at = step + j * 0.009;
         add(out, mul(bp(noise(len(0.003)), 2200, 6500), env(len(0.003), (t) => Math.exp(-t * 2000))), len(at), 0.3);
         add(out, mul(sine(len(0.03), 3100), env(len(0.03), (t) => Math.exp(-t * 160))), len(at), 0.03);
       }
@@ -241,15 +246,19 @@ const V = {
      soft plucked notes walking the chord, a dotted-eighth echo behind them and a quiet sub. Clean,
      friendly and steady, so it can run under the whole film without pulling at you. It is laid out
      so the last bar is F, the chord the logo's swell opens into. */
-  ambient({ d = 30, bar = 4, g = 1 }) {
+  ambient({ d = 30, bar = 4, g = 1, hold = Infinity }) {
     const n = len(d), pad = new Float32Array(n), sub = new Float32Array(n), arp = new Float32Array(n);
     const CHORDS = [[6, 8, 10, 12, 14], [3, 5, 7, 9, 11], [1, 3, 5, 7, 9], [7, 9, 11, 13, 15]];
-    const count = Math.ceil(d / bar), off = (4 - ((count - 1) % 4)) % 4, fade = 1.4;
+    // From `hold` on, the bed stays on F, under the logo's swell; the bar before it is G, leading in.
+    const count = Math.ceil(d / bar), kHold = Math.min(count - 1, Math.floor(hold / bar)), fade = 1.4;
+    const off = (((3 - (kHold - 1)) % 4) + 4) % 4;
     const beat = 60 / BPM, ORDER = [0, 2, 4, 1, 3, 4, 2, 1];
     for (let k = 0; k < count; k++) {
-      const ch = CHORDS[(k + off) % 4], t0 = k * bar, seg = len(bar + 2 * fade), at = Math.round((t0 - fade) * SR);
+      if (k > kHold) break;
+      const last = k === kHold, ch = last ? CHORDS[0] : CHORDS[(k + off) % 4], t0 = k * bar;
+      const span = last ? d - t0 : bar, seg = len(span + 2 * fade), at = Math.round((t0 - fade) * SR);
       const shape = env(seg, (t) => {
-        const a = Math.min(1, t / (2 * fade)), b = Math.min(1, (bar + 2 * fade - t) / (2 * fade));
+        const a = Math.min(1, t / (2 * fade)), b = Math.min(1, (span + 2 * fade - t) / (2 * fade));
         return Math.sin((Math.PI / 2) * Math.min(a, b)) ** 2;
       });
       const tones = new Float32Array(seg);
@@ -261,7 +270,7 @@ const V = {
       const fr = hz(ch[0], 2);
       add(sub, mul(env(seg, (t) => Math.sin(2 * Math.PI * fr * t)), shape), at, 0.5);
       // The plucks: one per beat, walking the chord an octave up, a little softer off the beat.
-      for (let b = 0; b < Math.round(bar / beat); b++) {
+      for (let b = 0; b < Math.round(span / beat); b++) {
         const deg = ch[ORDER[b % ORDER.length]], f = hz(deg, 5), m = len(1.1), v = (b % 2 ? 0.6 : 1) * (0.8 + 0.2 * rnd());
         const pluck = env(m, (t) => (Math.sin(2 * Math.PI * f * t) + 0.3 * Math.sin(4 * Math.PI * f * t) * Math.exp(-t * 8)) * Math.min(1, t / 0.004) * Math.exp(-t * 4.5) * v);
         add(arp, pluck, Math.round((t0 + b * beat) * SR));

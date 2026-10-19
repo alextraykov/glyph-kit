@@ -79,6 +79,23 @@ for (const f of frames) {
 }
 for (const f of frames) if (f.change > 0.25 && !pressing(f.t) && !sections.some((s) => s.kind === "cut" && Math.abs(s.from - f.t) < 0.05)) findings.push(`jump  ${f.t.toFixed(2)} s  ${(f.change * 100).toFixed(0)}% of the picture changed in one frame`);
 
+// Sync: every accent in the soundtrack must have a picture change within one frame of it. Keys, blips,
+// ticks and each typed letter are checked; the bed and the press (which has its own section) are not.
+const cueList = (await page.evaluate(() => window.__cues?.()))?.cues ?? [];
+const moments = [];
+for (const q of cueList) {
+  if (["key", "land", "tick", "stamp", "error"].includes(q.type)) moments.push([q.t, q.type]);
+  if (q.type === "type" && q.at) q.at.forEach((o, i) => q.text?.[i] !== " " && moments.push([q.t + o, "letter"]));
+}
+const unsynced = await page.evaluate(({ moments, FPS }) => {
+  const c = document.getElementById("c"), x = c.getContext("2d", { willReadFrequently: true });
+  const grab = (t) => { window.seek(t); const d = x.getImageData(0, 0, c.width, c.height).data; const v = new Uint8Array(d.length / 4); for (let i = 0, k = 0; i < d.length; i += 4, k++) v[k] = d[i]; return v; };
+  const differs = (a, b) => a.some((v, i) => Math.abs(v - b[i]) > 24);
+  return moments.filter(([t]) => !differs(grab(t - 1 / FPS), grab(t + 1 / FPS))).map(([t, type]) => `${type} ${t.toFixed(2)} s`);
+}, { moments, FPS });
+for (const u of unsynced) findings.push(`sync  ${u}  sound with no picture change within a frame`);
+console.log(`sync: ${moments.length - unsynced.length}/${moments.length} sounds land on a picture change`);
+
 // Contact sheets: every 1/6 s, one sheet per 2 seconds.
 for (let s = 0; s < dur; s += 2) {
   const shots = [];

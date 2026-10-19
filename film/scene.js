@@ -20,7 +20,12 @@ const FONT = '"Departure Mono"';
 const CW = 0.6364; // Departure Mono's advance, as a share of its size (7 px at 11 px)
 // In the figures, the shades ▓▒░ are drawn as fine dots, as they read in the kit's HTML files, not
 // as Departure Mono's big pixels: a 4 × 4 ordered dither at a small dot, one cell each.
-const SHADE = { "░": 4, "▒": 8, "▓": 12, "█": 16 }; // a full block is drawn too, so bars have no seams
+const SHADE = { "░": 4, "▒": 8, "▓": 12 };
+// Full and partial blocks are drawn as shapes too, in eighths of a cell, so a bar never has a seam
+// or a step where a partial block meets a full one.
+const BLOCK = { "█": 8, "▉": 7, "▊": 6, "▋": 5, "▌": 4, "▍": 3, "▎": 2, "▏": 1 };
+// Blocks and shades fill this share of their line, centred, so stacked bars keep a clear gap.
+const BAR = 0.7;
 
 // Borders stay still in the film: work moves along the lines and inside the views, not round boxes.
 Grid.prototype.chase = () => {};
@@ -30,7 +35,7 @@ Grid.prototype.flash = () => {};
 const BPM = 120;
 const B = 60 / BPM; // seconds per beat
 const beat = (n) => n * B;
-export const DUR = beat(133); // 66.5 s
+export const DUR = beat(136); // 68 s
 const T = {
   glyphs: [2, 3, 4, 5].map(beat), // the four clicks
   mark: beat(6), // the glyphs step up into the corner
@@ -40,12 +45,12 @@ const T = {
   components: beat(28), // the kit's parts build in, then get used
   compare: beat(40), // most ASCII tools against Glyph kit, a row a beat
   examples: [56, 64, 72, 80, 88].map(beat), // one per eight beats; the press covers at each
-  formats: beat(96), // one file, every format: six full views, three and a half beats each
-  close: beat(118), // the last press covers, then reveals an empty frame
-  join: [119.5, 120.5, 121.5, 122.5].map(beat), // the four glyphs click together, one per beat
-  name: [beat(124), beat(124.75)], // "Glyph kit" types
-  free: [beat(126), beat(126.75)], // "Free forever."
-  domain: [beat(128.5), beat(129.5)] // then the address
+  formats: beat(96), // one spec, six formats: six full views, four beats each
+  close: beat(121), // the last press covers, then reveals an empty frame
+  join: [123, 123.25, 123.5, 123.75].map(beat), // the four glyphs land a sixteenth apart
+  name: [beat(125), beat(125.75)], // "Glyph kit" types
+  free: [beat(127), beat(127.75)], // "Free forever."
+  domain: [beat(129), beat(130)] // then the address
 };
 
 // ── The dither press, as on the site's buttons, over the stage ──────────────────────────────────
@@ -72,11 +77,12 @@ async function prepare() {
   const pick = (list, kind) => list.find((s) => s.kind === kind);
   const text = (spec, options) => ({ spec: { ...spec, options: { ...spec.options, ...options } } });
   const list = [
-    { title: "Screen wireframe", ...text(pick(wire, "screen")) },
-    { title: "Funnel", ...text(pick(metrics, "funnel"), { width: 20 }) },
-    { title: "Rework loop", live: loop },
-    { title: "Motion intent", ...text(pick(motion, "intentCard"), { width: 46 }) },
-    { title: "Work queue", live: queue }
+    // `label` names the diagram's type, shown top right.
+    { title: "Screen wireframe", label: "Wireframe", ...text(pick(wire, "screen")) },
+    { title: "Funnel", label: "Funnel chart", ...text(pick(metrics, "funnel"), { width: 20 }) },
+    { title: "Rework loop", label: "Process flow", live: loop },
+    { title: "Motion spec", label: "Motion spec", lines: motionSpecLines(pick(motion, "intentCard")) },
+    { title: "Work queue", label: "Kanban board", live: queue }
   ];
   EX = list.map((ex) => {
     let cells;
@@ -88,7 +94,8 @@ async function prepare() {
       ex.still = still;
       ex.crop = inkBounds(make, still + 80);
       cells = crop(cellsFromGrid(g), ex.crop);
-    } else {
+    } else if (ex.lines) cells = cellsFromText(ex.lines.join("\n"), classify);
+    else {
       const s = ex.spec;
       cells = cellsFromText(resolve(s).render(s.data, s.options ?? {}), classify);
     }
@@ -147,7 +154,7 @@ if (SCALE !== 1) {
 }
 let LOGO = null;
 const colour = (cls) =>
-  ({ "gk-e": "rgba(8,8,8,0.45)", "gk-f": C.caption, "gk-x": C.fail, "gk-ok": C.ok, "gl-ok": C.ok, "gl-fail": C.fail, "gl-mute": C.caption })[cls] ?? C.ink;
+  ({ "gk-e": "rgba(8,8,8,0.45)", "gk-f": C.caption, "gk-x": C.fail, "gk-ok": C.ok, "gl-ok": C.ok, "gl-fail": C.fail, "gl-mute": C.caption, "gk-bg": C.caption })[cls] ?? C.ink;
 
 function text(s, x, y, size, col = C.ink, align = "left") {
   ctx.font = `${size}px ${FONT}`;
@@ -162,6 +169,7 @@ function cells(box, x, y, fs) {
   const cw = fs * CW;
   const lh = fs * 1.25;
   const dot = 2;
+  const snap = (v) => Math.round(v / dot) * dot; // neighbouring cells share their edge exactly
   ctx.font = `${fs}px ${FONT}`;
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
@@ -174,23 +182,24 @@ function cells(box, x, y, fs) {
         ctx.fillText(run, x + start * cw, y + r * lh + fs * 0.12);
       }
     };
+    const shapeAt = (c) => SHADE[row[c]] || BLOCK[row[c]];
     for (let c = 0; c <= row.length; c++) {
-      const shade = SHADE[row[c]];
-      if (c === row.length || shade || box.cl[r][c] !== box.cl[r][start] || SHADE[row[start]]) {
-        if (c > start && !SHADE[row[start]]) flush(c);
+      const shape = c < row.length && shapeAt(c);
+      if (c === row.length || shape || box.cl[r][c] !== box.cl[r][start]) {
+        if (c > start) flush(c);
         start = c;
       }
-      if (!shade) continue;
-      // The shade's cell, filled with dots on a fixed grid so neighbouring cells join up.
+      if (!shape) continue;
       ctx.fillStyle = colour(box.cl[r][c]);
-      // A light shade fills its whole line, so a ░ backdrop has no stripes; the darker ones keep a gap
-      // between rows, so stacked bars stay apart.
-      const full = row[c] === "░";
-      const x0 = x + c * cw, y0 = y + r * lh + (full ? 0 : fs * 0.06), h = full ? lh : fs * 1.13;
-      const snap = (v) => Math.round(v / dot) * dot; // neighbouring cells share their edge exactly
-      for (let py = snap(y0); py < snap(y0 + h); py += dot)
-        for (let px = snap(x0); px < snap(x0 + cw); px += dot)
-          if (BAYER[((py / dot) % 4) * 4 + ((px / dot) % 4)] < shade) ctx.fillRect(px, py, dot, dot);
+      // A backdrop of ░ fills its whole line, so it has no stripes; everything else sits in the bar.
+      const backdrop = box.cl[r][c] === "gk-bg";
+      const x0 = x + c * cw, y0 = y + r * lh + (backdrop ? 0 : (lh * (1 - BAR)) / 2), h = backdrop ? lh : lh * BAR;
+      const eighths = BLOCK[row[c]];
+      if (eighths) ctx.fillRect(snap(x0), snap(y0), snap(x0 + (cw * eighths) / 8) - snap(x0), snap(y0 + h) - snap(y0));
+      else
+        for (let py = snap(y0); py < snap(y0 + h); py += dot)
+          for (let px = snap(x0); px < snap(x0 + cw); px += dot)
+            if (BAYER[((py / dot) % 4) * 4 + ((px / dot) % 4)] < SHADE[row[c]]) ctx.fillRect(px, py, dot, dot);
       start = c + 1;
     }
   });
@@ -250,8 +259,8 @@ function lines(t) {
 }
 
 const STATS = [
-  { label: "To draw a figure", value: 4.0, decimals: 1, unit: " μs", note: "Median of 48 figures, in Node." },
-  { label: "As text, against its picture", value: 65, decimals: 0, unit: "× smaller", note: "354 bytes as text, 22.8 KB as an image." },
+  { label: "To draw a figure", value: 4.0, decimals: 1, unit: " μs", note: ["Glyph kit: median of 48 figures, in Node.", "Others: rough, from published benchmarks."] },
+  { label: "As text, against a picture of it", value: 65, decimals: 0, unit: "× smaller", note: ["354 bytes as text, 22.8 KB as an image."] },
 ];
 
 function stat(t, k) {
@@ -263,30 +272,68 @@ function stat(t, k) {
     text(v, M, 500, big);
     text(s.unit, M + v.length * big * CW, 500, 44, C.ink);
   }
-  const g = t0 + beat(2);
-  if (k === 0 && t >= g) {
-    // Already drawn: the figure appears whole, in one frame.
-    const f = FUNNEL;
-    cells(f.box, M, 560, 22);
-  }
-  if (k === 1) bars(t, g - beat(1));
-  if (t >= t0 + beat(1)) text(s.note, M, 820, 22, C.caption);
+  if (k === 0) speeds(t, t0);
+  if (k === 1) bars(t, t0 + beat(1));
+  if (t >= t0 + beat(1)) s.note.forEach((line, i) => text(line, M, 850 + i * 30, 22, C.caption));
 }
 
-/** 354 bytes against 22.8 KB, grown cell by cell, inside the frame. */
+// A bar growing cell by cell with the kit's motion: full blocks behind a ▓▒░ leading edge. `cells`
+// is its final length in cells, `p` how many cells have grown; partial last cells are eighths.
+function growing(length, p, col) {
+  const n = Math.ceil(length), head = Math.floor(p), done = p >= length;
+  const part = Math.round((length - Math.floor(length)) * 8);
+  const ch = Array.from({ length: n }, (_, i) => {
+    if (done) return i < Math.floor(length) || !part ? "█" : "▏▎▍▌▋▊▉"[part - 1];
+    const d = head - i; // 0 is the leading cell
+    return d < 0 ? " " : d === 0 ? "░" : d === 1 ? "▒" : d === 2 ? "▓" : "█";
+  });
+  return { ch: [ch], cl: [ch.map(() => col)] };
+}
+const GROW = 0.03; // seconds per cell, the same pace for every bar
+const growTime = (length) => Math.max(GROW, Math.ceil(length) * GROW);
+
+// Stat 1: how long a figure takes to draw, against the usual ways of making one. Glyph kit is a
+// green sliver; the others are long bars. One row a beat, each bar growing at the same pace.
+const SPEEDS = [
+  ["Glyph kit", 0.000004, "4 μs", "gk-ok"],
+  ["Mermaid, in a browser", 0.1, "~0.1 s", ""],
+  ["Mermaid, to an image", 2, "~2 s", ""],
+  ["A model typing it", 3, "~3 s", ""]
+];
+const SPEED_FS = 26, SPEED_LABEL = 22;
+const speedCells = () => Math.floor((SIZE - 2 * M) / (SPEED_FS * CW)) - SPEED_LABEL - 8;
+const speedAt = (t0, i) => t0 + beat(2 + i);
+const speedLength = (i) => Math.max(0.25, (SPEEDS[i][1] / 3) * speedCells());
+function speeds(t, t0) {
+  const cw = SPEED_FS * CW, n = speedCells();
+  SPEEDS.forEach(([label, , value, col], i) => {
+    const t1 = speedAt(t0, i);
+    if (t < t1) return;
+    const y = 590 + i * 52, len = speedLength(i), p = (t - t1) / GROW;
+    text(label, M, y + SPEED_FS * 0.95, SPEED_FS, col ? C.ok : C.caption);
+    cells(growing(len, p, col), M + SPEED_LABEL * cw, y, SPEED_FS);
+    if (p >= len) text(value, M + (SPEED_LABEL + Math.ceil(len) + 1) * cw, y + SPEED_FS * 0.95, SPEED_FS, col ? C.ok : C.caption);
+  });
+}
+
+/** 354 bytes against 22.8 KB, each bar grown cell by cell with the kit's motion, inside the frame. */
+const BARS_FS = 33;
+const barCells = () => {
+  const cw = BARS_FS * CW, x = M + 9 * cw;
+  return Math.floor((SIZE - M - x) / cw) - 9; // room for the label after the bar
+};
 function bars(t, t0) {
   if (t < t0) return;
-  const fs = 33, cw = fs * CW, x = M + 9 * cw;
-  const n = Math.floor((SIZE - M - x) / cw) - 9; // room for the label after the bar
-  const img = Math.min(n, Math.floor((t - t0) / 0.03));
-  const done = t >= t0 + n * 0.03;
+  const fs = BARS_FS, cw = fs * CW, x = M + 9 * cw, n = barCells();
+  const p = (t - t0) / GROW, done = p >= n;
   text("text", M, 610, fs, C.caption);
-  text("▎", x, 610, fs, C.ok);
-  if (done) text("354 B", x + 2 * cw, 610, fs, C.caption);
+  cells(growing(0.25, 1, "gk-ok"), x, 610 - fs * 0.95, fs);
+  if (t >= t0) text("354 B", x + 2 * cw, 610, fs, C.caption);
   text("picture", M, 670, fs, C.caption);
-  if (img > 0) text("█".repeat(img), x, 670, fs, C.ink);
+  cells(growing(n, p, ""), x, 670 - fs * 0.95, fs);
   if (done) text("22.8 KB", x + (n + 1) * cw, 670, fs, C.caption);
 }
+
 
 /** The range of image tokens, 76 to 918, with the median, drawn on left to right. */
 // ── Components: the kit's own wireframe parts, built in one after another, then used ────────────
@@ -304,7 +351,9 @@ const PARTS = [
   ["Search", { type: "search", placeholder: "Search reports", hint: "/" }]
 ];
 // Each part is used once it's built, in turn: [seconds after the scene starts, the part's new state].
-const USE_AT = 1.8, USE_EVERY = 0.5;
+// Each part is used on a beat, one a beat; on that beat everything else dims, so the eye goes to the
+// part in use. A beat after the last one, everything comes back to full before the press.
+const USE_AT = beat(3), USE_EVERY = beat(1), USE_END = beat(10), DIM = 0.3;
 const USED = {
   Toggle: { on: true },
   Checkbox: { checked: true },
@@ -340,9 +389,22 @@ function components(t) {
     let box;
     if (ms < p.plan.total) box = buildFrame(p.box, p.plan, ms);
     else box = partNow(p, t - t0);
+    ctx.globalAlpha = partAlpha(p.name, t - t0);
     cells(box, x, y, fs);
     if (ms > 120) text(p.name, x, y - 12, 18, C.caption);
+    ctx.globalAlpha = 1;
   });
+}
+// The part in focus at a moment: the last one used, until everything returns to full.
+function focusAt(sec) {
+  if (sec < USE_AT || sec >= USE_END) return null;
+  return USE_ORDER[Math.min(USE_ORDER.length - 1, Math.floor((sec - USE_AT) / USE_EVERY))];
+}
+// Dimming steps on the site's 40 ms tick: two steps between full and dim, never a fade.
+function partAlpha(name, sec) {
+  const level = (s) => { const f = focusAt(s); return f === null || f === name ? 1 : DIM; };
+  const tick = Math.floor(sec / 0.04) * 0.04;
+  return (level(tick) + level(tick - 0.04) + level(tick - 0.08)) / 3;
 }
 // A part in use: its state once its turn has come, with a moving caret or shimmer where it waits.
 function partNow(p, sec) {
@@ -361,8 +423,8 @@ function partNow(p, sec) {
   let box = used ? partBox({ ...p.row, ...change }) : p.box;
   // The switch slides through a half step.
   if (p.name === "Toggle" && used && sec < at + 0.06) box = onGrid(box, PART_W, (g) => { const [r, c] = find(box, "[ ■]"); g.text(r, c, "[▒▒]"); });
-  if (p.name === "Input") return onGrid(box, PART_W, (g) => { const [r, c] = find(box, "team@example.com"); if (Math.floor(sec / 0.2) % 2 === 0) g.put(r, c + 16, "█"); });
-  if (p.name === "Search") return onGrid(box, PART_W, (g) => { if (Math.floor(sec / 0.2) % 2 === 1) g.put(0, 2, "█"); });
+  if (p.name === "Input") return onGrid(box, PART_W, (g) => { const [r, c] = find(box, "team@example.com"); if (Math.floor(sec / beat(0.5)) % 2 === 0) g.put(r, c + 16, "█"); });
+  if (p.name === "Search") return onGrid(box, PART_W, (g) => { if (Math.floor(sec / beat(0.5)) % 2 === 1) g.put(0, 2, "█"); });
   if (p.name === "Skeleton") return onGrid(box, PART_W, (g) => box.ch.forEach((row, r) => {
     const run = row.map((ch, c) => (ch === "░" ? [r, c] : null)).filter(Boolean);
     const pos = ((sec * 18 + r * 5) % (run.length + 8)) - 3;
@@ -384,17 +446,20 @@ function drawCaptions(t) {
   CAPTIONS.length = 0;
 }
 
-// ── Compared: most ASCII tools against Glyph kit. The table's frame draws on, then the header and
-// one row a beat, each settling left to right through the scramble ramp. The kit's column is green.
+// ── Compared: AI-drawn ASCII against Glyph kit. The table grows a row a beat: the header first, then
+// each row arrives with its own line, the bottom edge moving down under it, the words settling left
+// to right through the scramble ramp. The AI column is grey; Glyph kit's is green.
 const COMPARE = [
-  ["", "Most ASCII tools", "Glyph kit"],
-  ["Made by", "hand, or guessed", "code, from data"],
-  ["Covers", "one chart, or boxes", "45 design figures"],
-  ["Moves", "no", "6 moving diagrams"],
-  ["Ends as", "mostly text", "text, deck, PDF, SVG"],
-  ["Made-up data", "looks real", "stamped SAMPLE DATA"]
+  ["", "AI-drawn ASCII", "Glyph kit"],
+  ["Alignment", "drifts, boxes break", "every cell lines up"],
+  ["Numbers", "bars by eye", "bars to scale"],
+  ["Speed", "seconds, typed out", "4 μs to draw"],
+  ["Tokens", "every character", "just the data, ~2× fewer"],
+  ["Edit a value", "redraw it all", "change one number"],
+  ["Motion", "none", "6 moving diagrams"],
+  ["Formats", "text", "Markdown, slides, PDF, SVG"]
 ];
-const CMP_AT = { header: 0.8, rows: 1.6, every: 0.9 };
+const CMP_AT = { header: beat(1), rows: beat(2), every: beat(1) };
 const TABLE_CH = "─│┌┐└┘├┤┬┴┼";
 let CMP = null;
 function prepareCompare() {
@@ -403,30 +468,33 @@ function prepareCompare() {
   const cols = Math.max(...lines.map((l) => l.length));
   const box = centre(cellsFromText(lines.map((l) => l.join("")).join("\n"), classify), lines.length, cols);
   const bars = lines[1].map((ch, c) => (ch === "│" ? c : -1)).filter((c) => c >= 0);
-  const column = (c) => bars.filter((b) => b < c).length - 1; // 0 labels, 1 most tools, 2 Glyph kit
+  const column = (c) => bars.filter((b) => b < c).length - 1; // 0 labels, 1 AI-drawn, 2 Glyph kit
   box.cl = box.cl.map((row, r) => row.map((cl, c) => (TABLE_CH.includes(box.ch[r][c]) ? "gk-f" : column(c) === 1 ? "gk-f" : column(c) === 2 ? "gk-ok" : cl)));
-  const frame = { ch: box.ch.map((row) => row.map((ch) => (TABLE_CH.includes(ch) ? ch : " "))), cl: box.cl };
-  CMP = { box, frame, plan: planBuild(frame), cols, rows: lines.length };
+  const fs = Math.floor(Math.min(24, STAGE.w / (cols * CW)));
+  CMP = { box, cols, rows: lines.length, fs };
 }
-// The moment each table row's words arrive: the header, then the five rows.
-const cmpRowAt = (r) => (r === 1 ? CMP_AT.header : r >= 3 && r < CMP.rows - 1 ? CMP_AT.rows + (r - 3) * CMP_AT.every : null);
+// The moment each table line arrives: the top edge, header and rule together, then a row a beat.
+const cmpRowAt = (r) => (r <= 2 ? CMP_AT.header : r < CMP.rows - 1 ? CMP_AT.rows + (r - 3) * CMP_AT.every : null);
 function compared(t) {
-  const sec = t - T.compare, fs = 24;
+  const sec = t - T.compare, fs = CMP.fs;
   const x = (SIZE - CMP.cols * fs * CW) / 2, y = STAGE.y + (STAGE.h - CMP.rows * fs * 1.25) / 2;
-  const ms = (sec * 1000) / 0.6;
-  const lines = ms < CMP.plan.total ? buildFrame(CMP.frame, CMP.plan, ms) : CMP.frame;
-  const out = { ch: lines.ch.map((row) => row.slice()), cl: CMP.box.cl };
   const tick = Math.floor(sec / 0.04);
-  CMP.box.ch.forEach((row, r) => {
+  const shown = [];
+  for (let r = 0; r < CMP.rows - 1; r++) if (sec >= cmpRowAt(r)) shown.push(r);
+  if (!shown.length) return;
+  const out = { ch: [], cl: [] };
+  shown.forEach((r) => {
     const at = cmpRowAt(r);
-    if (at === null || sec < at) return;
-    row.forEach((ch, c) => {
-      if (ch === " " || TABLE_CH.includes(ch)) return;
-      const shown = at + c * 0.008, settled = shown + 0.12;
-      if (sec < shown) return;
-      out.ch[r][c] = sec >= settled ? ch : " .:+*#%@"[1 + ((r * 31 + c * 17 + tick * 7) % 7)];
-    });
+    out.ch.push(CMP.box.ch[r].map((ch, c) => {
+      if (ch === " " || TABLE_CH.includes(ch)) return ch;
+      const from = at + c * 0.008;
+      return sec < from ? " " : sec >= from + 0.12 ? ch : " .:+*#%@"[1 + ((r * 31 + c * 17 + tick * 7) % 7)];
+    }));
+    out.cl.push(CMP.box.cl[r]);
   });
+  // The bottom edge always closes the table under its last row.
+  out.ch.push(CMP.box.ch[CMP.rows - 1]);
+  out.cl.push(CMP.box.cl[CMP.rows - 1]);
   cells(out, x, y, fs);
 }
 
@@ -469,55 +537,79 @@ function shimmer(g, box, s) {
     if (run.length > 2) glint(g, run, (s * 1.1 + r * 6) % (run.length + 10) - 4);
   });
 }
-function stillMotion(ex, ms, box = ex.box) {
-  if (ex.title === "Screen wireframe") return screenMotion(ex, ms);
-  if (ex.title === "Motion intent") return intentMotion(ex, ms);
+function stillMotion(ex, ms, sec, box = ex.box) {
+  if (ex.title === "Screen wireframe") return screenMotion(ex, sec);
+  if (ex.title === "Motion spec") return motionSpecMotion(ex, sec);
   return onGrid(box, ex.cols, (g) => shimmer(g, box, ms / 120));
 }
-
-// The settings screen in use: the cursor blinks in the address while Save is still disabled; the
-// weekly summary switches on, so Save wakes up; the digest day changes; Save is pressed and says so.
-const SCREEN = { toggle: 0.6, day: 1.4, save: 2.2 }; // seconds after the build; the press comes at about 3.3
-function screenMotion(ex, ms) {
-  const box = ex.box, sec = ms / 1000, step = ms / 120;
+// The settings screen in use, one action a beat (seconds from the example's start): the weekly
+// summary switches on, so Save wakes up; the digest day changes; Save is pressed and says so. The
+// cursor in the address field blinks with the beat.
+const SCREEN = { toggle: beat(2), day: beat(3), save: beat(4) };
+function screenMotion(ex, sec) {
+  const box = ex.box, step = sec / 0.12;
   return onGrid(box, ex.cols, (g, tint) => {
     const [er, ec] = find(box, "team@example.com");
-    if (Math.floor(ms / 240) % 2 === 0) g.put(er, ec + 16, "█"); // the address field keeps focus
+    if (Math.floor(sec / beat(0.5)) % 2 === 0) g.put(er, ec + 16, "█");
     const [wr, wc] = find(box, "[■ ] off");
     if (sec >= SCREEN.toggle) g.text(wr, wc, sec < SCREEN.toggle + 0.08 ? "[▒▒] off" : "[ ■] on ");
     const [dr, dc] = find(box, "Monday");
-    if (sec >= SCREEN.day) g.scramble(dr, dc, "Friday", (ms - SCREEN.day * 1000) / 120, step);
+    if (sec >= SCREEN.day) g.scramble(dr, dc, "Friday", (sec - SCREEN.day) / 0.12, step);
     const [sr, sc] = find(box, "[[ Save ]]");
     if (sec < SCREEN.toggle) tint(sr, sc, 10, "gk-f");
     const p = Math.floor((sec - SCREEN.save) / 0.08);
     if (p >= 0 && p < 3) for (let i = 2; i < 8; i++) g.put(sr, sc + i, ["▓", "▒", "░"][p]);
     if (p >= 3) {
       const [, fc] = find(box, "║");
-      g.scramble(sr, fc + 2, "Saved", (ms - SCREEN.save * 1000 - 240) / 120, step);
+      g.scramble(sr, fc + 2, "Saved", (sec - SCREEN.save - 0.24) / 0.12, step);
       tint(sr, fc + 2, 5, "gk-ok");
     }
   });
 }
 
-// The motion card plays the toast it describes: the timing bar fills along its easing while the
-// easing curve draws in step, then both hold a moment and play again.
-function intentMotion(ex, ms) {
+// The motion spec as a developer would take it: trigger, duration and the exact curve; the property
+// tracks on a 0–200 ms axis, drawn by the kit; the eased progress, sampled from that same curve. A
+// playhead runs the axis every two beats at a quarter of real speed, and says so.
+const MS_W = 24, MS_QUARTER = 0.8; // 200 ms at ¼ speed
+const bezierY = ([x1, y1, x2, y2], x) => {
+  let lo = 0, hi = 1, m = 0.5;
+  const at = (a, b, u) => 3 * (1 - u) ** 2 * u * a + 3 * (1 - u) * u ** 2 * b + u ** 3;
+  for (let i = 0; i < 40; i++) ((m = (lo + hi) / 2), at(x1, x2, m) < x ? (lo = m) : (hi = m));
+  return at(y1, y2, m);
+};
+function motionSpecLines(card) {
+  const d = card.data, curve = d.easing;
+  const tracks = [
+    { property: "opacity", from: "0", to: "1", start: 0, end: 150 },
+    { property: "transform", from: "y 16px", to: "y 0", start: 0, end: d.ms }
+  ];
+  const drawn = resolve({ kind: "transitionSpec", source: card.source, data: tracks }).render(tracks, { width: MS_W }).split("\n");
+  const progress = Array.from({ length: MS_W }, (_, i) => "▁▂▃▄▅▆▇█"[Math.round(bezierY(curve, (i + 0.5) / MS_W) * 7)]).join("");
+  return boxed("toast.enter", [
+    "trigger   save succeeds",
+    `duration  ${d.ms}ms`,
+    `easing    cubic-bezier(${curve.join(", ")})`,
+    "",
+    "",
+    ...drawn,
+    "",
+    `progress  ${progress}`,
+    "reduced   opacity only, same 200ms",
+    "",
+    "          playhead at ¼ speed"
+  ], 66);
+}
+function motionSpecMotion(ex, sec) {
   const box = ex.box;
-  return onGrid(box, ex.cols, (g) => {
-    const [tr] = find(box, "timing");
-    const row = box.ch[tr].join("");
-    const a = row.indexOf("▕") + 1, b = row.indexOf("▏");
-    const [cr] = find(box, "easing");
-    const crow = box.ch[cr].join("");
-    const ca = crow.search(/[█▆▅▄▃▂▁]/);
-    const lap = (ms % 1200) / 900; // 0.9 s playing, 0.3 s held
-    const k = Math.min(1, lap), eased = 1 - Math.pow(1 - k, 3);
-    const full = row.slice(a, b).lastIndexOf("█") + 1;
-    for (let i = 0; i < b - a; i++) g.put(tr, a + i, i < Math.round(eased * full) ? "█" : "·");
-    for (let i = Math.ceil(k * 8); i < 8; i++) g.put(cr, ca + i, " ");
+  return onGrid(box, ex.cols, (g, tint) => {
+    const [r, c] = find(box, "opacity   ");
+    const loop = Math.max(0, sec - beat(2)) % beat(2);
+    const p = sec < beat(2) ? 0 : Math.min(1, Math.floor(loop / 0.04) * 0.04 / MS_QUARTER);
+    g.put(r - 1, c + 10 + Math.round(p * (MS_W - 1)), "▼");
+    const [hr, hc] = find(box, "playhead at ¼ speed");
+    tint(hr, hc, 19, "gk-f");
   });
 }
-
 function example(t, i) {
   const ex = EX[i];
   const t0 = T.examples[i];
@@ -527,7 +619,7 @@ function example(t, i) {
   const y = STAGE.y + (STAGE.h - h) / 2;
   const ms = ((t - t0) * 1000) / 0.75; // the site's build, a quarter faster for film
   // Moving examples move from their first frame: the build-in reveals the live picture as it runs.
-  let now = ex.live ? liveBox(ex, Math.max(0, (t - t0) * 1000)) : ms < ex.plan.total ? ex.box : stillMotion(ex, ms - ex.plan.total);
+  let now = ex.live ? liveBox(ex, Math.max(0, (t - t0) * 1000)) : ms < ex.plan.total ? ex.box : stillMotion(ex, ms - ex.plan.total, t - t0);
   // The queue has quiet stretches between cards moving; a shimmer along its cards keeps it alive.
   if (ex.title === "Work queue") now = onGrid(now, ex.cols, (g) => shimmer(g, now, ms / 120));
   cells(ms < ex.plan.total ? buildFrame(now, ex.plan, ms) : now, x, y, ex.fs);
@@ -537,7 +629,7 @@ function example(t, i) {
 // The bars come from the kit itself; each view is drawn the way its format looks, in the same
 // block and box characters as everything else. A view wipes in over the last one, left to right,
 // building as it comes, then keeps one small motion of its own.
-const VIEW_BEATS = 3.5;
+const VIEW_BEATS = 4;
 const padTo = (str, w) => { const n = [...str].length; return n >= w ? str : str + " ".repeat(w - n); };
 // A box of width w with a name in its top edge.
 function boxed(name, body, w, style = "─│┌┐└┘") {
@@ -554,7 +646,7 @@ function prepareViews() {
   const list = [
     ["Markdown", boxed("funnel.md", ["### Signup to paid, last 30 days", "", "```text", ...bars, "```", "", "4 steps; 5% of visitors reach paid.", "Source: analytics export"], W)],
     ["MDX", boxed("funnel.mdx", ['import Glyph from "./Glyph.astro";', "", "## Signup to paid", "<Glyph spec={funnel} />", ...boxed("", bars, W - 4)], W)],
-    ["Prototype", boxed("settings.html", ["■ ■ ■  [ localhost:4321/settings    ]", "", "Settings", "Profile │ Notifications │ Billing", "          ━━━━━━━━━━━━━", "Email me when a report is ready  [ ■] on", "Weekly summary                   [■ ] off", "Digest day  [ Monday           ▼]", "", "                  [ Cancel ]  [[ Save ]]"], W)],
+    ["Prototype", boxed("funnel.html", ["■ ■ ■  [ localhost:4321/funnel      ]", "", "Signup to paid          [ 30 days ▼]", "", ...bars, "", "", "                  [ Export ]  [[ Share ]]"], W)],
     ["Deck", boxed("review.html", ["", "HOW PEOPLE GET TO PAID", "", ...bars, "", "", "▓▓▓░░░░░░░░░░░░░░░░░░░░░░░░░░░░    03 / 12"], W)],
     ["PDF report", boxed("audit.pdf", ["░▒▓█                    Signup report", "", "Signup to paid", "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒", "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒", "", ...bars, "", "", "", "                                1 / 6"], 42)],
     ["SVG · PNG", [...Array(2).fill("░".repeat(W)), ...bars.map((l) => `░░ ${padTo(l, W - 6)} ░░`), ...Array(2).fill("░".repeat(W)), "", padTo("", W - 21) + "funnel.svg · 1080 × 540"]]
@@ -563,42 +655,61 @@ function prepareViews() {
     const cols = Math.max(...lines.map((l) => [...l].length));
     const box = centre(cellsFromText(lines.join("\n"), classify), lines.length, cols);
     // The SVG's backdrop stands for transparency, so it sits back in grey.
-    if (name === "SVG · PNG") box.cl = box.cl.map((row, r) => row.map((cl, c) => (box.ch[r][c] === "░" ? "gk-f" : cl)));
+    if (name === "SVG · PNG") box.cl = box.cl.map((row, r) => row.map((cl, c) => (box.ch[r][c] === "░" ? "gk-bg" : cl)));
     if (name === "Prototype") box.cl[1] = box.cl[1].map((cl, c) => (c < 8 ? "gk-f" : cl));
     const fs = Math.floor(Math.min(28, STAGE.w / (cols * CW), (STAGE.h - 90) / (lines.length * 1.25)));
     return { name, lines, box, plan: planBuild(box), cols, rows: lines.length, fs };
   });
 }
-const viewAt = (k) => T.formats + beat(0.5 + k * VIEW_BEATS);
+const viewAt = (k) => T.formats + beat(1 + k * VIEW_BEATS);
+const blink = (s) => Math.floor(s / beat(0.5)) % 2 === 0; // carets blink with the beat
 // Each view's own motion, s seconds after it starts.
+// A light passing along a view's bars, row after row; used where a view would otherwise go still.
+const barGlint = (g, s, v, from = 0) => v.box.ch.forEach((row, r) => {
+  if (r < from) return;
+  const run = row.map((ch, c) => (ch === "█" ? [r, c] : null)).filter(Boolean);
+  if (run.length > 2 && run.length < 20) glint(g, run, (s * 9 + r * 5) % (run.length + 10) - 4);
+});
 const VIEW_MOTION = {
-  Markdown: (g, s, v) => { if (Math.floor(s / 0.24) % 2 === 0) g.put(v.rows - 3, 2 + 35, "█"); }, // the cursor after the last line
+  Markdown: (g, s, v) => { if (blink(s)) g.put(v.rows - 3, 2 + 35, "█"); }, // the cursor after the last line
   MDX: (g, s, v) => v.box.ch.forEach((row, r) => {
     if (r < 6) return;
     const run = row.map((ch, c) => (ch === "█" ? [r, c] : null)).filter(Boolean);
     if (run.length > 2) glint(g, run, (s * 9 + r * 5) % (run.length + 10) - 4);
   }),
-  Prototype: (g, s, v) => {
-    const [ar, ac] = find(v.box, "localhost:4321/settings");
-    if (Math.floor(s / 0.24) % 2 === 0) g.put(ar, ac + 23, "█");
-    const [wr, wc] = find(v.box, "[■ ] off");
-    if (s > 0.9) g.text(wr, wc, s < 0.98 ? "[▒▒] off" : "[ ■] on ");
-    const [sr, sc] = find(v.box, "[[ Save ]]");
-    const p = Math.floor((s - 1.3) / 0.08);
-    if (p >= 0 && p < 3) for (let i = 2; i < 8; i++) g.put(sr, sc + i, ["▓", "▒", "░"][p]);
+  // The page in use: the pointer rests on a row a beat, and that row says how many were kept.
+  Prototype: (g, s, v, tint) => {
+    const [ar, ac] = find(v.box, "localhost:4321/funnel");
+    if (blink(s)) g.put(ar, ac + 21, "█");
+    const kept = [["signed up", "◄ 49%"], ["activated", "◄ 38%"], ["paid", "◄ 27%"]];
+    const k = Math.floor(s / beat(1)) - 1;
+    if (k < 0) return;
+    const [label, tip] = kept[Math.min(2, k)];
+    const [r, c] = find(v.box, label);
+    const run = v.box.ch[r].map((ch, i) => (BLOCK[ch] ? i : -1)).filter((i) => i >= 0);
+    run.forEach((i) => g.put(r, i, "▓"));
+    const end = v.box.ch[r].join("").trimEnd().replace(/[│ ]+$/, "").length;
+    g.text(r, end + 2, tip);
+    tint(r, end + 2, tip.length, "gk-ok");
   },
+  // Next slide on the second beat: the count steps and the progress bar grows to it.
   Deck: (g, s, v) => {
     const [pr, pc] = find(v.box, "▓▓▓░");
-    const n = Math.min(31, 3 + Math.floor(s / 0.12));
-    for (let i = 0; i < 31; i++) g.put(pr, pc + i, i < n ? "▓" : "░");
-    if (s > 0.9) g.text(pr, pc + 35, "04 / 12");
+    const next = s >= beat(2);
+    const target = next ? 4 : 3, from = next ? 3 : 0;
+    const n = Math.min(target, from + (s - (next ? beat(2) : 0)) / 0.12) * (31 / 12);
+    for (let i = 0; i < 31; i++) g.put(pr, pc + i, i < Math.floor(n) ? "▓" : "░");
+    if (next) g.text(pr, pc + 35, "04 / 12");
+    barGlint(g, s, v, 3);
   },
+  // The summary fills in, a line a beat.
   "PDF report": (g, s, v) => {
     const [r1, c1] = find(v.box, "▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒");
     [[r1, 28], [r1 + 1, 20]].forEach(([r, w], i) => {
-      const n = Math.max(0, Math.min(w, Math.floor((s - i * 0.5) / 0.05)));
+      const n = Math.max(0, Math.min(w, Math.floor((s - beat(1 + i)) / 0.02)));
       for (let k = 0; k < w; k++) g.put(r, c1 + k, k < n ? "█" : "▒");
     });
+    barGlint(g, s, v, r1 + 2);
   },
   "SVG · PNG": (g, s, v) => v.box.ch.forEach((row, r) => {
     const run = row.map((ch, c) => (ch === "█" ? [r, c] : null)).filter(Boolean);
@@ -608,7 +719,7 @@ const VIEW_MOTION = {
 function viewFrame(v, s) {
   const ms = (s * 1000) / 0.6;
   if (ms < v.plan.total) return buildFrame(v.box, v.plan, ms);
-  return onGrid(v.box, v.cols, (g) => VIEW_MOTION[v.name]?.(g, s, v));
+  return onGrid(v.box, v.cols, (g, tint) => VIEW_MOTION[v.name]?.(g, s, v, tint));
 }
 function drawView(k, t) {
   const v = VIEWS[k], s = t - viewAt(k);
@@ -618,7 +729,7 @@ function drawView(k, t) {
 const WIPE = 0.45;
 function formats(t) {
   const t0 = T.formats;
-  typed("One file, every format.", t, t0, t0 + beat(0.75), M, STAGE.y + 8, 44);
+  typed("One spec, six formats.", t, t0, t0 + beat(0.75), M, STAGE.y + 8, 44);
   const k = VIEWS.findLastIndex((_, i) => t >= viewAt(i));
   if (k < 0) return "";
   const p = (t - viewAt(k)) / WIPE;
@@ -631,20 +742,18 @@ function formats(t) {
   return VIEWS[k].name;
 }
 
-// The end: the four glyphs wait spaced across the frame, then slide together one at a time, each
-// clicking into place, ▒ first, then ▓ beside it, then ░ and █ on either side. Moves step on the
-// site's 40 ms tick and overshoot a little before they settle.
-const JOIN_ORDER = [1, 2, 0, 3];
-const JOIN_MOVE = 0.36;
+// The end: the four glyphs wait spaced across the frame, then slide in together, staggered left to
+// right, each easing out on the site's 40 ms tick with no overshoot and clicking as it lands, a
+// sixteenth apart.
+const JOIN_MOVE = 0.5;
 function joined(t) {
   const cw = big * CW, cx = SIZE / 2, y = 500;
   const slot = (i) => cx - 2 * cw + i * cw;
   const start = (i) => M + 10 + i * ((SIZE - 2 * M - 20 - cw) / 3);
   const tick = Math.floor(t / 0.04) * 0.04;
   GLYPHS.forEach((g, i) => {
-    const arrive = T.join[JOIN_ORDER.indexOf(i)];
-    const k = Math.max(0, Math.min(1, (tick - (arrive - JOIN_MOVE)) / JOIN_MOVE));
-    const back = 1.6, e = k >= 1 ? 1 : 1 + (back + 1) * (k - 1) ** 3 + back * (k - 1) ** 2; // ease out, a little past and back
+    const k = Math.max(0, Math.min(1, (tick - (T.join[i] - JOIN_MOVE)) / JOIN_MOVE));
+    const e = 1 - (1 - k) ** 1.5; // ease out, still visibly moving into its last tick, so the click is the arrival
     text(g, start(i) + (slot(i) - start(i)) * e, y, big);
   });
 }
@@ -709,7 +818,7 @@ function draw(t) {
     if (i < 0) stat(t, 2);
     else {
       example(t, i);
-      title = EX[i].title;
+      title = EX[i].label;
     }
   } else if (t >= T.close) close(t);
   drawCaptions(t);
@@ -722,35 +831,59 @@ function draw(t) {
 function cues() {
   const c = [];
   const at = (t, type, o = {}) => c.push({ t: +t.toFixed(4), type, ...o });
+  // Typing: one key the moment each letter appears (typed() shows letter k at t0 + k·(t1 − t0)/n).
+  const typing = (s, t0, t1, g = 0.6) => at(t0, "type", { at: [...s].map((_, k) => +((k * (t1 - t0)) / s.length).toFixed(4)), text: s, g });
+  // A bar growing: floppy steps spread over its growth, ending as it does.
+  const growth = (t0, length, steps = 4) => {
+    const d = growTime(length), n = Math.max(1, Math.min(steps, Math.round(d / 0.1)));
+    at(t0, "fill", { at: Array.from({ length: n }, (_, k) => +((k * d) / n).toFixed(4)) });
+  };
+
+  at(0, "ambient", { d: DUR, hold: Math.floor(T.name[0] / 4) * 4 }); // the bed; F from the bar the name lands in
   at(0, "boot", { quick: true, g: 0.55 }); // under the blinking cursor, done before the first glyph
   T.glyphs.forEach((t) => at(t, "key"));
-  at(T.make[0], "type", { d: T.make[1] - T.make[0] });
-  at(T.send[0], "type", { d: T.send[1] - T.send[0] });
-  at(0.5, "ambient", { d: DUR - 0.5 }); // the bed, under the whole film
+  typing("Less to make.", ...T.make, 0.8);
+  typing("Less to send.", ...T.send, 0.8);
+
+  // Stats: the label types, the number counts (disk chatter) and lands (a blip) as it settles.
   T.stats.forEach((t0, k) => {
-    at(t0, "type", { d: beat(0.5), g: 0.6 });
+    typing(STATS[k].label, t0, t0 + beat(0.5));
     at(t0 + beat(1), "roll", { d: beat(1) });
-    at(t0 + beat(2), "land", { deg: [5, 3, 1][k], oct: 5 });
-    if (k === 1) at(t0 + beat(1), "fill", { steps: 4, dir: 1, every: 0.3 });
+    at(t0 + beat(2), "land", { deg: [5, 3][k], oct: 5 });
   });
+  SPEEDS.forEach((_, i) => growth(speedAt(T.stats[0], i), speedLength(i)));
+  growth(T.stats[1] + beat(1), barCells());
+
+  // Every press: the blips step up to the cover on the cut, then back down.
   [T.components, T.compare, ...T.examples, T.formats].forEach((t) => at(t - PRESS.swap, "press", { swap: PRESS.swap }));
-  // Components: a soft key as each part is used.
-  USE_ORDER.forEach((_, k) => at(T.components + USE_AT + k * USE_EVERY, "key", { g: 0.35 }));
-  // The components' caption types softly; in the comparison, the header types and each row lands
-  // with a soft key.
-  at(T.components + beat(0.5), "type", { d: 0.6, g: 0.45 });
-  at(T.compare + CMP_AT.header, "type", { d: 0.4, g: 0.45 });
-  for (let r = 0; r < COMPARE.length - 1; r++) at(T.compare + CMP_AT.rows + r * CMP_AT.every, "key", { g: 0.4 });
-  at(T.formats, "type", { d: beat(0.75), g: 0.6 });
-  for (let k = 1; k < 6; k++) at(viewAt(k), "key", { g: 0.4 }); // each format view lands
   at(T.close - PRESS.swap, "press", { swap: PRESS.swap, quietReveal: true });
-  // The glyphs click together, one key each, then the name, the line and the address type.
+
+  // Components: the caption types; each part is used on its beat with a key, as the rest dims.
+  const cap = "The parts a wireframe is made of.";
+  typing(cap, T.components + beat(0.5), T.components + beat(0.5) + Math.min(beat(1), cap.length * 0.02), 0.45);
+  USE_ORDER.forEach((_, k) => at(T.components + USE_AT + k * USE_EVERY, "key", { g: 0.45 }));
+
+  // The comparison: a key as the header lands and as each row lands, one a beat.
+  at(T.compare + CMP_AT.header, "key", { g: 0.45 });
+  for (let r = 0; r < COMPARE.length - 1; r++) at(T.compare + CMP_AT.rows + r * CMP_AT.every, "key", { g: 0.45 });
+
+  // The wireframe is used: the switch, the day, Save, each on its beat.
+  Object.values(SCREEN).forEach((s) => at(T.examples[0] + s, "key", { g: 0.45 }));
+  // The motion spec's playhead starts a run every two beats: a small tick.
+  for (let s = beat(2); s < beat(8) - PRESS.swap - 0.2; s += beat(2)) at(T.examples[3] + s, "tick", { g: 0.6 });
+
+  // Formats: the line types; each view lands with a key; the deck steps to its next slide.
+  typing("One spec, six formats.", T.formats, T.formats + beat(0.75));
+  for (let k = 1; k < 6; k++) at(viewAt(k), "key", { g: 0.45 });
+  at(viewAt(3) + beat(2), "key", { g: 0.35 });
+
+  // The end: the glyphs click as each lands; a warm swell opens as the name types; then the line
+  // and the address.
   T.join.forEach((t) => at(t, "key", { g: 0.9 }));
-  // A warm swell opens as the name types in.
   at(T.name[0], "swell", { d: DUR - T.name[0], g: 0.55 });
-  at(T.name[0], "type", { d: T.name[1] - T.name[0], g: 0.8 });
-  at(T.free[0], "type", { d: T.free[1] - T.free[0], g: 0.6 });
-  at(T.domain[0], "type", { d: T.domain[1] - T.domain[0], g: 0.5 });
+  typing("Glyph kit", ...T.name, 0.8);
+  typing("Free forever.", ...T.free, 0.6);
+  typing("glyph-kit.traykov.cc", ...T.domain, 0.5);
   return { dur: DUR, bpm: BPM, key: "A minor", cues: c.sort((x, y) => x.t - y.t) };
 }
 
