@@ -55,3 +55,19 @@ if (themeButton) {
     showTheme();
   });
 }
+
+// Analytics: Vercel counts page views on its own. These name the few actions worth knowing about:
+// copying an install command, downloading the zip, building a figure, going to GitHub. One click
+// listener for the whole page, so nothing else on it needs to know. No personal data is sent.
+const track = (name, data) => { try { window.va?.("event", { name, ...(data ? { data } : {}) }); } catch {} };
+window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+document.addEventListener("click", (event) => {
+  const el = event.target instanceof Element ? event.target.closest("[data-copy], a[href]") : null;
+  if (!el) return;
+  if (el.matches("[data-copy]")) {
+    const text = el.getAttribute("data-copy") || "";
+    track("Copy install", { how: text.startsWith("npx") ? "npx" : text.startsWith("/plugin") ? "plugin" : "other" });
+  } else if (/releases\/latest\/download/.test(el.href)) track("Download zip");
+  else if (/github\.com\/alextraykov\/glyph-kit/.test(el.href)) track("GitHub", { from: el.closest("nav") ? "top bar" : "page" });
+});
+document.querySelector("[data-try]")?.addEventListener("submit", () => track("Build figure"));
