@@ -35,6 +35,7 @@ document.querySelectorAll("[data-copy]").forEach((button) => {
 import "./showcase.js";
 import "./try.js";
 import "./parallax.js";
+import "./feedback.js";
 
 // The theme switch: light by default, dark when chosen, remembered on this device.
 const themeButton = document.querySelector("[data-theme-toggle]");

@@ -42,6 +42,10 @@
   ],
   "rewrites": [
     {
+      "source": "/glyph-kit/api/feedback",
+      "destination": "/api/feedback"
+    },
+    {
       "source": "/",
       "has": [
         {

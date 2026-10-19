@@ -42,6 +42,8 @@ const starLabel = stars !== null && stars >= 10 ? `★ Star · ${stars.toLocaleS
 // Ask for one: the drawing function runs on traykov.cc; the Turnstile site key is public.
 const DRAW_URL = process.env.GLYPH_KIT_DRAW_URL ?? "https://traykov.cc/api/glyph-kit-draw";
 const TURNSTILE_SITE_KEY = process.env.GLYPH_KIT_TURNSTILE_SITE_KEY ?? "0x4AAAAAAFbX6pR3QiTNlZ6I";
+// Feedback: the function in api/feedback.mjs, on this project. Same Turnstile widget, its own action.
+const FEEDBACK_SITE_KEY = process.env.GLYPH_KIT_FEEDBACK_SITE_KEY ?? TURNSTILE_SITE_KEY;
 // Suggestions: three asks, each checked to build the figure its thumbnail shows (traykov.cc/labs/glyph-kit).
 const SUGGESTIONS = [
   { short: "Signup funnel", kind: "Moving funnel", key: "live:funnel", from: { live: "signup-funnel" },
@@ -141,6 +143,27 @@ const showcase = `<figure class="demo showcase" data-showcase>
   <figcaption><span data-showcase-caption>${esc(showcaseViews[0].caption)}</span><span class="label">Sample data</span></figcaption>
 </figure>`;
 
+// ── Feedback: a dialog, opened from the footer (feedback.js) ────────────────────────────────────
+const feedback = `<dialog class="feedback" aria-labelledby="feedback-title" data-feedback data-endpoint="/api/feedback" data-sitekey="${esc(FEEDBACK_SITE_KEY)}">
+  <div class="feedback__head"><h2 id="feedback-title">Feedback</h2><button class="feedback__close" type="button" data-feedback-close>Close</button></div>
+  <form class="feedback__form" novalidate>
+    <div class="feedback__field">
+      <div class="feedback__labels"><label class="label" for="feedback-message">Message</label><span class="label" data-feedback-count aria-live="polite"></span></div>
+      <textarea id="feedback-message" name="message" rows="5" minlength="3" maxlength="2000" required></textarea>
+    </div>
+    <div class="feedback__field">
+      <div class="feedback__labels"><label class="label" for="feedback-email">Email · optional</label></div>
+      <input id="feedback-email" name="email" type="email" maxlength="254" autocomplete="email" spellcheck="false" aria-describedby="feedback-email-note">
+      <p class="feedback__note" id="feedback-email-note">Only to reply to you.</p>
+    </div>
+    <p class="feedback__page"><span class="label">Page</span><span data-feedback-page></span></p>
+    <div class="feedback__trap" aria-hidden="true"><label for="feedback-website">Website</label><input id="feedback-website" name="website" type="text" tabindex="-1" autocomplete="off"></div>
+    <div class="feedback__check" data-feedback-check hidden></div>
+    <div class="feedback__bar"><output class="feedback__status" data-feedback-status aria-live="polite"></output><button class="button feedback__send" type="submit" data-feedback-send>Send</button></div>
+  </form>
+  <div class="feedback__done" data-feedback-done hidden><p>Sent. Thank you.</p><button class="button button--quiet" type="button" data-feedback-close>Close</button></div>
+</dialog>`;
+
 // ── Page shell ─────────────────────────────────────────────────────────────────────────────────
 const page = ({ path, title, description, content, current }) => `<!doctype html>
 <html lang="en">
@@ -187,7 +210,8 @@ ${current === "home" ? '<script src="https://challenges.cloudflare.com/turnstile
 <main class="shell">
 ${content}
 </main>
-<footer><div class="shell"><span>Glyph kit ${plugin.version} · MIT · made by <a href="https://traykov.cc">Alexander Traykov</a></span><span><a href="https://traykov.cc/notes/four-characters/">Four characters</a>, the story behind it</span></div></footer>
+<footer><div class="shell"><span>Glyph kit ${plugin.version} · MIT · made by <a href="https://traykov.cc">Alexander Traykov</a></span><span><a href="https://traykov.cc/notes/four-characters/">Four characters</a>, the story behind it</span><button class="footer__button" type="button" data-feedback-open hidden>Send feedback</button></div></footer>
+${feedback}
 <script type="application/json" id="live-specs">${JSON.stringify(liveSpecs).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="try-example">${JSON.stringify({ spec: exampleSpec, mode: "moving" }).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="showcase">${JSON.stringify(showcaseData).replace(/</g, "\\u003c")}</script>
@@ -357,7 +381,7 @@ mkdirSync(join(out, "kinds"), { recursive: true });
 writeFileSync(join(out, "index.html"), based(home));
 writeFileSync(join(out, "kinds/index.html"), based(kinds));
 cpSync(join(root, "site/src/style.css"), join(out, "style.css"));
-for (const f of ["app.js", "showcase.js", "showcase-core.mjs", "try.js", "parallax.js"]) cpSync(join(root, "site/src", f), join(out, f));
+for (const f of ["app.js", "showcase.js", "showcase-core.mjs", "try.js", "parallax.js", "feedback.js"]) cpSync(join(root, "site/src", f), join(out, f));
 cpSync(join(root, "site/src/fonts"), join(out, "fonts"), { recursive: true });
 cpSync(join(root, "site/public"), out, { recursive: true });
 cpSync(join(kit, "assets/icon.svg"), join(out, "icon.svg"));

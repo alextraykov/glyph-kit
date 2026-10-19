@@ -311,3 +311,49 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 .hero__body { align-items: start; }
 .hero__copy { align-content: start; }
 .hero .showcase { margin-top: var(--space-2); }
+
+/* ── Feedback: a short form in a dialog, opened from the footer ─────────────────────────────── */
+.footer__button { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.footer__button:hover { color: var(--ink); }
+.footer__button[hidden] { display: none; }
+.feedback { width: min(34rem, 100% - 2 * var(--space-4)); max-height: calc(100% - 2 * var(--space-4)); margin: auto; padding: 0; overflow: auto; border: var(--hairline) solid var(--ink); background: var(--paper); color: var(--ink); box-shadow: 4px 4px 0 var(--ink); }
+/* The shade behind it is a fine checker, like ▒: half the page shows through, nothing blurs. */
+.feedback::backdrop { background: repeating-conic-gradient(rgba(8, 8, 8, .16) 0 25%, transparent 0 50%) 0 0 / 2px 2px; }
+:root[data-theme="dark"] .feedback::backdrop { background: rgba(0, 0, 0, .55) repeating-conic-gradient(rgba(244, 242, 234, .1) 0 25%, transparent 0 50%) 0 0 / 2px 2px; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .feedback::backdrop { background: rgba(0, 0, 0, .55) repeating-conic-gradient(rgba(244, 242, 234, .1) 0 25%, transparent 0 50%) 0 0 / 2px 2px; } }
+.feedback__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 52px; padding: 0 var(--space-5); border-bottom: var(--hairline) solid var(--line); }
+.feedback__head h2 { font-size: var(--px-22); line-height: 1; }
+.feedback__close { padding: var(--space-1) 0; border: 0; border-bottom: 2px solid transparent; background: none; color: inherit; font: 400 .9rem/1.4 var(--sans); cursor: pointer; }
+.feedback__close:hover { border-bottom-color: var(--ink); }
+.feedback[data-sent] .feedback__head .feedback__close { visibility: hidden; }
+.feedback__form { display: grid; gap: var(--space-4); padding: var(--space-5); }
+.feedback__form[hidden], .feedback__done[hidden], .feedback__check[hidden] { display: none; }
+.feedback__field { display: grid; gap: var(--space-2); }
+.feedback__labels { display: flex; justify-content: space-between; gap: var(--space-3); }
+.feedback textarea, .feedback input { width: 100%; min-height: var(--tap); padding: var(--space-2) var(--space-3); border: var(--hairline) solid var(--line); border-radius: 0; background: var(--paper); color: var(--ink); font: 400 1rem/1.5 var(--sans); }
+.feedback textarea { min-height: 8.5rem; resize: vertical; }
+.feedback textarea:hover, .feedback input:hover { border-color: var(--edge-strong); }
+/* Focus inks the edge and lays a marker on the bottom; a field that needs fixing gets a red one. */
+.feedback textarea:focus, .feedback input:focus { outline: 0; border-color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
+.feedback [aria-invalid="true"] { border-color: var(--signal-fail); box-shadow: inset 0 -2px 0 var(--signal-fail); }
+.feedback textarea:focus[aria-invalid="true"], .feedback input:focus[aria-invalid="true"] { border-color: var(--signal-fail); box-shadow: inset 0 -2px 0 var(--signal-fail); }
+.feedback__note { color: var(--text-caption); font-size: .8rem; }
+.feedback__page { display: flex; align-items: baseline; gap: var(--space-3); min-width: 0; color: var(--text-soft); font-size: .85rem; }
+.feedback__page span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The field only scripts see: off screen, out of the tab order, hidden from screen readers. */
+.feedback__trap { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.feedback__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding-top: var(--space-4); border-top: var(--hairline) solid var(--line); }
+.feedback__status { min-width: 0; color: var(--text-caption); font-size: .85rem; line-height: 1.4; }
+.feedback__status[data-state="error"] { color: var(--signal-fail); }
+.feedback__send { flex: none; min-width: 6.5rem; justify-content: center; font: 500 .95rem/1 var(--sans); cursor: pointer; }
+.feedback__send:disabled:hover { background: var(--ink); color: var(--paper); }
+.feedback__done { display: grid; justify-items: start; gap: var(--space-4); padding: var(--space-5); }
+.feedback__done p { font: 400 var(--px-22)/1.2 var(--pixel); }
+.feedback__done .button { font: 500 .95rem/1 var(--sans); cursor: pointer; }
+@media (max-width: 640px) {
+  .feedback { width: calc(100% - 2 * var(--space-3)); box-shadow: 3px 3px 0 var(--ink); }
+  .feedback__head { padding: 0 var(--space-4); }
+  .feedback__form, .feedback__done { padding: var(--space-4); }
+  .feedback__bar { flex-wrap: wrap; }
+  .feedback__send { flex: 1 0 100%; order: -1; }
+}
