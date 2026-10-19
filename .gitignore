@@ -2,3 +2,5 @@
 node_modules/
 site/dist/
 dist/
+.vercel
+.env*
