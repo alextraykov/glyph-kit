@@ -1,0 +1,12 @@
+{
+  "kind": "flow",
+  "title": "Request to preview",
+  "source": "Sample data, made up for this example",
+  "data": [
+    "request",
+    "plan",
+    "build",
+    "preview"
+  ],
+  "motion": true
+}

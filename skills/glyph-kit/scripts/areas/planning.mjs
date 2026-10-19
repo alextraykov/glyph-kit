@@ -1,3 +1,4 @@
+import { motionGantt, motionBoard, motionSwimlane } from "../motion/planning.mjs";
 // Planning: boards, impact and effort, ownership, timelines, decisions, status.
 import { checks } from "../guard.mjs";
 import { BOX, clamp, cut, gantt, join, len, padEnd, place, statusKey, table, wrap } from "../core.mjs";
@@ -131,3 +132,7 @@ export const kinds = {
   decisionLog: { label: "Decision log",
     check: (d) => [checks.inTimeOrder(d, "date")], render: decisionLog, summary: (r) => r.map((x) => `${x.date}: ${x.decision}`).join(". ") }
 };
+
+kinds.gantt.motion = (data, options) => motionGantt(data, options, kinds.gantt.render);
+kinds.board.motion = (data, options) => motionBoard(data, options, kinds.board.render);
+kinds.swimlane.motion = (data, options) => motionSwimlane(data, options, kinds.swimlane.render);

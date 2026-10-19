@@ -1,0 +1,34 @@
+{
+  "kind": "branchFlow",
+  "title": "Export, with its failure paths",
+  "intent": "Agree on every path before anyone designs a screen.",
+  "source": "Sample data, made up for this example",
+  "data": [
+    {
+      "label": "open export"
+    },
+    {
+      "label": "has data",
+      "type": "decision",
+      "no": {
+        "label": "empty state",
+        "to": "import data"
+      }
+    },
+    {
+      "label": "choose format"
+    },
+    {
+      "label": "file ready",
+      "type": "decision",
+      "no": {
+        "label": "show error",
+        "to": "choose format"
+      }
+    },
+    {
+      "label": "download"
+    }
+  ],
+  "motion": true
+}

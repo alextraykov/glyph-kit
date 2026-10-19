@@ -1,0 +1,29 @@
+{
+  "kind": "transitionSpec",
+  "title": "Card lifts",
+  "source": "Sample data, made up for this example",
+  "data": [
+    {
+      "property": "opacity",
+      "from": "0",
+      "to": "1",
+      "start": 0,
+      "end": 150
+    },
+    {
+      "property": "transform",
+      "from": "y 8px",
+      "to": "y 0",
+      "start": 0,
+      "end": 200
+    },
+    {
+      "property": "shadow",
+      "from": "none",
+      "to": "md",
+      "start": 100,
+      "end": 200
+    }
+  ],
+  "motion": true
+}

@@ -1,0 +1,35 @@
+{
+  "kind": "cohort",
+  "title": "Monthly retention",
+  "source": "Sample data, made up for this example",
+  "data": [
+    {
+      "label": "Jan",
+      "size": 120,
+      "values": [
+        1,
+        0.62,
+        0.48,
+        0.41
+      ]
+    },
+    {
+      "label": "Feb",
+      "size": 140,
+      "values": [
+        1,
+        0.7,
+        0.55
+      ]
+    },
+    {
+      "label": "Mar",
+      "size": 98,
+      "values": [
+        1,
+        0.58
+      ]
+    }
+  ],
+  "motion": true
+}

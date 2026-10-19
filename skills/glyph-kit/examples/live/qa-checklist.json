@@ -1,0 +1,29 @@
+{
+  "kind": "qaChecklist",
+  "title": "Design QA",
+  "source": "Sample data, made up for this example",
+  "data": [
+    {
+      "text": "Spacing matches the 8px scale",
+      "status": "done"
+    },
+    {
+      "text": "Focus states on every button",
+      "status": "progress"
+    },
+    {
+      "text": "Empty state copy",
+      "status": "todo"
+    },
+    {
+      "text": "Icon set",
+      "status": "blocked",
+      "note": "waiting on brand"
+    },
+    {
+      "text": "Dark theme contrast",
+      "status": "done"
+    }
+  ],
+  "motion": true
+}

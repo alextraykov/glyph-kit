@@ -1,0 +1,25 @@
+{
+  "kind": "motionTiming",
+  "title": "Toast, today and proposed",
+  "source": "Sample data, made up for this example",
+  "data": [
+    {
+      "label": "today",
+      "ms": 200,
+      "easing": "ease",
+      "easingName": "ease"
+    },
+    {
+      "label": "proposed",
+      "ms": 150,
+      "easing": [
+        0.33,
+        1,
+        0.68,
+        1
+      ],
+      "easingName": "reveal"
+    }
+  ],
+  "motion": true
+}

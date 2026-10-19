@@ -1,0 +1,31 @@
+{
+  "kind": "barChart",
+  "title": "Design QA issues by area",
+  "source": "Sample data, made up for this example",
+  "data": [
+    {
+      "label": "Design QA",
+      "value": 42,
+      "text": "42"
+    },
+    {
+      "label": "Handoff",
+      "value": 17,
+      "text": "17"
+    },
+    {
+      "label": "Research",
+      "value": 3,
+      "text": "3"
+    },
+    {
+      "label": "Copy",
+      "value": 0.4,
+      "text": "<1"
+    }
+  ],
+  "options": {
+    "width": 24
+  },
+  "motion": true
+}

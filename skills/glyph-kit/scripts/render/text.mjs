@@ -2,11 +2,13 @@
 import { isSample, stamp } from "../guard.mjs";
 import { resolve } from "../registry.mjs";
 import { compact as toAscii } from "../tokens.mjs";
+import { stillGrid } from "../motion/shared.mjs";
 
 /** The diagram as plain text. Made-up data carries a SAMPLE DATA stamp in the figure itself. */
 export function body(spec) {
   const def = resolve(spec);
-  const text = def.render(def.data, spec.options ?? {});
+  const moving = spec.motion && def.motion ? def.motion(def.data, spec.options ?? {}) : null;
+  const text = moving ? stillGrid(moving.make, moving.still).toText() : def.render(def.data, spec.options ?? {});
   return isSample(spec.source) ? stamp(text) : text;
 }
 

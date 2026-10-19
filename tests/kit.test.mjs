@@ -28,6 +28,7 @@ const examples = Object.fromEntries(
 const width = (s) => [...s].length;
 
 test("every kind has docs and an example in its area", () => {
+  assert.ok(Object.values(KINDS).filter((kind) => kind.motion).length >= 20);
   for (const [area, { kinds }] of Object.entries(AREAS)) {
     for (const kind of Object.keys(kinds)) {
       assert.ok(KIND_DOCS[kind]?.when && KIND_DOCS[kind]?.traps, `${kind} needs docs`);

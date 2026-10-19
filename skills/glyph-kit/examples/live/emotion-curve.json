@@ -1,0 +1,28 @@
+{
+  "kind": "emotionCurve",
+  "title": "How the first week felt",
+  "source": "Sample data, made up for this example",
+  "data": [
+    {
+      "label": "discover",
+      "score": 1
+    },
+    {
+      "label": "sign up",
+      "score": 0
+    },
+    {
+      "label": "import",
+      "score": -2
+    },
+    {
+      "label": "first chart",
+      "score": 2
+    },
+    {
+      "label": "share",
+      "score": 1
+    }
+  ],
+  "motion": true
+}

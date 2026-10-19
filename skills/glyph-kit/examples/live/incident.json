@@ -1,0 +1,30 @@
+{
+  "kind": "incident",
+  "title": "Detection to recovery",
+  "data": {
+    "events": [
+      {
+        "at": 0,
+        "label": "Alert received",
+        "kind": "detect"
+      },
+      {
+        "at": 3,
+        "label": "On-call paged",
+        "kind": "page"
+      },
+      {
+        "at": 12,
+        "label": "Traffic moved",
+        "kind": "mitigate"
+      },
+      {
+        "at": 20,
+        "label": "Service restored",
+        "kind": "resolve"
+      }
+    ]
+  },
+  "source": "Sample data, made up for this example",
+  "motion": true
+}

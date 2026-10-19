@@ -1,0 +1,26 @@
+{
+  "kind": "calendarStrip",
+  "title": "Days the limit was hit",
+  "source": "Sample data, made up for this example",
+  "data": [
+    false,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    true,
+    false,
+    false,
+    false,
+    false,
+    true,
+    true,
+    false
+  ],
+  "options": {
+    "gap": " "
+  },
+  "motion": true
+}

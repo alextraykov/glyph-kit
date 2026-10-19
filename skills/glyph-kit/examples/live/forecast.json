@@ -1,0 +1,33 @@
+{
+  "kind": "forecast",
+  "title": "Usage against July",
+  "source": "Sample data, made up for this example",
+  "data": [
+    {
+      "label": "Jul",
+      "measured": 1,
+      "text": "1.0×"
+    },
+    {
+      "label": "Aug",
+      "measured": 2.3,
+      "text": "2.3×"
+    },
+    {
+      "label": "Sep",
+      "measured": 4.1,
+      "text": "4.1×"
+    },
+    {
+      "label": "Oct",
+      "measured": 2.5,
+      "projected": 2.5,
+      "text": "on pace for ~5×"
+    }
+  ],
+  "options": {
+    "width": 36,
+    "max": 5
+  },
+  "motion": true
+}

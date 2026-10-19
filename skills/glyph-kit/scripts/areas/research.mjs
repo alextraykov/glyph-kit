@@ -1,3 +1,4 @@
+import { motionLikert, motionTaskStats, motionEmotionCurve } from "../motion/research.mjs";
 // Research data: survey answers, themes across participants, quotes, task results, journeys.
 import { checks } from "../guard.mjs";
 import { BOX, clamp, cut, join, len, padEnd, padStart, place, wrap } from "../core.mjs";
@@ -164,3 +165,7 @@ export const kinds = {
     summary: (s) => s.map((x) => `${x.label} ${x.score > 0 ? "+" : ""}${x.score}`).join(", ")
   }
 };
+
+kinds.likert.motion = (data, options) => motionLikert(data, options, kinds.likert.render);
+kinds.taskStats.motion = (data, options) => motionTaskStats(data, options, kinds.taskStats.render);
+kinds.emotionCurve.motion = (data, options) => motionEmotionCurve(data, options, kinds.emotionCurve.render);

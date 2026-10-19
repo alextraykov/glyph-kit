@@ -1,0 +1,20 @@
+{
+  "kind": "split",
+  "title": "Traffic and conversion",
+  "data": {
+    "variants": [
+      {
+        "label": "Control",
+        "share": 0.5,
+        "converts": 0.2
+      },
+      {
+        "label": "Variant",
+        "share": 0.5,
+        "converts": 0.3
+      }
+    ]
+  },
+  "source": "Sample data, made up for this example",
+  "motion": true
+}

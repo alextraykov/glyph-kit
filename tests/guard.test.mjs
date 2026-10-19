@@ -56,7 +56,8 @@ test("each kind checks its own data, in plain words", () => {
   assert.throws(() => body({ kind: "abResult", source: "x", data: [{ label: "new", value: 7, low: 3, high: 5 }] }), /should sit inside its range/);
   assert.throws(() => body({ kind: "gantt", source: "x", data: [{ label: "build", start: 5, end: 2 }] }), /end after it starts/);
   assert.throws(() => body({ kind: "decisionLog", data: [{ date: "Oct 9", decision: "b" }, { date: "Oct 2", decision: "a" }] }), /keep them in time order/);
-  assert.throws(() => body({ kind: "meter", source: "x", data: { value: 120, cap: 100 } }), /outside 0 to 100/);
+  assert.match(body({ kind: "meter", source: "x", data: { value: 120, cap: 100 } }), /120%.*over/);
+  assert.throws(() => body({ kind: "meter", source: "x", data: { value: -1, cap: 100 } }), /nonnegative/);
   assert.throws(() => body({ kind: "cohort", source: "x", data: [{ label: "Jan", size: 10, values: [1, 48] }] }), /write 48% as 0.48/);
   assert.throws(() => body({ kind: "taskStats", source: "x", data: [{ label: "t", min: 1, q1: 2, median: 3, q3: 4, max: 5, done: 9, of: 8 }] }), /9 finished out of 8/);
 });

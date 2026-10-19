@@ -1,3 +1,4 @@
+import { motionMotionTiming, motionTransitionSpec, motionStagger, motionFilmstrip } from "../motion/motion.mjs";
 // Motion: intent, timing, transitions, choreography, frames and easing tokens.
 import { checks } from "../guard.mjs";
 import { BOX, EASINGS, clamp, cut, gantt, join, len, padEnd, padStart, ruler, velocity } from "../core.mjs";
@@ -153,3 +154,8 @@ export const kinds = {
   filmstrip: { label: "Frame strip", render: filmstrip, summary: (f) => `Position on each of ${f.frames} frames with ${curveText(f.easing ?? "ease-out")}.` },
   easingTable: { label: "Easing tokens", render: easingTable, summary: (t) => t.map((x) => x.name).join(", ") }
 };
+
+kinds.motionTiming.motion = (data, options) => motionMotionTiming(data, options, kinds.motionTiming.render);
+kinds.transitionSpec.motion = (data, options) => motionTransitionSpec(data, options, kinds.transitionSpec.render);
+kinds.stagger.motion = (data, options) => motionStagger(data, options, kinds.stagger.render);
+kinds.filmstrip.motion = (data, options) => motionFilmstrip(data, options, kinds.filmstrip.render);

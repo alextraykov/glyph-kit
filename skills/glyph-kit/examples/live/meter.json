@@ -1,0 +1,13 @@
+{
+  "kind": "meter",
+  "title": "Seats used",
+  "source": "Sample data, made up for this example",
+  "data": {
+    "value": 84,
+    "cap": 100
+  },
+  "options": {
+    "width": 30
+  },
+  "motion": true
+}

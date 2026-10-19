@@ -1,3 +1,4 @@
+import { motionFlow, motionBranchFlow, motionStateMachine, motionJourneyMap } from "../motion/flows.mjs";
 // UX flows: linear and branching flows, state machines, journey maps, sitemaps.
 import { checks } from "../guard.mjs";
 import { BOX, cut, flow, join, len, padEnd, textCells, tree, wrap } from "../core.mjs";
@@ -141,6 +142,7 @@ export const kinds = {
   },
   stateMachine: {
     label: "State machine",
+    normalize: (data) => Array.isArray(data) ? data : data.transitions.map((transition) => ({ ...transition, event: transition.event ?? transition.label ?? "" })),
     render: stateMachine,
     summary: (t) => t.map((x) => `${x.from} goes to ${x.to} on ${x.event}`).join(". ")
   },
@@ -157,3 +159,8 @@ export const kinds = {
     }
   }
 };
+
+kinds.flow.motion = (data, options) => motionFlow(data, options, kinds.flow.render);
+kinds.branchFlow.motion = (data, options) => motionBranchFlow(data, options, kinds.branchFlow.render);
+kinds.stateMachine.motion = (data, options) => motionStateMachine(data, options, kinds.stateMachine.render);
+kinds.journeyMap.motion = (data, options) => motionJourneyMap(data, options, kinds.journeyMap.render);

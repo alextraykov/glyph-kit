@@ -65,3 +65,55 @@ export const KIND_DOCS = {
   filmstrip: { when: "Seeing an easing curve frame by frame.", traps: "Rows are equal slices of time, so bunched marks mean slow movement." },
   easingTable: { when: "Documenting easing tokens.", traps: "Three or four curves cover most products." }
 };
+
+KIND_DOCS.barChart.motion = "Bars grow in order while values count up; an overflow marker flashes.";
+KIND_DOCS.funnel.motion = "People fall through the steps and departures drift out to the side.";
+KIND_DOCS.cohort.motion = "Rows appear in turn and their retention develops from left to right.";
+KIND_DOCS.sparkline.motion = "The line draws from left to right with a leading marker.";
+KIND_DOCS.metricPanel.motion = "Trends draw in a stagger while their values count up.";
+KIND_DOCS.meter.motion = "The meter fills with a blinking lead and marks overflow.";
+KIND_DOCS.forecast.motion = "Measured values fill first, then the projection extends them.";
+KIND_DOCS.gantt.motion = "A time cursor sweeps the tracks as they fill.";
+KIND_DOCS.stateMachine.motion = "A token plays the chosen path and rests at its last state.";
+KIND_DOCS.branchFlow.motion = "A packet follows the spine, visits a failure branch and returns.";
+KIND_DOCS.flow.motion = "A packet walks between boxes and each arrival flashes.";
+KIND_DOCS.journeyMap.motion = "A cursor visits each stage and reveals its thinking and feeling.";
+KIND_DOCS.emotionCurve.motion = "The feeling curve traces with a head and trail.";
+KIND_DOCS.board.motion = "One card travels from later through next to now.";
+KIND_DOCS.swimlane.motion = "A packet follows each row; returns use the failure signal.";
+KIND_DOCS.stagger.motion = "A time cursor crosses each item's start delay.";
+KIND_DOCS.filmstrip.motion = "Frames play down the rows in time.";
+KIND_DOCS.transitionSpec.motion = "Property tracks fill along a time cursor.";
+KIND_DOCS.motionTiming.motion = "Rulers fill at speeds proportional to their durations.";
+KIND_DOCS.qaChecklist.motion = "Done items tick in order while blocked items flash.";
+KIND_DOCS.calendarStrip.motion = "Days fill from left to right.";
+KIND_DOCS.heatmap.motion = "A diagonal sweep develops cells to their final levels.";
+KIND_DOCS.taskStats.motion = "Box plots draw from minimum to maximum and values count up.";
+KIND_DOCS.likert.motion = "Bars grow out from the centre while agreement counts up.";
+Object.assign(KIND_DOCS, {
+  "handoff": {
+    "when": "Work passing between teams, including time spent waiting.",
+    "traps": "Every step must name a listed lane; waiting time cannot be negative.",
+    "motion": "Pieces queue at lane boundaries; the lane with most waiting is named."
+  },
+  "retry": {
+    "when": "A request retried with increasing backoff.",
+    "traps": "Keep the successful attempt within the attempt count.",
+    "motion": "Failures flash and the next gap grows until an attempt succeeds."
+  },
+  "cache": {
+    "when": "Requests served by a cache or sent to an origin.",
+    "traps": "Write the hit rate as a share from zero to one.",
+    "motion": "Hits bounce from the cache; misses visit the origin and both counters advance."
+  },
+  "split": {
+    "when": "Traffic divided between variants with different conversion rates.",
+    "traps": "Shares must add up to one; conversions are shares too.",
+    "motion": "Seeded packets route by share while arrivals and conversions count up."
+  },
+  "incident": {
+    "when": "Detection, paging, mitigation and resolution over time.",
+    "traps": "Keep events in time order and include exactly one resolution.",
+    "motion": "A clock sweeps the incident; the detection window signals failure and resolution signals success."
+  }
+});

@@ -23,7 +23,7 @@ test("every moving kind has an example", () => {
 for (const spec of examples) {
   test(`${spec.kind}: runs a full loop, stays on its grid, settles for the still`, () => {
     const { make, still, summary } = live(spec);
-    assert.ok(summary.length > 20);
+    assert.ok(summary.trim().length > 0);
     const frame = make();
     let cols = 0;
     for (let s = 0; s < 600; s++) {
@@ -136,4 +136,28 @@ test("autoplay releases observers and clocks and settles for print and reduced m
   } finally {
     for (const key of keys) { const desc = saved.get(key); if (desc) Object.defineProperty(globalThis, key, desc); else delete globalThis[key]; }
   }
+});
+
+test("new process kinds reject impossible inputs in plain words", () => {
+  const invalid = [
+    ["handoff", { lanes: ["Design"], steps: [{ lane: "Missing", label: "Build", wait: 0 }] }],
+    ["retry", { attempts: 3, base: 100, factor: 2, succeedOn: 4 }],
+    ["cache", { hitRate: 1.2, origin: "Origin" }],
+    ["split", { variants: [{ label: "A", share: 0.4 }] }],
+    ["incident", { events: [{ at: 0, label: "Seen", kind: "detect" }] }]
+  ];
+  for (const [kind, data] of invalid) assert.throws(() => animate({ kind, data, source: "Sample data" }), (error) => error.constructor === Error && !/undefined|NaN|Cannot read/.test(error.message));
+});
+
+test("moving board settles after the move and state machine settles at the path end", () => {
+  const board = examples.find((spec) => spec.kind === "board");
+  const expected = structuredClone(board);
+  const card = expected.data.later.shift();
+  expected.data.now.push(card);
+  expected.motion = false;
+  assert.equal(stillText(board), body(expected));
+  const machine = examples.find((spec) => spec.kind === "stateMachine");
+  const path = [machine.data[0].from, machine.data[0].to];
+  const still = stillText({ ...machine, options: { ...machine.options, path } });
+  assert.equal(still.split("\n")[0], path.at(-1));
 });

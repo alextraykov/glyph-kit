@@ -1,0 +1,31 @@
+{
+  "kind": "taskStats",
+  "title": "Usability test, eight people",
+  "source": "Sample data, made up for this example",
+  "data": [
+    {
+      "label": "find export",
+      "min": 38,
+      "q1": 44,
+      "median": 52,
+      "q3": 70,
+      "max": 95,
+      "done": 5,
+      "of": 8
+    },
+    {
+      "label": "share a view",
+      "min": 12,
+      "q1": 18,
+      "median": 21,
+      "q3": 30,
+      "max": 41,
+      "done": 8,
+      "of": 8
+    }
+  ],
+  "options": {
+    "scale": 120
+  },
+  "motion": true
+}

@@ -1,3 +1,4 @@
+import { motionBarChart, motionCohort, motionSparkline, motionMetricPanel, motionMeter, motionForecast, motionCalendarStrip, motionHeatmap } from "../motion/metrics.mjs";
 // Experiments and metrics: funnels, cohorts, test results, metric panels, plus the core charts.
 import { checks } from "../guard.mjs";
 import {
@@ -126,7 +127,7 @@ export const kinds = {
     summary: (rows) => rows.map((r) => `${r.label}: ${r.text ?? r.measured}${r.projected ? " (part projected)" : ""}`).join(". ")
   },
   meter: { label: "Meter",
-    check: (d) => [d.value < 0 || d.value > d.cap ? `The value ${d.value} is outside 0 to ${d.cap}.` : ""], render: (d, o) => meter(d.value, d.cap, o), summary: (d) => `${d.value} of ${d.cap}` },
+    check: (d) => [d.value < 0 || d.cap < 0 || (d.cap === 0 && d.value > 0) ? "Use a nonnegative value and a positive cap, or zero for both." : ""], render: (d, o) => meter(d.value, d.cap, o), summary: (d) => `${d.value} of ${d.cap}` },
   sparkline: {
     label: "Sparkline",
     render: (d, o = {}) => {
@@ -166,3 +167,12 @@ export const kinds = {
     summary: (items) => items.map((m) => `${m.label}: ${m.values.at(-1)}${m.unit ?? ""}`).join(". ")
   }
 };
+
+kinds.barChart.motion = (data, options) => motionBarChart(data, options, kinds.barChart.render);
+kinds.cohort.motion = (data, options) => motionCohort(data, options, kinds.cohort.render);
+kinds.sparkline.motion = (data, options) => motionSparkline(data, options, kinds.sparkline.render);
+kinds.metricPanel.motion = (data, options) => motionMetricPanel(data, options, kinds.metricPanel.render);
+kinds.meter.motion = (data, options) => motionMeter(data, options, kinds.meter.render);
+kinds.forecast.motion = (data, options) => motionForecast(data, options, kinds.forecast.render);
+kinds.calendarStrip.motion = (data, options) => motionCalendarStrip(data, options, kinds.calendarStrip.render);
+kinds.heatmap.motion = (data, options) => motionHeatmap(data, options, kinds.heatmap.render);

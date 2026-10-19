@@ -1,0 +1,13 @@
+{
+  "kind": "retry",
+  "title": "Request retries",
+  "data": {
+    "attempts": 4,
+    "base": 200,
+    "factor": 2,
+    "succeedOn": 4,
+    "unit": "ms"
+  },
+  "source": "Sample data, made up for this example",
+  "motion": true
+}

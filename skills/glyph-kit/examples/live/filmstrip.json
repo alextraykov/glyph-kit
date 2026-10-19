@@ -1,0 +1,11 @@
+{
+  "kind": "filmstrip",
+  "title": "Ease-out, frame by frame",
+  "source": "Sample data, made up for this example",
+  "data": {
+    "frames": 8,
+    "easing": "ease-out",
+    "ms": 240
+  },
+  "motion": true
+}

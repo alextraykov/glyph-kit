@@ -1,0 +1,19 @@
+{
+  "kind": "board",
+  "title": "Roadmap",
+  "source": "Sample data, made up for this example",
+  "data": {
+    "now": [
+      "Export to CSV",
+      "Fix date parsing on import"
+    ],
+    "next": [
+      "Saved views",
+      "Keyboard shortcuts for tables"
+    ],
+    "later": [
+      "Scheduled reports"
+    ]
+  },
+  "motion": true
+}
