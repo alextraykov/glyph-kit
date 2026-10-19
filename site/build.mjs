@@ -153,9 +153,9 @@ const home = page({
   <div class="pages">${[1, 2, 3, 4].map((n) => `<img src="/images/report-page-${n}.webp" alt="${n === 1 ? "Report cover: the title, a summary of four findings and the contents." : `Report page ${n}: numbered sections with takeaways and figures.`}" width="909" height="1286" loading="lazy" decoding="async">`).join("")}</div>
   <div class="links">
     <a class="text-link" href="/examples/motion-audit/motion-audit.pdf">The report as a PDF</a>
-    <a class="text-link" href="/examples/decks/motion-audit.html">The same audit as a deck</a>
-    <a class="text-link" href="/examples/product/settings.html">A prototype from a text wireframe</a>
-    <a class="text-link" href="/examples/live/review-queue.html">A moving diagram on its own</a>
+    <a class="text-link" href="/examples/decks/motion-audit">The same audit as a deck</a>
+    <a class="text-link" href="/examples/product/settings">A prototype from a text wireframe</a>
+    <a class="text-link" href="/examples/live/review-queue">A moving diagram on its own</a>
   </div>
 </section>
 
