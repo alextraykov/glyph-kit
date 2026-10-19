@@ -6,8 +6,8 @@ import { compact, estimateTextTokens } from "../skills/glyph-kit/scripts/tokens.
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { AREA_DOCS, KIND_DOCS } from "./docs.mjs";
-import { AREAS } from "../skills/glyph-kit/scripts/registry.mjs";
+import { AREA_DOCS, KIND_DOCS, LIVE_DOC } from "./docs.mjs";
+import { AREAS, KINDS } from "../skills/glyph-kit/scripts/registry.mjs";
 import { body, label } from "../skills/glyph-kit/scripts/render/text.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -34,6 +34,7 @@ for (const [area, { label: areaLabel, kinds }] of Object.entries(AREAS)) {
       out.push("```text", body(spec), "```", "", `*${label(spec)}*`, "");
       out.push("<details><summary>Spec</summary>", "", "```json", JSON.stringify({ kind: spec.kind, data: spec.data, ...(spec.options ? { options: spec.options } : {}) }, null, 2), "```", "", "</details>", "");
     }
+    if (doc.motion) out.push(`**Motion:** ${doc.motion}`, "");
     if (doc.traps) out.push(`**Watch for:** ${doc.traps}`, "");
   }
   writeFileSync(join(root, "reference/areas", `${area}.md`), out.join("\n"));
@@ -108,3 +109,5 @@ Made-up numbers must never look real, and drawings shouldn't fill a model's cont
   writeFileSync(join(docsDir, "benefits.md"), md);
   console.log("docs/benefits.md");
 }
+
+writeFileSync(join(root, "reference/live.md"), LIVE_DOC + "| Kind | Motion |\n|---|---|\n" + Object.entries(KINDS).filter(([, def]) => def.motion).map(([kind, def]) => `| \`${kind}\` | ${KIND_DOCS[kind]?.motion ?? def.label} |`).join("\n") + "\n");

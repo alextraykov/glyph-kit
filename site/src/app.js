@@ -1,14 +1,23 @@
 // Moving diagrams play from their still frame while on screen; reduced motion keeps the still.
 // Install commands copy with one click.
-import { live } from "./kit/live/kinds.mjs";
+import { animate } from "./kit/motion.mjs";
 import { autoplay } from "./kit/live/play.mjs";
 
 const specs = JSON.parse(document.getElementById("live-specs")?.textContent || "{}");
 document.querySelectorAll("[data-live]").forEach((pre) => {
   const spec = specs[pre.dataset.live];
   if (!spec) return;
-  const { make, still } = live(spec);
-  autoplay(pre, make, still);
+  const { make, still } = animate(spec);
+  let stop = autoplay(pre, make, still);
+  const button = pre.closest("figure")?.querySelector("[data-live-toggle]");
+  if (button) {
+    button.hidden = false;
+    button.addEventListener("click", () => {
+      if (stop) { stop(); stop = null; } else stop = autoplay(pre, make, still);
+      button.textContent = stop ? "Still" : "Play";
+      button.setAttribute("aria-pressed", String(Boolean(stop)));
+    });
+  }
 });
 
 // Copy buttons are icons: a tick for a moment after copying.

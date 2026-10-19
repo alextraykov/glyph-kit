@@ -6,9 +6,12 @@ const markRe = /\p{Mark}/u;
 const emojiRe = /\p{Emoji_Presentation}|\p{Regional_Indicator}/u;
 const rtlRe = /[\p{Script=Arabic}\p{Script=Hebrew}\u0700-\u08ff\ufb1d-\ufdff\ufe70-\ufefc]/u;
 
+const segmenters = new Map();
 const segmenter = (granularity, lang) => {
   try {
-    return typeof Intl?.Segmenter === "function" ? new Intl.Segmenter(lang, { granularity }) : null;
+    const key = `${granularity}:${lang ?? ""}`;
+    if (!segmenters.has(key)) segmenters.set(key, typeof Intl?.Segmenter === "function" ? new Intl.Segmenter(lang, { granularity }) : null);
+    return segmenters.get(key);
   } catch {
     return null;
   }

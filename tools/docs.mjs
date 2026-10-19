@@ -117,3 +117,17 @@ Object.assign(KIND_DOCS, {
     "motion": "A clock sweeps the incident; the detection window signals failure and resolution signals success."
   }
 });
+
+export const LIVE_DOC = `# Moving diagrams
+
+Motion is a capability of a kind. Keep the kind the content calls for and add \`"motion": true\`; a moving chart stays a chart, and a moving roadmap stays a board. Use \`node scripts/glyph-kit.mjs live spec.json --to html\` for a standalone page, or \`--to markdown\` for its still.
+
+The still makes the same point and is used for reduced motion, print and no-JavaScript output. The Play/Still control stops playback without changing the data. Processes use the data shapes in \`reference/areas/process.md\`. A funnel accepts either a list of steps or \`{steps: [...]}\`; \`states\` remains the legacy state-machine alias.
+
+Structure changes in steps. Travelling marks use the kit’s \`▓▒░\` trail, arrivals flash, waiting work chases, and only changing values scramble. Chart row delays follow a curve; the shared clock stays at 120ms. New chart sequences settle within 3.6 seconds and hold for 2.4 seconds. Process timelines keep their semantic pacing. No blur, sliding text or springs.
+
+Cell-grid playback necessarily repaints text rather than using compositor transforms. Layout and routes are precomputed, unchanged HTML is not replaced, and off-screen players stop. Keep simultaneous playback bounded and profile the rendered page.
+
+## Kinds that move
+
+`;

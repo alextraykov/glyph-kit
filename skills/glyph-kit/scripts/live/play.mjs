@@ -6,14 +6,14 @@ import { stillGrid } from "./kinds.mjs";
 
 export function player(pre, make, still, { prefix = "gl-" } = {}) {
   let frame = null;
-  let pos = still;
+  let pos = 0;
   let last = "";
   const draw = (g) => {
     const html = g.toHtml(prefix);
     if (html !== last) pre.innerHTML = last = html;
   };
   return {
-    /** Move on by ms of real time. Starts from the still frame, so nothing jumps. */
+    /** Move on by ms of real time. Starts at the beginning of the sequence. The initial markup remains the readable still until play begins. */
     advance(ms) {
       if (!frame) {
         frame = make();
@@ -26,7 +26,7 @@ export function player(pre, make, still, { prefix = "gl-" } = {}) {
     /** Show the still frame and forget the running state. */
     still() {
       frame = null;
-      pos = still;
+      pos = 0;
       draw(stillGrid(make, still));
     }
   };

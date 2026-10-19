@@ -3,14 +3,14 @@ name: glyph-kit
 description: Draws product-design figures as text with block (░▒▓█) and box-drawing characters - research and survey results, funnels and A/B tests, UX flows and state machines, roadmaps, screen wireframes, design-system docs, handoff and QA checklists, motion specs and moving diagrams. Use for an ASCII or Unicode diagram, text wireframe, sparkline or bar chart in Markdown, a PR, a ticket or a doc; a design review deck; a report or audit as a PDF; or turning a text wireframe into an HTML prototype or components from the project's design system. Draws from a small JSON spec with real, sourced data and exports Markdown, MDX, HTML, SVG, PNG and PDF.
 license: MIT
 metadata:
-  version: "0.1.0"
+  version: "0.2.0"
   author: Alexander Traykov
   homepage: https://traykov.cc/glyph-kit
 ---
 
 # Glyph kit
 
-Every artifact is a **spec** (`{ kind, title, intent, source, data, options }`) rendered by a generator with no dependencies. Text is the first fidelity; the same spec becomes an HTML prototype, a deck, and through the project's design-system map, production code.
+Every artifact is a **spec** (`{ kind, title, intent, source, data, options, motion, lang }`) rendered by a generator with no dependencies. Text is the first fidelity; the same spec becomes an HTML prototype, a deck, and through the project's design-system map, production code.
 
 ## Pick the area, read only its guide
 
@@ -24,6 +24,7 @@ Every artifact is a **spec** (`{ kind, title, intent, source, data, options }`) 
 | Tokens, scales, contrast, component states, layers | `reference/areas/systems.md` |
 | Redlines, QA checklists, before and after | `reference/areas/handoff.md` |
 | Motion intent, timing, transitions, stagger, easing | `reference/areas/motion.md` |
+| Handoffs, retries, caches, traffic splits, incidents | `reference/areas/process.md` |
 
 Each guide lists its kinds with when to use them, a real example, the spec that made it, and what to watch for. `node scripts/glyph-kit.mjs kinds` lists them all.
 
@@ -52,7 +53,7 @@ For layout-only figures that no kind covers (a one-off diagram), draw by hand wi
 
 ## Moving diagrams
 
-When the point is a process over time (work flowing and coming back, people leaving a funnel, a queue backing up, a rollout and its guard, a state machine, a loading sequence), use a moving diagram: `node scripts/glyph-kit.mjs live spec.json --to html` writes one page that plays, with a still frame for reduced motion; `--to markdown` gives the still for docs and tickets. Kinds: `loop`, `funnel`, `states`, `queue`, `rollout`, `loading`. Read `reference/live.md` for each kind's data. Say what the motion shows in the sentence next to it; the still must make the same point.
+Keep the kind the content calls for and add `"motion": true` when its registry entry moves. A chart remains a chart; a roadmap remains a board. `node scripts/glyph-kit.mjs live spec.json --to html` writes a moving page; `--to markdown` gives its still. Read `reference/live.md` for the generated list and `reference/areas/process.md` for processes. The still must make the same point, including reduced motion, print and no-JavaScript output.
 
 ## Going up in fidelity
 
@@ -67,16 +68,16 @@ Read `reference/fidelity.md` before building a prototype or code from a spec, an
 4. **A positive value never draws as empty**, and the empty part of a scale stays visible.
 5. **Show the source** under every figure with numbers.
 6. **No costume.** No green-on-black, glyph rain or scrambled headlines unless the product is a terminal.
-7. **Stay in the measured glyph set** (`reference/characters.md`); `scripts/lint.mjs` enforces it.
+7. **Use any script for labels; keep drawing symbols measured.** Width counts cells, not string length: CJK takes two cells and graphemes stay whole. Set `lang` for casing and numbers. Read `reference/characters.md` for font and RTL limits.
 8. **Follow the layout rules** (`reference/layout.md`) for anything drawn by hand: two cells of padding inside a box, text centred in a box that shares a column's width, four cells between boxes, and `▓` only for what is current, measured or done. Structure is lines.
 
 ## Checks before handing over
 
-- [ ] `node scripts/lint.mjs <file.md>` passes: frames close, every glyph is one cell wide, no text touches its box. Read its token warnings.
+- [ ] `node scripts/lint.mjs <file.md>` passes: frames close, glyphs occupy their expected cell widths, no text touches its box. Read its token warnings.
 - [ ] Every figure with numbers has a real `source`, or says it is illustrative and carries the SAMPLE DATA stamp.
 - [ ] Every figure has a description: the Markdown and HTML renderers add one; plain text needs a sentence next to it.
 - [ ] Values appear as text, not only as lengths.
-- [ ] The font renders every glyph at one cell (width check in `reference/characters.md`). If figures look misaligned where the user reads them, suggest Departure Mono (free, departuremono.com); never require a font.
+- [ ] The font renders each glyph at its expected cell width (width check in `reference/characters.md`). If figures look misaligned where the user reads them, suggest Departure Mono (free, departuremono.com); never require a font.
 - [ ] Nothing wider than about 80 columns unless it scrolls in its own box.
 - [ ] Motion specs say what reduced motion shows.
 

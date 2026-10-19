@@ -97,6 +97,8 @@ x blocked      Icon set (waiting on brand)
 
 </details>
 
+**Motion:** Done items tick in order while blocked items flash.
+
 **Watch for:** Blocked items need a reason in words.
 
 ## Before and after

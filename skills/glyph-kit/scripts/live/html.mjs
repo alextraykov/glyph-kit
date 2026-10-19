@@ -1,6 +1,7 @@
 // A moving diagram as one self-contained HTML file: the grid, the kinds and the player are inlined,
 // so the file opens anywhere with nothing beside it. Reduced motion shows the still frame.
 import { readFileSync } from "node:fs";
+import { FONT_CSS } from "../render/font.mjs";
 import { palette } from "../render/themes.mjs";
 import { isSample } from "../guard.mjs";
 import { live, stillGrid } from "./kinds.mjs";
@@ -55,14 +56,15 @@ export function renderLiveHtml(spec, { theme = "paper" } = {}) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(spec.title)}</title>
-<style>
+<style>${FONT_CSS}
 :root{color-scheme:${theme === "paper" ? "light" : "dark"}}
-body{margin:0;min-height:100vh;display:grid;place-items:center;background:${p.bg};color:${p.ink};font:15px/1.5 system-ui,sans-serif}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:${p.bg};color:${p.ink};font:16px/1.6 system-ui,sans-serif}
 figure{margin:0;padding:48px 40px;display:grid;gap:20px;max-width:100%}
-h1{margin:0;font-size:20px;font-weight:600}
+h1{margin:0;font:400 22px/1.3 "Departure Mono",monospace}
 p{margin:0;color:${p.muted};max-width:68ch}
-pre{margin:0;padding:28px 32px;overflow-x:auto;background:${p.panel};font:13px/1.25 Menlo,"SF Mono",Consolas,"DejaVu Sans Mono",monospace;font-variant-ligatures:none;white-space:pre}
-.stamp{color:${p.flag};font:600 12px/1.4 Menlo,monospace;letter-spacing:.06em;text-transform:uppercase}
+pre{margin:0;padding:28px 32px;overflow-x:auto;background:${p.panel};font:400 11px/1.25 "Departure Mono",Menlo,"SF Mono",Consolas,"DejaVu Sans Mono",monospace;font-variant-ligatures:none;white-space:pre}
+.stamp{color:${p.flag};font:400 11px/1.4 "Departure Mono",Menlo,monospace;letter-spacing:.06em;text-transform:uppercase}
+button{justify-self:start;min-height:44px;padding:0 14px;border:1px solid currentColor;border-radius:0;background:transparent;color:inherit;font:400 11px "Departure Mono",monospace;cursor:pointer}button:focus-visible{outline:2px solid currentColor;outline-offset:3px}[hidden]{display:none!important}@media print{button{display:none}}
 .gl-ok{color:${p.ok}}.gl-fail{color:${p.flag}}.gl-mute{color:${p.muted}}
 </style>
 </head>
@@ -71,6 +73,7 @@ pre{margin:0;padding:28px 32px;overflow-x:auto;background:${p.panel};font:13px/1
 <h1>${esc(spec.title)}</h1>
 ${spec.intent ? `<p>${esc(spec.intent)}</p>` : ""}
 <pre role="img" aria-label="${esc(summary)}">${esc(stillGrid(make, still).toText())}</pre>
+<button type="button" hidden data-play aria-pressed="true">Still</button>
 ${isSample(spec.source) ? `<p class="stamp">Sample data: made up to show the idea, not real numbers</p>` : ""}
 ${spec.source ? `<p>Source: ${esc(spec.source)}</p>` : ""}
 </figure>
@@ -78,7 +81,15 @@ ${spec.source ? `<p>Source: ${esc(spec.source)}</p>` : ""}
 ${inlineMotion()}
 const spec = ${JSON.stringify(spec).replace(/</g, "\\u003c")};
 const { make, still } = animate(spec);
-autoplay(document.querySelector("pre"), make, still);
+const pre = document.querySelector("pre");
+const button = document.querySelector("[data-play]");
+let stop = autoplay(pre, make, still);
+button.hidden = false;
+button.addEventListener("click", () => {
+  if (stop) { stop(); stop = null; } else stop = autoplay(pre, make, still);
+  button.textContent = stop ? "Still" : "Play";
+  button.setAttribute("aria-pressed", String(Boolean(stop)));
+});
 </script>
 </body>
 </html>

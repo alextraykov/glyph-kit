@@ -46,6 +46,8 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
 
 </details>
 
+**Motion:** One card travels from later through next to now.
+
 **Watch for:** Keep items short enough to fit two lines.
 
 ## Impact and effort
@@ -207,6 +209,8 @@ spec v2 ────────► build ──────────► ok, 
 
 </details>
 
+**Motion:** A packet follows each row; returns use the failure signal.
+
 **Watch for:** One action per row; returns go left once.
 
 ## Timeline
@@ -263,6 +267,8 @@ beta     ····························█████
 ```
 
 </details>
+
+**Motion:** A time cursor sweeps the tracks as they fill.
 
 **Watch for:** One scale for all rows; print start and end as text.
 

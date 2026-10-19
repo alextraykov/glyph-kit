@@ -49,6 +49,8 @@ proposed ▕██████··············▏  150ms  reveal  �
 
 </details>
 
+**Motion:** Rulers fill at speeds proportional to their durations.
+
 **Watch for:** Keep the 500ms scale fixed across a report; a + is usually the finding.
 
 ## Motion intent
@@ -152,6 +154,8 @@ shadow    ···············█████████████�
 
 </details>
 
+**Motion:** Property tracks fill along a time cursor.
+
 **Watch for:** Animate transform and opacity; anything else needs a measured reason.
 
 ## Stagger
@@ -192,6 +196,8 @@ card 5 ······················█████████�
 
 </details>
 
+**Motion:** A time cursor crosses each item's start delay.
+
 **Watch for:** Cap the total: past about 400ms the last item feels late.
 
 ## Frame strip
@@ -231,6 +237,8 @@ card 5 ······················█████████�
 ```
 
 </details>
+
+**Motion:** Frames play down the rows in time.
 
 **Watch for:** Rows are equal slices of time, so bunched marks mean slow movement.
 

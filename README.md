@@ -65,6 +65,7 @@ Then ask for what you need, the way you'd ask a colleague: "chart these usabilit
 | Design system | Spacing scale, type scale, contrast check, component states, layer stack, token table, table |
 | Handoff and QA | Spacing redline, QA checklist, before and after |
 | Motion | Motion timing, motion intent, transition spec, stagger, frame strip, easing tokens |
+| Processes | Handoffs, retries, cache hit or miss, traffic splits, incidents, loops, queues, rollouts, loading, states |
 | Moving diagrams | Rework loop, funnel, state machine, work queue, staged rollout, loading sequence |
 
 See every one at **[traykov.cc/glyph-kit](https://traykov.cc/glyph-kit)**.
@@ -103,3 +104,5 @@ Issues and ideas are welcome. Run `node --test tests/*.test.mjs` before a pull r
 ## License
 
 MIT. Made by [Alexander Traykov](https://traykov.cc). The story behind it: [Four characters](https://traykov.cc/notes/four-characters/).
+
+Version 0.2.0 has 55 kinds across nine areas; 34 can move. Keep the same kind and add `"motion": true`. Set `"lang": "de"` (or another BCP 47 tag) for locale-aware numbers and casing. Existing specs still work; regenerate standalone pages for the updated player. No new fonts are required.

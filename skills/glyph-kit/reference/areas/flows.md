@@ -36,6 +36,8 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
 
 </details>
 
+**Motion:** A packet walks between boxes and each arrival flashes.
+
 **Watch for:** Four or five boxes per row at most.
 
 ## Flow with decisions
@@ -111,6 +113,8 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
 
 </details>
 
+**Motion:** A packet follows the spine, visits a failure branch and returns.
+
 **Watch for:** Every decision's no-branch needs a destination, or it's a dead end nobody designed.
 
 ## State machine
@@ -165,6 +169,8 @@ failed ──[ retry  ]──► saving
 ```
 
 </details>
+
+**Motion:** A token plays the chosen path and rests at its last state.
 
 **Watch for:** Read the footer: it lists ends and unreachable states.
 
@@ -221,6 +227,8 @@ feeling  ▲ good            ▼▼ bad            ▲▲ great
 ```
 
 </details>
+
+**Motion:** A cursor visits each stage and reveals its thinking and feeling.
 
 **Watch for:** Thoughts are quotes or close paraphrases from research, not invented.
 

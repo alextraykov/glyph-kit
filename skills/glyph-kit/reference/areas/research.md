@@ -65,6 +65,8 @@ Would use it weekly           ██▒▒▒▒░░░░░│░░░░�
 
 </details>
 
+**Motion:** Bars grow out from the centre while agreement counts up.
+
 **Watch for:** Show the counts or percentages; never hide neutral answers, they change the story.
 
 ## Themes by participant
@@ -258,6 +260,8 @@ share a view     ├─│███─┤                      median 21s · 8/8
 
 </details>
 
+**Motion:** Box plots draw from minimum to maximum and values count up.
+
 **Watch for:** With fewer than about eight people, report the range and the completions, not a confident median.
 
 ## Journey feeling
@@ -310,5 +314,7 @@ share a view     ├─│███─┤                      median 21s · 8/8
 ```
 
 </details>
+
+**Motion:** The feeling curve traces with a head and trail.
 
 **Watch for:** The score is a judgement from research, say whose and from what.

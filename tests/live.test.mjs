@@ -64,7 +64,7 @@ test("unknown kinds fail in plain words", () => {
 
 test("standalone HTML carries its own player and the still frame", () => {
   const html = renderLiveHtml(examples[0]);
-  assert.match(html, /autoplay\(document\.querySelector\("pre"\)/);
+  assert.match(html, /autoplay\(pre, make, still\)/);
   assert.doesNotMatch(html, /^import /m);
   assert.doesNotMatch(html, /^export /m);
   assert.match(html, /prefers-reduced-motion/);

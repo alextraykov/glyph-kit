@@ -1,3 +1,4 @@
+import { cells as textCells, width as textWidth } from "../../skills/glyph-kit/scripts/text.mjs";
 // The hero showcase: views of the kit centred in one fixed character box. Pure functions, shared
 // by the build (the first view is in the page) and the browser (showcase.js).
 //
@@ -9,7 +10,7 @@ const esc = (c) => (c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === "&" ? "&amp;
 export function cellsFromText(text, classify) {
   const lines = text.split("\n");
   return {
-    ch: lines.map((l) => [...l]),
+    ch: lines.map(textCells),
     cl: lines.map((l) => classify(l).map((role) => (role ? `gk-${role}` : "")))
   };
 }
@@ -81,7 +82,7 @@ export function planBuild(box, { lang } = {}) {
   const at = (r, c) => curve(Math.min(1, (c / Math.max(1, W)) * 0.7 + (r / Math.max(1, H)) * 0.3));
   const plan = Array.from({ length: H }, () => Array(W).fill(null));
   let total = 0;
-  const end = (ms) => (total = Math.max(total, ms));
+  const end = (ms) => (total = Math.max(total, Math.ceil(ms)));
 
   box.ch.forEach((row, r) => {
     const line = row.join("");
@@ -98,7 +99,7 @@ export function planBuild(box, { lang } = {}) {
         grouped: raw.includes(group),
         d: 240 + at(r, m.index) * 620
       };
-      for (let k = 0; k < raw.length; k++) plan[r][m.index + k] = { kind: "num", tok, k };
+      for (let k = 0; k < raw.length; k++) plan[r][textWidth(line.slice(0, m.index)) + k] = { kind: "num", tok, k };
       end(tok.d + COUNT_STEPS * BUILD_STEP);
     }
     // Runs of blocks grow along the row, away from a centre line when they touch one.
@@ -120,7 +121,7 @@ export function planBuild(box, { lang } = {}) {
       c = e;
     }
     row.forEach((ch, c) => {
-      if (ch === " " || plan[r][c]) return;
+      if (ch === " " || ch === "" || plan[r][c]) return;
       if (LINES.includes(ch)) {
         plan[r][c] = { kind: "line", d: at(r, c) * 560 };
         end(plan[r][c].d + BUILD_STEP);
@@ -151,13 +152,14 @@ export function buildFrame(box, { plan, lang }, t) {
       let out = final;
       if (p.kind === "line") out = k === 0 ? "·" : final;
       else if (p.kind === "block") out = final === "░" || k >= 2 ? final : k === 0 ? "░" : "▒";
-      else if (p.kind === "text") out = k < 3 ? scrambleGlyph(r, c, k) : final;
+      else if (p.kind === "text") out = textWidth(final) > 1 ? final : k < 3 ? scrambleGlyph(r, c, k) : final;
       else if (p.kind === "num") {
         const progress = Math.min(1, k / COUNT_STEPS);
         const v = progress >= 1 ? p.tok.value : Number((p.tok.value * progress).toFixed(p.tok.decimals));
         out = format(p.tok, v, lang)[p.k];
       }
       ch[r][c] = out;
+      if (textWidth(out) > 1) ch[r][c + 1] = "";
       cl[r][c] = box.cl[r][c];
     })
   );

@@ -2,6 +2,7 @@
 // Builds traykov.cc/glyph-kit into site/dist with the kit's own renderers. No dependencies:
 // every figure on the site is drawn by the same code the skill runs.
 // Usage: node site/build.mjs
+import { execFileSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -17,6 +18,7 @@ const imp = (p) => import(new URL(`file://${join(kit, p)}`).href);
 
 const { AREAS, KINDS } = await imp("scripts/registry.mjs");
 const { AREA_DOCS, KIND_DOCS } = await import(new URL(`file://${join(root, "tools/docs.mjs")}`).href);
+const { width: textWidth } = await imp("scripts/text.mjs");
 const { body, label } = await imp("scripts/render/text.mjs");
 const { paint } = await imp("scripts/render/paint.mjs");
 const { LIVE, live, stillGrid } = await imp("scripts/live/kinds.mjs");
@@ -44,7 +46,9 @@ const DRAW_URL = process.env.GLYPH_KIT_DRAW_URL ?? "https://traykov.cc/api/glyph
 const TURNSTILE_SITE_KEY = process.env.GLYPH_KIT_TURNSTILE_SITE_KEY ?? "0x4AAAAAAFbX6pR3QiTNlZ6I";
 // Suggestions: three asks, each checked to build the figure its thumbnail shows (traykov.cc/labs/glyph-kit).
 const SUGGESTIONS = [
-  { short: "Signup funnel", kind: "Moving funnel", key: "live:funnel", from: { live: "signup-funnel" },
+  { short: "Bar chart that grows", kind: "Bar chart", key: "moving:barChart", from: { live: "bar-chart" }, ask: "Draw an animated bar chart: Design QA 42, Handoff 17, Research 3. These are sample numbers." },
+  { short: "Retry with backoff", kind: "Retry", key: "moving:retry", from: { live: "retry" }, ask: "Draw a moving retry with exponential backoff: 4 attempts, base 100 ms, factor 2, succeed on attempt 4. Sample data." },
+  { short: "Signup funnel", kind: "Moving funnel", key: "moving:funnel", from: { live: "signup-funnel" },
     ask: "Show signup to paid for the last 30 days as people, not percentages, moving: 12,400 visited, 6,100 signed up, 2,300 activated, 610 paid. These are sample numbers." },
   { short: "Export flow", kind: "Flow with failures", key: "branchFlow", from: { area: "flows" },
     ask: "Map the export flow with its failure paths: open export, check there's data (if not, an empty state that sends you to import data), choose a format, check the file is ready (if not, show an error and go back to choosing a format), then download." },
@@ -75,7 +79,7 @@ const moving = Object.entries(liveSpecs).map(([id, spec]) => {
   const { make, still, summary } = live(spec);
   const grid = stillGrid(make, still);
   const lines = grid.toText().split("\n");
-  return { id, spec, summary, html: grid.toHtml(), cols: Math.max(...lines.map((l) => [...l].length)), rows: lines.length };
+  return { id, spec, summary, html: grid.toHtml(), cols: Math.max(...lines.map(textWidth)), rows: lines.length };
 });
 const m = JSON.parse(readFileSync(join(root, "docs/measurements.json"), "utf8")).rows;
 const med = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
@@ -90,6 +94,8 @@ const stats = {
   tokensHigh: Math.max(...m.map((r) => r.imageTokens))
 };
 const kindCount = Object.keys(KINDS).length;
+const movingCount = Object.values(KINDS).filter(def => def.motion).length;
+const areaCount = Object.keys(AREAS).length;
 // Size of the release zip, when it has been packed (node scripts/pack.mjs); otherwise left out.
 let zipSize = "about 0.5 MB";
 try {
@@ -98,7 +104,7 @@ try {
 const figure = (spec) => `<pre class="grid-figure" role="img" aria-label="${esc(label(spec))}">${paint(body(spec))}</pre>`;
 const stage = (cols, rows, pre) => `<div class="stage" style="--cols:${cols};--rows:${rows}">${pre}</div>`;
 const liveFigure = (mv, depth) => `<figure class="demo"${depth ? ` data-depth="${depth}"` : ""}>
-  <div class="demo__bar"><span class="label">${esc(mv.spec.title)}</span><span class="label">Sample data</span></div>
+  <div class="demo__bar"><span class="label">${esc(mv.spec.title)}</span><span class="label">Sample data</span><button type="button" class="motion-toggle" data-live-toggle hidden aria-pressed="true">Still</button></div>
   ${stage(mv.cols, mv.rows, `<pre class="grid-figure live" role="img" aria-label="${esc(mv.summary)}" data-live="${mv.id}">${mv.html}</pre>`)}
   <figcaption>${esc(mv.spec.intent)}</figcaption>
 </figure>`;
@@ -180,7 +186,7 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
   }
 </script>
 <link rel="stylesheet" href="/style.css">
-${current === "home" ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' : ""}
+${current === "home" && TURNSTILE_SITE_KEY ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' : ""}
 </head>
 <body>
 <header class="top"><div class="shell">
@@ -233,6 +239,7 @@ const builder = `<section class="builder" id="try" aria-label="Builder" data-lay
       <div class="tabs" role="tablist" aria-label="Preview, data or history"><button type="button" role="tab" aria-selected="true" data-tab="preview">Preview</button><button type="button" role="tab" aria-selected="false" data-tab="data">Data</button><button type="button" role="tab" aria-selected="false" data-tab="history">History</button></div>
       <span class="label builder__title" data-try-title>Example · ${esc(exampleSpec.title)}</span>
       <span class="builder__hint" data-try-hint hidden>Scroll sideways to see all of it.</span>
+      <button type="button" class="motion-toggle" data-try-motion hidden aria-pressed="false">Play</button>
       <details class="export" data-try-export><summary>Export</summary><div class="export__menu" data-try-export-menu></div></details>
       <span class="label" data-try-stamp>Sample data</span>
     </div>
@@ -250,7 +257,7 @@ const builder = `<section class="builder" id="try" aria-label="Builder" data-lay
       </form>
     </div>
   </figure>
-  <div class="cf-turnstile" data-sitekey="${TURNSTILE_SITE_KEY}" data-action="glyph-kit" data-appearance="interaction-only" data-theme="auto"></div>
+  ${TURNSTILE_SITE_KEY ? `<div class="cf-turnstile" data-sitekey="${TURNSTILE_SITE_KEY}" data-action="glyph-kit" data-appearance="interaction-only" data-theme="auto"></div>` : ""}
 </section>`;
 
 // ── How to use ─────────────────────────────────────────────────────────────────────────────────
@@ -323,7 +330,7 @@ const GUIDE = [
     when: "A process over time: work coming back, people leaving a funnel, a queue backing up, a rollout and its guard, a state machine, a loading sequence.",
     ask: "Show how work comes back from QA as a moving diagram.",
     run: ["node scripts/glyph-kit.mjs live loop.json --to html", "node scripts/glyph-kit.mjs live loop.json --to markdown"],
-    check: ["Six kinds move: loop, funnel, states, queue, rollout, loading.", "The still frame makes the same point; it's what reduced motion, print and docs show.", "One sentence next to it says what the motion shows.", "Motion specs say what reduced motion shows."]
+    check: [`${movingCount} kinds move, including charts, flows, plans and processes.`, "The still frame makes the same point; it's what reduced motion, print and docs show.", "One sentence next to it says what the motion shows.", "Motion specs say what reduced motion shows."]
   },
   {
     id: "deck", title: "Presentations and pitch decks",
@@ -417,7 +424,7 @@ const home = page({
   content: `
 <section class="hero" aria-labelledby="title">
   <div class="hero__inner" data-depth="0.5" data-lag>
-    <p class="kicker">Free · MIT · ${kindCount + Object.keys(LIVE).length} kinds · v${plugin.version}</p>
+    <p class="kicker">Free · MIT · ${kindCount} kinds · v${plugin.version}</p>
     <h1 id="title">Glyph kit.</h1>
     <div class="hero__body">
       <div class="hero__copy">
@@ -453,12 +460,12 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="moving">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Motion</p><h2 id="moving">Six kinds that move.</h2></header>
-  <div class="gallery">${moving.map((mv) => liveFigure(mv)).join("\n")}</div>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Motion</p><h2 id="moving">${movingCount} kinds that move.</h2></header>
+  <div class="gallery">${moving.slice(0, 6).map((mv) => liveFigure(mv)).join("\n")}</div>
 </section>
 
 <section class="section" aria-labelledby="areas">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Coverage</p><h2 id="areas">${kindCount} kinds. Eight areas.</h2><a class="text-link" href="/kinds/">Every kind</a></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Coverage</p><h2 id="areas">${kindCount} kinds. ${areaCount} areas.</h2><a class="text-link" href="/kinds/">Every kind</a></header>
   <div class="areas">${Object.entries(AREAS).map(([id, area], i) => `<article class="area"><h3>${esc(area.label)}</h3>${figure(examples[id][0])}<p>${Object.values(area.kinds).map((k) => esc(k.label)).join(" · ")}</p></article>`).join("\n")}</div>
 </section>
 
@@ -515,7 +522,7 @@ ${Object.entries(AREAS).map(([id, area]) => {
   const specs = examples[id].filter((s) => (seen.has(s.kind) ? false : seen.add(s.kind)));
   return `<section class="section" id="${id}" aria-labelledby="${id}-title">
   <header class="heading"><h2 id="${id}-title">${esc(area.label)}</h2><p>${esc(AREA_DOCS[id])}</p></header>
-  <div class="areas">${specs.map((s) => `<article class="kind"><h3>${esc(KINDS[s.kind].label)}</h3><p class="kind__when">${esc(KIND_DOCS[s.kind]?.when ?? "")}</p>${figure(s)}${KIND_DOCS[s.kind]?.traps ? `<p class="kind__watch">Watch for: ${esc(KIND_DOCS[s.kind].traps)}</p>` : ""}</article>`).join("\n")}</div>
+  <div class="areas">${specs.map((s) => `<article class="kind"><h3>${esc(KINDS[s.kind].label)}</h3>${KINDS[s.kind].motion ? '<span class="label">Moves</span>' : ""}<p class="kind__when">${esc(KIND_DOCS[s.kind]?.when ?? "")}</p>${figure(s)}${KIND_DOCS[s.kind]?.traps ? `<p class="kind__watch">Watch for: ${esc(KIND_DOCS[s.kind].traps)}</p>` : ""}</article>`).join("\n")}</div>
 </section>`;
 }).join("\n")}
 <section class="section" id="moving" aria-labelledby="moving-title">
@@ -527,6 +534,12 @@ ${Object.entries(AREAS).map(([id, area]) => {
 /** Root-relative links in a page, moved under BASE. External links are left alone. */
 const based = (html) => html.replace(/(href|src)="\/(?!\/|_vercel\/)/g, `$1="${BASE}/`); // Vercel's own paths stay at the root
 
+// Refresh standalone examples through the CLI, from the same specs as the gallery.
+for (const id of Object.keys(liveSpecs)) {
+  const html = execFileSync(process.execPath, [join(kit, "scripts/glyph-kit.mjs"), "live", join(kit, "examples/live", id + ".json"), "--to", "html"], { encoding: "utf8", maxBuffer: 8 * 1024 * 1024 });
+  writeFileSync(join(root, "site/public/examples/live", id + ".html"), html);
+}
+
 // ── Write ──────────────────────────────────────────────────────────────────────────────────────
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(join(out, "kinds"), { recursive: true });
@@ -536,11 +549,12 @@ mkdirSync(join(out, "how-to-use"), { recursive: true });
 writeFileSync(join(out, "how-to-use/index.html"), based(guide));
 cpSync(join(root, "site/src/style.css"), join(out, "style.css"));
 for (const f of ["app.js", "showcase.js", "showcase-core.mjs", "try.js", "parallax.js", "guide-motion.js"]) cpSync(join(root, "site/src", f), join(out, f));
+writeFileSync(join(out, "showcase-core.mjs"), readFileSync(join(root, "site/src/showcase-core.mjs"), "utf8").replaceAll("../../skills/glyph-kit/scripts/", "./kit/"));
 cpSync(join(root, "site/src/fonts"), join(out, "fonts"), { recursive: true });
 cpSync(join(root, "site/public"), out, { recursive: true });
 cpSync(join(kit, "assets/icon.svg"), join(out, "icon.svg"));
 // The browser modules the moving diagrams need, at the same relative paths as in the kit.
-const COMPUTER_ONLY = ["build-reference.mjs", "data.mjs", "glyph-kit.mjs", "lint.mjs", "measure.mjs", "live/html.mjs", "render/export.mjs"];
+const COMPUTER_ONLY = ["build-reference.mjs", "data.mjs", "glyph-kit.mjs", "lint.mjs", "measure.mjs", "live/html.mjs", "render/export.mjs", "render/font.mjs"];
 cpSync(join(kit, "scripts"), join(out, "kit"), {
   recursive: true,
   filter: (p) => {
@@ -558,7 +572,7 @@ for (const area of Object.keys(AREAS)) for (const spec of examples[area]) {
 }
 for (const spec of Object.values(liveSpecs)) {
   const { make, still } = live(spec);
-  skeletons[`live:${spec.kind}`] = stillGrid(make, still).toText();
+  skeletons[`moving:${spec.kind}`] = stillGrid(make, still).toText();
 }
 writeFileSync(join(out, "skeletons.json"), JSON.stringify(skeletons));
 console.log(`site/dist: ${readdirSync(out).length} entries, ${moving.length} moving diagrams, ${kindCount} kinds`);

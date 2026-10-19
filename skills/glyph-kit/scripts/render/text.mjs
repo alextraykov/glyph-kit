@@ -5,8 +5,8 @@ import { compact as toAscii } from "../tokens.mjs";
 import { stillGrid } from "../motion/shared.mjs";
 
 /** The diagram as plain text. Made-up data carries a SAMPLE DATA stamp in the figure itself. */
-export function body(spec) {
-  const def = resolve(spec);
+export function body(spec, resolved) {
+  const def = typeof resolved?.render === "function" ? resolved : resolve(spec);
   const options = { ...spec.options, ...(spec.lang ? { lang: spec.lang } : {}) };
   const moving = spec.motion && def.motion ? def.motion(def.data, options) : null;
   const text = moving ? stillGrid(moving.make, moving.still).toText() : def.render(def.data, options);

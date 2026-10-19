@@ -23,11 +23,15 @@ Every artifact the kit makes is described by one JSON object:
 | `intent` | no | Why this artifact exists, in one sentence. Goes into Markdown, HTML and decks; not into the bare text figure. |
 | `source` | when there are numbers | Where the data came from, printed under the figure in every form. A spec whose data holds numbers is refused without one. Starting it with "Illustrative" or "Sample" stamps SAMPLE DATA on the figure. With `"@file"` data and no source, the source names the file. |
 | `label` | no | The sentence screen readers get. Generated from the data when absent. |
-| `options` | no | Layout settings: widths, scales, column labels. |
+| `options` | no | Layout settings: widths, scales, column labels; `path` lists the states to visit for a moving `stateMachine`. |
+| `motion` | no | `true` requests motion when the kind supports it; otherwise the kind stays still. |
+| `lang` | no | A BCP 47 language tag, such as `de` or `tr`, for numbers, casing and export language. |
 
 Each kind also checks its own data and refuses what can't be true, in plain words: a funnel that grows, a value outside its range, a test result outside its interval, a timeline that ends before it starts, dates out of order, a moving state machine whose path skips a transition.
 
 A file may hold one spec or a list of them. Keep specs next to the document that uses them (`docs/specs/*.json`), so the figure, its data and its text change in one commit.
+
+A `funnel` accepts either `[{label, value}]` or `{steps: [{label, value}]}`. Both normalize to the same steps. The builder keeps legacy object-shaped funnels moving unless `motion` is explicitly false. `states` keeps its legacy `{states, transitions, path}` shape; `stateMachine` uses its normal transition list and `options.path`.
 
 ## Rendering
 

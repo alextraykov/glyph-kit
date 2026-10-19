@@ -15,6 +15,7 @@
 // Keys: → / space / click step forward, ← back, Home / End, N notes, F full screen. The address keeps
 // the slide and step (#3.2). Reduced motion: nothing types or prints, the camera cuts. Printing gives
 // one page per slide in its final state.
+import { FONT_CSS } from "./font.mjs";
 import { resolve } from "../registry.mjs";
 import { BASE_CSS, PLAY_JS, esc, fragment, tokensCss } from "./html.mjs";
 import { PAINT_CSS, paintLine } from "./paint.mjs";
@@ -306,7 +307,7 @@ export function renderDeck(deck, { title: titleOverride, map } = {}) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(d.title)}</title>
 ${map?.stylesheet ? `<link rel="stylesheet" href="${esc(map.stylesheet)}">` : ""}
-<style>${tokensCss(map)}:root{${Object.entries(theme).map(([k, v]) => `--gk-${k}:${v}`).join(";")}}${BASE_CSS}${DECK_CSS}${PAINT_CSS("--gk-deck-")}</style>
+<style>${FONT_CSS}${tokensCss(map)}:root{${Object.entries(theme).map(([k, v]) => `--gk-${k}:${v}`).join(";")}}${BASE_CSS}${DECK_CSS}${PAINT_CSS("--gk-deck-")}</style>
 </head>
 <body>
 <main class="gk-deck"><div class="gk-stagebox">

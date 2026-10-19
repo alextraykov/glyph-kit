@@ -1,4 +1,4 @@
-import { motionCanvas, motionFactory, motionMarks, motionCounters, motionProgress, growBar, countUp, timeCursor } from "./shared.mjs";
+import { motionCanvas, motionFactory, motionMarks, motionCounters, motionProgress, staggerDelay, growBar, countUp, timeCursor } from "./shared.mjs";
 
 function metricMotion(data, options, render, mode) {
   const canvas = motionCanvas(render(data, options));
@@ -10,7 +10,7 @@ function metricMotion(data, options, render, mode) {
   const active = marks.flatMap((line, row) => line.length ? [row] : []);
   return motionFactory(canvas, (grid, time) => {
     active.forEach((row, index) => {
-      const progress = motionProgress(time, mode === "heat" ? 0 : index * Math.min(8, 60 / Math.max(1, active.length)), 90);
+      const progress = motionProgress(time, mode === "heat" ? 0 : staggerDelay(index, active.length), 90);
       if (mode === "heat") {
         marks[row].forEach((col) => { const p = motionProgress(time, (row + col) * 0.6, 50); if (p < 1) grid.put(row, col, p > 0.5 ? "░" : "·", "mute"); });
       } else if (mode === "cohort") {
@@ -23,9 +23,9 @@ function metricMotion(data, options, render, mode) {
       } else growBar(grid, row, marks[row], progress, { head: mode === "spark" || mode === "meter" });
       if (mode === "calendar" && progress < 1 && marks[row].length) timeCursor(grid, row, marks[row][0], marks[row].at(-1), progress);
     });
-    counters.forEach((counter) => countUp(grid, counter.row, counter.col, counter.value, motionProgress(time, active.indexOf(counter.row) * 5, 90), counter.size, counter.format));
-    if ((mode === "bar" || mode === "meter") && time < 140 && Math.floor(time / 2) % 2) canvas.matrix.forEach((row, r) => row.forEach((ch, c) => { if (ch === "+") grid.put(r, c, " "); }));
-    if (mode === "meter" && time < 140 && Math.floor(time / 2) % 2) canvas.lines.forEach((line, row) => { const at = line.lastIndexOf(" over"); if (at >= 0) grid.text(row, at, "     "); });
+    counters.forEach((counter) => countUp(grid, counter.row, counter.col, counter.value, motionProgress(time, staggerDelay(active.indexOf(counter.row), active.length), 90), counter.size, counter.format));
+    if ((mode === "bar" || mode === "meter") && time < 48 && Math.floor(time / 12) % 2) canvas.matrix.forEach((row, r) => row.forEach((ch, c) => { if (ch === "+") grid.put(r, c, " "); }));
+    if (mode === "meter" && time < 48 && Math.floor(time / 12) % 2) canvas.lines.forEach((line, row) => { const at = line.lastIndexOf(" over"); if (at >= 0) grid.text(row, at, "     "); });
   });
 }
 

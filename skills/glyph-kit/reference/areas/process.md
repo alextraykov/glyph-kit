@@ -51,6 +51,8 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
 
 </details>
 
+**Motion:** Work travels forward; a share returns for another pass.
+
 **Watch for:** Keep the return share grounded in a source.
 
 ## State machine
@@ -130,6 +132,8 @@ Editing
 
 </details>
 
+**Motion:** A token follows the played path.
+
 **Watch for:** Every step in the path needs a transition.
 
 ## Work queue
@@ -192,6 +196,8 @@ READY      7   DESIGN   4/4   REVIEW   2/2   BUILD    0/4   DONE      12
 
 </details>
 
+**Motion:** Cards wait when the next column is full.
+
 **Watch for:** State each column's limit and time per card.
 
 ## Staged rollout
@@ -242,6 +248,8 @@ limit 2%            ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
 ```
 
 </details>
+
+**Motion:** Stages advance, pause and roll back at a breach.
 
 **Watch for:** A breach must name one of the stages.
 
@@ -303,6 +311,8 @@ limit 2%            ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
 
 </details>
 
+**Motion:** The card develops beside a time ruler.
+
 **Watch for:** Keep phases in time order.
 
 ## Handoff between teams
@@ -361,6 +371,8 @@ Most waiting: Engineering (2)
 
 </details>
 
+**Motion:** Pieces queue at lane boundaries; the lane with most waiting is named.
+
 **Watch for:** Every step must name a listed lane; waiting time cannot be negative.
 
 ## Retry with backoff
@@ -400,6 +412,8 @@ Attempt     Backoff                              Result
 
 </details>
 
+**Motion:** Failures flash and the next gap grows until an attempt succeeds.
+
 **Watch for:** Keep the successful attempt within the attempt count.
 
 ## Cache hit or miss
@@ -437,6 +451,8 @@ Hit rate 75%   TTL 60
 ```
 
 </details>
+
+**Motion:** Hits bounce from the cache; misses visit the origin and both counters advance.
 
 **Watch for:** Write the hit rate as a share from zero to one.
 
@@ -482,6 +498,8 @@ Traffic                         Arrivals   Conversions
 ```
 
 </details>
+
+**Motion:** Seeded packets route by share while arrivals and conversions count up.
 
 **Watch for:** Shares must add up to one; conversions are shares too.
 
@@ -539,5 +557,7 @@ Traffic                         Arrivals   Conversions
 ```
 
 </details>
+
+**Motion:** A clock sweeps the incident; the detection window signals failure and resolution signals success.
 
 **Watch for:** Keep events in time order and include exactly one resolution.

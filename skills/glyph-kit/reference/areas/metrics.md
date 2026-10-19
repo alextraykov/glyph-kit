@@ -56,6 +56,8 @@ Copy       ▎                         <1
 
 </details>
 
+**Motion:** Bars grow in order while values count up; an overflow marker flashes.
+
 **Watch for:** Sort first; one scale per document; value as text on every row.
 
 ## Comparison
@@ -164,6 +166,8 @@ Oct ██████████████████░░░░░░░�
 
 </details>
 
+**Motion:** Measured values fill first, then the projection extends them.
+
 **Watch for:** Say how the projection was made in the legend line.
 
 ## Meter
@@ -196,6 +200,8 @@ Oct ██████████████████░░░░░░░�
 ```
 
 </details>
+
+**Motion:** The meter fills with a blinking lead and marks overflow.
 
 **Watch for:** Over 100%, the bar stays full and the word over says the rest.
 
@@ -239,6 +245,8 @@ requests  ▁▁▁▂▃▃▃▅▆▅▇█  3 → 21
 ```
 
 </details>
+
+**Motion:** The line draws from left to right with a leading marker.
 
 **Watch for:** Print the first and last values; a sparkline has no axis.
 
@@ -306,6 +314,8 @@ wk 3     ░░▓▓▓▓▒▒░░
 
 </details>
 
+**Motion:** A diagonal sweep develops cells to their final levels.
+
 **Watch for:** Five levels is the limit people can tell apart.
 
 ## Calendar strip
@@ -351,6 +361,8 @@ wk 3     ░░▓▓▓▓▒▒░░
 ```
 
 </details>
+
+**Motion:** Days fill from left to right.
 
 **Watch for:** Put date labels over the exact columns they name.
 
@@ -398,6 +410,8 @@ paid       █▌                                 610    5%  ▼ 27% kept
 ```
 
 </details>
+
+**Motion:** People fall through the steps and departures drift out to the side.
 
 **Watch for:** Use the same time window for every step.
 
@@ -458,6 +472,8 @@ Mar 98   ██  ▒▒
 ```
 
 </details>
+
+**Motion:** Rows appear in turn and their retention develops from left to right.
 
 **Watch for:** Newer cohorts have fewer periods; blank is not zero.
 
@@ -566,5 +582,7 @@ support tickets      ▃▁▄█       45  ▲ 13%
 ```
 
 </details>
+
+**Motion:** Trends draw in a stagger while their values count up.
 
 **Watch for:** Up isn't always good: time and tickets should go down. Say which way is better.

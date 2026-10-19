@@ -60,3 +60,7 @@ Lines join the frames they connect: a connector leaves from `┬` in the bottom 
 ## The check
 
 `node scripts/lint.mjs file.md` fails when text touches a box, as well as on unmeasured characters and broken frames. Run it on anything drawn by hand.
+
+## Bounded layouts
+
+Generated figures fit within 80 display cells. Labels are capped at 24 cells with an explicit cut mark, rows at 16 with an omitted-row count. Columns share the available width; layouts that cannot fit return a plain-language error. Padding and wrapping count grapheme cell widths, not UTF-16 length. Positive values stay visible. Moving figures keep the same allocated width on every frame and settle to a readable, deterministic still. `assertFits` and the adversarial frame tests enforce this contract.

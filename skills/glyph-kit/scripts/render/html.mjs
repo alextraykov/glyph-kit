@@ -2,6 +2,7 @@
 // Charts stay text (a labelled <pre>). Wireframes become a working prototype: real controls on an
 // artboard, styled from the design-system map's tokens, each element tagged with the component it
 // stands for, notes pinned to the elements they describe. Motion specs play, with a still for reduced motion.
+import { FONT_CSS } from "./font.mjs";
 import { resolve } from "../registry.mjs";
 import { SPACING } from "./themes.mjs";
 import { isSample } from "../guard.mjs";
@@ -27,7 +28,7 @@ export const DEFAULT_TOKENS = {
   space: "8px",
   radius: "10px",
   font: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
-  mono: 'Menlo, "DejaVu Sans Mono", Consolas, "Cascadia Mono", monospace',
+  mono: '"Departure Mono", Menlo, "DejaVu Sans Mono", Consolas, "Cascadia Mono", monospace',
   durationBase: "200ms",
   easingBase: "cubic-bezier(0.2, 0, 0, 1)"
 };
@@ -283,7 +284,7 @@ const page = ({ title, intent, source, content, text, map, moving = false, lang 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 ${map?.stylesheet ? `<link rel="stylesheet" href="${esc(map.stylesheet)}">` : ""}
-<style>${tokensCss(map)}${BASE_CSS}</style>
+<style>${FONT_CSS}${tokensCss(map)}${BASE_CSS}</style>
 </head>
 <body>
 <header class="gk-top"><span class="gk-chip">Prototype</span><h1>${esc(title)}</h1>${intent ? `<p>${esc(intent)}</p>` : ""}</header>

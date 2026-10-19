@@ -134,7 +134,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 /* A stage holds one figure in its middle, scaled so its widest line fills the stage (each glyph is
    0.64 em wide). --cols and --rows come from the figure; small screens keep a readable size and scroll. */
 .stage { container-type: inline-size; display: grid; place-items: center; min-width: 0; padding: var(--space-6) var(--space-5); overflow-x: auto; background: var(--panel); }
-.stage > .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: clamp(9px, min(calc(100cqi / (var(--cols) * .6364) - .2px), calc(62vh / (var(--rows) * 1.25))), 18px); }
+.stage > .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: var(--px-11); }
 /* Too wide even at the smallest size: it scrolls inside the box, starting from its left edge. */
 .stage:has(> .grid-figure) { justify-items: safe center; }
 
@@ -276,7 +276,7 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 .builder__canvas { height: clamp(460px, 68vh, 640px); background: var(--panel); }
 .builder__canvas > .stage { container-type: size; height: 100%; padding: var(--space-5) var(--space-5) calc(var(--dock) + var(--space-5)); background: transparent; }
 .builder__canvas > .stage[hidden], .builder__data[hidden] { display: none; }
-.builder__canvas > .stage > .grid-figure { font-size: clamp(8px, min(calc(100cqi / (var(--cols) * .6364) - .2px), calc(100cqb / (var(--rows) * 1.25))), 18px); }
+.builder__canvas > .stage > .grid-figure { font-size: var(--px-11); }
 /* The Data view scrolls only in the space above the dock, so nothing sits under the prompt. */
 .builder__data { position: relative; display: grid; grid-template-columns: minmax(14rem, .9fr) minmax(0, 1.4fr); align-content: start; gap: var(--space-3) var(--space-6); height: calc(100% - var(--dock) - var(--space-5) * 2 - var(--space-3)); margin: 0; padding: var(--space-5); overflow: auto; color: var(--ink); font: 400 .92rem/1.5 var(--sans); }
 .data__about, .data__body { display: grid; align-content: start; gap: var(--space-2); min-width: 0; }
@@ -428,3 +428,9 @@ td.is-number .data__input { text-align: right; font-variant-numeric: tabular-num
 .top { padding-top: env(safe-area-inset-top); }
 .shell { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
 footer { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); }
+
+/* Playback uses the same quiet, square control as the kit toolbar. */
+.motion-toggle { min-height: var(--tap); padding: 0 var(--space-3); border: var(--hairline) solid var(--line); border-radius: 0; background: transparent; color: var(--ink); font: 400 var(--px-11)/1 var(--pixel); cursor: pointer; }
+.motion-toggle:hover { border-color: var(--ink); }
+.motion-toggle[hidden] { display: none; }
+@media print { .motion-toggle { display: none; } }

@@ -1,6 +1,10 @@
 import { Grid } from "../live/grid.mjs";
 import { cells, cut, width, padStart } from "../text.mjs";
 
+// Existing 120ms clock; new chart sequences advance six logical steps per tick.
+// A 180-step sequence settles in 3.6s, with a 2.4s readable hold.
+export const MOTION_RATE = 6;
+export const staggerDelay = (index, count, span = 36) => count < 2 ? 0 : span * (1 - 2 ** (-8 * index / (count - 1))) / (1 - 2 ** -8);
 export const cycle = (step, frac = 0, end = 180, period = 300) => Grid.settled ? end : (step % period) + frac;
 export const motionProgress = (time, start = 0, duration = 90) => Math.max(0, Math.min(1, (time - start) / Math.max(1, duration)));
 
@@ -14,7 +18,7 @@ export function motionCanvas(text, extraRows = 0) {
 }
 
 export function motionFactory(canvas, draw, still = 180) {
-  return { still, make: () => (step, frac = 0) => { const grid = canvas.grid(); draw(grid, cycle(step, frac, still, still + 120), step); return grid; } };
+  return { still, make: () => (step, frac = 0) => { const grid = canvas.grid(); draw(grid, cycle(step * MOTION_RATE, frac * MOTION_RATE, still, still + 120), Math.floor(step * MOTION_RATE)); return grid; } };
 }
 
 export function growBar(grid, row, marks, progress, { reverse = false, head = false } = {}) {
@@ -52,7 +56,7 @@ export function motionCounters(canvas, marks, lang) {
     if (!marks[row]?.length) return [];
     const start = marks[row].at(-1) + 1;
     const tail = canvas.matrix[row].slice(start).join("");
-    return [...tail.matchAll(/-?\d+(?:[,.]\d+)*(?:e[+-]?\d+)?/g)].map((match) => ({ row, col: start + width(tail.slice(0, match.index)), size: width(match[0]), value: parse(match[0]), format })).filter((item) => Number.isFinite(item.value));
+    return [...tail.matchAll(/-?\d+(?:[,.]\d+)*(?:e[+-]?\d+)?/g)].filter(match => !/[<>~≈]/u.test(tail.slice(0, match.index))).map((match) => ({ row, col: start + width(tail.slice(0, match.index)), size: width(match[0]), value: parse(match[0]), format })).filter((item) => Number.isFinite(item.value));
   });
 }
 
