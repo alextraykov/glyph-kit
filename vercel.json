@@ -59,7 +59,7 @@
           "value": "glyph-kit.traykov.cc"
         }
       ],
-      "destination": "/glyph-kit/:path/index.html"
+      "destination": "/glyph-kit/:path"
     },
     {
       "source": "/:path*",
