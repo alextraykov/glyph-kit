@@ -8,19 +8,34 @@
   "redirects": [
     {
       "source": "/",
-      "missing": [{ "type": "host", "value": "glyph-kit.traykov.cc" }],
+      "missing": [
+        {
+          "type": "host",
+          "value": "glyph-kit.traykov.cc"
+        }
+      ],
       "destination": "/glyph-kit/",
       "permanent": false
     },
     {
       "source": "/glyph-kit",
-      "has": [{ "type": "host", "value": "glyph-kit.traykov.cc" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "glyph-kit.traykov.cc"
+        }
+      ],
       "destination": "/",
       "permanent": false
     },
     {
       "source": "/glyph-kit/:path([^.]*)",
-      "has": [{ "type": "host", "value": "glyph-kit.traykov.cc" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "glyph-kit.traykov.cc"
+        }
+      ],
       "destination": "/:path",
       "permanent": false
     }
@@ -28,12 +43,32 @@
   "rewrites": [
     {
       "source": "/",
-      "has": [{ "type": "host", "value": "glyph-kit.traykov.cc" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "glyph-kit.traykov.cc"
+        }
+      ],
       "destination": "/glyph-kit/"
     },
     {
+      "source": "/:path(.+)/",
+      "has": [
+        {
+          "type": "host",
+          "value": "glyph-kit.traykov.cc"
+        }
+      ],
+      "destination": "/glyph-kit/:path/index.html"
+    },
+    {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "glyph-kit.traykov.cc" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "glyph-kit.traykov.cc"
+        }
+      ],
       "destination": "/glyph-kit/:path*"
     }
   ]

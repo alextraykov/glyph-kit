@@ -200,3 +200,25 @@ export function fillFrame(box, plan, t, skel) {
   );
   return frame;
 }
+
+// ── Trimming to the ink ──────────────────────────────────────────────────────────────────────────
+// A moving diagram's grid can be wider than what it draws. Centring the grid would then leave the
+// figure off to one side, so each view is cut to the columns its ink uses across all of its frames.
+
+/** The first and last-plus-one columns with ink, over every box given. */
+export function inkBounds(boxes) {
+  let left = Infinity;
+  let right = 0;
+  for (const { ch } of boxes) for (const row of ch) {
+    const first = row.findIndex((c) => c !== " ");
+    if (first < 0) continue;
+    let last = row.length - 1;
+    while (last > first && row[last] === " ") last--;
+    left = Math.min(left, first);
+    right = Math.max(right, last + 1);
+  }
+  return Number.isFinite(left) ? [left, right] : [0, 0];
+}
+
+/** The same box, cut to columns [left, right). */
+export const crop = ({ ch, cl }, [left, right]) => ({ ch: ch.map((r) => r.slice(left, right)), cl: cl.map((r) => r.slice(left, right)) });

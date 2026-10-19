@@ -10,7 +10,7 @@
 import { STEP_MS } from "./kit/live/grid.mjs";
 import { live, stillGrid } from "./kit/live/kinds.mjs";
 import { classify } from "./kit/render/paint.mjs";
-import { blank, buildFrame, cellsFromGrid, cellsFromText, centre, planBuild, toHtml } from "./showcase-core.mjs";
+import { blank, buildFrame, cellsFromGrid, cellsFromText, centre, crop, planBuild, toHtml } from "./showcase-core.mjs";
 
 const HOLD_MS = 4200; // a still view
 const HOLD_LIVE_MS = 6000; // a moving view, long enough to see it move
@@ -110,7 +110,7 @@ if (root && data && !reduce.matches) {
         const step = Math.floor(pos);
         const g = frame(step, pos - step);
         g.toText();
-        return centre(cellsFromGrid(g), H, W);
+        return centre(v.crop ? crop(cellsFromGrid(g), v.crop) : cellsFromGrid(g), H, W);
       }
     };
     view.reset();

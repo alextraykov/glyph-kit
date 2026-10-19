@@ -116,9 +116,17 @@ const showcaseViews = [
 ].map((v) => {
   if (v.live) {
     const { make, still, summary } = live(liveSpecs[v.live]);
+    // The columns this view's ink ever uses, sampled across its motion, so it centres on the drawing.
+    const frame = make();
+    const samples = [];
+    for (let step = 0; step < 900; step++) {
+      const g = frame(step, 0);
+      if (step % 3 === 0) (g.toText(), samples.push(core.cellsFromGrid(g)));
+    }
+    const bounds = core.inkBounds(samples);
     const g = stillGrid(make, still);
     g.toText();
-    return { ...v, label: summary, cells: core.cellsFromGrid(g) };
+    return { ...v, label: summary, crop: bounds, cells: core.crop(core.cellsFromGrid(g), bounds) };
   }
   const text = resolve(v.spec).render(v.spec.data, v.spec.options ?? {});
   return { ...v, text, label: label(v.spec), cells: core.cellsFromText(text, classify) };
@@ -146,7 +154,16 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${SITE}${path}">
-<meta property="og:image" content="${SITE}/images/report-page-1.webp">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Glyph kit">
+<meta property="og:image" content="${SITE}/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Glyph kit. Docs and diagrams as text, for people and AI. A rework loop drawn in block characters.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${esc(title)}">
+<meta name="twitter:description" content="${esc(description)}">
+<meta name="twitter:image" content="${SITE}/og.png">
 <link rel="preload" href="/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <script>
   // The hero's first view builds in. Hide it until the script takes over; never for reduced motion,
@@ -162,7 +179,7 @@ ${current === "home" ? '<script src="https://challenges.cloudflare.com/turnstile
 <body>
 <header class="top"><div class="shell">
   <a class="brand" href="/"><img src="/icon.svg" alt="" width="22" height="22">Glyph kit</a>
-  <nav class="nav" aria-label="Site"><a href="/kinds/"${current === "kinds" ? ' aria-current="page"' : ""}>Kinds</a><a href="${REPO}" aria-label="Star Glyph kit on GitHub">${starLabel}</a><a href="${REPO}/blob/main/CHANGELOG.md">Changes</a><a href="https://traykov.cc">traykov.cc</a></nav>
+  <nav class="nav" aria-label="Site"><a href="/kinds/"${current === "kinds" ? ' aria-current="page"' : ""}>Kinds</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a><a href="${REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changes</a><a href="https://traykov.cc">traykov.cc</a></nav>
 </div></header>
 <main class="shell">
 ${content}
@@ -291,7 +308,7 @@ const home = page({
 
 <section class="section support" aria-labelledby="support">
   <header class="heading"><p class="kicker">07 Support</p><h2 id="support">Free. MIT.</h2></header>
-  <div class="actions"><a class="button" href="${REPO}">★ Star on GitHub</a>${SUPPORT_URL ? `<a class="button button--quiet" href="${esc(SUPPORT_URL)}">Buy me a coffee</a>` : ""}</div>
+  <div class="actions"><a class="button" href="${REPO}" target="_blank" rel="noopener">★ Star on GitHub</a>${SUPPORT_URL ? `<a class="button button--quiet" href="${esc(SUPPORT_URL)}">Buy me a coffee</a>` : ""}</div>
 </section>
 
 <aside class="note" aria-labelledby="note">
