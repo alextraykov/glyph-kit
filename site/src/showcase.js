@@ -2,12 +2,15 @@
 // frame takes the dither press, the same fill as the site's buttons: 8 px cells fill through levels
 // 2 → 4 → 6 → 8 in reading order (steps inside, a curve across), the next view swaps in while the
 // frame is covered, and the cells empty 6 → 4 → 2 → 0 to show it. The figures themselves don't move.
-// It only runs on screen, pauses while pointed at or focused, and stays on the first view for
-// reduced motion. The first view is already in the page, so nothing moves on load.
+// Every view builds in (showcase-core.mjs): lines draw on, words scramble and settle, numbers count
+// up, bars grow. The first view builds when the hero first comes on screen; each later one builds
+// while the press reveals it. Moving views start moving once built.
+// It only runs on screen, pauses while pointed at or focused, and shows the first view as it is,
+// with no motion, for reduced motion.
 import { STEP_MS } from "./kit/live/grid.mjs";
 import { live, stillGrid } from "./kit/live/kinds.mjs";
 import { classify } from "./kit/render/paint.mjs";
-import { cellsFromGrid, cellsFromText, centre, toHtml } from "./showcase-core.mjs";
+import { blank, buildFrame, cellsFromGrid, cellsFromText, centre, planBuild, toHtml } from "./showcase-core.mjs";
 
 const HOLD_MS = 4200; // a still view
 const HOLD_LIVE_MS = 6000; // a moving view, long enough to see it move
@@ -120,6 +123,12 @@ if (root && data && !reduce.matches) {
   let phase = "hold";
   let elapsed = 0;
   let swapped = false;
+  let building = null; // { box, plan, t } while a view builds in
+  let started = false;
+  const build = (k) => {
+    const box = views[k].box();
+    building = { box, plan: planBuild(box), t: 0 };
+  };
   let visible = false;
   let paused = false;
   let last = 0;
@@ -140,14 +149,23 @@ if (root && data && !reduce.matches) {
   const tick = (now) => {
     const dt = last ? Math.min(now - last, 100) : 0;
     last = now;
+    if (!started) {
+      started = true;
+      build(i);
+    }
+    if (building) {
+      building.t += dt;
+      if (building.t >= building.plan.total) {
+        draw(building.box);
+        building = null;
+      } else draw(buildFrame(building.box, building.plan, building.t));
+    } else if (views[i].live) {
+      views[i].advance(dt);
+      draw(views[i].box());
+    }
     if (phase === "hold") {
-      const view = views[i];
-      if (view.live) {
-        view.advance(dt);
-        draw(view.box());
-      }
-      if (!paused) elapsed += dt;
-      if (elapsed >= (view.live ? HOLD_LIVE_MS : HOLD_MS)) {
+      if (!paused && !building) elapsed += dt;
+      if (elapsed >= (views[i].live ? HOLD_LIVE_MS : HOLD_MS)) {
         layout();
         phase = "press";
         elapsed = 0;
@@ -156,16 +174,13 @@ if (root && data && !reduce.matches) {
     } else {
       elapsed += dt;
       if (!swapped && elapsed >= SWAP_AT) {
-        // Covered: swap the view and its words underneath.
+        // Covered: swap the words, and start the next view building in underneath.
         swapped = true;
         i = (i + 1) % views.length;
         views[i].reset();
         label(i);
-        draw(views[i].box());
-      }
-      if (swapped && views[i].live) {
-        views[i].advance(dt);
-        draw(views[i].box());
+        build(i);
+        draw(buildFrame(building.box, building.plan, 0));
       }
       paintPress(elapsed);
       if (elapsed >= PRESS_MS) {
@@ -176,6 +191,10 @@ if (root && data && !reduce.matches) {
     }
     raf = requestAnimationFrame(tick);
   };
+
+  // The first view builds in, so start from an empty box of the same size (the page keeps its height).
+  draw(blank(views[0].box()));
+  document.documentElement.dataset.showcaseState = "ready";
 
   const sync = () => {
     cancelAnimationFrame(raf);

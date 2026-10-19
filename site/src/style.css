@@ -105,6 +105,7 @@ main { display: grid; gap: var(--space-7); padding-block: var(--space-6) var(--s
 
 /* The hero showcase: the dither press covers the whole frame between views. */
 .showcase { position: relative; }
+[data-showcase-state="pending"] [data-showcase-grid] { visibility: hidden; }
 .showcase__press { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 
 /* Measured readings */

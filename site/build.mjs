@@ -114,6 +114,14 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
 <meta property="og:url" content="${SITE}${path}">
 <meta property="og:image" content="${SITE}/images/report-page-1.webp">
 <link rel="preload" href="/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<script>
+  // The hero's first view builds in. Hide it until the script takes over; never for reduced motion,
+  // and never for long: if the script fails, the finished view shows after two seconds.
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    document.documentElement.dataset.showcaseState = "pending";
+    setTimeout(() => { if (document.documentElement.dataset.showcaseState === "pending") document.documentElement.dataset.showcaseState = "ready"; }, 2000);
+  }
+</script>
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
