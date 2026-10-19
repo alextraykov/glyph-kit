@@ -4,5 +4,6 @@
   "installCommand": "",
   "buildCommand": "node site/build.mjs",
   "outputDirectory": "site/dist",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "redirects": [{ "source": "/", "destination": "/glyph-kit/", "permanent": false }]
 }

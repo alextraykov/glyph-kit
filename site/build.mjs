@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Builds glyph-kit.traykov.cc into site/dist with the kit's own renderers. No dependencies:
+// Builds traykov.cc/glyph-kit into site/dist with the kit's own renderers. No dependencies:
 // every figure on the site is drawn by the same code the skill runs.
 // Usage: node site/build.mjs
 import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
@@ -8,7 +8,11 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const kit = join(root, "skills/glyph-kit");
-const out = join(root, "site/dist");
+// The site lives at traykov.cc/glyph-kit: the portfolio's Vercel project passes that path through
+// to this project, so every page and file is built under BASE.
+const BASE = "/glyph-kit";
+const dist = join(root, "site/dist");
+const out = join(dist, BASE.slice(1));
 const imp = (p) => import(new URL(`file://${join(kit, p)}`).href);
 
 const { AREAS, KINDS } = await imp("scripts/registry.mjs");
@@ -22,7 +26,7 @@ const json = (p) => JSON.parse(read(p));
 const plugin = JSON.parse(readFileSync(join(root, ".claude-plugin/plugin.json"), "utf8"));
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const REPO = "https://github.com/alextraykov/glyph-kit";
-const SITE = "https://glyph-kit.traykov.cc";
+const SITE = `https://traykov.cc${BASE}`;
 
 // ── Data ───────────────────────────────────────────────────────────────────────────────────────
 const examples = Object.fromEntries(Object.keys(AREAS).map((a) => [a, json(`examples/${a}.json`)]));
@@ -193,11 +197,14 @@ ${Object.entries(AREAS).map(([id, area]) => {
 </section>`
 });
 
+/** Root-relative links in a page, moved under BASE. External links are left alone. */
+const based = (html) => html.replace(/(href|src)="\/(?!\/)/g, `$1="${BASE}/`);
+
 // ── Write ──────────────────────────────────────────────────────────────────────────────────────
-rmSync(out, { recursive: true, force: true });
+rmSync(dist, { recursive: true, force: true });
 mkdirSync(join(out, "kinds"), { recursive: true });
-writeFileSync(join(out, "index.html"), home);
-writeFileSync(join(out, "kinds/index.html"), kinds);
+writeFileSync(join(out, "index.html"), based(home));
+writeFileSync(join(out, "kinds/index.html"), based(kinds));
 cpSync(join(root, "site/src/style.css"), join(out, "style.css"));
 cpSync(join(root, "site/src/app.js"), join(out, "app.js"));
 cpSync(join(root, "site/src/fonts"), join(out, "fonts"), { recursive: true });

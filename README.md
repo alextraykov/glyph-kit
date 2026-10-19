@@ -55,7 +55,7 @@ Then ask for what you need, the way you'd ask a colleague: "chart these usabilit
 | Motion | Motion timing, motion intent, transition spec, stagger, frame strip, easing tokens |
 | Moving diagrams | Rework loop, funnel, state machine, work queue, staged rollout, loading sequence |
 
-See every one at **[glyph-kit.traykov.cc](https://glyph-kit.traykov.cc)**.
+See every one at **[traykov.cc/glyph-kit](https://traykov.cc/glyph-kit)**.
 
 ## Why text
 

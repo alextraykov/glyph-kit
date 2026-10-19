@@ -1,7 +1,7 @@
 // Moving diagrams play from their still frame while on screen; reduced motion keeps the still.
 // Install commands copy with one click.
-import { live } from "/kit/live/kinds.mjs";
-import { autoplay } from "/kit/live/play.mjs";
+import { live } from "./kit/live/kinds.mjs";
+import { autoplay } from "./kit/live/play.mjs";
 
 const specs = JSON.parse(document.getElementById("live-specs")?.textContent || "{}");
 document.querySelectorAll("[data-live]").forEach((pre) => {

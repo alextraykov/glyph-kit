@@ -1,9 +1,9 @@
 /* Glyph kit site. The visual language of traykov.cc: printed paper, one ink, square corners,
    Departure Mono for headings, labels and every character grid (it draws block and box characters
    at exactly one cell), Geist Sans for reading. Steps inside, curves across; no blur, no slide. */
-@font-face { font-family: "Departure Mono"; src: url("/fonts/DepartureMono-Regular.woff2") format("woff2"); font-display: block; }
-@font-face { font-family: "Geist Sans"; src: url("/fonts/geist-sans-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
-@font-face { font-family: "Geist Sans"; src: url("/fonts/geist-sans-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-display: swap; }
+@font-face { font-family: "Departure Mono"; src: url("fonts/DepartureMono-Regular.woff2") format("woff2"); font-display: block; }
+@font-face { font-family: "Geist Sans"; src: url("fonts/geist-sans-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Geist Sans"; src: url("fonts/geist-sans-latin-500-normal.woff2") format("woff2"); font-weight: 500; font-display: swap; }
 
 :root {
   color-scheme: light;

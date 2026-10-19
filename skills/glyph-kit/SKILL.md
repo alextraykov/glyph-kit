@@ -5,7 +5,7 @@ license: MIT
 metadata:
   version: "0.1.0"
   author: Alexander Traykov
-  homepage: https://glyph-kit.traykov.cc
+  homepage: https://traykov.cc/glyph-kit
 ---
 
 # Glyph kit
