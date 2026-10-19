@@ -159,7 +159,7 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
 <meta property="og:image" content="${SITE}/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Glyph kit. Docs and diagrams as text, for people and AI. A rework loop drawn in block characters.">
+<meta property="og:image:alt" content="The four shades ░▒▓█ above the words Glyph kit, in Departure Mono.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(description)}">
