@@ -20,6 +20,9 @@ const { AREA_DOCS, KIND_DOCS } = await imp("scripts/docs.mjs");
 const { body, label } = await imp("scripts/render/text.mjs");
 const { paint } = await imp("scripts/render/paint.mjs");
 const { LIVE, live, stillGrid } = await imp("scripts/live/kinds.mjs");
+const { resolve } = await imp("scripts/registry.mjs");
+const { classify } = await imp("scripts/render/paint.mjs");
+const core = await import(new URL(`file://${join(root, "site/src/showcase-core.mjs")}`).href);
 
 const read = (p) => readFileSync(join(kit, p), "utf8");
 const json = (p) => JSON.parse(read(p));
@@ -65,6 +68,37 @@ const liveFigure = (mv) => `<figure class="demo">
   <figcaption>${esc(mv.spec.intent)}</figcaption>
 </figure>`;
 
+// ── The hero showcase: views of the kit in one box, swapped with the dither press ───────────────
+const ex = (area, kind) => examples[area].find((sp) => sp.kind === kind);
+const showcaseViews = [
+  { live: "rework-loop", title: "Rework loop · moving", caption: "Where the week goes: about one in three pieces of work comes back from QA." },
+  { spec: ex("wireframes", "screen"), title: "Screen wireframe", caption: "A settings screen. Its notes become behaviour in the prototype." },
+  { spec: ex("metrics", "funnel"), title: "Funnel", caption: "Signup to paid, with what each step keeps." },
+  { live: "save-states", title: "State machine · moving", caption: "Every state of saving a draft, including the failure and the retry." },
+  { spec: ex("motion", "intentCard"), title: "Motion intent", caption: "Why a toast moves, how long, which curve, and what reduced motion shows." },
+  { live: "review-queue", title: "Work queue · moving", caption: "Review takes two at a time, so everything before it waits." },
+  { spec: ex("research", "likert"), title: "Survey answers", caption: "How people rated the export flow, agree against disagree." }
+].map((v) => {
+  if (v.live) {
+    const { make, still, summary } = live(liveSpecs[v.live]);
+    const g = stillGrid(make, still);
+    g.toText();
+    return { ...v, label: summary, cells: core.cellsFromGrid(g) };
+  }
+  const text = resolve(v.spec).render(v.spec.data, v.spec.options ?? {});
+  return { ...v, text, label: label(v.spec), cells: core.cellsFromText(text, classify) };
+});
+const box = {
+  H: Math.max(...showcaseViews.map((v) => core.size(v.cells).rows)),
+  W: Math.max(...showcaseViews.map((v) => core.size(v.cells).cols))
+};
+const showcaseData = { ...box, views: showcaseViews.map(({ cells, spec, ...v }) => v) };
+const showcase = `<figure class="demo showcase" data-showcase>
+  <div class="demo__bar"><span class="label" data-showcase-title>${esc(showcaseViews[0].title)}</span><span class="label"><span data-showcase-count>1 / ${showcaseViews.length}</span> · Sample data</span></div>
+  <pre class="grid-figure live" role="img" aria-label="${esc(showcaseViews[0].label)}" data-showcase-grid>${core.toHtml(core.centre(showcaseViews[0].cells, box.H, box.W))}</pre>
+  <figcaption data-showcase-caption>${esc(showcaseViews[0].caption)}</figcaption>
+</figure>`;
+
 // ── Page shell ─────────────────────────────────────────────────────────────────────────────────
 const page = ({ path, title, description, content, current }) => `<!doctype html>
 <html lang="en">
@@ -92,6 +126,7 @@ ${content}
 </main>
 <footer><div class="shell"><span>Glyph kit ${plugin.version} · MIT · made by <a href="https://traykov.cc">Alexander Traykov</a></span><span><a href="https://traykov.cc/notes/four-characters/">Four characters</a>, the story behind it</span></div></footer>
 <script type="application/json" id="live-specs">${JSON.stringify(liveSpecs).replace(/</g, "\\u003c")}</script>
+<script type="application/json" id="showcase">${JSON.stringify(showcaseData).replace(/</g, "\\u003c")}</script>
 <script type="module" src="/app.js"></script>
 </body>
 </html>
@@ -122,7 +157,7 @@ const home = page({
     <p>A skill for Claude Code and Codex. Research, flows, wireframes, plans and motion, drawn in four shades and a few lines. Code draws them from the numbers, so they're exact, and the same file becomes a deck, a report or a prototype when the work needs one.</p>
     ${install}
   </div>
-  ${liveFigure(hero)}
+  ${showcase}
 </section>
 
 <section class="section" aria-labelledby="cheap">
@@ -213,12 +248,12 @@ mkdirSync(join(out, "kinds"), { recursive: true });
 writeFileSync(join(out, "index.html"), based(home));
 writeFileSync(join(out, "kinds/index.html"), based(kinds));
 cpSync(join(root, "site/src/style.css"), join(out, "style.css"));
-cpSync(join(root, "site/src/app.js"), join(out, "app.js"));
+for (const f of ["app.js", "showcase.js", "showcase-core.mjs"]) cpSync(join(root, "site/src", f), join(out, f));
 cpSync(join(root, "site/src/fonts"), join(out, "fonts"), { recursive: true });
 cpSync(join(root, "site/public"), out, { recursive: true });
 cpSync(join(kit, "assets/icon.svg"), join(out, "icon.svg"));
 // The browser modules the moving diagrams need, at the same relative paths as in the kit.
-for (const f of ["layout.mjs", "guard.mjs", "live/grid.mjs", "live/kinds.mjs", "live/play.mjs"]) {
+for (const f of ["layout.mjs", "guard.mjs", "live/grid.mjs", "live/kinds.mjs", "live/play.mjs", "render/paint.mjs"]) {
   mkdirSync(dirname(join(out, "kit", f)), { recursive: true });
   cpSync(join(kit, "scripts", f), join(out, "kit", f));
 }

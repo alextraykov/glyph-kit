@@ -27,3 +27,5 @@ document.querySelectorAll("[data-copy]").forEach((button) => {
     }, 1600);
   });
 });
+
+import "./showcase.js";
