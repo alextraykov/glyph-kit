@@ -196,7 +196,7 @@ ${content}
 <script type="application/json" id="showcase">${JSON.stringify(showcaseData).replace(/</g, "\\u003c")}</script>
 <script type="module" src="/app.js"></script>
 ${current === "guide" ? '<script type="module" src="/guide-motion.js"></script>' : ""}
-<!-- Visits, through Vercel Web Analytics (switch it on for this project in Vercel). No cookies. -->
+<!-- Vercel Web Analytics - Enable in your Vercel dashboard under Analytics. No cookies. -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
 </html>
