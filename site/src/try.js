@@ -15,6 +15,8 @@ import { classify } from "./kit/render/paint.mjs";
 import { live, stillGrid } from "./kit/live/kinds.mjs";
 import { autoplay } from "./kit/live/play.mjs";
 import { cellsFromGrid, cellsFromText, fillFrame, planBuild, shimmerFrame, skeleton, toHtml } from "./showcase-core.mjs";
+import { figureSvg } from "./kit/render/svg.mjs";
+import { SPACING, palette } from "./kit/render/themes.mjs";
 
 // ── The Data view: the spec laid out to read, not as code ───────────────────────────────────────
 // Title, intent and source first, then the data: a list of records becomes a table, a list of words a
@@ -78,6 +80,117 @@ function renderData(target, spec) {
 }
 const emptyData = (target, text) => target.replaceChildren(el("p", "data__empty", text));
 
+// ── History: figures built here, kept in this browser only ──────────────────────────────────────
+const HISTORY_KEY = "glyph-kit:history";
+const HISTORY_MAX = 20;
+const readHistory = () => {
+  try {
+    const list = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    return Array.isArray(list) ? list.filter((e) => e && e.spec && typeof e.ask === "string") : [];
+  } catch {
+    return [];
+  }
+};
+const writeHistory = (list) => {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, HISTORY_MAX)));
+  } catch {} // storage full or blocked: the builder carries on without it
+};
+const when = (iso) => {
+  const t = new Date(iso);
+  const mins = Math.round((Date.now() - t.getTime()) / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins} min ago`;
+  if (new Date().toDateString() === t.toDateString()) return t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return t.toLocaleDateString([], { day: "numeric", month: "short" });
+};
+
+// ── Export: the figure on screen as text, Markdown, an image or its data ────────────────────────
+/** The figure's text: a still kind's drawing, or a moving kind's still frame. */
+function figureText({ spec, mode }) {
+  if (mode === "moving") {
+    try {
+      const { make, still, summary } = live(spec);
+      return { text: stillGrid(make, still).toText(), aria: summary, still: true };
+    } catch {}
+  }
+  return { text: body(spec), aria: label(spec), still: false };
+}
+/** A standalone SVG, laid out like the kit's own: title, intent, the figure on a panel, the source. */
+function figureImage(spec, text) {
+  const c = palette("paper");
+  const padX = SPACING.figurePadX;
+  const padY = SPACING.figurePadY;
+  const titleH = spec.title ? 48 : 0;
+  const intentH = spec.intent ? 26 : 0;
+  const sourceH = spec.source ? 34 : 0;
+  const fig = figureSvg(text, { colors: c, cell: 10, row: 22, x0: padX * 2, y0: padY + titleH + intentH + padY });
+  const width = Math.max(fig.width + padX * 4, spec.title ? spec.title.length * 11 + padX * 2 : 0);
+  const panelTop = padY + titleH + intentH;
+  const panelH = fig.height + padY * 2;
+  const height = panelTop + panelH + sourceH + padY;
+  const x = (v) => String(v ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+  const sans = `font-family="system-ui, -apple-system, 'Segoe UI', sans-serif"`;
+  return { width, height, svg: `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<defs>${fig.defs}</defs>
+<rect width="100%" height="100%" fill="${c.bg}"/>
+${spec.title ? `<text x="${padX}" y="${padY + 26}" ${sans} font-size="22" font-weight="600" fill="${c.ink}">${x(spec.title)}</text>` : ""}
+${spec.intent ? `<text x="${padX}" y="${padY + titleH + 14}" ${sans} font-size="15" fill="${c.muted}">${x(spec.intent)}</text>` : ""}
+<rect x="${padX}" y="${panelTop}" width="${width - padX * 2}" height="${panelH}" fill="${c.panel}"/>
+<g font-family="Menlo, 'DejaVu Sans Mono', Consolas, monospace" font-size="${(22 * 0.66).toFixed(2)}">${fig.svg}</g>
+${spec.source ? `<text x="${padX}" y="${panelTop + panelH + 24}" ${sans} font-size="12.5" fill="${c.muted}">Source: ${x(spec.source)}</text>` : ""}
+</svg>
+` };
+}
+const fileName = (spec) => (String(spec.title ?? "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "glyph-kit-figure");
+function download(name, blob) {
+  const url = URL.createObjectURL(blob);
+  const a = el("a");
+  a.href = url;
+  a.download = name;
+  document.body.append(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+/** The export formats for a figure. Each returns a Blob; text ones also give the text to copy. */
+function exportsFor(result) {
+  const { spec } = result;
+  const { text, aria, still } = figureText(result);
+  const frame = still ? " (still frame)" : "";
+  const plain = [spec.title, "", text, ...(spec.source ? ["", `Source: ${spec.source}`] : [])].filter((l, i) => i > 0 || l).join("\n");
+  const md = [...(spec.title ? [`### ${spec.title}`, ""] : []), ...(spec.intent ? [spec.intent, ""] : []), "```text", text, "```", "", `*${aria}*`, ...(spec.source ? ["", `Source: ${spec.source}`] : [])].join("\n");
+  const image = figureImage(spec, text);
+  return [
+    { label: `Text${frame}`, ext: "txt", copy: plain, blob: () => new Blob([plain], { type: "text/plain" }) },
+    { label: `Markdown${frame}`, ext: "md", copy: md, blob: () => new Blob([md], { type: "text/markdown" }) },
+    { label: `Image, SVG${frame}`, ext: "svg", blob: () => new Blob([image.svg], { type: "image/svg+xml" }) },
+    { label: `Image, PNG${frame}`, ext: "png", blob: () => svgToPng(image) },
+    { label: "Data", ext: "json", blob: () => new Blob([JSON.stringify(spec, null, 2)], { type: "application/json" }) },
+  ];
+}
+/** The SVG drawn onto a canvas at 2×. Resolves to a PNG, or rejects so the caller can offer the SVG. */
+function svgToPng({ svg, width, height }) {
+  return new Promise((resolveImage, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = width * 2;
+      canvas.height = height * 2;
+      const ctx = canvas.getContext("2d");
+      ctx.scale(2, 2);
+      ctx.drawImage(img, 0, 0);
+      try {
+        canvas.toBlob((blob) => (blob ? resolveImage(blob) : reject(new Error("no png"))), "image/png");
+      } catch (error) {
+        reject(error);
+      }
+    };
+    img.onerror = () => reject(new Error("no png"));
+    img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  });
+}
+
 const PAUSED = "Drawing is paused right now. Try again later.";
 const CANT = "That one couldn't be drawn. Try naming the figure you want, like a funnel or a flow.";
 const TIMEOUT_MS = 45_000;
@@ -113,8 +226,16 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
   const IDLE = "Enter to build";
   const turnstileElement = document.querySelector("#try .cf-turnstile");
   const turnstileToken = () => String(document.querySelector("#try [name='cf-turnstile-response']")?.value ?? "");
+  const historyEl = out.querySelector("[data-try-history]");
+  const exportEl = out.querySelector("[data-try-export]");
+  const exportMenu = out.querySelector("[data-try-export-menu]");
+  const chipsEl = document.querySelector(".builder .chips");
+  const PLACEHOLDER = field.placeholder;
   let busy = false;
   let shown = null; // the last real figure: { result, heading }
+  // The figure the next ask changes. Each change sends only this figure and the new ask, never a
+  // transcript: the server treats it as data (cleanBase) and returns the whole updated figure.
+  let editing = null;
 
   const setStatus = (text, state = "idle") => {
     status.textContent = text || IDLE;
@@ -130,6 +251,10 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     tabs.forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.tab === name)));
     stage.hidden = name !== "preview";
     specOut.hidden = name !== "data";
+    if (historyEl) {
+      historyEl.hidden = name !== "history";
+      if (name === "history") renderHistory();
+    }
   };
   tabs.forEach((tab) => tab.addEventListener("click", () => selectTab(tab.dataset.tab)));
 
@@ -206,6 +331,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     halt();
     const pre = mount(skel, "Figure on its way");
     stage.dataset.state = "skeleton";
+    syncExport();
     if (!shimmer || reduce.matches) return;
     animate((t) => {
       pre.innerHTML = toHtml(shimmerFrame(skel, t));
@@ -236,6 +362,139 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     caption.textContent = spec.intent ?? spec.title ?? "";
   };
 
+  // ── Changing the current figure ───────────────────────────────────────────────────────────────
+  let editChip = null;
+  const setEditing = (result) => {
+    editing = result ? { spec: result.spec, mode: result.mode } : null;
+    editChip?.remove();
+    editChip = null;
+    field.placeholder = editing ? "Change it: rename a step, add a row, make it moving…" : PLACEHOLDER;
+    if (!editing || !chipsEl) return;
+    editChip = el("button", "chip chip--editing");
+    editChip.type = "button";
+    editChip.setAttribute("aria-pressed", "true");
+    editChip.setAttribute("aria-label", `Changing ${editing.spec.title ?? "this figure"}. Click to start a new figure instead.`);
+    editChip.append(el("span", "", `Changing · ${editing.spec.title ?? "this figure"}`), el("span", "chip__x", "×"));
+    editChip.addEventListener("click", () => {
+      setEditing(null);
+      field.focus();
+    });
+    chipsEl.prepend(editChip);
+  };
+
+  // ── History ──────────────────────────────────────────────────────────────────────────────────
+  const remember = (ask, result) => {
+    const entry = { id: Date.now().toString(36), at: new Date().toISOString(), ask, spec: result.spec, mode: result.mode, note: result.note };
+    writeHistory([entry, ...readHistory()]);
+  };
+  let clearTimer = 0;
+  function renderHistory() {
+    if (!historyEl) return;
+    const list = readHistory();
+    if (!list.length) {
+      historyEl.replaceChildren(el("p", "data__empty", "Nothing built yet. Figures you build are kept here, on this device."));
+      return;
+    }
+    const ol = el("ol", "history");
+    for (const entry of list) {
+      const li = el("li", "history__item");
+      const open = el("button", "history__open");
+      open.type = "button";
+      open.append(el("strong", "", entry.spec.title ?? "Figure"), el("span", "history__ask", entry.ask), el("span", "history__when", when(entry.at)));
+      open.addEventListener("click", () => {
+        try {
+          show({ spec: entry.spec, mode: entry.mode }, undefined, { build: false });
+        } catch {
+          setStatus(CANT, "error");
+          return;
+        }
+        field.value = entry.ask;
+        pressChip(null);
+        setEditing({ spec: entry.spec, mode: entry.mode });
+        setStatus(typeof entry.note === "string" ? entry.note : "");
+        selectTab("preview");
+      });
+      const remove = el("button", "history__remove", "×");
+      remove.type = "button";
+      remove.setAttribute("aria-label", `Remove ${entry.spec.title ?? "this figure"} from history`);
+      remove.addEventListener("click", () => {
+        writeHistory(readHistory().filter((e) => e.id !== entry.id));
+        renderHistory();
+      });
+      li.append(open, remove);
+      ol.append(li);
+    }
+    const clear = el("button", "history__clear", "Clear history");
+    clear.type = "button";
+    clear.addEventListener("click", () => {
+      if (clear.dataset.confirm) {
+        writeHistory([]);
+        renderHistory();
+        return;
+      }
+      clear.dataset.confirm = "";
+      clear.textContent = "Clear everything?";
+      clearTimeout(clearTimer);
+      clearTimer = setTimeout(() => {
+        delete clear.dataset.confirm;
+        clear.textContent = "Clear history";
+      }, 3000);
+    });
+    historyEl.replaceChildren(ol, clear, el("p", "history__privacy", "Kept in this browser only. Nothing is sent anywhere."));
+  }
+
+  // ── Export ───────────────────────────────────────────────────────────────────────────────────
+  const canExport = () => Boolean(shown) && stage.dataset.state === "figure" && !busy;
+  const syncExport = () => {
+    if (!exportEl) return;
+    const ok = canExport();
+    exportEl.toggleAttribute("data-disabled", !ok);
+    exportEl.querySelector("summary").setAttribute("aria-disabled", String(!ok));
+    if (!ok) exportEl.open = false;
+  };
+  exportEl?.querySelector("summary").addEventListener("click", (event) => {
+    if (!canExport()) {
+      event.preventDefault();
+      return;
+    }
+    const items = exportsFor(shown.result);
+    exportMenu.replaceChildren(...items.map((item) => {
+      const row = el("div", "export__row");
+      const save = el("button", "export__save", item.label);
+      save.type = "button";
+      save.addEventListener("click", async () => {
+        const name = `${fileName(shown.result.spec)}.${item.ext}`;
+        try {
+          download(name, await item.blob());
+        } catch {
+          // The PNG couldn't be drawn here: give the SVG instead.
+          const svg = items.find((i) => i.ext === "svg");
+          download(`${fileName(shown.result.spec)}.svg`, await svg.blob());
+        }
+        exportEl.open = false;
+      });
+      row.append(save);
+      if (item.copy) {
+        const copyBtn = el("button", "export__copy", "Copy");
+        copyBtn.type = "button";
+        copyBtn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(item.copy);
+            copyBtn.textContent = "Copied";
+          } catch {
+            copyBtn.textContent = "Couldn't copy";
+          }
+          setTimeout(() => (copyBtn.textContent = "Copy"), 1600);
+        });
+        row.append(copyBtn);
+      }
+      return row;
+    }));
+  });
+  document.addEventListener("click", (event) => {
+    if (exportEl?.open && !exportEl.contains(event.target)) exportEl.open = false;
+  });
+
   /** Draw a result: it builds in over its own skeleton, then a moving one plays. */
   const show = (result, heading, { build = true } = {}) => {
     const drawn = prepare(result); // may throw: nothing on screen has changed yet
@@ -244,6 +503,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     stage.dataset.state = "figure";
     describe(result.spec, heading);
     shown = { result, heading };
+    syncExport();
     const done = () => {
       pre.innerHTML = toHtml(drawn.cells);
       if (drawn.play) stopMoving = drawn.play(pre);
@@ -288,6 +548,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
       selectTab("preview");
       field.value = button.dataset.preset;
       field.removeAttribute("data-invalid");
+      setEditing(null);
       pressChip(button);
       field.focus();
       if (busy) return;
@@ -342,6 +603,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     takeOver();
     selectTab("preview");
     busy = true;
+    syncExport();
     submit.disabled = true;
     form.setAttribute("aria-busy", "true");
     setStatus("Picking a figure…");
@@ -349,7 +611,17 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     // A suggestion keeps its own skeleton; a custom ask starts from the generic one. Either shimmers.
     const pressed = chips.some((chip) => chip.getAttribute("aria-pressed") === "true");
     const current = stage.querySelector("pre");
-    if (pressed && stage.dataset.state === "skeleton" && current) showSkeleton(skeleton(cellsFromText(current.textContent, () => [])), { shimmer: true });
+    const base = editing;
+    const ask = field.value;
+    if (base) {
+      let skel;
+      try {
+        skel = skeleton(prepare(base).cells);
+      } catch {
+        skel = skeleton(cellsFromText(GENERIC, () => []));
+      }
+      showSkeleton(skel, { shimmer: true });
+    } else if (pressed && stage.dataset.state === "skeleton" && current) showSkeleton(skeleton(cellsFromText(current.textContent, () => [])), { shimmer: true });
     else showSkeleton(skeleton(cellsFromText(GENERIC, () => [])), { shimmer: true });
     title.textContent = "Building";
     stamp.textContent = "";
@@ -362,7 +634,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
         response = await fetch(form.action, {
           method: "POST",
           headers: { Accept: "text/event-stream, application/json", "Content-Type": "application/json" },
-          body: JSON.stringify({ ask: field.value, "cf-turnstile-response": turnstileToken() }),
+          body: JSON.stringify({ ask, "cf-turnstile-response": turnstileToken(), ...(base ? { base: base.spec } : {}) }),
           signal: timer.signal,
         });
       } catch {
@@ -397,6 +669,8 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
         throw new Error(CANT);
       }
       setStatus(typeof result.note === "string" ? result.note : "");
+      remember(ask, result);
+      setEditing(result);
     } catch (error) {
       restore();
       setStatus(error instanceof Error ? error.message : PAUSED, "error");
@@ -406,6 +680,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
       busy = false;
       submit.disabled = false;
       form.removeAttribute("aria-busy");
+      syncExport();
       const turnstile = Reflect.get(window, "turnstile");
       if (turnstileElement && turnstile?.reset) turnstile.reset(turnstileElement);
     }

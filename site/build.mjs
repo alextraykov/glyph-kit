@@ -221,14 +221,16 @@ const exampleStill = (() => {
 const builder = `<section class="builder" id="try" aria-label="Builder">
   <figure class="builder__preview" data-try-out>
     <div class="builder__bar">
-      <div class="tabs" role="tablist" aria-label="Preview or data"><button type="button" role="tab" aria-selected="true" data-tab="preview">Preview</button><button type="button" role="tab" aria-selected="false" data-tab="data">Data</button></div>
+      <div class="tabs" role="tablist" aria-label="Preview, data or history"><button type="button" role="tab" aria-selected="true" data-tab="preview">Preview</button><button type="button" role="tab" aria-selected="false" data-tab="data">Data</button><button type="button" role="tab" aria-selected="false" data-tab="history">History</button></div>
       <span class="label builder__title" data-try-title>Example · ${esc(exampleSpec.title)}</span>
       <span class="builder__hint" data-try-hint hidden>Scroll sideways to see all of it.</span>
+      <details class="export" data-try-export><summary>Export</summary><div class="export__menu" data-try-export-menu></div></details>
       <span class="label" data-try-stamp>Sample data</span>
     </div>
     <div class="builder__canvas">
       <div class="stage" data-try-stage style="--cols:${exampleStill.cols};--rows:${exampleStill.rows}"><pre class="grid-figure live" role="img" aria-label="${esc(exampleStill.summary)}">${exampleStill.html}</pre></div>
       <div class="builder__data" tabindex="0" data-try-spec hidden><p class="data__empty">Build a figure to see its data.</p></div>
+      <div class="builder__data builder__history" data-try-history hidden></div>
     </div>
     <div class="builder__dock">
       <div class="chips" role="group" aria-label="Start from">${SUGGESTIONS.map((t) => `<button type="button" class="chip" data-preset="${esc(t.ask)}" data-skeleton="${t.key}" data-short="${esc(t.short)}">${esc(t.short)}</button>`).join("")}</div>
