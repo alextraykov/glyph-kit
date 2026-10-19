@@ -5,7 +5,8 @@ import { compact as toAscii } from "../tokens.mjs";
 
 /** The diagram as plain text. Made-up data carries a SAMPLE DATA stamp in the figure itself. */
 export function body(spec) {
-  const text = resolve(spec).render(spec.data, spec.options ?? {});
+  const def = resolve(spec);
+  const text = def.render(def.data, spec.options ?? {});
   return isSample(spec.source) ? stamp(text) : text;
 }
 
@@ -13,7 +14,7 @@ export function body(spec) {
 export function label(spec) {
   if (spec.label) return spec.label;
   const def = resolve(spec);
-  const summary = def.summary ? def.summary(spec.data) : "";
+  const summary = def.summary ? def.summary(def.data) : "";
   return [spec.title ?? def.label, summary].filter(Boolean).join(". ").replace(/\.\./g, ".");
 }
 

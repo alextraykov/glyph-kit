@@ -2,6 +2,7 @@
 // are generated from this file and the examples (node scripts/build-reference.mjs).
 
 export const AREA_DOCS = {
+  process: "Processes over time: work moving between stages, waiting, returning and finishing.",
   research: "Turn interviews, surveys and usability tests into evidence a team can read in a PR or a ticket. Every figure keeps who said it and where it came from.",
   metrics: "Funnels, cohorts, test results and the everyday charts. Numbers are always printed next to the bars, so a reader or a model reads them instead of estimating lengths.",
   flows: "Agree on paths, states and journeys before anyone designs a screen. Text flows are quick to change in review and easy for an agent to turn into routes and state.",
@@ -13,6 +14,11 @@ export const AREA_DOCS = {
 };
 
 export const KIND_DOCS = {
+  loop: { when: "Work that returns to an earlier stage.", traps: "Keep the return share grounded in a source.", motion: "Work travels forward; a share returns for another pass." },
+  states: { when: "A state machine with a path to play.", traps: "Every step in the path needs a transition.", motion: "A token follows the played path." },
+  queue: { when: "Work waiting between limited columns.", traps: "State each column's limit and time per card.", motion: "Cards wait when the next column is full." },
+  rollout: { when: "A staged release with a guard metric.", traps: "A breach must name one of the stages.", motion: "Stages advance, pause and roll back at a breach." },
+  loading: { when: "What appears while a request finishes.", traps: "Keep phases in time order.", motion: "The card develops beside a time ruler." },
   likert: { when: "A survey question answered on a five-point scale, compared across questions.", traps: "Show the counts or percentages; never hide neutral answers, they change the story." },
   themeMatrix: { when: "Synthesis after interviews: which themes came from how many people.", traps: "A theme from one loud participant looks small here, which is the point. Keep participant codes, never names." },
   affinity: { when: "Counting notes per cluster after an affinity session.", traps: "State what was counted (notes, people, sessions) in the title." },

@@ -1,0 +1,306 @@
+# Processes over time
+
+Processes over time: work moving between stages, waiting, returning and finishing.
+
+Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
+
+## Rework loop
+
+`kind: "loop"`
+
+**Use it for** work that returns to an earlier stage.
+
+```text
+                                       8 came back       29 shipped
+
+▓────────┐         ┌─────·░▒▓         ┌────────┐         ░░░░░░░░░░
+▒ DESIGN │░▒▓─────►│ BUILD  │░▒▓─░▒▓─►│   QA   │░▒▓─────►░  SHIP  ░
+░·───────┘         └────────┘         └─▓▒░·───┘         ░░░░░░░░░░
+                        ▲                  │
+                        │                  │
+                        │                  │
+                        └─────▓▒░──────────┘
+                   about 1 in 3 comes back from QA
+
+                                                        SAMPLE DATA
+```
+
+*Where the week goes. Work moves through Design, Build, QA, Ship; about 30% is sent back from QA to Build.*
+
+<details><summary>Spec</summary>
+
+```json
+{
+  "kind": "loop",
+  "data": {
+    "stages": [
+      "Design",
+      "Build",
+      "QA",
+      "Ship"
+    ],
+    "back": {
+      "from": "QA",
+      "to": "Build",
+      "share": 0.3,
+      "label": "about 1 in 3 comes back from QA"
+    }
+  }
+}
+```
+
+</details>
+
+**Watch for:** Keep the return share grounded in a source.
+
+## State machine
+
+`kind: "states"`
+
+**Use it for** a state machine with a path to play.
+
+```text
+Editing
+
+                            ┌───────────── no network ────────────┐
+                            │                                     ▼
+┌─────────┐          ┌─────────┐          ┌─────────┐          ┌─────────┐
+│ EDITING │── save ─►│ SAVING  │─── ok ──►│  SAVED  │          │ FAILED  │
+└─·▓▒░·───┘          └─────────┘          └─────────┘          └─────────┘
+       ▲                    ▲                │                    │
+       │                    └─────────────── retry ───────────────┘
+       │                                     │
+       └──────────────── type ───────────────┘
+
+                                                               SAMPLE DATA
+```
+
+*Saving a draft. States Editing, Saving, Saved, Failed; the token plays the path Editing → Saving → Failed → Saving → Saved → Editing.*
+
+<details><summary>Spec</summary>
+
+```json
+{
+  "kind": "states",
+  "data": {
+    "states": [
+      "Editing",
+      "Saving",
+      "Saved",
+      "Failed"
+    ],
+    "transitions": [
+      {
+        "from": "Editing",
+        "to": "Saving",
+        "label": "save"
+      },
+      {
+        "from": "Saving",
+        "to": "Saved",
+        "label": "ok"
+      },
+      {
+        "from": "Saving",
+        "to": "Failed",
+        "label": "no network"
+      },
+      {
+        "from": "Failed",
+        "to": "Saving",
+        "label": "retry"
+      },
+      {
+        "from": "Saved",
+        "to": "Editing",
+        "label": "type"
+      }
+    ],
+    "path": [
+      "Editing",
+      "Saving",
+      "Failed",
+      "Saving",
+      "Saved",
+      "Editing"
+    ]
+  }
+}
+```
+
+</details>
+
+**Watch for:** Every step in the path needs a transition.
+
+## Work queue
+
+`kind: "queue"`
+
+**Use it for** work waiting between limited columns.
+
+```text
+READY      7   DESIGN   4/4   REVIEW   2/2   BUILD    0/4   DONE      12
+────────────   ────────────   ────────────   ────────────   ────────────
+▒▒▒▒▒ ▒▒▒▒▒    ▒▒▒▒▒ ▒▒▒▒▒    ▓▓▓▓▓ ▓▓▓▓▓                   ▓▓▓▓▓ ▓▓▓▓▓
+▒▒▒▒▒ ▒▒▒▒▒    ▒▒▒▒▒ ▒▒▒▒▒                                  ▓▓▓▓▓ ▓▓▓▓▓
+▒▒▒▒▒ ▒▒▒▒▒                                                 ▓▓▓▓▓ ▓▓▓▓▓
+▒▒▒▒▒                                                       ▓▓▓▓▓ ▓▓▓▓▓
+                                                            ▓▓▓▓▓ ▓▓▓▓▓
+                                                            ▓▓▓▓▓ ▒▒▒▒▒
+
+
+                              ▲ Review holds everything up
+
+                                                             SAMPLE DATA
+```
+
+*Review is the bottleneck. Columns Ready, Design (limit 4), Review (limit 2), Build (limit 4), Done. Work piles up before the slowest column.*
+
+<details><summary>Spec</summary>
+
+```json
+{
+  "kind": "queue",
+  "data": {
+    "columns": [
+      {
+        "label": "Ready",
+        "pace": 0
+      },
+      {
+        "label": "Design",
+        "limit": 4,
+        "pace": 14
+      },
+      {
+        "label": "Review",
+        "limit": 2,
+        "pace": 30
+      },
+      {
+        "label": "Build",
+        "limit": 4,
+        "pace": 16
+      },
+      {
+        "label": "Done"
+      }
+    ]
+  }
+}
+```
+
+</details>
+
+**Watch for:** State each column's limit and time per card.
+
+## Staged rollout
+
+`kind: "rollout"`
+
+**Use it for** a staged release with a guard metric.
+
+```text
+                    1%         5%           25%         50%       100%
+ROLLOUT             ▓━━━━━━━━━━━▓────────────┼───────────┼───────────┼
+
+PEOPLE              ··············▓······················▓············
+5% on               ·········▓··········▓·····························
+                    ··················································
+                    ········▓·················▓···▓▓········▓·▓·······
+
+
+ERROR RATE
+limit 2%            ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+                    ▒▒▒ ▒▒▒ ▒▒▒ ▒▒ ▒▒▒▒▒▒▒▒ ▒▒  ▒▒▒▒▒   ▒▒▒▒▒▒▒ ▒▒▒▒▒▒
+
+                    holding at 5%, watching
+
+                                                           SAMPLE DATA
+```
+
+*Rolling out the new editor. Rollout to 1%, 5%, 25%, 50%, 100%, guarded by Error rate at 2%; it trips at 25% and rolls back.*
+
+<details><summary>Spec</summary>
+
+```json
+{
+  "kind": "rollout",
+  "data": {
+    "stages": [
+      1,
+      5,
+      25,
+      50,
+      100
+    ],
+    "metric": "Error rate",
+    "limit": 2,
+    "breachAt": 25
+  }
+}
+```
+
+</details>
+
+**Watch for:** A breach must name one of the stages.
+
+## Loading sequence
+
+`kind: "loading"`
+
+**Use it for** what appears while a request finishes.
+
+```text
+┌────────────────────────────────┐      TIME
+│ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ │      ╷        ╷        ╷         ╷
+│ ░░▒▒▒▒▒▒▒░░░░░░░░░░░░░░░░░░░░░ │      ═════════════════════════════════▓
+│ ▒▒▓▓▓▓▓▓▓▒▒▒▒░░░░░░░░░░░░░▒▒▒▒ │      0        500      1000      1500
+│ ▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒░░░░░░▒▒▒▓▓▓▓ │
+│ ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▒▒▒▓▓▓▓▓▓▓ │
+│                                │      ▓ 0ms tap
+│ Weekly report                  │
+│                                │        ▓ 100ms skeleton
+│ Signups up 12% on last week,   │
+│ most of it from the new invite │                   ▓ 700ms text
+│ flow. Activation is flat.      │
+│                                │                          ▓ 1100ms image
+└────────────────────────────────┘      showing: image
+
+                                                               SAMPLE DATA
+```
+
+*Opening a report. In 1800ms: tap at 0ms, skeleton at 100ms, text at 700ms, image at 1100ms.*
+
+<details><summary>Spec</summary>
+
+```json
+{
+  "kind": "loading",
+  "data": {
+    "duration": 1800,
+    "phases": [
+      {
+        "at": 0,
+        "show": "tap"
+      },
+      {
+        "at": 100,
+        "show": "skeleton"
+      },
+      {
+        "at": 700,
+        "show": "text"
+      },
+      {
+        "at": 1100,
+        "show": "image"
+      }
+    ]
+  }
+}
+```
+
+</details>
+
+**Watch for:** Keep phases in time order.

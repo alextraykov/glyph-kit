@@ -1,0 +1,148 @@
+[
+  {
+    "kind": "loading",
+    "title": "Opening a report",
+    "intent": "Agree what someone sees in the first two seconds.",
+    "source": "Illustrative timings.",
+    "data": {
+      "duration": 1800,
+      "phases": [
+        {
+          "at": 0,
+          "show": "tap"
+        },
+        {
+          "at": 100,
+          "show": "skeleton"
+        },
+        {
+          "at": 700,
+          "show": "text"
+        },
+        {
+          "at": 1100,
+          "show": "image"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "queue",
+    "title": "Review is the bottleneck",
+    "intent": "Show why work waits: one column with a low limit and slow reviews.",
+    "source": "Illustrative.",
+    "data": {
+      "columns": [
+        {
+          "label": "Ready",
+          "pace": 0
+        },
+        {
+          "label": "Design",
+          "limit": 4,
+          "pace": 14
+        },
+        {
+          "label": "Review",
+          "limit": 2,
+          "pace": 30
+        },
+        {
+          "label": "Build",
+          "limit": 4,
+          "pace": 16
+        },
+        {
+          "label": "Done"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "loop",
+    "title": "Where the week goes",
+    "intent": "Show how much finished work comes back from QA for another lap.",
+    "source": "Illustrative: sample numbers.",
+    "data": {
+      "stages": [
+        "Design",
+        "Build",
+        "QA",
+        "Ship"
+      ],
+      "back": {
+        "from": "QA",
+        "to": "Build",
+        "share": 0.3,
+        "label": "about 1 in 3 comes back from QA"
+      }
+    }
+  },
+  {
+    "kind": "states",
+    "title": "Saving a draft",
+    "intent": "Agree every state of save, including the failure and the retry, before anything is drawn.",
+    "source": "Illustrative.",
+    "data": {
+      "states": [
+        "Editing",
+        "Saving",
+        "Saved",
+        "Failed"
+      ],
+      "transitions": [
+        {
+          "from": "Editing",
+          "to": "Saving",
+          "label": "save"
+        },
+        {
+          "from": "Saving",
+          "to": "Saved",
+          "label": "ok"
+        },
+        {
+          "from": "Saving",
+          "to": "Failed",
+          "label": "no network"
+        },
+        {
+          "from": "Failed",
+          "to": "Saving",
+          "label": "retry"
+        },
+        {
+          "from": "Saved",
+          "to": "Editing",
+          "label": "type"
+        }
+      ],
+      "path": [
+        "Editing",
+        "Saving",
+        "Failed",
+        "Saving",
+        "Saved",
+        "Editing"
+      ]
+    }
+  },
+  {
+    "kind": "rollout",
+    "title": "Rolling out the new editor",
+    "intent": "Agree the stages, the guard and what happens when it trips.",
+    "source": "Illustrative.",
+    "data": {
+      "stages": [
+        1,
+        5,
+        25,
+        50,
+        100
+      ],
+      "metric": "Error rate",
+      "limit": 2,
+      "breachAt": 25
+    }
+  }
+]

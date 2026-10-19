@@ -4,16 +4,47 @@ import { readFileSync } from "node:fs";
 import { palette } from "../render/themes.mjs";
 import { isSample } from "../guard.mjs";
 import { live, stillGrid } from "./kinds.mjs";
+import { KINDS } from "../registry.mjs";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
-// Module sources without their import and export keywords, joined into one script.
-const inline = () =>
-  ["../layout.mjs", "../guard.mjs", "grid.mjs", "kinds.mjs", "play.mjs"]
-    .map((f) => readFileSync(new URL(f, import.meta.url), "utf8"))
-    .join("\n")
-    .replace(/^import [^;]+;\n/gm, "")
-    .replace(/^export \{[^}]*\};\n/gm, "")
-    .replace(/^export (?=(const|function|class|async))/gm, "");
+// Scope each module while concatenating it, preserving imported aliases and re-exports.
+// The same browser bundle is used by standalone pages and moving deck slides.
+export function inlineMotion() {
+  const modules = new Map();
+  const chunks = [];
+  const fields = (text, separator) => text.split(",").map((part) => part.trim()).filter(Boolean).map((part) => {
+    const [name, alias] = part.split(/\s+as\s+/);
+    return alias ? `${name}${separator}${alias}` : name;
+  }).join(", ");
+  const add = (url) => {
+    if (modules.has(url.href)) return modules.get(url.href);
+    const id = modules.size;
+    modules.set(url.href, id);
+    let source = readFileSync(url, "utf8");
+    const exports = [];
+    source = source.replace(/^import\s*\{([^}]+)\}\s*from\s*["']([^"']+)["'];/gm, (_, names, path) => `const { ${fields(names, ": ")} } = __glyph[${add(new URL(path, url))}];`);
+    source = source.replace(/^export\s*\{([^}]+)\}\s*from\s*["']([^"']+)["'];/gm, (_, names, path) => {
+      const dep = add(new URL(path, url));
+      for (const item of names.split(",")) {
+        const [name, alias] = item.trim().split(/\s+as\s+/);
+        exports.push(`${alias ?? name}: __glyph[${dep}].${name}`);
+      }
+      return "";
+    });
+    source = source.replace(/^export\s*\{([^}]+)\};/gm, (_, names) => {
+      for (const item of names.split(",")) { const [name, alias] = item.trim().split(/\s+as\s+/); exports.push(`${alias ?? name}: ${name}`); }
+      return "";
+    });
+    source = source.replace(/^export (const|function|class|async function)\s+(\w+)/gm, (_, type, name) => { exports.push(name); return `${type} ${name}`; });
+    chunks.push(`__glyph[${id}] = (() => {\n${source}\nreturn { ${exports.join(", ")} };\n})();`);
+    return id;
+  };
+  const motion = add(new URL("../motion.mjs", import.meta.url));
+  const play = add(new URL("play.mjs", import.meta.url));
+  const registry = add(new URL("../registry.mjs", import.meta.url));
+  const table = Object.keys(KINDS).filter((kind) => KINDS[kind].motion).map((kind) => `${JSON.stringify(kind)}: __glyph[${registry}].KINDS[${JSON.stringify(kind)}].motion`).join(", ");
+  return `const __glyph = {};\n${chunks.join("\n")}\nconst { animate, stillGrid, stillText } = __glyph[${motion}];\nconst { autoplay, player } = __glyph[${play}];\nconst MOTION = { ${table} };`;
+}
 
 export function renderLiveHtml(spec, { theme = "paper" } = {}) {
   const p = palette(theme);
@@ -44,9 +75,9 @@ ${isSample(spec.source) ? `<p class="stamp">Sample data: made up to show the ide
 ${spec.source ? `<p>Source: ${esc(spec.source)}</p>` : ""}
 </figure>
 <script type="module">
-${inline()}
-const spec = ${JSON.stringify(spec)};
-const { make, still } = live(spec);
+${inlineMotion()}
+const spec = ${JSON.stringify(spec).replace(/</g, "\\u003c")};
+const { make, still } = animate(spec);
 autoplay(document.querySelector("pre"), make, still);
 </script>
 </body>

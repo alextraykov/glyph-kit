@@ -8,6 +8,7 @@ import { kinds as planning } from "./areas/planning.mjs";
 import { kinds as research } from "./areas/research.mjs";
 import { kinds as systems } from "./areas/systems.mjs";
 import { kinds as wireframes } from "./areas/wireframes.mjs";
+import { kinds as process } from "./areas/process.mjs";
 
 export const AREAS = {
   research: { label: "Research data", kinds: research },
@@ -17,7 +18,8 @@ export const AREAS = {
   wireframes: { label: "Wireframes", kinds: wireframes },
   systems: { label: "Design system", kinds: systems },
   handoff: { label: "Handoff and QA", kinds: handoff },
-  motion: { label: "Motion", kinds: motion }
+  motion: { label: "Motion", kinds: motion },
+  process: { label: "Processes over time", kinds: process }
 };
 
 /** kind → { area, label, render, summary }. A kind listed in two areas keeps its first area. */
@@ -32,6 +34,8 @@ export function resolve(spec) {
   const def = KINDS[spec.kind];
   if (!def) throw new Error(`Unknown kind "${spec.kind}". Known kinds: ${Object.keys(KINDS).join(", ")}.`);
   if (spec.data === undefined) throw new Error(`The ${spec.kind} spec has no data.`);
-  guard(spec, def);
-  return def;
+  if (typeof spec.data === "string" && spec.data.startsWith("@")) guard(spec, { label: def.label });
+  const data = def.normalize ? def.normalize(spec.data) : spec.data;
+  guard({ ...spec, data }, def);
+  return { ...def, data };
 }

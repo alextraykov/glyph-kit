@@ -20,11 +20,14 @@ import { BASE_CSS, PLAY_JS, esc, fragment, tokensCss } from "./html.mjs";
 import { PAINT_CSS, paintLine } from "./paint.mjs";
 import { PALETTES, SPACING } from "./themes.mjs";
 import { body, label } from "./text.mjs";
+import { moves, stillText } from "../motion.mjs";
+import { inlineMotion } from "../live/html.mjs";
 
 const DECK_CSS = `
 html,body{height:100%;margin:0;overflow:hidden;background:var(--gk-deck-bg)}
 body{color:var(--gk-deck-ink)}
 .gk-deck{position:fixed;inset:0 0 36px;overflow:hidden}
+.gl-ok{color:var(--gk-deck-ok)}.gl-fail{color:var(--gk-deck-flag)}.gl-mute{color:var(--gk-deck-muted)}
 .gk-stagebox{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center}
 .gk-slide{position:absolute;inset:0;display:none;grid-template-rows:auto minmax(0,1fr) auto;gap:28px;padding:72px 88px 56px;background:var(--gk-deck-bg)}
 .gk-slide.is-current{display:grid}
@@ -94,14 +97,16 @@ function figureSlide(spec, i, total, map, kicker) {
   const def = resolve(spec);
   const p = spec.present ?? {};
   const screen = spec.kind === "screen" || spec.kind === "responsive";
+  const moving = spec.motion && moves(spec.kind);
   const fig = screen
     ? `<div class="gk-proto">${fragment(spec, { map })}</div>`
-    : `<pre class="gk-fig" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(body(spec))}</pre>`;
+    : `<pre class="gk-fig" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(moving ? stillText(spec) : body(spec))}</pre>`;
   return `<section class="gk-slide" data-steps="${esc(JSON.stringify(p.steps ?? []))}" data-flag="${esc(p.flag ?? "")}" aria-roledescription="slide" aria-label="${i + 1} of ${total}">
 <header><p class="gk-kicker">${esc(kicker || def.label)}</p><h2 class="gk-title">${esc(spec.title ?? def.label)}</h2>${spec.intent ? `<p class="gk-lead">${esc(spec.intent)}</p>` : ""}</header>
 <div class="gk-view"><div class="gk-world">${fig}</div></div>
 <footer><p class="gk-say" aria-live="polite"></p>${spec.source ? `<p class="gk-source-line">Source: ${esc(spec.source)}</p>` : ""}</footer>
 <template class="gk-notes-src">${esc(p.notes ?? "")}</template>
+${moving ? `<template class="gk-motion-src">${esc(JSON.stringify(spec))}</template>` : ""}
 </section>`;
 }
 
@@ -118,7 +123,7 @@ function plainSlide(slide, i, total) {
 }
 
 // Runs in the browser. Kept as a real function so it is syntax-checked with the module.
-function runtime() {
+function runtime(motionApi) {
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const box = document.querySelector(".gk-stagebox");
   const slides = [...document.querySelectorAll(".gk-slide")];
@@ -127,6 +132,8 @@ function runtime() {
   const panel = document.querySelector(".gk-notes-panel");
   let slide = 0;
   let step = 0;
+  let stopMoving = null;
+  let movingSlide = null;
 
   const fitStage = () => {
     const k = Math.min(innerWidth / 1600, (innerHeight - 36) / 900);
@@ -164,6 +171,7 @@ function runtime() {
   // Type the title, type the command, print the figure line by line, flash flagged lines.
   const play = (s) => {
     if (reduce) return;
+    if (s.querySelector(".gk-motion-src")) return;
     const title = s.querySelector(".gk-title");
     if (title) {
       const n = title.textContent.length;
@@ -199,6 +207,20 @@ function runtime() {
   const render = (animate) => {
     const s = slides[slide];
     slides.forEach((x, i) => x.classList.toggle("is-current", i === slide));
+    if (movingSlide !== s) {
+      stopMoving?.();
+      stopMoving = null;
+      movingSlide = s;
+      const template = s.querySelector(".gk-motion-src");
+      if (template && motionApi) {
+        const spec = JSON.parse(template.content.textContent);
+        const pre = s.querySelector(".gk-fig");
+        const { make, still } = motionApi.animate(spec);
+        const stamp = /^\s*(illustrative|sample)/i.test(spec.source ?? "") ? "\n\nSAMPLE DATA" : "";
+        const target = { element: pre, set innerHTML(html) { pre.innerHTML = (html + stamp).split("\n").map((line, i) => `<span class="gk-ln" data-l="${i}">${line || " "}</span>`).join(""); } };
+        stopMoving = motionApi.autoplay(target, make, still);
+      }
+    }
     const steps = stepsOf(s);
     const target = step > 0 ? steps[step - 1] : null;
     camera(s, target);
@@ -269,6 +291,7 @@ export function renderDeck(deck, { title: titleOverride, map } = {}) {
   const d = Array.isArray(deck) ? { title: titleOverride ?? "Deck", slides: deck } : { ...deck, title: titleOverride ?? deck.title };
   const theme = THEMES[d.theme ?? "paper"] ?? THEMES.paper;
   const total = d.slides.length;
+  const moving = d.slides.some((s) => s.motion && moves(s.kind));
   let section = "";
   const html = d.slides
     .map((s, i) => {
@@ -292,7 +315,7 @@ ${html}
 <div class="gk-bar" aria-hidden="true"><span class="gk-ticks"></span><span class="gk-count"></span></div>
 <pre class="gk-notes-panel" hidden aria-label="Presenter notes"></pre>
 <p class="gk-hint" aria-hidden="true">→ next · ← back · N notes · F full screen</p>
-<script>${PLAY_JS}(${runtime.toString()})();</script>
+<script>${PLAY_JS}${moving ? inlineMotion() : ""}\n(${runtime.toString()})(${moving ? "{ animate, autoplay }" : "null"});</script>
 </body>
 </html>
 `;

@@ -47,7 +47,7 @@ export function lintBlock(text, offset = 0) {
   // Every row below must keep a left and right edge in those columns until the bottom corners.
   const rows = lines.map(cells);
   const LEFT = "│║┃├╠┣└╚┗╰";
-  const RIGHT = "│║┃┤╣┫┘╝┛╯▲▼■▒"; // a scroll bar may stand in for the right edge
+  const RIGHT = "│║┃┤╣┫┘╝┛╯▲▼■░▒▓█·"; // scrollbars and the moving grid's held edge markers
   rows.forEach((row, i) => {
     row.forEach((ch, c) => {
       if (!TOP.test(ch)) return;

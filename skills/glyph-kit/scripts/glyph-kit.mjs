@@ -27,6 +27,7 @@ import { loadData } from "./data.mjs";
 import { compact } from "./tokens.mjs";
 import { renderLiveHtml } from "./live/html.mjs";
 import { LIVE, live, stillText } from "./live/kinds.mjs";
+import { moves } from "./motion.mjs";
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -58,10 +59,8 @@ try {
   if (command === "kinds") {
     for (const [area, { label, kinds }] of Object.entries(AREAS)) {
       console.log(`${label} (${area})`);
-      for (const [kind, def] of Object.entries(kinds)) console.log(`  ${kind.padEnd(16)} ${def.label}`);
+      for (const [kind, def] of Object.entries(kinds)) console.log(`  ${kind.padEnd(16)} ${def.label}${moves(kind) ? " (moves)" : ""}`);
     }
-    console.log("Moving diagrams (live)");
-    for (const [kind, def] of Object.entries(LIVE)) console.log(`  ${kind.padEnd(16)} ${def.label}`);
   } else if (command === "live" && files.length === 1) {
     // Moving diagrams: an HTML page that plays, or the still frame as text for docs and tickets.
     const spec = read(files[0]);

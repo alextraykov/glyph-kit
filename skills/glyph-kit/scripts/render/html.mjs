@@ -7,6 +7,8 @@ import { SPACING } from "./themes.mjs";
 import { isSample } from "../guard.mjs";
 import { PAINT_CSS, paint } from "./paint.mjs";
 import { body, label } from "./text.mjs";
+import { moves, stillText } from "../motion.mjs";
+import { inlineMotion, renderLiveHtml } from "../live/html.mjs";
 
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -258,6 +260,7 @@ export function fragment(spec, { map, notes = true } = {}) {
   if (spec.kind === "screen") return sample + screenHtml(spec.data, map, { notes });
   if (spec.kind === "responsive")
     return sample + `<div class="gk-pair">${spec.data.map((s) => `<figure><figcaption>${esc(s.label)}</figcaption>${screenHtml(s.spec, map, { notes: false })}</figure>`).join("")}</div>`;
+  if (spec.motion && moves(spec.kind)) return `<pre class="gk-figure" data-moving role="img" aria-label="${esc(label(spec))}">${esc(stillText(spec))}</pre><template data-motion-spec>${esc(JSON.stringify(spec))}</template>`;
   const figure = `<pre class="gk-figure" role="img" aria-label="${esc(label(spec))}">${paint(body(spec))}</pre>`;
   const demo = motionDemo(spec);
   if (!demo) return figure;
@@ -273,7 +276,7 @@ document.querySelectorAll(".gk-tabs").forEach((t)=>t.addEventListener("click",(e
 document.querySelectorAll("[data-screen]").forEach((screen)=>{const wake=()=>screen.querySelectorAll("[data-until-change]").forEach((b)=>b.disabled=false);screen.addEventListener("input",wake);screen.addEventListener("change",wake);const d=screen.querySelector("[data-dialog]");if(!d)return;d.querySelectorAll("[data-close]").forEach((b)=>b.addEventListener("click",()=>{d.hidden=true;screen.querySelector("[data-reopen]")?.removeAttribute("hidden")}));addEventListener("keydown",(e)=>{if(e.key==="Escape")d.hidden=true});screen.querySelector(".gk-list")?.addEventListener("click",()=>{d.hidden=false})});
 `;
 
-const page = ({ title, intent, source, content, text, map }) => `<!doctype html>
+const page = ({ title, intent, source, content, text, map, moving = false }) => `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -289,17 +292,19 @@ ${map?.stylesheet ? `<link rel="stylesheet" href="${esc(map.stylesheet)}">` : ""
   text ? `<details><summary>The same spec as text</summary><pre class="gk-figure">${esc(text)}</pre></details>` : ""
 }</footer>
 <script>${PLAY_JS}</script>
+${moving ? `<script>${inlineMotion()}\ndocument.querySelectorAll('[data-motion-spec]').forEach(t => { const spec = JSON.parse(t.content.textContent); const {make,still} = animate(spec); autoplay(t.previousElementSibling,make,still); });</script>` : ""}
 </body>
 </html>
 `;
 
 /** A whole self-contained page for one spec, or for a list of specs one after another. */
 export function renderHtml(spec, { map, title: pageTitle } = {}) {
+  if (!Array.isArray(spec) && spec.motion && moves(spec.kind)) return renderLiveHtml(spec);
   if (Array.isArray(spec)) {
     const content = `<div style="display:grid;gap:56px;justify-items:center;width:100%">${spec
       .map((s) => `<section style="display:grid;gap:16px;justify-items:center;width:100%"><h2 style="margin:0;font-size:16px">${esc(s.title ?? resolve(s).label)}</h2>${fragment(s, { map })}</section>`)
       .join("")}</div>`;
-    return page({ title: pageTitle ?? "Glyph kit", content, map });
+    return page({ title: pageTitle ?? "Glyph kit", content, map, moving: spec.some((s) => s.motion && moves(s.kind)) });
   }
   const def = resolve(spec);
   const isScreen = spec.kind === "screen" || spec.kind === "responsive";

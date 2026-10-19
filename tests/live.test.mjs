@@ -3,7 +3,12 @@ import { readFileSync, readdirSync } from "node:fs";
 import { test } from "node:test";
 import { checkBoxes } from "../skills/glyph-kit/scripts/layout.mjs";
 import { Grid } from "../skills/glyph-kit/scripts/live/grid.mjs";
-import { renderLiveHtml } from "../skills/glyph-kit/scripts/live/html.mjs";
+import { inlineMotion, renderLiveHtml } from "../skills/glyph-kit/scripts/live/html.mjs";
+import { animate, moves } from "../skills/glyph-kit/scripts/motion.mjs";
+import { renderHtml } from "../skills/glyph-kit/scripts/render/html.mjs";
+import { renderDeck } from "../skills/glyph-kit/scripts/render/deck.mjs";
+import { body } from "../skills/glyph-kit/scripts/render/text.mjs";
+import { autoplay } from "../skills/glyph-kit/scripts/live/play.mjs";
 import { LIVE, live, stillText } from "../skills/glyph-kit/scripts/live/kinds.mjs";
 import * as pace from "../tools/pace.mjs";
 
@@ -63,4 +68,72 @@ test("standalone HTML carries its own player and the still frame", () => {
   assert.doesNotMatch(html, /^import /m);
   assert.doesNotMatch(html, /^export /m);
   assert.match(html, /prefers-reduced-motion/);
+});
+
+test("the browser bundle evaluates and matches Node for every moving kind", () => {
+  const browser = new Function(`${inlineMotion()}; return { animate, stillGrid, MOTION };`)();
+  assert.deepEqual(Object.keys(browser.MOTION).sort(), Object.keys(LIVE).sort());
+  for (const spec of examples) {
+    const a = animate(spec);
+    const b = browser.animate(spec);
+    assert.equal(browser.stillGrid(b.make, b.still).toText(), stillText({ ...spec, source: "Measured example" }));
+    const af = a.make(), bf = b.make();
+    for (let step = 0; step < 60; step++) assert.equal(af(step, 0.5).toText(), bf(step, 0.5).toText());
+    assert.ok(renderLiveHtml(spec).includes(browser.stillGrid(b.make, b.still).toText().replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")));
+  }
+});
+
+test("funnel normalization keeps still output and motion compatible", () => {
+  const legacy = examples.find((spec) => spec.kind === "funnel");
+  const canonical = { ...legacy, data: legacy.data.steps };
+  assert.equal(body(legacy), body(canonical));
+  assert.equal(stillText(legacy), stillText(canonical));
+  assert.ok(moves("funnel"));
+  assert.equal(moves("screen"), false);
+});
+
+test("moving exports embed specs and current-slide playback with a printable still", () => {
+  const spec = { ...examples[0], motion: true };
+  assert.match(renderHtml(spec), /const MOTION/);
+  const deck = renderDeck([spec, { ...spec, title: "Second" }]);
+  assert.equal((deck.match(/class="gk-motion-src"/g) ?? []).length, 2);
+  assert.match(deck, /stopMoving\?\.\(\)/);
+  assert.match(deck, /beforeprint/);
+  assert.match(deck, /observer\.disconnect\(\)/);
+  for (const script of deck.matchAll(/<script>([\s\S]*?)<\/script>/g)) new Function(script[1]);
+});
+
+test("autoplay releases observers and clocks and settles for print and reduced motion", () => {
+  const keys = ["document", "matchMedia", "requestAnimationFrame", "cancelAnimationFrame", "IntersectionObserver", "addEventListener", "removeEventListener"];
+  const saved = new Map(keys.map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  const events = new Map(), frames = new Map();
+  let change, observer, serial = 0;
+  const media = { matches: false, addEventListener: (_, fn) => { change = fn; }, removeEventListener: () => { change = null; } };
+  try {
+    Object.assign(globalThis, {
+      document: { hidden: false, addEventListener: (key, fn) => events.set(key, fn), removeEventListener: (key) => events.delete(key) },
+      matchMedia: () => media,
+      requestAnimationFrame: (fn) => { frames.set(++serial, fn); return serial; },
+      cancelAnimationFrame: (id) => frames.delete(id),
+      IntersectionObserver: class { constructor(fn) { this.callback = fn; observer = this; } observe() {} disconnect() { this.disconnected = true; } },
+      addEventListener: (key, fn) => events.set(key, fn), removeEventListener: (key) => events.delete(key)
+    });
+    const pre = { innerHTML: "" };
+    const stop = autoplay(pre, () => () => new Grid(1, 3), 1);
+    assert.equal(frames.size, 1);
+    events.get("beforeprint")();
+    assert.equal(frames.size, 0);
+    events.get("afterprint")();
+    assert.equal(frames.size, 1);
+    media.matches = true; change();
+    assert.equal(frames.size, 0);
+    stop();
+    assert.ok(observer.disconnected);
+    assert.equal(events.size, 0);
+    assert.equal(change, null);
+    observer.callback([{ isIntersecting: true }]);
+    assert.equal(frames.size, 0);
+  } finally {
+    for (const key of keys) { const desc = saved.get(key); if (desc) Object.defineProperty(globalThis, key, desc); else delete globalThis[key]; }
+  }
 });

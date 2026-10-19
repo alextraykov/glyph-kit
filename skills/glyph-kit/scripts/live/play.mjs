@@ -40,6 +40,8 @@ export function autoplay(pre, make, still) {
   let visible = true;
   let prev = 0;
   let raf = 0;
+  let stopped = false;
+  let printing = false;
   const loop = (now) => {
     if (prev) p.advance(now - prev);
     prev = now;
@@ -48,15 +50,31 @@ export function autoplay(pre, make, still) {
   const sync = () => {
     cancelAnimationFrame(raf);
     prev = 0;
-    if (reduce?.matches) p.still();
+    if (stopped) return;
+    if (reduce?.matches || printing || document.hidden) p.still();
     else if (visible) raf = requestAnimationFrame(loop);
   };
-  new IntersectionObserver((entries) => {
+  const observer = new IntersectionObserver((entries) => {
     visible = entries.some((e) => e.isIntersecting);
     sync();
-  }).observe(pre);
+  });
+  observer.observe(pre.element ?? pre);
   reduce?.addEventListener?.("change", sync);
+  const beforePrint = () => { printing = true; sync(); };
+  const afterPrint = () => { printing = false; sync(); };
+  addEventListener("beforeprint", beforePrint);
+  addEventListener("afterprint", afterPrint);
+  document.addEventListener("visibilitychange", sync);
   p.still();
   sync();
-  return () => cancelAnimationFrame(raf);
+  return () => {
+    stopped = true;
+    cancelAnimationFrame(raf);
+    observer.disconnect();
+    reduce?.removeEventListener?.("change", sync);
+    removeEventListener("beforeprint", beforePrint);
+    removeEventListener("afterprint", afterPrint);
+    document.removeEventListener("visibilitychange", sync);
+    p.still();
+  };
 }

@@ -51,7 +51,8 @@ if (existsSync(measurements)) {
   const rows = pick.map((k) => r.find((x) => x.kind === k)).filter(Boolean);
   const tbl = rows.map((x) => `| ${x.kind} | ${x.us.toFixed(1)} μs | ${x.textBytes} B | ${kb(x.htmlBytes)} | ${kb(x.pngBytes)} (${x.pngSize}) | ${x.imageTokens} |`).join("\n");
   // Text tokens: the real count when measure.mjs had an API key, otherwise the estimate, labelled as one.
-  const figures = Object.keys(AREAS).flatMap((a) => JSON.parse(readFileSync(join(here, "examples", `${a}.json`), "utf8"))).map((s) => body(s));
+  const measuredKinds = new Set(r.map((row) => row.kind));
+  const figures = Object.keys(AREAS).flatMap((a) => JSON.parse(readFileSync(join(here, "examples", `${a}.json`), "utf8"))).filter((s) => measuredKinds.has(s.kind)).map((s) => body(s));
   const tokenRow = r.every((x) => typeof x.textTokens === "number")
     ? `| Text tokens | Median **${med(r.map((x) => x.textTokens))}** tokens as text and **${med(r.map((x) => x.compactTokens))}** in compact form, against ${med(r.map((x) => x.imageTokens))} for the image, counted with Anthropic's token-counting endpoint. ${r.filter((x) => x.textTokens > x.imageTokens).length} of ${r.length} figures cost more as text than as an image. |`
     : `| Text tokens | **Not measured yet**: counting needs an API key (\`ANTHROPIC_API_KEY\`), which this run didn't have. A rough estimate (\`scripts/tokens.mjs\`: one token per block or box character, one per run of spaces, one per four other characters) puts these figures at a median of about **${med(figures.map(estimateTextTokens))}** tokens, and **${med(figures.map((f) => estimateTextTokens(compact(f))))}** in compact form. That's a guess, not a claim: block characters are rare and three bytes each, so a dense figure can cost more as text than as an image. |`;
