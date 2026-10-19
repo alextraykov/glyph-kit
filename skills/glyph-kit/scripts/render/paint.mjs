@@ -5,6 +5,8 @@
 //   gk-f  frame     box drawing, rulers, · and arrows              (structure)
 //   gk-x  problem   "fails", "blocked", "x missing", "▼▼ bad", "over"
 //   gk-ok success   "AAA", "AA", "done", "ok", "▲▲ great"
+import { cellWidth, graphemes } from "../text.mjs";
+
 const DATA = "█▓▒▀▄▌▐▏▎▍▋▊▉▁▂▃▅▆▇■";
 const EMPTY = "░";
 const FRAME = "─│┌┐└┘├┤┬┴┼━┃┏┓┗┛┣┫┳┻╋═║╔╗╚╝╠╣╦╩╬▕·┊►◄▲▼→↺";
@@ -17,31 +19,26 @@ const roleOf = (ch) => (DATA.includes(ch) ? "d" : ch === EMPTY ? "e" : FRAME.inc
 
 /** The role of every character in a line: "d", "e", "f", "x", "ok" or "" (plain text). */
 export function classify(line) {
-  const chars = [...line];
   const word = Array(line.length).fill("");
   for (const [re, role] of [[SAMPLE_STAMP, "f"], [PROBLEM, "x"], [SUCCESS, "ok"]]) {
     re.lastIndex = 0;
     let m;
     while ((m = re.exec(line))) for (let i = m.index; i < m.index + m[0].length; i++) word[i] ||= role;
   }
-  // word[] is indexed by UTF-16 position; map it onto characters.
+  // word[] is indexed by UTF-16 position; map it onto grapheme cells.
   let pos = 0;
-  return chars.map((ch) => {
-    const role = word[pos] || roleOf(ch);
-    pos += ch.length;
-    return role;
-  });
+  const roles = [];
+  for (const cluster of graphemes(line)) {
+    const role = word[pos] || roleOf(cluster);
+    roles.push(...Array(cellWidth(cluster)).fill(role));
+    pos += cluster.length;
+  }
+  return roles;
 }
 
 /** One line of a figure as HTML with role spans. */
 export function paintLine(line) {
-  // Mark word-level roles first, by character position.
-  const word = Array(line.length).fill("");
-  for (const [re, role] of [[SAMPLE_STAMP, "f"], [PROBLEM, "x"], [SUCCESS, "ok"]]) {
-    re.lastIndex = 0;
-    let m;
-    while ((m = re.exec(line))) for (let i = m.index; i < m.index + m[0].length; i++) word[i] ||= role;
-  }
+  const roles = classify(line);
   let out = "";
   let run = "";
   let runRole = null;
@@ -50,13 +47,15 @@ export function paintLine(line) {
     out += runRole ? `<span class="gk-${runRole}">${esc(run)}</span>` : esc(run);
     run = "";
   };
-  [...line].forEach((ch, i) => {
-    const role = word[i] || (ch === " " ? runRole : roleOf(ch)) || "";
+  let col = 0;
+  graphemes(line).forEach((ch) => {
+    const role = (ch === " " ? runRole : roles[col]) || "";
     if (role !== runRole) {
       flush();
       runRole = role;
     }
     run += ch;
+    col += cellWidth(ch);
   });
   flush();
   return out;

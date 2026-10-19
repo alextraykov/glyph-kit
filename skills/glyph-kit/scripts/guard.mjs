@@ -5,6 +5,8 @@
 //      explains a failure in a sentence a designer understands.
 // No DOM and no file access, so it runs in Node and in a browser.
 
+import { width } from "./text.mjs";
+
 export const SAMPLE = "SAMPLE DATA";
 
 /** True when the source says the numbers are made up. */
@@ -36,8 +38,8 @@ export function guard(spec, { check, label } = {}) {
 /** Add the SAMPLE DATA stamp under a text figure, right-aligned to its width. Line numbers above
  *  it don't move, so deck steps that point at lines still land. */
 export function stamp(text) {
-  const width = Math.max(SAMPLE.length, ...text.split("\n").map((l) => [...l].length));
-  return `${text}\n\n${" ".repeat(width - SAMPLE.length)}${SAMPLE}`;
+  const cols = Math.max(width(SAMPLE), ...text.split("\n").map(width));
+  return `${text}\n\n${" ".repeat(cols - width(SAMPLE))}${SAMPLE}`;
 }
 
 // Checks shared by the kinds. Each returns a sentence, or nothing when the data is fine.

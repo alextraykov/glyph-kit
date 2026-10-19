@@ -2,6 +2,23 @@
 // No dependencies, no DOM. Every function returns a string (lines joined with "\n").
 // The command line lives in glyph-kit.mjs; the registry of kinds in registry.mjs.
 
+import {
+  cellWidth,
+  cells as textCells,
+  center,
+  cut,
+  formatNumber,
+  graphemes,
+  isRtl,
+  padEnd,
+  padStart,
+  upper,
+  width,
+  wrap
+} from "./text.mjs";
+
+export { cellWidth, center, cut, formatNumber, graphemes, isRtl, padEnd, padStart, textCells, upper, width, wrap };
+
 export const SHADES = [" ", "░", "▒", "▓", "█"];
 export const EIGHTHS_LEFT = ["", "▏", "▎", "▍", "▌", "▋", "▊", "▉"]; // horizontal, 1/8 to 7/8 of a cell
 export const EIGHTHS_LOW = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]; // vertical, for sparklines
@@ -13,40 +30,12 @@ export const BOX = {
 
 // Shared helpers, also used by the area modules.
 export const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-export const len = (s) => [...String(s)].length; // every glyph used here is one cell wide
-export const padEnd = (s, n) => String(s) + " ".repeat(Math.max(0, n - len(s)));
-export const padStart = (s, n) => " ".repeat(Math.max(0, n - len(s))) + String(s);
+export const len = width;
 export const join = (lines) => lines.map((l) => l.replace(/\s+$/, "")).join("\n");
-/** Wrap words to a width. A word longer than the width is cut. */
-export const wrap = (text, width) => {
-  const lines = [];
-  for (const para of String(text).split("\n")) {
-    let line = "";
-    for (const word of para.split(/\s+/).filter(Boolean)) {
-      if (!line) line = word;
-      else if (len(line) + 1 + len(word) <= width) line += " " + word;
-      else {
-        lines.push(line);
-        line = word;
-      }
-      while (len(line) > width) {
-        lines.push([...line].slice(0, width).join(""));
-        line = [...line].slice(width).join("");
-      }
-    }
-    lines.push(line);
-  }
-  return lines;
-};
-/** Centre text in a width, filling with a character. */
-export const center = (text, width, fill = " ") => {
-  const gap = Math.max(0, width - len(text));
-  return fill.repeat(Math.floor(gap / 2)) + text + fill.repeat(Math.ceil(gap / 2));
-};
 /** Place text pieces at fixed columns on one line: place([[0, "a"], [10, "b"]]). */
 export const place = (pieces) => {
   const row = [];
-  for (const [col, text] of pieces) [...String(text)].forEach((ch, i) => (row[col + i] = ch));
+  for (const [col, text] of pieces) textCells(text).forEach((ch, i) => (row[col + i] = ch));
   return Array.from(row, (ch) => ch ?? " ").join("").replace(/\s+$/, "");
 };
 
@@ -181,7 +170,7 @@ export function gantt(tracks, { scale, width = 40, unit = "ms", ticks = 3 } = {}
   }
   marks.forEach(([pos, text], i) => {
     const start = i === marks.length - 1 ? Math.max(0, pos - len(text) + 1) : pos;
-    [...text].forEach((ch, k) => (axis[start + k] = ch));
+    textCells(text).forEach((ch, k) => (axis[start + k] = ch));
   });
   return join([...lines, " ".repeat(labelW + 1) + axis.join("")]);
 }

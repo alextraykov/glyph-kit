@@ -41,6 +41,12 @@ test("svg: glyphs become shapes, text keeps its cells", () => {
   assert.ok(!/<text[^>]*> <\/text>/.test(svg), "no text element holds only a space");
 });
 
+test("svg: wide text occupies two cells per cluster", () => {
+  const { svg, width } = figureSvg("界A", { colors: PALETTES.paper, cell: 10, row: 20 });
+  assert.equal(width, 30);
+  assert.match(svg, /textLength="30"[^>]*>界A<\/text>/);
+});
+
 test("svg: double-line corners close", () => {
   const { svg } = figureSvg("╔═╗\n╚═╝", { colors: PALETTES.paper, cell: 10, row: 20 });
   // ╔ at (0,0): the outer line turns at (5 - 1.9, 10 - 1.9).

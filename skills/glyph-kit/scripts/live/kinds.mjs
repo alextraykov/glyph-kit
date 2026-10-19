@@ -2,10 +2,11 @@
 // factory: call it for a fresh diagram, a function (step, frac) → Grid. `still` is the step that
 // stands in for the whole animation when motion is off, in print and in Markdown.
 import { checks, guard, isSample, stamp } from "../guard.mjs";
+import { width as textWidth } from "../text.mjs";
 import { FADE, Grid, changes, clamp, easeInOut, hash, mod, rand } from "./grid.mjs";
 
 const pad = (n, w) => String(n).padStart(w, " ");
-const boxW = (labels, min = 8) => Math.max(min, ...labels.map((l) => l.length + 4));
+const boxW = (labels, min = 8) => Math.max(min, ...labels.map((l) => textWidth(l) + 4));
 
 /* Loop: work moves through stages; some of it is sent back from one stage to an earlier one. ------ */
 // data: { stages: ["Design", "Build", "QA", "Ship"], back: { from: "QA", to: "Build", share: 0.3, label } }
@@ -82,7 +83,7 @@ loop.still = 260;
 // data: { steps: [{ label, value }, ...] } in order, largest first.
 function funnel({ data }) {
   const steps = data.steps;
-  const LABEL = Math.max(...steps.map((s) => s.label.length)) + 3;
+  const LABEL = Math.max(...steps.map((s) => textWidth(s.label))) + 3;
   const BAR = 44;
   const top = steps[0].value;
   const cols = LABEL + BAR + 16;
@@ -262,7 +263,7 @@ function queue({ data }) {
         const last = i === cols.length - 1;
         g.text(0, xs[i], c.label.toUpperCase(), isFull ? "fail" : last ? "ok" : "");
         const cap = c.limit ? `${inCol.length}/${c.limit}` : String(inCol.length);
-        g.scramble(0, xs[i] + W - cap.length, cap, since(`c${i}`, cap, step), step, isFull ? "fail" : "mute");
+        g.scramble(0, xs[i] + W - textWidth(cap), cap, since(`c${i}`, cap, step), step, isFull ? "fail" : "mute");
         for (let x = 0; x < W; x++) g.put(1, xs[i] + x, "─", isFull ? "fail" : "mute");
         // Cards stack from the top; the ones that can't move on show as waiting (▒).
         inCol.sort((a, b) => a.since - b.since).forEach((k, n) => {
@@ -281,7 +282,7 @@ function queue({ data }) {
       const full = (i) => cols[i].limit && count(i) >= cols[i].limit;
       const worst = cols.findLastIndex((c, i) => i > 0 && i < cols.length - 1 && full(i) && !full(i + 1) && count(i - 1) > 0);
       const msg = worst > 0 ? `▲ ${cols[worst].label} holds everything up` : "";
-      g.scramble(H + 2, worst > 0 ? Math.min(xs[worst], width - msg.length) : 0, msg, since("b", msg, step), step, "fail");
+      g.scramble(H + 2, worst > 0 ? Math.min(xs[worst], width - textWidth(msg)) : 0, msg, since("b", msg, step), step, "fail");
       return g;
     };
   };
@@ -327,7 +328,7 @@ function rollout({ data }) {
       const reached = cur.i >= i;
       const label = `${p}%`;
       g.put(1, stageX(i), reached ? "▓" : "┼", reached ? role : "mute");
-      g.text(0, Math.min(GX + COLS - label.length, Math.max(GX, stageX(i) - Math.floor(label.length / 2))), label, reached ? role : "mute");
+      g.text(0, Math.min(GX + COLS - textWidth(label), Math.max(GX, stageX(i) - Math.floor(textWidth(label) / 2))), label, reached ? role : "mute");
     });
     // People: switch on in a stable random order, so a stage's share is always the same people.
     const ease = clamp(t / 8);

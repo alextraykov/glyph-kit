@@ -7,6 +7,7 @@ import { resolve } from "../registry.mjs";
 import { classify } from "./paint.mjs";
 import { SPACING, palette } from "./themes.mjs";
 import { body, label } from "./text.mjs";
+import { cellWidth, graphemes, width as textWidth } from "../text.mjs";
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const n = (v) => +v.toFixed(2);
@@ -32,7 +33,7 @@ export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0 } 
   const c = colors;
   const roleColor = { d: c.data, e: c.data, f: c.frame, x: c.flag, ok: c.ok, "": c.ink };
   const lines = text.split("\n");
-  const cols = Math.max(1, ...lines.map((l) => [...l].length));
+  const cols = Math.max(1, ...lines.map(textWidth));
   const band = row * 0.72; // block height: leaves a gap between rows so charts breathe
   const out = [];
   const patterns = new Map();
@@ -50,23 +51,29 @@ export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0 } 
   };
 
   lines.forEach((line, r) => {
-    const chars = [...line];
+    const chars = graphemes(line);
     const roles = classify(line);
     const top = y0 + r * row;
     const cy = top + row / 2;
     let run = "";
     let runStart = 0;
+    let runWidth = 0;
     let runColor = c.ink;
     const flush = () => {
       if (run.trim()) {
         const x = x0 + runStart * cell;
         out.push(
-          `<text x="${n(x)}" y="${n(cy + row * 0.25)}" fill="${runColor}" textLength="${n(run.length * cell)}" lengthAdjust="spacingAndGlyphs">${esc(run)}</text>`
+          `<text x="${n(x)}" y="${n(cy + row * 0.25)}" fill="${runColor}" textLength="${n(runWidth * cell)}" lengthAdjust="spacingAndGlyphs">${esc(run)}</text>`
         );
       }
       run = "";
+      runWidth = 0;
     };
-    chars.forEach((ch, i) => {
+    let col = 0;
+    chars.forEach((ch) => {
+      const i = col;
+      const cells = cellWidth(ch);
+      col += cells;
       const x = x0 + i * cell;
       const color = roleColor[roles[i]] ?? c.ink;
       const box = BOX[ch];
@@ -86,6 +93,7 @@ export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0 } 
           runColor = color;
         }
         run += ch;
+        runWidth += cells;
         return;
       }
       flush();
@@ -167,7 +175,7 @@ export function renderSvg(spec, { theme = "paper", cell = 10, row = 22, frame = 
   const intentH = frame && spec.intent ? 26 : 0;
   const sourceH = frame && spec.source ? 34 : 0;
   const fig = figureSvg(text, { colors: c, cell, row, x0: padX * 2, y0: padY + titleH + intentH + padY });
-  const width = Math.max(fig.width + padX * 4, frame && spec.title ? spec.title.length * 11 + padX * 2 : 0);
+  const width = Math.max(fig.width + padX * 4, frame && spec.title ? textWidth(spec.title) * 11 + padX * 2 : 0);
   const panelTop = padY + titleH + intentH;
   const panelH = fig.height + padY * 2;
   const height = panelTop + panelH + sourceH + padY;

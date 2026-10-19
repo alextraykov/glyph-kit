@@ -22,6 +22,7 @@ export const FADE = ["▓", "▒", "░", "·"];
 const RAMP = " .:+*#%@";
 const HEADS = { right: "►", left: "◄", down: "▼", up: "▲" };
 import { LAYOUT, fit } from "../layout.mjs";
+import { cellWidth, cells as textCells, graphemes, width } from "../text.mjs";
 
 export { LAYOUT, fit };
 const esc = (c) => (c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === "&" ? "&amp;" : c);
@@ -59,9 +60,30 @@ export class Grid {
   }
   get(r, c) { return this.ch[r]?.[c]; }
   put(r, c, ch, cls = "") {
-    if (this.ch[r]?.[c] === undefined) return;
-    this.ch[r][c] = ch;
-    this.cl[r][c] = cls;
+    const row = this.ch[r];
+    const roles = this.cl[r];
+    if (row?.[c] === undefined) return;
+    if (ch === "") {
+      row[c] = "";
+      roles[c] = cls;
+      return;
+    }
+    if (row[c] === "" && c > 0) {
+      row[c - 1] = " ";
+      roles[c - 1] = "";
+      row[c] = " ";
+    } else if (cellWidth(row[c]) > 1 && row[c + 1] === "") {
+      row[c + 1] = " ";
+      roles[c + 1] = "";
+    }
+    const n = cellWidth(ch);
+    if (n > 1 && row[c + 1] === undefined) return;
+    row[c] = ch;
+    roles[c] = cls;
+    if (n > 1) {
+      row[c + 1] = "";
+      roles[c + 1] = cls;
+    }
   }
   // Light a cell with an intensity (0–1). The strongest light on a cell wins.
   deposit(r, c, v, cls = "") {
@@ -75,32 +97,36 @@ export class Grid {
     if (level) this.deposit(Math.round(r), Math.round(c), level, cls);
     else this.put(Math.round(r), Math.round(c), ch, cls);
   }
-  text(r, c, s, cls = "") { [...s].forEach((ch, i) => this.put(r, c + i, ch, cls)); }
+  text(r, c, s, cls = "") { textCells(s).forEach((ch, i) => this.put(r, c + i, ch, cls)); }
   /** Centre text between columns c0 and c1. */
-  center(r, c0, c1, s, cls = "") { this.text(r, Math.round((c0 + c1 + 1 - s.length) / 2), s, cls); }
+  center(r, c0, c1, s, cls = "") { this.text(r, Math.round((c0 + c1 + 1 - width(s)) / 2), s, cls); }
   /** Centred text that stays on top of anything gliding underneath it. */
   label(r, c0, c1, s, cls = "") {
-    const c = Math.round((c0 + c1 + 1 - s.length) / 2);
+    const c = Math.round((c0 + c1 + 1 - width(s)) / 2);
     this.text(r, c, s, cls);
-    for (let i = 0; i < s.length; i++) this.lum.delete(r * this.cols + c + i);
+    for (let i = 0; i < width(s); i++) this.lum.delete(r * this.cols + c + i);
   }
 
   scramble(r, c, s, age, step, cls = "") {
     if (Grid.settled) age = Infinity;
     const frame = Math.floor(step);
-    [...s].forEach((ch, i) => {
+    let col = c;
+    graphemes(s).forEach((ch, i) => {
+      const n = cellWidth(ch);
       const settled = age >= i * 0.25 + 2;
-      const glyph = settled || ch === " " ? ch : RAMP[1 + Math.floor(hash(frame, i + r * 7) * (RAMP.length - 1))];
-      this.put(r, c + i, glyph, cls);
+      if (settled || ch === " ") this.text(r, col, ch, cls);
+      else for (let k = 0; k < n; k++) this.put(r, col + k, RAMP[1 + Math.floor(hash(frame, col + k + r * 7) * (RAMP.length - 1))], cls);
+      col += n;
     });
   }
 
   boxLines(w, label, style = "solid") {
     const inner = w - 2;
-    const left = Math.floor((inner - label.length) / 2);
+    const labelWidth = width(label);
+    const left = Math.floor((inner - labelWidth) / 2);
     const h = style === "dotted" ? "┄" : "─";
     const v = style === "dotted" ? "┆" : "│";
-    const mid = `${v}${" ".repeat(Math.max(0, left))}${label}${" ".repeat(Math.max(0, inner - left - label.length))}${v}`;
+    const mid = `${v}${" ".repeat(Math.max(0, left))}${label}${" ".repeat(Math.max(0, inner - left - labelWidth))}${v}`;
     return [`┌${h.repeat(inner)}┐`, mid, `└${h.repeat(inner)}┘`];
   }
   box(r, c, w, label, cls = "", style = "solid") {
@@ -110,7 +136,7 @@ export class Grid {
    *  the longest text it will hold. */
   counter(r, c, w, text, cls = "", { age = Infinity, step = 0, style = "solid" } = {}) {
     this.box(r, c, w, "", cls, style);
-    this.scramble(r + 1, c + 1 + Math.floor((w - 2 - [...text].length) / 2), text, age, step, cls);
+    this.scramble(r + 1, c + 1 + Math.floor((w - 2 - width(text)) / 2), text, age, step, cls);
   }
   glideBox(r, c, w, label, cls = "") { this.box(Math.round(r), Math.round(c), w, label, cls); }
   perimeter(r, c, w, h = 3) {

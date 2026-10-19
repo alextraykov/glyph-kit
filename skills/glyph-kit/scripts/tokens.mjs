@@ -1,6 +1,8 @@
 // Token guardrails: a compact plain-ASCII form for model context, a rough cost estimate, and a real
 // count through Anthropic's token-counting endpoint when an API key is set. No dependencies.
 
+import { width } from "./text.mjs";
+
 // Every glyph maps to one ASCII character, so columns and centring stay where they were.
 const COMPACT = {
   "█": "#", "▓": "#", "▒": "=", "░": ":", "·": ".", "■": "#", "□": "o",
@@ -38,7 +40,7 @@ export const imageTokens = (w, h) => Math.ceil(w / 28) * Math.ceil(h / 28);
  *  width ≈ 15.65 px × columns + 64, height ≈ 31.06 px × rows + 73. */
 export function estimateImageTokens(text) {
   const lines = text.split("\n");
-  const cols = Math.max(...lines.map((l) => [...l].length));
+  const cols = Math.max(...lines.map(width));
   return imageTokens(Math.round(cols * 15.65 + 64), Math.round(lines.length * 31.06 + 73));
 }
 
