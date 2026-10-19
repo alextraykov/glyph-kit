@@ -12,7 +12,8 @@
 // can't be drawn here brings the last figure back. A figure too wide for its box scrolls inside it.
 import { body, label } from "./kit/render/text.mjs";
 import { classify } from "./kit/render/paint.mjs";
-import { live, stillGrid } from "./kit/live/kinds.mjs";
+import { LIVE, live, stillGrid } from "./kit/live/kinds.mjs";
+import { KINDS } from "./kit/registry.mjs";
 import { autoplay } from "./kit/live/play.mjs";
 import { cellsFromGrid, cellsFromText, fillFrame, planBuild, shimmerFrame, skeleton, toHtml } from "./showcase-core.mjs";
 import { figureSvg } from "./kit/render/svg.mjs";
@@ -54,7 +55,89 @@ function dataValue(value) {
   }
   return el("p", "data__list", cellText(value));
 }
-function renderData(target, spec) {
+// Editing: values in a table of records or a list can be changed in place. Every keystroke redraws
+// the figure here with the kit's own code (no call to the model); leaving a field keeps the change as
+// a new version. What the kit refuses (a funnel that grows, a number without a source) shows as the
+// kit's own sentence under the data, and the figure stays as it was.
+const isRecords = (v) => Array.isArray(v) && v.length > 0 && v.every((r) => r && typeof r === "object" && !Array.isArray(r));
+const isWords = (v) => Array.isArray(v) && v.length > 0 && v.every((x) => typeof x === "string" || typeof x === "number");
+const parseLike = (old, text) => {
+  if (typeof old !== "number") return { value: text };
+  const n = Number(String(text).replace(/,/g, "").trim());
+  return Number.isFinite(n) && String(text).trim() !== "" ? { value: n } : { error: "That needs to be a number." };
+};
+function editableData(spec, edit, error) {
+  const working = structuredClone(spec);
+  const field = (value, onValue, label) => {
+    const input = el("input", "data__input");
+    input.value = cellText(value);
+    input.setAttribute("aria-label", label);
+    if (typeof value === "number") input.inputMode = "decimal";
+    let timer = 0;
+    input.addEventListener("input", () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const read = parseLike(value, input.value);
+        if (read.error) return (error.textContent = read.error);
+        onValue(read.value);
+        error.textContent = edit.preview(structuredClone(working));
+      }, 120);
+    });
+    input.addEventListener("change", () => {
+      clearTimeout(timer);
+      const read = parseLike(value, input.value);
+      if (read.error) return (error.textContent = read.error);
+      onValue(read.value);
+      error.textContent = edit.commit(structuredClone(working));
+    });
+    return input;
+  };
+  const wrap = el("div", "data__group");
+  if (isRecords(working.data)) {
+    const rows = working.data;
+    const keys = [...new Set(rows.flatMap((row) => Object.keys(row)))];
+    const table = el("table", "data__table");
+    const head = table.createTHead().insertRow();
+    keys.forEach((k) => head.append(el("th", "", words(k))));
+    head.append(el("th", ""));
+    const tbody = table.createTBody();
+    rows.forEach((row, i) => {
+      const tr = tbody.insertRow();
+      keys.forEach((k) => {
+        const v = row[k];
+        const td = el("td", typeof v === "number" ? "is-number" : "");
+        if (v !== null && typeof v === "object") td.textContent = cellText(v);
+        else td.append(field(v ?? "", (next) => (row[k] = next), `${words(k)}, row ${i + 1}`));
+        tr.append(td);
+      });
+      const cell = el("td", "");
+      if (rows.length > 1) {
+        const remove = el("button", "data__row-remove", "×");
+        remove.type = "button";
+        remove.setAttribute("aria-label", `Remove row ${i + 1}`);
+        remove.addEventListener("click", () => {
+          rows.splice(i, 1);
+          error.textContent = edit.commit(structuredClone(working), { rerender: true });
+        });
+        cell.append(remove);
+      }
+      tr.append(cell);
+    });
+    const add = el("button", "data__add", "Add a row");
+    add.type = "button";
+    add.addEventListener("click", () => {
+      rows.push(structuredClone(rows.at(-1)));
+      error.textContent = edit.commit(structuredClone(working), { rerender: true });
+    });
+    wrap.append(table, add);
+  } else if (isWords(working.data)) {
+    const list = el("div", "data__group");
+    working.data.forEach((v, i) => list.append(field(v, (next) => (working.data[i] = next), `Item ${i + 1}`)));
+    wrap.append(list);
+  } else return null;
+  return wrap;
+}
+function renderData(target, spec, edit) {
   const meta = el("dl", "data__meta");
   for (const [key, label] of [["kind", "Kind"], ["title", "Title"], ["intent", "Why"], ["source", "Source"]]) {
     if (spec[key] === undefined) continue;
@@ -74,7 +157,12 @@ function renderData(target, spec) {
   const about = el("div", "data__about");
   about.append(meta);
   const body = el("div", "data__body");
-  body.append(el("h4", "label", "Data"), dataValue(spec.data));
+  const error = el("p", "data__error");
+  error.setAttribute("aria-live", "polite");
+  const editable = edit ? editableData(spec, edit, error) : null;
+  body.append(el("h4", "label", "Data"));
+  if (editable) body.append(el("p", "data__note", "Change any value: the figure redraws here, without asking the model."), editable, error);
+  else body.append(dataValue(spec.data));
   if (spec.options && Object.keys(spec.options).length) body.append(el("h4", "label", "Options"), dataValue(spec.options));
   target.replaceChildren(copy, about, body);
 }
@@ -104,6 +192,24 @@ const when = (iso) => {
   if (new Date().toDateString() === t.toDateString()) return t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   return t.toLocaleDateString([], { day: "numeric", month: "short" });
 };
+
+// ── The conversation: this figure's asks and versions, kept in this browser across reloads ──────────
+const THREAD_KEY = "glyph-kit:thread";
+const emptyThread = () => ({ versions: [], items: [], current: -1 });
+const readThread = () => {
+  try {
+    const t = JSON.parse(localStorage.getItem(THREAD_KEY) || "null");
+    if (t && Array.isArray(t.versions) && Array.isArray(t.items) && t.versions.every((v) => v && v.spec)) return t;
+  } catch {}
+  return emptyThread();
+};
+const writeThread = (t) => {
+  try {
+    localStorage.setItem(THREAD_KEY, JSON.stringify({ ...t, versions: t.versions.slice(-30), items: t.items.slice(-80) }));
+  } catch {}
+};
+/** The kit's name for a figure, for the conversation's replies. */
+const kindName = ({ spec, mode }) => (mode === "moving" ? LIVE[spec.kind]?.label : KINDS[spec.kind]?.label) ?? "Figure";
 
 // ── Export: the figure on screen as text, Markdown, an image or its data ────────────────────────
 /** The figure's text: a still kind's drawing, or a moving kind's still frame. */
@@ -358,9 +464,164 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
   const describe = (spec, heading) => {
     title.textContent = heading ?? spec.title ?? "Your figure";
     stamp.textContent = /^(illustrative|sample)/i.test(spec.source ?? "") ? "Sample data" : "";
-    renderData(specOut, spec);
+    renderData(specOut, spec, dataEdits);
     caption.textContent = spec.intent ?? spec.title ?? "";
   };
+
+  // ── Editing the data by hand ──────────────────────────────────────────────────────────────────
+  /** Put a drawing on the stage without touching the data panel (which may have focus). */
+  const redraw = (drawn) => {
+    halt();
+    const pre = mount(drawn.cells, drawn.aria);
+    stage.dataset.state = "figure";
+    if (drawn.play) stopMoving = drawn.play(pre);
+  };
+  const dataEdits = {
+    preview(next) {
+      if (!shown) return "";
+      try {
+        redraw(prepare({ spec: next, mode: shown.result.mode }));
+        return "";
+      } catch (error) {
+        return error instanceof Error && error.message ? error.message : "That can't be drawn.";
+      }
+    },
+    commit(next, { rerender = false } = {}) {
+      if (!shown) return "";
+      const result = { spec: next, mode: shown.result.mode };
+      let drawn;
+      try {
+        drawn = prepare(result);
+      } catch (error) {
+        restore();
+        return error instanceof Error && error.message ? error.message : "That can't be drawn.";
+      }
+      redraw(drawn);
+      if (!thread.versions.length) startThread(shown.result, null, "Started from this figure.");
+      shown = { result, heading: undefined };
+      title.textContent = next.title ?? "Your figure";
+      addVersion(result, { who: "edit", text: "You changed the data." });
+      setEditing(result);
+      syncExport();
+      enterSplit(true);
+      if (rerender) renderData(specOut, next, dataEdits);
+      return "";
+    }
+  };
+
+  // ── The conversation and its versions ───────────────────────────────────────────────────────
+  const threadEl = out.querySelector("[data-try-thread]");
+  const threadList = out.querySelector("[data-try-thread-list]");
+  const dividerEl = out.querySelector("[data-try-divider]");
+  let thread = readThread();
+  const saveThread = () => writeThread(thread);
+  const startThread = (result, ask, reply) => {
+    thread = { versions: [{ spec: result.spec, mode: result.mode }], items: [...(ask ? [{ who: "you", text: ask }] : []), { who: "kit", text: reply, v: 0 }], current: 0 };
+    saveThread();
+  };
+  const addVersion = (result, item) => {
+    thread.versions.push({ spec: result.spec, mode: result.mode });
+    thread.current = thread.versions.length - 1;
+    thread.items.push({ ...item, v: thread.current });
+    saveThread();
+    renderThread();
+  };
+  const say = (item) => {
+    thread.items.push(item);
+    saveThread();
+    renderThread();
+  };
+  function renderThread() {
+    if (!threadList) return;
+    threadList.replaceChildren(...thread.items.map((item) => {
+      const li = el("li");
+      if (item.who === "you") li.append(el("p", "thread__you", item.text));
+      else if (item.who === "fail") li.append(el("p", "thread__fail", item.text));
+      else {
+        const button = el("button", "thread__kit");
+        button.type = "button";
+        button.append(el("span", "", item.text), el("span", "thread__v", `v${item.v + 1}`));
+        button.setAttribute("aria-current", String(item.v === thread.current));
+        button.setAttribute("aria-label", `${item.text} Version ${item.v + 1}. Show this version.`);
+        button.addEventListener("click", () => openVersion(item.v));
+        li.append(button);
+      }
+      return li;
+    }));
+    threadList.scrollTop = threadList.scrollHeight;
+  }
+  const openVersion = (i) => {
+    const v = thread.versions[i];
+    if (!v) return;
+    try {
+      show({ spec: v.spec, mode: v.mode }, undefined, { build: false });
+    } catch {
+      setStatus(CANT, "error");
+      return;
+    }
+    thread.current = i;
+    saveThread();
+    renderThread();
+    setEditing(v);
+  };
+
+  // ── The layout: docked prompt before the first build, split after it ─────────────────────────
+  const wide = matchMedia("(min-width: 641px)");
+  let dividerTimer = 0;
+  /** The divider, drawn top to bottom (or left to right on phones) a few cells a tick, led by ▒░. */
+  const drawDivider = (animate) => {
+    if (!dividerEl || dividerEl.hidden) return;
+    clearInterval(dividerTimer);
+    const size = parseFloat(getComputedStyle(dividerEl).fontSize) || 11;
+    const vertical = wide.matches;
+    const n = vertical ? Math.max(2, Math.floor(out.clientHeight / (size * 1.25))) : Math.max(2, Math.floor(dividerEl.clientWidth / (size * 0.6364)));
+    const line = vertical ? ["┬", ...Array(n - 2).fill("│"), "┴"] : ["├", ...Array(n - 2).fill("─"), "┤"];
+    const frame = (k) => line.map((ch, i) => (i < k ? ch : i === k ? "▒" : i === k + 1 ? "░" : " ")).join(vertical ? "\n" : "");
+    if (!animate || reduce.matches) return void (dividerEl.textContent = frame(n));
+    let k = 0;
+    const step = vertical ? 3 : 10;
+    dividerEl.textContent = frame(0);
+    dividerTimer = setInterval(() => {
+      k += step;
+      dividerEl.textContent = frame(Math.min(k, n));
+      if (k >= n) clearInterval(dividerTimer);
+    }, 40);
+  };
+  const enterSplit = (animate) => {
+    if (!builderEl || builderEl.dataset.layout === "split") return;
+    builderEl.dataset.layout = "split";
+    if (threadEl) threadEl.hidden = false;
+    if (dividerEl) dividerEl.hidden = false;
+    renderThread();
+    requestAnimationFrame(() => drawDivider(animate));
+  };
+  const leaveSplit = () => {
+    if (!builderEl) return;
+    builderEl.dataset.layout = "intro";
+    if (threadEl) threadEl.hidden = true;
+    if (dividerEl) dividerEl.hidden = true;
+  };
+  let lastSize = "";
+  new ResizeObserver(() => {
+    const size = `${out.clientWidth}x${out.clientHeight}`;
+    if (size !== lastSize && builderEl?.dataset.layout === "split" && !dividerTimer) drawDivider(false);
+    lastSize = size;
+  }).observe(out);
+  wide.addEventListener?.("change", () => drawDivider(false));
+  out.querySelector("[data-try-new]")?.addEventListener("click", () => {
+    thread = emptyThread();
+    saveThread();
+    renderThread();
+    setEditing(null);
+    leaveSplit();
+    shown = null;
+    restore();
+    field.value = "";
+    pressChip(null);
+    setStatus("");
+    selectTab("preview");
+    field.focus();
+  });
 
   // ── Changing the current figure ───────────────────────────────────────────────────────────────
   let editChip = null;
@@ -408,8 +669,11 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
           setStatus(CANT, "error");
           return;
         }
-        field.value = entry.ask;
+        field.value = "";
         pressChip(null);
+        startThread({ spec: entry.spec, mode: entry.mode }, entry.ask, "Opened from history.");
+        enterSplit(true);
+        renderThread();
         setEditing({ spec: entry.spec, mode: entry.mode });
         setStatus(typeof entry.note === "string" ? entry.note : "");
         selectTab("preview");
@@ -564,11 +828,16 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
   });
 
 
-  // The builder starts from an example, already built.
-  try {
-    const example = JSON.parse(document.getElementById("try-example")?.textContent || "null");
-    if (example) show(example, `Example · ${example.spec.title}`, { build: false });
-  } catch {}
+  // The builder picks up the conversation from last time, or starts from an example, already built.
+  if (thread.versions.length) {
+    enterSplit(false);
+    openVersion(Math.min(Math.max(0, thread.current), thread.versions.length - 1));
+  } else {
+    try {
+      const example = JSON.parse(document.getElementById("try-example")?.textContent || "null");
+      if (example) show(example, `Example · ${example.spec.title}`, { build: false });
+    } catch {}
+  }
 
   // ── Asking ────────────────────────────────────────────────────────────────────────────────────
   /** Read a server-sent stream: calls on(name, data) for every event. */
@@ -602,6 +871,9 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     }
     takeOver();
     selectTab("preview");
+    if (!editing) thread = emptyThread(); // a new figure starts a new conversation
+    say({ who: "you", text: field.value });
+    enterSplit(true);
     busy = true;
     syncExport();
     submit.disabled = true;
@@ -670,10 +942,14 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
       }
       setStatus(typeof result.note === "string" ? result.note : "");
       remember(ask, result);
+      addVersion(result, { who: "kit", text: base ? "Changed it." : `${kindName(result)}, drawn.` });
       setEditing(result);
+      field.value = "";
     } catch (error) {
       restore();
       setStatus(error instanceof Error ? error.message : PAUSED, "error");
+      say({ who: "fail", text: error instanceof Error ? error.message : PAUSED });
+      if (!thread.versions.length) leaveSplit();
       flash();
     } finally {
       clearTimeout(timeout);

@@ -353,6 +353,47 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 .prompt__send { flex: none; display: inline-flex; align-items: center; gap: var(--space-1); min-height: 34px; padding: 0 var(--space-3); border: var(--hairline) solid var(--ink); background: var(--ink); color: var(--paper); font: 500 .88rem/1 var(--sans); cursor: pointer; }
 .prompt__send:hover { background: var(--paper); color: var(--ink); }
 .prompt__send:disabled { opacity: .5; cursor: progress; }
+/* After the first build the frame splits: the conversation on the left, the figure on the right,
+   a drawn divider between them. Before it, the prompt sits docked on the preview as above. */
+.builder__thread[hidden], .builder__divider[hidden] { display: none; }
+.builder[data-layout="split"] .builder__preview { grid-template-columns: minmax(15rem, 22rem) auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "thread divider bar" "thread divider canvas" "dock divider canvas"; }
+.builder[data-layout="split"] .builder__thread { grid-area: thread; }
+.builder[data-layout="split"] .builder__divider { grid-area: divider; }
+.builder[data-layout="split"] .builder__bar { grid-area: bar; }
+.builder[data-layout="split"] .builder__canvas { grid-area: canvas; }
+.builder[data-layout="split"] .builder__dock { grid-area: dock; position: static; width: auto; margin: 0; padding: var(--space-3); }
+.builder[data-layout="split"] .chip:not(.chip--editing) { display: none; }
+.builder[data-layout="split"] .builder__canvas > .stage { padding-bottom: var(--space-5); }
+.builder[data-layout="split"] .builder__data { height: 100%; }
+.builder__divider { margin: 0; overflow: hidden; color: var(--ink); font: 400 var(--px-11)/1.25 var(--pixel); font-variant-ligatures: none; white-space: pre; user-select: none; }
+.builder__thread { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+.thread__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); min-height: 48px; padding: 0 var(--space-3); border-bottom: var(--hairline) solid var(--line); }
+.thread__new { min-height: 32px; padding: 0; border: 0; border-bottom: 2px dotted var(--ink); background: transparent; color: var(--ink); font: 500 .85rem/1 var(--sans); cursor: pointer; }
+.thread__new:hover, .thread__new:focus-visible { border-bottom-style: solid; }
+.thread { display: grid; align-content: start; gap: var(--space-2); min-height: 0; margin: 0; padding: var(--space-3); overflow-y: auto; list-style: none; }
+.thread__you { padding: var(--space-2) var(--space-3); background: var(--panel); overflow-wrap: anywhere; }
+.thread__kit { display: flex; gap: var(--space-2); align-items: baseline; width: 100%; min-height: 32px; padding: var(--space-1) 0; border: 0; background: transparent; color: var(--text-soft); font: 400 .88rem/1.45 var(--sans); text-align: left; cursor: pointer; }
+.thread__kit::before { content: "›"; font-family: var(--pixel); }
+.thread__kit:hover, .thread__kit:focus-visible { color: var(--ink); }
+.thread__kit[aria-current="true"] { color: var(--ink); box-shadow: inset 2px 0 0 var(--ink); padding-left: var(--space-2); }
+.thread__v { margin-left: auto; color: var(--text-caption); font: 400 var(--px-11)/1.4 var(--pixel); text-transform: uppercase; }
+.thread__fail { color: var(--signal-fail); font-size: .88rem; line-height: 1.45; }
+@media (max-width: 640px) {
+  .builder[data-layout="split"] .builder__preview { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto; grid-template-areas: "thread" "divider" "bar" "canvas" "dock"; }
+  .builder[data-layout="split"] .builder__thread { max-height: 15rem; }
+}
+
+/* The Data tab can be edited: the figure redraws here, with no call to the model. */
+.data__input { width: 100%; min-width: 4ch; padding: 2px 0; border: 0; border-bottom: var(--hairline) dotted var(--line); background: transparent; color: var(--ink); font: inherit; }
+.data__input:hover { border-bottom-color: var(--ink); }
+.data__input:focus { outline: 0; border-bottom: 2px solid var(--ink); }
+td.is-number .data__input { text-align: right; font-variant-numeric: tabular-nums; }
+.data__row-remove { width: 28px; min-height: 28px; border: 0; background: transparent; color: var(--text-caption); cursor: pointer; }
+.data__row-remove:hover, .data__row-remove:focus-visible { color: var(--ink); }
+.data__add { justify-self: start; min-height: 32px; padding: 0; border: 0; border-bottom: 2px dotted var(--ink); background: transparent; color: var(--ink); font: 500 .85rem/1 var(--sans); cursor: pointer; }
+.data__note { color: var(--text-caption); font-size: .8rem; }
+.data__error { color: var(--signal-fail); font-size: .85rem; }
+.data__error:empty { display: none; }
 .builder > .cf-turnstile:empty { display: none; }
 .builder > .cf-turnstile { margin-top: var(--space-3); }
 

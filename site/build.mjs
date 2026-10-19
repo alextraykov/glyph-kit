@@ -222,8 +222,13 @@ const exampleStill = (() => {
   const lines = g.toText().split("\n");
   return { html: g.toHtml(), cols: Math.max(...lines.map((l) => [...l].length)), rows: lines.length, summary: live(exampleSpec).summary };
 })();
-const builder = `<section class="builder" id="try" aria-label="Builder">
+const builder = `<section class="builder" id="try" aria-label="Builder" data-layout="intro">
   <figure class="builder__preview" data-try-out>
+    <aside class="builder__thread" data-try-thread aria-label="This figure's conversation" hidden>
+      <div class="thread__head"><span class="label">This figure</span><button type="button" class="thread__new" data-try-new>New figure</button></div>
+      <ol class="thread" data-try-thread-list></ol>
+    </aside>
+    <pre class="builder__divider" aria-hidden="true" data-try-divider hidden></pre>
     <div class="builder__bar">
       <div class="tabs" role="tablist" aria-label="Preview, data or history"><button type="button" role="tab" aria-selected="true" data-tab="preview">Preview</button><button type="button" role="tab" aria-selected="false" data-tab="data">Data</button><button type="button" role="tab" aria-selected="false" data-tab="history">History</button></div>
       <span class="label builder__title" data-try-title>Example · ${esc(exampleSpec.title)}</span>
