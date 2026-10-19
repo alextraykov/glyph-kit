@@ -127,7 +127,7 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
 <body>
 <header class="top"><div class="shell">
   <a class="brand" href="/"><img src="/icon.svg" alt="" width="22" height="22">Glyph kit</a>
-  <nav class="nav" aria-label="Site"><a href="/kinds/"${current === "kinds" ? ' aria-current="page"' : ""}>Kinds</a><a href="${REPO}">GitHub</a><a href="${REPO}/blob/main/CHANGELOG.md">Changes</a></nav>
+  <nav class="nav" aria-label="Site"><a href="/kinds/"${current === "kinds" ? ' aria-current="page"' : ""}>Kinds</a><a href="${REPO}">GitHub</a><a href="${REPO}/blob/main/CHANGELOG.md">Changes</a><a href="https://traykov.cc">traykov.cc</a></nav>
 </div></header>
 <main class="shell">
 ${content}

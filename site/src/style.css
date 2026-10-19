@@ -167,6 +167,7 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
   .stats { grid-template-columns: minmax(0, 1fr); }
   .stat, .stat + .stat { padding: var(--space-4) 0; border-left: 0; }
   .stat + .stat { border-top: var(--hairline) solid var(--line); }
-  .nav { gap: var(--space-3); font-size: .85rem; }
+  .top .shell { flex-wrap: wrap; row-gap: 0; padding-block: var(--space-2); }
+  .nav { width: 100%; justify-content: space-between; gap: var(--space-3); font-size: .85rem; }
   .grid-figure, .live { padding: var(--space-4); }
 }
