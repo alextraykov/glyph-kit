@@ -182,7 +182,7 @@ ${current === "home" ? '<script src="https://challenges.cloudflare.com/turnstile
 <body>
 <header class="top"><div class="shell">
   <a class="brand" href="/"><img src="/icon.svg" alt="" width="22" height="22">Glyph kit</a>
-  <nav class="nav" aria-label="Site"><a href="/kinds/"${current === "kinds" ? ' aria-current="page"' : ""}>Kinds</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a><a href="${REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changes</a><a href="https://traykov.cc">traykov.cc</a><button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme">Dark</button></nav>
+  <nav class="nav" aria-label="Site"><a href="/how-to-use/"${current === "guide" ? ' aria-current="page"' : ""}>How to use</a><a href="/kinds/"${current === "kinds" ? ' aria-current="page"' : ""}>Kinds</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a><a href="${REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changes</a><a href="https://traykov.cc">traykov.cc</a><button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme">Dark</button></nav>
 </div></header>
 <main class="shell">
 ${content}
@@ -192,6 +192,7 @@ ${content}
 <script type="application/json" id="try-example">${JSON.stringify({ spec: exampleSpec, mode: "moving" }).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="showcase">${JSON.stringify(showcaseData).replace(/</g, "\\u003c")}</script>
 <script type="module" src="/app.js"></script>
+${current === "guide" ? '<script type="module" src="/guide-motion.js"></script>' : ""}
 <!-- Visits, through Vercel Web Analytics (switch it on for this project in Vercel). No cookies. -->
 <script defer src="/_vercel/insights/script.js"></script>
 </body>
@@ -241,6 +242,161 @@ const builder = `<section class="builder" id="try" aria-label="Builder">
   <div class="cf-turnstile" data-sitekey="${TURNSTILE_SITE_KEY}" data-action="glyph-kit" data-appearance="interaction-only" data-theme="auto"></div>
 </section>`;
 
+// ── How to use ─────────────────────────────────────────────────────────────────────────────────
+const USE_ASKS = [
+  "Chart these usability results for the PR. The data is in results.csv.",
+  "A wireframe for the notification settings, then a clickable prototype.",
+  "Turn the research readout into a ten-slide deck, one point per slide."
+];
+const USE_FORMATS = [["Markdown", "markdown"], ["MDX", "mdx"], ["HTML", "html"], ["Animation", "animation"], ["Deck", "deck"], ["PDF", "pdf"], ["SVG and PNG", "svg"]];
+// Every section's figure is drawn by the kit itself, from a spec, the way a user's would be.
+const SAMPLE = "Illustrative: sample numbers for this guide";
+const GUIDE_FIGS = {
+  start: { kind: "flow", data: ["ask in words", "agent writes the spec", "code draws it", "any format"] },
+  glyphs: { kind: "table", data: [["Glyph", "Means, in every figure"], ["███", "measured or done"], ["", ""], ["▓▓▓", "current"], ["", ""], ["░░░", "projected, or the empty part of a scale"], ["", ""], ["···", "an empty cell"]] },
+  markdown: { kind: "barChart", source: SAMPLE, data: [{ label: "task 1", value: 92, text: "92%" }, { label: "task 2", value: 71, text: "71%" }, { label: "task 3", value: 38, text: "38%" }], options: { width: 24 } },
+  mdx: { kind: "flow", data: ["funnel.json", "<Glyph spec={funnel} />", "SVG at build time"] },
+  html: examples.wireframes.find((sp) => sp.kind === "screen"),
+  deck: { kind: "flow", data: ["title", "section", "figure, in steps", "statement", "PDF, 16:9"] },
+  pdf: { kind: "flow", data: ["cover", "summary", "sections", "figures", "A4 PDF"] },
+  svg: { kind: "flow", data: ["████ 12.4k", "rectangles, lines, dither", "funnel.svg"] },
+  handover: { kind: "qaChecklist", data: [
+    { text: "The lint passes", status: "todo" },
+    { text: "Numbers have a real source, or the stamp", status: "todo" },
+    { text: "Every figure has a description", status: "todo" },
+    { text: "Values appear as text, not only lengths", status: "todo" },
+    { text: "About 80 columns at most", status: "todo" },
+    { text: "Motion says what reduced motion shows", status: "todo" }
+  ] },
+  wrong: { kind: "branchFlow", data: [
+    { label: "figure drawn" },
+    { label: "boxes line up", type: "decision", no: { label: "change the font", to: "or export SVG" } },
+    { label: "fits 80 columns", type: "decision", no: { label: "split it in two", to: "draw again" } },
+    { label: "ready to send" }
+  ] }
+};
+// A kit figure that acts out its section (site/src/guide-motion.js); without scripts it stays as drawn.
+const moved = (key) => `<div class="guide-figure">${figure(GUIDE_FIGS[key]).replace('<pre class="grid-figure"', `<pre class="grid-figure" data-guide-motion="${key}"`)}</div>`;
+// Animations: the same diagram twice, its still beside it moving, to show the still makes the same point.
+const stillAndMoving = (mv) => `<div class="pair">
+  <figure class="pair__item"><figcaption class="label">Still · reduced motion, print, docs</figcaption><pre class="grid-figure" role="img" aria-label="${esc(mv.summary)}">${mv.html}</pre></figure>
+  <figure class="pair__item"><figcaption class="label">Moving · on screen</figcaption><pre class="grid-figure live" role="img" aria-label="${esc(mv.summary)}" data-live="${mv.id}">${mv.html}</pre></figure>
+</div>`;
+const guideFigure = (key) => key === "animation" ? stillAndMoving(moving.find((mv) => mv.id === "rework-loop")) : moved(key);
+
+// One entry per deliverable: when to use it, what to ask, what the agent runs, what to check.
+const GUIDE = [
+  {
+    id: "markdown", title: "ASCII and Markdown",
+    when: "Docs, pull requests, tickets, READMEs, Slack, and a model's own context. The figure is text, so it diffs, copies and pastes anywhere.",
+    ask: "Chart these usability results for the PR. The data is in results.csv.",
+    run: ["node scripts/glyph-kit.mjs render results.json --to markdown", "node scripts/lint.mjs README.md", "node scripts/glyph-kit.mjs render results.json --compact"],
+    check: ["The lint passes: frames close, every glyph is one cell, no text touches its box.", "Every figure with numbers names its source.", "The sentence next to the figure states the point; the figure supports it.", "About 80 columns at most, so it doesn't wrap.", "--compact (plain ASCII, same layout) only when the figure goes into a model's context."]
+  },
+  {
+    id: "mdx", title: "MDX",
+    when: "Docs sites and blogs built with Astro, Next.js or Docusaurus.",
+    ask: "Add the signup funnel to our docs page as MDX.",
+    run: ["node scripts/glyph-kit.mjs export funnel.json --to mdx", "node scripts/glyph-kit.mjs export funnel.json --to mdx --mdx component"],
+    check: ["Static MDX works in any setup: each figure is a text block with its description.", "Component mode writes <Glyph spec={…} />: copy templates/mdx/Glyph.astro or Glyph.jsx next to your MDX and point it at scripts/render/svg.mjs.", "Components render to SVG at build time, so readers need no special font."]
+  },
+  {
+    id: "html", title: "HTML pages and prototypes",
+    when: "A figure on its own page, or a wireframe that should click like the product.",
+    ask: "Turn the settings wireframe into a clickable prototype with our design system.",
+    run: ["node scripts/glyph-kit.mjs render settings.json --to html --map design-system.map.json", "node scripts/glyph-kit.mjs export settings.json --to html"],
+    check: ["The map names only components and tokens you really have; start from templates/design-system.map.example.json.", "Notes on the wireframe become behaviour in the prototype.", "Where the map has no entry, the agent asks instead of inventing one.", "For production code, the agent reads reference/fidelity.md first."]
+  },
+  {
+    id: "animation", title: "Animations",
+    when: "A process over time: work coming back, people leaving a funnel, a queue backing up, a rollout and its guard, a state machine, a loading sequence.",
+    ask: "Show how work comes back from QA as a moving diagram.",
+    run: ["node scripts/glyph-kit.mjs live loop.json --to html", "node scripts/glyph-kit.mjs live loop.json --to markdown"],
+    check: ["Six kinds move: loop, funnel, states, queue, rollout, loading.", "The still frame makes the same point; it's what reduced motion, print and docs show.", "One sentence next to it says what the motion shows.", "Motion specs say what reduced motion shows."]
+  },
+  {
+    id: "deck", title: "Presentations and pitch decks",
+    when: "A review, a research readout, a pitch: anything you present.",
+    ask: "Make a ten-slide deck from the research readout, one point per slide, and a PDF to send.",
+    run: ["node scripts/glyph-kit.mjs deck deck.json > deck.html", "node scripts/glyph-kit.mjs export deck.json --to pdf", "node scripts/glyph-kit.mjs export deck.json --to html --theme ink"],
+    check: ["One point per slide, with the conclusion in the title.", "Steps zoom to lines of a figure and show the line you'll say; find line numbers with --to text, counting from 0.", "Flag problem rows so they flash; keep presenter notes in notes (press N).", "For a pitch, every number has a real source: made-up numbers are stamped SAMPLE DATA on the slide.", "Themes: paper, ink, phosphor, gilt. The PDF is one 16:9 page per slide."]
+  },
+  {
+    id: "pdf", title: "Reports and PDFs",
+    when: "When it has to read like a finished document: a research readout, an audit, a design review.",
+    ask: "Write the motion audit up as a report and export a PDF.",
+    run: ["node scripts/glyph-kit.mjs export report.json --to pdf", "node scripts/glyph-kit.mjs export report.json --to html", "node scripts/glyph-kit.mjs export report.json --to md"],
+    check: ["A cover, a summary, numbered sections, numbered figures.", "Each takeaway is the conclusion, not the topic.", "PDF uses Chrome, Chromium or Edge already on the machine (or CHROME_PATH). With none, export HTML and print it."]
+  },
+  {
+    id: "svg", title: "SVG and PNG",
+    when: "A figure for Keynote, Figma, Google Slides or a post.",
+    ask: "Export the funnel as an SVG for the board deck.",
+    run: ["node scripts/glyph-kit.mjs export funnel.json --to svg --theme paper", "node scripts/glyph-kit.mjs export funnel.json --to png"],
+    check: ["SVG needs no font: blocks become rectangles, shades become dither patterns, lines become vectors.", "PNG is the same SVG at 2×, through a browser already on the machine.", "Pick the theme that matches the slide: paper, ink, phosphor or gilt."]
+  }
+];
+const guideItem = (g) => `<article class="guide-item" id="${g.id}" aria-labelledby="${g.id}-title">
+  <div class="guide-item__head"><h3 id="${g.id}-title">${esc(g.title)}</h3><p>${esc(g.when)}</p></div>
+  <div class="guide-item__body">
+    <p class="label">What you get</p>${guideFigure(g.id)}
+    <p class="label">Ask</p><blockquote class="ask-line">“${esc(g.ask)}”</blockquote>
+    <p class="label">The agent runs</p><div class="cmds">${g.run.map(cmd).join("")}</div>
+    <p class="label">Before you send it</p><ul class="checks">${g.check.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>
+  </div>
+</article>`;
+const guide = page({
+  path: "/how-to-use/",
+  current: "guide",
+  title: "How to use · Glyph kit",
+  description: "How to get the best Markdown, MDX, HTML, animations, decks, reports and images out of Glyph kit.",
+  content: `
+<header class="heading"><p class="kicker">How to use</p><h2>Ask in words. Pick a format.</h2><p>How to get the best Markdown, MDX, HTML, animations, decks, reports and images out of Glyph kit. Your agent runs the commands; they're here so you know what it does, and so you can run them yourself with Node 18 or later.</p></header>
+<nav class="jump" aria-label="Formats"><a href="#start">Start</a><a href="#rules">Quality</a>${GUIDE.map((g) => `<a href="#${g.id}">${esc(g.title)}</a>`).join("")}<a href="#handover">Before you hand over</a><a href="#wrong">When it looks wrong</a></nav>
+
+<section class="section" id="start" aria-labelledby="start-title">
+  <header class="heading"><h2 id="start-title">Start</h2><p>Install once, then ask the way you'd ask a colleague. The agent picks the kind of figure, writes the data as a small spec, and code draws it.</p></header>
+  ${moved("start")}
+  ${install}
+  <ul class="asks">${USE_ASKS.map((a) => `<li>“${esc(a)}”</li>`).join("")}</ul>
+</section>
+
+<section class="section" id="rules" aria-labelledby="rules-title">
+  <header class="heading"><h2 id="rules-title">Quality, in every format</h2></header>
+  ${moved("glyphs")}
+  <ul class="rules">
+    <li><strong>Real data, with its source.</strong> Point the agent at your file. Made-up numbers are stamped SAMPLE DATA everywhere they appear.</li>
+    <li><strong>Say the point in words.</strong> One sentence next to the figure states the conclusion; the figure backs it up.</li>
+    <li><strong>One meaning per glyph.</strong> █ measured or done, ░ projected or empty, the same across the whole document.</li>
+    <li><strong>About 80 columns.</strong> Wider figures wrap on small screens; split them instead.</li>
+    <li><strong>Departure Mono for text.</strong> Any monospace font with block characters works; Departure Mono lines up exactly. SVG needs no font.</li>
+    <li><strong>Pass specs, not drawings.</strong> Between agents and steps, the spec is a few hundred bytes. Draw only when a person will look.</li>
+  </ul>
+</section>
+
+<section class="section" aria-labelledby="formats-title">
+  <header class="heading"><h2 id="formats-title">Format by format</h2></header>
+  <div class="guide">${GUIDE.map(guideItem).join("\n")}</div>
+</section>
+
+<section class="section" id="handover" aria-labelledby="handover-title">
+  <header class="heading"><h2 id="handover-title">Before you hand over</h2></header>
+  ${moved("handover")}
+  <p class="guide-note">Tick each before a file leaves your hands. Markdown and HTML add the descriptions for you; plain text needs a sentence next to each figure.</p>
+</section>
+
+<section class="section" id="wrong" aria-labelledby="wrong-title">
+  <header class="heading"><h2 id="wrong-title">When it looks wrong</h2></header>
+  ${moved("wrong")}
+  <ul class="rules">
+    <li><strong>Boxes don't line up.</strong> The font draws some glyphs wider than one cell. Use Departure Mono, or export SVG.</li>
+    <li><strong>It wraps.</strong> The figure is over about 80 columns. Ask for it split in two, or narrower.</li>
+    <li><strong>A SAMPLE DATA stamp.</strong> The source says the numbers are made up. Give the real source and it goes.</li>
+    <li><strong>It won't draw.</strong> Read the sentence it gives back: numbers without a source, or data that can't be true, like a funnel that grows.</li>
+  </ul>
+</section>`
+});
+
 // ── Home ───────────────────────────────────────────────────────────────────────────────────────
 const home = page({
   path: "/",
@@ -276,18 +432,27 @@ const home = page({
   </div>
 </section>
 
+<section class="section" aria-labelledby="use">
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">03 How to use</p><h2 id="use">Ask in words. Pick a format.</h2><a class="text-link" href="/how-to-use/">Read the guide</a></header>
+  <ol class="steps">
+    <li><p class="label">1 · Install</p>${cmd("npx skills add alextraykov/glyph-kit")}<p>Or as a Claude Code plugin, or from the zip.</p></li>
+    <li><p class="label">2 · Ask in words</p><ul class="asks">${USE_ASKS.map((a) => `<li>“${esc(a)}”</li>`).join("")}</ul></li>
+    <li><p class="label">3 · Pick a format</p><p class="formats">${USE_FORMATS.map(([name, id]) => `<a href="/how-to-use/#${id}">${esc(name)}</a>`).join(" · ")}</p><p>The agent writes the data; code draws the figure, in any of them.</p></li>
+  </ol>
+</section>
+
 <section class="section" aria-labelledby="moving">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">03 Motion</p><h2 id="moving">Six kinds that move.</h2></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Motion</p><h2 id="moving">Six kinds that move.</h2></header>
   <div class="gallery">${moving.map((mv) => liveFigure(mv)).join("\n")}</div>
 </section>
 
 <section class="section" aria-labelledby="areas">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Coverage</p><h2 id="areas">${kindCount} kinds. Eight areas.</h2><a class="text-link" href="/kinds/">Every kind</a></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Coverage</p><h2 id="areas">${kindCount} kinds. Eight areas.</h2><a class="text-link" href="/kinds/">Every kind</a></header>
   <div class="areas">${Object.entries(AREAS).map(([id, area], i) => `<article class="area"><h3>${esc(area.label)}</h3>${figure(examples[id][0])}<p>${Object.values(area.kinds).map((k) => esc(k.label)).join(" · ")}</p></article>`).join("\n")}</div>
 </section>
 
 <section class="section" aria-labelledby="guard">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Trust</p><h2 id="guard">Sample data is stamped.</h2></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">06 Trust</p><h2 id="guard">Sample data is stamped.</h2></header>
   <ul class="rules">
     <li><strong>No source, no numbers.</strong> A figure with numbers waits until it says where they came from.</li>
     <li><strong>Sample data is stamped.</strong> Made-up numbers carry SAMPLE DATA in every format.</li>
@@ -299,7 +464,7 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="formats">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">06 Output</p><h2 id="formats">One file, every format.</h2><p>A motion audit of Pave's front end.</p></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">07 Output</p><h2 id="formats">One file, every format.</h2><p>A motion audit of Pave's front end.</p></header>
   <div class="pages">${[1, 2, 3, 4].map((n) => `<img src="/images/report-page-${n}.webp" alt="${n === 1 ? "Report cover: the title, a summary of four findings and the contents." : `Report page ${n}: numbered sections with takeaways and figures.`}" width="909" height="1286" loading="lazy" decoding="async">`).join("")}</div>
   <div class="links">
     <a class="text-link" href="/examples/motion-audit/motion-audit.pdf">The report as a PDF</a>
@@ -310,7 +475,7 @@ const home = page({
 </section>
 
 <section class="section support" aria-labelledby="support">
-  <header class="heading"><p class="kicker">07 Support</p><h2 id="support">Free. MIT.</h2></header>
+  <header class="heading"><p class="kicker">08 Support</p><h2 id="support">Free. MIT.</h2></header>
   <div class="actions"><a class="button" href="${REPO}" target="_blank" rel="noopener">★ Star on GitHub</a>${SUPPORT_URL ? `<a class="button button--quiet" href="${esc(SUPPORT_URL)}">Buy me a coffee</a>` : ""}</div>
 </section>
 
@@ -356,8 +521,10 @@ rmSync(dist, { recursive: true, force: true });
 mkdirSync(join(out, "kinds"), { recursive: true });
 writeFileSync(join(out, "index.html"), based(home));
 writeFileSync(join(out, "kinds/index.html"), based(kinds));
+mkdirSync(join(out, "how-to-use"), { recursive: true });
+writeFileSync(join(out, "how-to-use/index.html"), based(guide));
 cpSync(join(root, "site/src/style.css"), join(out, "style.css"));
-for (const f of ["app.js", "showcase.js", "showcase-core.mjs", "try.js", "parallax.js"]) cpSync(join(root, "site/src", f), join(out, f));
+for (const f of ["app.js", "showcase.js", "showcase-core.mjs", "try.js", "parallax.js", "guide-motion.js"]) cpSync(join(root, "site/src", f), join(out, f));
 cpSync(join(root, "site/src/fonts"), join(out, "fonts"), { recursive: true });
 cpSync(join(root, "site/public"), out, { recursive: true });
 cpSync(join(kit, "assets/icon.svg"), join(out, "icon.svg"));

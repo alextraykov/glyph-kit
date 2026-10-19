@@ -65,8 +65,8 @@ p { margin: 0; }
 .theme:hover { border-bottom-color: var(--ink); }
 
 /* Sections */
-main { display: grid; gap: var(--space-7); padding-block: var(--space-6) var(--space-7); }
-.section { display: grid; gap: var(--space-5); }
+main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7); padding-block: var(--space-6) var(--space-7); }
+.section { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
 .heading { display: grid; justify-items: start; gap: var(--space-3); }
 .heading h2 { font-size: var(--px-33); line-height: 1.1; }
 .heading > p:not(.label) { max-width: 62ch; color: var(--text-soft); }
@@ -167,6 +167,33 @@ main { display: grid; gap: var(--space-7); padding-block: var(--space-6) var(--s
 .jump a:hover { text-decoration: underline; }
 
 /* Guardrails and formats */
+/* How to use: three steps on the home page; on the guide, one block per format. */
+.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--space-5); margin: 0; padding: 0; list-style: none; }
+.steps > li { display: grid; align-content: start; justify-items: start; gap: var(--space-3); padding-top: var(--space-4); border-top: var(--hairline) solid var(--line); }
+.steps > li > p:not(.label) { color: var(--text-soft); }
+.asks { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; color: var(--text-soft); }
+.formats a { text-underline-offset: 3px; }
+.guide { display: grid; gap: var(--space-6); }
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--space-4); min-width: 0; }
+.pair__item { display: grid; align-content: start; gap: var(--space-2); min-width: 0; margin: 0; }
+.pair__item .grid-figure { max-width: 100%; }
+.guide-note { max-width: 62ch; color: var(--text-soft); }
+.guide-figure { display: grid; justify-items: start; min-width: 0; }
+.guide-figure .grid-figure { max-width: 100%; font-size: var(--px-11); }
+.guide-item { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: var(--space-5); padding-top: var(--space-5); border-top: var(--hairline) solid var(--line); scroll-margin-top: 80px; }
+.guide-item__head { display: grid; align-content: start; gap: var(--space-3); }
+.guide-item__head h3 { font-size: var(--px-22); }
+.guide-item__head p { color: var(--text-soft); }
+.guide-item__body { display: grid; align-content: start; gap: var(--space-2); min-width: 0; }
+.guide-item__body .label:not(:first-child) { margin-top: var(--space-3); }
+.ask-line { margin: 0; padding: var(--space-2) var(--space-3); border-left: 2px solid var(--ink); background: var(--panel); }
+.cmds { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: start; gap: var(--space-2); min-width: 0; }
+.checks { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.checks li { position: relative; padding-left: 1.6em; color: var(--text-soft); }
+.checks li::before { content: "■"; position: absolute; left: 0; color: var(--signal-ok); font-family: var(--pixel); }
+.checks--big { grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--space-3) var(--space-5); }
+[id] { scroll-margin-top: 80px; }
+@media (max-width: 760px) { .guide-item { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); } }
 .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--space-5); margin: 0; padding: 0; list-style: none; }
 .rules li { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: var(--hairline) solid var(--line); color: var(--text-soft); font-size: .92rem; }
 .rules strong { color: var(--ink); font-weight: 500; }
@@ -232,10 +259,10 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 
 /* ── Builder: one preview, with the prompt docked over its bottom edge and the suggestions on top ─── */
 .builder { --dock: 10.5rem; position: relative; z-index: 1; }
-.builder__preview { position: relative; display: grid; grid-template-rows: auto auto; margin: 0; border: var(--hairline) solid var(--ink); background: var(--paper); }
+.builder__preview { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; margin: 0; border: var(--hairline) solid var(--ink); background: var(--paper); }
 .builder__bar { display: flex; align-items: center; gap: var(--space-4); min-height: 48px; padding: 0 var(--space-4) 0 var(--space-2); border-bottom: var(--hairline) solid var(--line); }
 .builder__title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.builder__hint { flex: none; color: var(--text-caption); font-size: .8rem; }
+.builder__hint { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-caption); font-size: .8rem; }
 .builder__hint[hidden] { display: none; }
 .tabs { display: flex; }
 .tabs button { min-height: 48px; padding: 0 var(--space-3); border: 0; background: transparent; color: var(--text-caption); font: 500 .88rem/1 var(--sans); cursor: pointer; }
@@ -268,7 +295,7 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 .data__copy:hover, .data__copy:focus-visible { border-color: var(--ink); }
 
 /* The dock: chips, then the prompt box, sitting on the preview. */
-.builder__dock { position: absolute; right: 0; bottom: var(--space-5); left: 0; display: grid; gap: var(--space-2); width: min(46rem, 100% - 2 * var(--space-5)); margin-inline: auto; }
+.builder__dock { position: absolute; right: 0; bottom: var(--space-5); left: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-2); width: min(46rem, 100% - 2 * var(--space-5)); margin-inline: auto; }
 .chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .chip { min-height: 32px; padding: 0 var(--space-3); border: var(--hairline) solid var(--line); background: var(--paper); color: var(--ink); font: 500 .82rem/1 var(--sans); cursor: pointer; }
 .chip:hover, .chip:focus-visible { border-color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
@@ -290,6 +317,8 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 
 @media (max-width: 640px) {
   .builder { --dock: 12rem; }
+  /* Tabs, title, export and the stamp don't fit one phone-width row: the bar wraps. */
+  .builder__bar { flex-wrap: wrap; column-gap: var(--space-3); }
   /* Eight chips in one row that scrolls sideways, so the prompt stays low. */
   .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
   .chip { flex: none; }
@@ -302,7 +331,7 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 #try { scroll-margin-top: calc(56px + var(--space-4)); }
 
 /* Install, under the line in the hero: small commands with copy icons. */
-.install { display: grid; justify-items: start; gap: var(--space-1); }
+.install { display: grid; grid-template-columns: minmax(0, 1fr); justify-items: start; gap: var(--space-1); }
 .install .label { margin-top: var(--space-2); }
 .install .label:first-child { margin-top: 0; }
 .install .cmd { max-width: 100%; }
