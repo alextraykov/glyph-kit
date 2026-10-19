@@ -166,6 +166,9 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
 <meta name="twitter:image" content="${SITE}/og.png">
 <link rel="preload" href="/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <script>
+  // Light unless the visitor chose dark here; set before paint so the page never flashes.
+  try { document.documentElement.dataset.theme = localStorage.getItem("glyph-kit-theme") === "dark" ? "dark" : "light"; }
+  catch { document.documentElement.dataset.theme = "light"; }
   // The hero's first view builds in. Hide it until the script takes over; never for reduced motion,
   // and never for long: if the script fails, the finished view shows after two seconds.
   if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -179,7 +182,7 @@ ${current === "home" ? '<script src="https://challenges.cloudflare.com/turnstile
 <body>
 <header class="top"><div class="shell">
   <a class="brand" href="/"><img src="/icon.svg" alt="" width="22" height="22">Glyph kit</a>
-  <nav class="nav" aria-label="Site"><a href="/kinds/"${current === "kinds" ? ' aria-current="page"' : ""}>Kinds</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a><a href="${REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changes</a><a href="https://traykov.cc">traykov.cc</a></nav>
+  <nav class="nav" aria-label="Site"><a href="/kinds/"${current === "kinds" ? ' aria-current="page"' : ""}>Kinds</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a><a href="${REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changes</a><a href="https://traykov.cc">traykov.cc</a><button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme">Dark</button></nav>
 </div></header>
 <main class="shell">
 ${content}

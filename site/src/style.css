@@ -60,6 +60,9 @@ p { margin: 0; }
 .nav { display: flex; gap: var(--space-4); font-size: .9rem; }
 .nav a { white-space: nowrap; text-decoration: none; padding-block: var(--space-1); border-bottom: 2px solid transparent; }
 .nav a:hover, .nav a[aria-current="page"] { border-bottom-color: var(--ink); }
+/* The theme switch sits with the links and looks like one: it names the theme it switches to. */
+.theme { padding: var(--space-1) 0; border: 0; border-bottom: 2px solid transparent; background: none; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
+.theme:hover { border-bottom-color: var(--ink); }
 
 /* Sections */
 main { display: grid; gap: var(--space-7); padding-block: var(--space-6) var(--space-7); }
