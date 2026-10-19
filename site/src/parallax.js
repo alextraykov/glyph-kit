@@ -7,6 +7,8 @@ const STEP = 4; // px
 const MAX = 64; // px, under the 72 px between sections, so no layer reaches the next one
 const RAMP = " ░▒▓";
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
+// Phones and touch screens scroll with momentum; stepped layers fight it, so nothing moves there.
+const touch = matchMedia("(max-width: 900px), (pointer: coarse)");
 
 // data-lag: starts in place and trails the scroll (the hero name); otherwise drift around the middle.
 // data-settle: starts higher and settles into place as it reaches the middle of the screen, so it never
@@ -87,23 +89,34 @@ const queue = () => {
   }
 };
 
+const still = () => reduce.matches || touch.matches;
 const start = () => {
-  if (reduce.matches) {
+  if (still()) {
     layers.forEach((layer) => {
       layer.y = 0;
       layer.el.style.transform = "";
     });
-    if (field) field.pre.hidden = true;
+    if (field) {
+      // Reduced motion hides the field; on touch screens it stays, drawn once and not moving.
+      field.pre.hidden = reduce.matches;
+      if (!reduce.matches) {
+        sizeField();
+        field.y = 0;
+        field.pre.style.transform = "";
+        drawField(0);
+      }
+    }
     return;
   }
   if (field) field.pre.hidden = false;
   sizeField();
   queue();
 };
-addEventListener("scroll", queue, { passive: true });
+addEventListener("scroll", () => { if (!still()) queue(); }, { passive: true });
 addEventListener("resize", () => {
   sizeField();
   queue();
 });
 reduce.addEventListener?.("change", start);
+touch.addEventListener?.("change", start);
 start();

@@ -42,6 +42,9 @@ const showTheme = () => {
   const dark = document.documentElement.dataset.theme === "dark";
   themeButton.textContent = dark ? "Light" : "Dark";
   themeButton.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
+  // Keep the phone's status bar the same colour as the page.
+  const bar = document.querySelector('meta[name="theme-color"]');
+  if (bar) bar.content = dark ? "#0c0c0b" : "#fbfbf8";
 };
 if (themeButton) {
   showTheme();

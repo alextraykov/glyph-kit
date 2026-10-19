@@ -146,7 +146,8 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#fbfbf8">
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${SITE}${path}">
@@ -169,6 +170,8 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
   // Light unless the visitor chose dark here; set before paint so the page never flashes.
   try { document.documentElement.dataset.theme = localStorage.getItem("glyph-kit-theme") === "dark" ? "dark" : "light"; }
   catch { document.documentElement.dataset.theme = "light"; }
+  // The phone's status bar takes the page's paper colour, in either theme.
+  document.querySelector('meta[name="theme-color"]').content = document.documentElement.dataset.theme === "dark" ? "#0c0c0b" : "#fbfbf8";
   // The hero's first view builds in. Hide it until the script takes over; never for reduced motion,
   // and never for long: if the script fails, the finished view shows after two seconds.
   if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {

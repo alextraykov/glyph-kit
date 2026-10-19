@@ -248,7 +248,12 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
   .stat, .stat + .stat { padding: var(--space-4) 0; border-left: 0; }
   .stat + .stat { border-top: var(--hairline) solid var(--line); }
   .top .shell { flex-wrap: wrap; row-gap: 0; padding-block: var(--space-2); }
-  .nav { width: 100%; justify-content: space-between; gap: var(--space-3); font-size: .85rem; }
+  .nav { width: 100%; justify-content: space-between; gap: var(--space-3); font-size: .9rem; }
+  /* Four links fit a phone row evenly; Changes and traykov.cc stay on larger screens (and the footer). */
+  .nav a[href$="CHANGELOG.md"], .nav a[href="https://traykov.cc"] { display: none; }
+  /* Long commands wrap inside their box instead of scrolling; Copy still copies the whole line. */
+  .cmd code { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .install__hand span { display: block; margin-top: var(--space-1); }
   .grid-figure, .live, .stage { padding: var(--space-4); }
   .stage > .grid-figure { padding: 0; }
 }
@@ -327,7 +332,7 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 .export__save:hover, .export__save:focus-visible, .export__copy:hover, .export__copy:focus-visible { background: var(--panel); }
 @media (max-width: 640px) {
   .builder__bar { flex-wrap: wrap; row-gap: 0; }
-  .export__menu { right: auto; left: 0; }
+  .export__menu { right: 0; left: auto; max-width: calc(100vw - 2 * var(--space-4)); }
 }
 
 /* The dock: chips, then the prompt box, sitting on the preview. */
@@ -376,3 +381,9 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 .hero__body { align-items: start; }
 .hero__copy { align-content: start; }
 .hero .showcase { margin-top: var(--space-2); }
+
+/* iPhone safe areas: with the page under the status bar (viewport-fit=cover), keep content clear of
+   the notch in landscape and the home indicator. The status bar itself takes the paper colour. */
+.top { padding-top: env(safe-area-inset-top); }
+.shell { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+footer { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); }
