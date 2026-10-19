@@ -14,7 +14,7 @@ jobs:
         with:
           node-version: 22
       - name: Tests
-        run: node --test skills/glyph-kit/scripts/*.test.mjs
+        run: node --test tests/*.test.mjs
       - name: Checker on every guide
         run: node skills/glyph-kit/scripts/lint.mjs skills/glyph-kit/SKILL.md skills/glyph-kit/README.md skills/glyph-kit/reference/*.md skills/glyph-kit/reference/areas/*.md
       - name: Versions agree

@@ -32,8 +32,6 @@ const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 
 if (root && data && !reduce.matches) {
   const grid = root.querySelector("[data-showcase-grid]");
-  const title = root.querySelector("[data-showcase-title]");
-  const count = root.querySelector("[data-showcase-count]");
   const caption = root.querySelector("[data-showcase-caption]");
   const { H, W } = data;
 
@@ -140,8 +138,6 @@ if (root && data && !reduce.matches) {
     if (html !== drawn) grid.innerHTML = drawn = html;
   };
   const label = (k) => {
-    title.textContent = views[k].title;
-    count.textContent = `${k + 1} / ${views.length}`;
     caption.textContent = views[k].caption;
     grid.setAttribute("aria-label", views[k].label);
   };
@@ -196,11 +192,18 @@ if (root && data && !reduce.matches) {
   draw(blank(views[0].box()));
   document.documentElement.dataset.showcaseState = "ready";
 
+  // The builder takes the preview over when someone picks a suggestion or types: stop for good.
+  let stopped = false;
   const sync = () => {
     cancelAnimationFrame(raf);
     last = 0;
-    if (visible && !document.hidden) raf = requestAnimationFrame(tick);
+    if (!stopped && visible && !document.hidden) raf = requestAnimationFrame(tick);
   };
+  document.addEventListener("showcase:stop", () => {
+    stopped = true;
+    sync();
+    press.remove();
+  }, { once: true });
   new IntersectionObserver((entries) => {
     visible = entries.some((e) => e.isIntersecting);
     sync();

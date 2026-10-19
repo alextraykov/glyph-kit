@@ -4,3 +4,4 @@ site/dist/
 dist/
 .vercel
 .env*
+film/out/

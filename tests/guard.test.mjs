@@ -3,17 +3,17 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { loadData, parseCsv } from "./data.mjs";
-import { SAMPLE, hasNumbers, isSample } from "./guard.mjs";
-import { renderLiveHtml } from "./live/html.mjs";
-import { live, stillText } from "./live/kinds.mjs";
-import { resolve } from "./registry.mjs";
-import { renderDeck } from "./render/deck.mjs";
-import { renderHtml } from "./render/html.mjs";
-import { renderReport } from "./render/report.mjs";
-import { renderSvg } from "./render/svg.mjs";
-import { body, renderMarkdown, renderText } from "./render/text.mjs";
-import { budget, compact, countTokens, estimateTextTokens } from "./tokens.mjs";
+import { loadData, parseCsv } from "../skills/glyph-kit/scripts/data.mjs";
+import { SAMPLE, hasNumbers, isSample } from "../skills/glyph-kit/scripts/guard.mjs";
+import { renderLiveHtml } from "../skills/glyph-kit/scripts/live/html.mjs";
+import { live, stillText } from "../skills/glyph-kit/scripts/live/kinds.mjs";
+import { resolve } from "../skills/glyph-kit/scripts/registry.mjs";
+import { renderDeck } from "../skills/glyph-kit/scripts/render/deck.mjs";
+import { renderHtml } from "../skills/glyph-kit/scripts/render/html.mjs";
+import { renderReport } from "../skills/glyph-kit/scripts/render/report.mjs";
+import { renderSvg } from "../skills/glyph-kit/scripts/render/svg.mjs";
+import { body, renderMarkdown, renderText } from "../skills/glyph-kit/scripts/render/text.mjs";
+import { budget, compact, countTokens, estimateTextTokens } from "../skills/glyph-kit/scripts/tokens.mjs";
 
 const funnel = (source, values = [100, 60, 20]) => ({ kind: "funnel", title: "Signups", source, data: values.map((value, i) => ({ label: `step ${i + 1}`, value })) });
 

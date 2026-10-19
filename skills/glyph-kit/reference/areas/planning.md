@@ -2,7 +2,7 @@
 
 Roadmaps, priorities, ownership and decisions in a form that lives next to the work and diffs when plans change.
 
-Examples: `examples/planning.json`. Render any of them with `node scripts/glyph-kit.mjs render examples/planning.json --to markdown` (or `--to html`).
+Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
 
 ## Now, next, later
 

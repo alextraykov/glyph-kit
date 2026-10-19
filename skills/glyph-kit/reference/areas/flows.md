@@ -2,7 +2,7 @@
 
 Agree on paths, states and journeys before anyone designs a screen. Text flows are quick to change in review and easy for an agent to turn into routes and state.
 
-Examples: `examples/flows.json`. Render any of them with `node scripts/glyph-kit.mjs render examples/flows.json --to markdown` (or `--to html`).
+Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
 
 ## Linear flow
 

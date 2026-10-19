@@ -2,7 +2,7 @@
 
 Write motion down as a decision before anyone animates it: why it moves, what starts it, how long, which curve, and what reduced motion shows instead. The HTML form plays it.
 
-Examples: `examples/motion.json`. Render any of them with `node scripts/glyph-kit.mjs render examples/motion.json --to markdown` (or `--to html`).
+Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
 
 ## Motion timing
 

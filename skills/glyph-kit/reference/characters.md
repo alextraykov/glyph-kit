@@ -14,7 +14,7 @@ The working set. Everything here is one cell wide in a font that covers it.
 | `▀ ▄` | U+2580, U+2584 | upper and lower half | two pixels per cell vertically |
 | `▌ ▐` | U+258C, U+2590 | left and right half | half-cell bar ends, rulers |
 
-In the classic VGA font the three shades are literal ordered dither: 2 of every 8 pixels lit, a checkerboard, 6 of every 8 (see `history.md`). In modern fonts the coverage varies, so if tone matters, measure it.
+In the classic VGA font the three shades are literal ordered dither: 2 of every 8 pixels lit, a checkerboard, 6 of every 8 (see [the history notes](https://github.com/alextraykov/glyph-kit/blob/main/docs/history.md)). In modern fonts the coverage varies, so if tone matters, measure it.
 
 ## Eighth blocks
 

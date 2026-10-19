@@ -11,13 +11,15 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { AREAS } from "./registry.mjs";
-import { renderHtml } from "./render/html.mjs";
-import { body } from "./render/text.mjs";
-import { compact, countTokens, estimateTextTokens } from "./tokens.mjs";
+import { AREAS } from "../skills/glyph-kit/scripts/registry.mjs";
+import { renderHtml } from "../skills/glyph-kit/scripts/render/html.mjs";
+import { body } from "../skills/glyph-kit/scripts/render/text.mjs";
+import { compact, countTokens, estimateTextTokens } from "../skills/glyph-kit/scripts/tokens.mjs";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const specs = Object.keys(AREAS).flatMap((a) => JSON.parse(readFileSync(join(root, "examples", `${a}.json`), "utf8")).map((s) => ({ area: a, ...s })));
+const here = dirname(fileURLToPath(import.meta.url));
+const root = join(here, "../skills/glyph-kit");
+const docsDir = join(here, "../docs");
+const specs = Object.keys(AREAS).flatMap((a) => JSON.parse(readFileSync(join(here, "examples", `${a}.json`), "utf8")).map((s) => ({ area: a, ...s })));
 const bytes = (s) => Buffer.byteLength(s, "utf8");
 const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
 
@@ -76,7 +78,7 @@ try {
 
 const result = { measured: new Date().toISOString().slice(0, 10), rows: rows.map(({ text, png, ...r }) => ({ ...r, us: +r.us.toFixed(2) })), pngNote, tokenNote };
 if (process.argv.includes("--write")) {
-  writeFileSync(join(root, "reference/measurements.json"), JSON.stringify(result, null, 2) + "\n");
+  writeFileSync(join(docsDir, "measurements.json"), JSON.stringify(result, null, 2) + "\n");
   console.log("reference/measurements.json");
 } else if (process.argv.includes("--json")) {
   console.log(JSON.stringify(result, null, 2));

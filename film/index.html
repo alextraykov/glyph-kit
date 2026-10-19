@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Glyph kit · film</title>
+<style>
+  @font-face { font-family: "Departure Mono"; src: url("../site/src/fonts/DepartureMono-Regular.woff2") format("woff2"); font-display: block; }
+  html, body { margin: 0; height: 100%; background: #e9e8e2; color: #080808; font: 14px/1.4 ui-monospace, Menlo, monospace; }
+  main { min-height: 100%; display: grid; place-items: center; gap: 12px; padding: 16px; box-sizing: border-box; }
+  canvas { display: block; width: min(92vmin, 1080px); height: auto; background: #fbfbf8; box-shadow: 0 0 0 1px rgba(8, 8, 8, .16); }
+  .bar { display: flex; align-items: center; gap: 12px; width: min(92vmin, 1080px); }
+  .bar input { flex: 1; accent-color: #080808; }
+  .bar button { min-width: 64px; height: 36px; border: 1px solid #080808; background: #fbfbf8; font: inherit; cursor: pointer; }
+  body.render main { padding: 0; }
+  body.render .bar { display: none; }
+  body.render canvas { width: 1080px; box-shadow: none; }
+</style>
+</head>
+<body>
+<main>
+  <canvas id="c" width="1080" height="1080" role="img" aria-label="Glyph kit, a 30 second film"></canvas>
+  <div class="bar"><button id="play" type="button">Play</button><input id="scrub" type="range" min="0" max="30" step="0.01" value="0" aria-label="Time"><span id="time">0.00 s</span></div>
+</main>
+<script type="module">
+  // The launch film by default; a teaser with ?scene=floppy | bars | frame | madeup | fidelity.
+  if (new URLSearchParams(location.search).has("scene")) import("./teasers.js");
+  else import("./scene.js");
+</script>
+</body>
+</html>

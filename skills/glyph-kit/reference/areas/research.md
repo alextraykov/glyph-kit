@@ -2,7 +2,7 @@
 
 Turn interviews, surveys and usability tests into evidence a team can read in a PR or a ticket. Every figure keeps who said it and where it came from.
 
-Examples: `examples/research.json`. Render any of them with `node scripts/glyph-kit.mjs render examples/research.json --to markdown` (or `--to html`).
+Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
 
 ## Likert answers
 

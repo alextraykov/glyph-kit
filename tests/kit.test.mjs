@@ -1,28 +1,29 @@
 // node --test skills/glyph-kit/scripts/*.test.mjs
 import assert from "node:assert/strict";
-import { checkBoxes } from "./layout.mjs";
+import { checkBoxes } from "../skills/glyph-kit/scripts/layout.mjs";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { abResult, cohort, funnel, metricPanel } from "./areas/metrics.mjs";
-import { branchFlow, stateMachine } from "./areas/flows.mjs";
-import { board, impactEffort, swimlane } from "./areas/planning.mjs";
-import { contrastRatio, contrast, stateMatrix } from "./areas/systems.mjs";
-import { likert, quoteCard, taskStats, themeMatrix } from "./areas/research.mjs";
-import { filmstrip, intentCard, stagger } from "./areas/motion.mjs";
-import { qaChecklist, redline } from "./areas/handoff.mjs";
-import { screen } from "./areas/wireframes.mjs";
-import { KIND_DOCS } from "./docs.mjs";
-import { lintBlock } from "./lint.mjs";
-import { AREAS, KINDS, resolve } from "./registry.mjs";
-import { renderDeck } from "./render/deck.mjs";
-import { renderHtml } from "./render/html.mjs";
-import { body, label, renderMarkdown } from "./render/text.mjs";
+import { abResult, cohort, funnel, metricPanel } from "../skills/glyph-kit/scripts/areas/metrics.mjs";
+import { branchFlow, stateMachine } from "../skills/glyph-kit/scripts/areas/flows.mjs";
+import { board, impactEffort, swimlane } from "../skills/glyph-kit/scripts/areas/planning.mjs";
+import { contrastRatio, contrast, stateMatrix } from "../skills/glyph-kit/scripts/areas/systems.mjs";
+import { likert, quoteCard, taskStats, themeMatrix } from "../skills/glyph-kit/scripts/areas/research.mjs";
+import { filmstrip, intentCard, stagger } from "../skills/glyph-kit/scripts/areas/motion.mjs";
+import { qaChecklist, redline } from "../skills/glyph-kit/scripts/areas/handoff.mjs";
+import { screen } from "../skills/glyph-kit/scripts/areas/wireframes.mjs";
+import { KIND_DOCS } from "../tools/docs.mjs";
+import { lintBlock } from "../skills/glyph-kit/scripts/lint.mjs";
+import { AREAS, KINDS, resolve } from "../skills/glyph-kit/scripts/registry.mjs";
+import { renderDeck } from "../skills/glyph-kit/scripts/render/deck.mjs";
+import { renderHtml } from "../skills/glyph-kit/scripts/render/html.mjs";
+import { body, label, renderMarkdown } from "../skills/glyph-kit/scripts/render/text.mjs";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const root = join(dirname(fileURLToPath(import.meta.url)), "../skills/glyph-kit");
+const tools = join(dirname(fileURLToPath(import.meta.url)), "../tools");
 const examples = Object.fromEntries(
-  Object.keys(AREAS).map((a) => [a, JSON.parse(readFileSync(join(root, "examples", `${a}.json`), "utf8"))])
+  Object.keys(AREAS).map((a) => [a, JSON.parse(readFileSync(join(tools, "examples", `${a}.json`), "utf8"))])
 );
 const width = (s) => [...s].length;
 
@@ -163,7 +164,7 @@ test("every example deck renders, and every camera step points at real lines", (
 });
 
 test("paint: roles, not decoration", async () => {
-  const { paintLine } = await import("./render/paint.mjs");
+  const { paintLine } = await import("../skills/glyph-kit/scripts/render/paint.mjs");
   assert.equal(paintLine("a ██░ b"), 'a <span class="gk-d">██</span><span class="gk-e">░ </span>b');
   assert.match(paintLine("x blocked  thing"), /<span class="gk-x">x blocked/);
   assert.match(paintLine("ratio 19.3:1  AAA"), /<span class="gk-ok">AAA<\/span>/);

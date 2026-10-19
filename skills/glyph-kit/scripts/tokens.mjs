@@ -34,7 +34,7 @@ export function estimateTextTokens(text) {
 export const imageTokens = (w, h) => Math.ceil(w / 28) * Math.ceil(h / 28);
 
 /** Estimated image tokens for a screenshot of a text figure. Pixel size per column and row is fitted
- *  to the 44 screenshots measured in reference/measurements.json (2× density, with padding):
+ *  to the 44 screenshots measured in docs/measurements.json (in the repository) (2× density, with padding):
  *  width ≈ 15.65 px × columns + 64, height ≈ 31.06 px × rows + 73. */
 export function estimateImageTokens(text) {
   const lines = text.split("\n");

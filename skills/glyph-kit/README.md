@@ -24,6 +24,8 @@ npx skills add alextraykov/glyph-kit                # any agent: Claude Code, Co
 
 In Claude Code, as a plugin: `/plugin marketplace add alextraykov/glyph-kit`, then `/plugin install glyph-kit@traykov`.
 
+**Font, recommended:** [Departure Mono](https://departuremono.com), free under the SIL Open Font License. It draws every block and box character at exactly one cell, so figures line up. Any monospace font that covers ░▒▓█ and box drawing works; the kit doesn't require it.
+
 By hand, copy this folder into a skills directory:
 
 | Tool | For you | For one repository |
@@ -37,8 +39,8 @@ Node 18 or later, nothing to install.
 
 ```bash
 node scripts/glyph-kit.mjs kinds                                   # 45 kinds in 8 areas
-node scripts/glyph-kit.mjs render examples/research.json --to markdown
-node scripts/glyph-kit.mjs render examples/wireframes.json --to html > wireframes.html
+node scripts/glyph-kit.mjs render examples/product/settings.spec.json --to markdown
+node scripts/glyph-kit.mjs render examples/product/settings.spec.json --to html > settings.html
 node scripts/glyph-kit.mjs deck examples/decks/export-review.json > deck.html   # a 16-slide review
 ```
 
@@ -46,7 +48,7 @@ Export any form:
 
 ```bash
 node scripts/glyph-kit.mjs export examples/reports/motion-audit.json --to pdf     # an A4 report
-node scripts/glyph-kit.mjs export examples/research.json --to svg --theme ink    # one SVG per figure
+node scripts/glyph-kit.mjs export examples/reports/motion-audit.json --to svg --theme ink   # one SVG per figure
 node scripts/glyph-kit.mjs export examples/reports/motion-audit.json --to mdx --mdx component
 ```
 
@@ -86,12 +88,12 @@ import { renderMarkdown } from "./scripts/render/text.mjs";
 ## Checks
 
 ```bash
-node --test scripts/*.test.mjs          # generators, renderers, lint
+node --test tests/*.test.mjs            # from the repository: generators, renderers, lint
 node scripts/lint.mjs reference/areas/*.md
-node scripts/measure.mjs                # timings, sizes, image tokens (and text tokens with credentials)
-node scripts/build-reference.mjs        # regenerate the area guides after a change
+node tools/measure.mjs                  # timings, sizes, image tokens (and text tokens with credentials)
+node tools/build-reference.mjs          # regenerate the area guides after a change
 ```
 
 ## Licence
 
-MIT, see `LICENSE`. The screenshots in `reference/images/` keep their own licences, listed in `reference/history.md`.
+MIT, see `LICENSE`. The history of the characters, with screenshots under their own licences, is in the repository: [docs/history.md](https://github.com/alextraykov/glyph-kit/blob/main/docs/history.md).

@@ -2,7 +2,7 @@
 
 Document the design system as data: scales, contrast, component states, layers and tokens. Contrast is computed, not eyeballed.
 
-Examples: `examples/systems.json`. Render any of them with `node scripts/glyph-kit.mjs render examples/systems.json --to markdown` (or `--to html`).
+Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
 
 ## Spacing scale
 

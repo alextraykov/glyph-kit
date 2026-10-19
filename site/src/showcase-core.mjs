@@ -162,3 +162,41 @@ export function buildFrame(box, { plan }, t) {
 
 /** An empty box of the same size: what shows before the first view builds. */
 export const blank = (box) => ({ ch: box.ch.map((row) => row.map(() => " ")), cl: box.cl.map((row) => row.map(() => "")) });
+
+// ── Skeletons and filling in ─────────────────────────────────────────────────────────────────────
+// Before a figure arrives, its skeleton: lines and frames stay as faint structure, every word, number
+// and bar becomes a dim ░. While the figure is being made, a ▒ band sweeps the skeleton in reading
+// order. When it arrives it builds in over its own skeleton, so the drawing fills its outline.
+
+/** The skeleton of a box: same size, structure kept faint, everything else ░. */
+export function skeleton(box) {
+  return {
+    ch: box.ch.map((row) => row.map((c) => (c === " " ? " " : LINES.includes(c) ? c : "░"))),
+    cl: box.ch.map((row) => row.map((c) => (c === " " ? "" : LINES.includes(c) ? "sk-line" : "sk")))
+  };
+}
+
+/** The skeleton with a ▒ band passing through it, t ms in. The band takes 1.2 s to cross, in steps. */
+export function shimmerFrame(skel, t) {
+  const W = skel.ch[0]?.length ?? 0;
+  const step = Math.floor(t / BUILD_STEP);
+  const at = (step * 2) % (W + 12) - 6;
+  return {
+    ch: skel.ch.map((row, r) => row.map((c, k) => (c === "░" && Math.abs(k - r - at) <= 2 ? "▒" : c))),
+    cl: skel.cl
+  };
+}
+
+/** One frame of a box building in over its skeleton: cells not started yet show the skeleton. */
+export function fillFrame(box, plan, t, skel) {
+  const frame = buildFrame(box, plan, t);
+  frame.ch.forEach((row, r) =>
+    row.forEach((c, k) => {
+      if (c === " " && skel.ch[r][k] !== " ") {
+        row[k] = skel.ch[r][k];
+        frame.cl[r][k] = skel.cl[r][k];
+      }
+    })
+  );
+  return frame;
+}

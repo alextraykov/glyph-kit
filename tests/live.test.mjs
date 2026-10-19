@@ -1,13 +1,13 @@
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { test } from "node:test";
-import { checkBoxes } from "./layout.mjs";
-import { Grid } from "./live/grid.mjs";
-import { renderLiveHtml } from "./live/html.mjs";
-import { LIVE, live, stillText } from "./live/kinds.mjs";
-import * as pace from "./live/pace.mjs";
+import { checkBoxes } from "../skills/glyph-kit/scripts/layout.mjs";
+import { Grid } from "../skills/glyph-kit/scripts/live/grid.mjs";
+import { renderLiveHtml } from "../skills/glyph-kit/scripts/live/html.mjs";
+import { LIVE, live, stillText } from "../skills/glyph-kit/scripts/live/kinds.mjs";
+import * as pace from "../tools/pace.mjs";
 
-const dir = new URL("../examples/live/", import.meta.url);
+const dir = new URL("../skills/glyph-kit/examples/live/", import.meta.url);
 const examples = readdirSync(dir).filter((f) => f.endsWith(".json")).map((f) => JSON.parse(readFileSync(new URL(f, dir), "utf8")));
 const width = (text) => Math.max(...text.split("\n").map((l) => [...l].length));
 

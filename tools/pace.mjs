@@ -3,7 +3,7 @@
 // examples of what the grid can do; for everyday work, write a spec for one of the kinds in kinds.mjs.
 //
 // Each export is a factory: call it to get a fresh diagram, a function (step, frac) → Grid.
-import { FADE, Grid, TRAIL, changes, clamp, easeInOut, fit, hash, mod, quant, rand } from "./grid.mjs";
+import { FADE, Grid, TRAIL, changes, clamp, easeInOut, fit, hash, mod, quant, rand } from "../skills/glyph-kit/scripts/live/grid.mjs";
 
 /* 1. Gates ---------------------------------------------------------------------------------- */
 // Top: the old enterprise route. Trust is low, so every expert's work queues behind nine

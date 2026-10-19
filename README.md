@@ -4,6 +4,8 @@
 
 **Get the point across clearly, cheaply, in an aesthetic that doesn't date.**
 
+<p align="center"><a href="https://glyph-kit.traykov.cc"><img src="docs/readme/hero.png" alt="The Glyph kit site: the name in Departure Mono, the install commands, and a moving rework loop drawn in block characters." width="100%"></a></p>
+
 A skill for Claude Code and Codex that draws product-design work in four shades and a few lines: research results, funnels and tests, flows, roadmaps, wireframes, design-system docs, handoff checklists, motion specs and moving diagrams. The agent writes a small spec, and code draws the figure, so the bars always match their numbers. The same spec becomes Markdown for a PR, a deck you present, a report as a PDF, an SVG for a slide, or a prototype built with your design system.
 
 ```text
@@ -22,6 +24,12 @@ A skill for Claude Code and Codex that draws product-design work in four shades 
 ╚═════════════════╝
 ```
 
+## Try it in the browser
+
+Describe a figure on [glyph-kit.traykov.cc](https://glyph-kit.traykov.cc) and the builder draws it live, with nothing to install.
+
+<img src="docs/readme/builder.png" alt="The builder: a moving signup funnel in the preview, suggestion chips, and a prompt box with a Build button." width="100%">
+
 ## Install
 
 **Any agent** (Claude Code, Codex, Cursor and others):
@@ -39,9 +47,13 @@ npx skills add alextraykov/glyph-kit
 
 **By hand:** download the zip from the [latest release](https://github.com/alextraykov/glyph-kit/releases/latest) and unzip it into `~/.claude/skills/` (Claude Code) or `~/.agents/skills/` (Codex).
 
+**Font, recommended:** [Departure Mono](https://departuremono.com), free under the SIL Open Font License. It draws every block and box character at exactly one cell, so figures line up. Any monospace font that covers ░▒▓█ and box drawing works; the kit doesn't require it.
+
 Then ask for what you need, the way you'd ask a colleague: "chart these usability results for the PR", "a wireframe for the notification settings", "a motion spec for the toast, including reduced motion".
 
 ## What it draws
+
+<img src="docs/readme/figures.png" alt="Eight areas of figures drawn by the kit: survey ratings, a funnel, a flow with failures, a roadmap, a settings wireframe, spacing tokens, a redline and a motion card." width="100%">
 
 | Area | Kinds |
 |---|---|
@@ -64,7 +76,7 @@ See every one at **[traykov.cc/glyph-kit](https://traykov.cc/glyph-kit)**.
 - **Works anywhere text does.** PRs, tickets, READMEs, Slack, terminals, a model's context, print.
 - **A baseline, not a dead end.** Agree the structure in text, then raise the same spec to a prototype, a deck, a report or production code.
 
-What's measured and what isn't: [benefits](skills/glyph-kit/reference/benefits.md). Text tokens aren't measured yet, and the kit says so.
+What's measured and what isn't: [benefits](docs/benefits.md). Text tokens aren't measured yet, and the kit says so.
 
 ## Guardrails
 
@@ -80,13 +92,13 @@ Node 18 or later, nothing to install:
 
 ```bash
 node skills/glyph-kit/scripts/glyph-kit.mjs kinds
-node skills/glyph-kit/scripts/glyph-kit.mjs render skills/glyph-kit/examples/research.json --to markdown
+node skills/glyph-kit/scripts/glyph-kit.mjs render skills/glyph-kit/examples/product/settings.spec.json --to markdown
 node skills/glyph-kit/scripts/glyph-kit.mjs export skills/glyph-kit/examples/reports/motion-audit.json --to pdf
 ```
 
 ## Contributing
 
-Issues and ideas are welcome. Run `node --test skills/glyph-kit/scripts/*.test.mjs` before a pull request. The kit has no dependencies and keeps it that way.
+Issues and ideas are welcome. Run `node --test tests/*.test.mjs` before a pull request. The kit has no dependencies and keeps it that way.
 
 ## License
 

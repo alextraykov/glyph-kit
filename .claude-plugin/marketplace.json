@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "glyph-kit",
-      "source": "./",
+      "source": "./skills/glyph-kit",
       "description": "Product-design figures as text, drawn from a small spec and exported to Markdown, MDX, HTML, SVG, PNG, PDF, decks and prototypes.",
       "version": "0.1.0",
       "author": {

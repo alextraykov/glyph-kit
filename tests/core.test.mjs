@@ -19,7 +19,7 @@ import {
   table,
   tree,
   velocity
-} from "./core.mjs";
+} from "../skills/glyph-kit/scripts/core.mjs";
 
 const width = (s) => [...s].length;
 

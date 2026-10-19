@@ -2,7 +2,7 @@
 
 Measurements and checklists for handing work to engineering and checking what came back.
 
-Examples: `examples/handoff.json`. Render any of them with `node scripts/glyph-kit.mjs render examples/handoff.json --to markdown` (or `--to html`).
+Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
 
 ## Spacing redline
 

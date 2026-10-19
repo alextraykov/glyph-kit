@@ -27,4 +27,4 @@ Examples for each are in `examples/live/`, with the HTML they make.
 - The motion is an illustration of the data, not a measurement. Seeded randomness keeps every run the same, but say "sample data" unless the numbers are real.
 - Keep it under 80 columns; the kinds size themselves from their labels, so long labels widen the grid.
 - One moving diagram per screen. Several at once compete for attention; the Labs page plays only what's on screen.
-- Hand-drawn compositions (`scripts/live/pace.mjs`) show what the grid can do for an argument. Build new ones on `scripts/live/grid.mjs` the same way: a function from (step, fraction) to a grid.
+- Hand-drawn compositions ([`tools/pace.mjs`](https://github.com/alextraykov/glyph-kit/blob/main/tools/pace.mjs) in the repository) show what the grid can do for an argument. Build new ones on `scripts/live/grid.mjs` the same way: a function from (step, fraction) to a grid.

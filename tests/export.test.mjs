@@ -5,18 +5,19 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { AREAS } from "./registry.mjs";
-import { findChrome, htmlToPdf, svgToPng } from "./render/export.mjs";
-import { renderMdx } from "./render/mdx.mjs";
-import { classify } from "./render/paint.mjs";
-import { renderReport, reportMarkdown } from "./render/report.mjs";
-import { figureSvg, renderSvg } from "./render/svg.mjs";
-import { PALETTES } from "./render/themes.mjs";
+import { AREAS } from "../skills/glyph-kit/scripts/registry.mjs";
+import { findChrome, htmlToPdf, svgToPng } from "../skills/glyph-kit/scripts/render/export.mjs";
+import { renderMdx } from "../skills/glyph-kit/scripts/render/mdx.mjs";
+import { classify } from "../skills/glyph-kit/scripts/render/paint.mjs";
+import { renderReport, reportMarkdown } from "../skills/glyph-kit/scripts/render/report.mjs";
+import { figureSvg, renderSvg } from "../skills/glyph-kit/scripts/render/svg.mjs";
+import { PALETTES } from "../skills/glyph-kit/scripts/render/themes.mjs";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const root = join(dirname(fileURLToPath(import.meta.url)), "../skills/glyph-kit");
+const tools = join(dirname(fileURLToPath(import.meta.url)), "../tools");
 const json = (p) => JSON.parse(readFileSync(join(root, p), "utf8"));
 const report = json("examples/reports/motion-audit.json");
-const all = Object.keys(AREAS).flatMap((a) => json(`examples/${a}.json`));
+const all = Object.keys(AREAS).flatMap((a) => JSON.parse(readFileSync(join(tools, "examples", `${a}.json`), "utf8")));
 
 test("svg: every example draws, in every theme, with no broken numbers", () => {
   for (const theme of Object.keys(PALETTES)) {

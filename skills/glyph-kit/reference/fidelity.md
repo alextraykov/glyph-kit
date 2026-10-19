@@ -35,8 +35,8 @@ spec ──► text      review structure, content and numbers in a PR or a tick
 |---|---|
 | `settings.spec.json` | the spec |
 | `settings.txt` | text, from `render --to text` |
-| `settings.html` | HTML prototype, from `render --to html --map design-system.map.json` |
-| `settings-deck.html` | a deck: the settings screen followed by the motion examples |
+| `settings.html` | HTML prototype, from `render --to html --map design-system.map.json` (render it; a copy is on the website) |
+| `settings-deck.html` | a deck: the settings screen followed by the motion examples (render it with `deck`) |
 | `NotificationSettings.astro` | production, built by hand from the spec and the map, with every primitive's origin marked |
 | `design-system.map.json` | the map: this site's tokens with fallbacks, and its component conventions |
 

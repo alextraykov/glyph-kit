@@ -2,7 +2,7 @@
 
 Funnels, cohorts, test results and the everyday charts. Numbers are always printed next to the bars, so a reader or a model reads them instead of estimating lengths.
 
-Examples: `examples/metrics.json`. Render any of them with `node scripts/glyph-kit.mjs render examples/metrics.json --to markdown` (or `--to html`).
+Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
 
 ## Bar chart
 

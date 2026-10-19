@@ -11,21 +11,27 @@ document.querySelectorAll("[data-live]").forEach((pre) => {
   autoplay(pre, make, still);
 });
 
+// Copy buttons are icons: a tick for a moment after copying.
 document.querySelectorAll("[data-copy]").forEach((button) => {
   button.hidden = false;
+  const label = button.getAttribute("aria-label");
   button.addEventListener("click", async () => {
     try {
       await navigator.clipboard.writeText(button.dataset.copy);
-      button.textContent = "Copied";
       button.dataset.done = "";
+      button.setAttribute("aria-label", "Copied");
+      button.title = "Copied";
     } catch {
-      button.textContent = "Select it";
+      button.title = "Select the text to copy it";
     }
     setTimeout(() => {
-      button.textContent = "Copy";
       delete button.dataset.done;
+      button.setAttribute("aria-label", label);
+      button.title = "Copy";
     }, 1600);
   });
 });
 
 import "./showcase.js";
+import "./try.js";
+import "./parallax.js";

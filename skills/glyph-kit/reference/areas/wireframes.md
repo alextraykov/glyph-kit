@@ -2,7 +2,7 @@
 
 Screens built from a small set of primitives. The same primitive names map to real components in the design-system map, which is what lets a text wireframe become a prototype and then production code without reinterpretation.
 
-Examples: `examples/wireframes.json`. Render any of them with `node scripts/glyph-kit.mjs render examples/wireframes.json --to markdown` (or `--to html`).
+Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
 
 ## Screen wireframe
 
