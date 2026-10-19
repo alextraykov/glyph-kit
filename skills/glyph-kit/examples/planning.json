@@ -1,0 +1,191 @@
+[
+  {
+    "kind": "board",
+    "title": "Roadmap",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "now": [
+        "Export to CSV",
+        "Fix date parsing on import"
+      ],
+      "next": [
+        "Saved views",
+        "Keyboard shortcuts for tables"
+      ],
+      "later": [
+        "Scheduled reports"
+      ]
+    }
+  },
+  {
+    "kind": "impactEffort",
+    "title": "What to fix first",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "Fix date parsing",
+        "impact": 0.9,
+        "effort": 0.2
+      },
+      {
+        "label": "Saved views",
+        "impact": 0.7,
+        "effort": 0.6
+      },
+      {
+        "label": "New onboarding",
+        "impact": 0.8,
+        "effort": 0.9
+      },
+      {
+        "label": "Dark mode",
+        "impact": 0.3,
+        "effort": 0.5
+      },
+      {
+        "label": "Rename tabs",
+        "impact": 0.2,
+        "effort": 0.1
+      }
+    ]
+  },
+  {
+    "kind": "swimlane",
+    "title": "Handoff for one feature",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "lanes": [
+        "Designer",
+        "Engineer",
+        "Reviewer"
+      ],
+      "rows": [
+        [
+          {
+            "lane": 0,
+            "text": "prototype"
+          },
+          {
+            "lane": 1,
+            "text": "read spec"
+          }
+        ],
+        [
+          {
+            "lane": 1,
+            "text": "build"
+          },
+          {
+            "lane": 2,
+            "text": "review"
+          }
+        ],
+        [
+          {
+            "lane": 2,
+            "text": "x missing states"
+          }
+        ],
+        {
+          "back": {
+            "from": 2,
+            "to": 0,
+            "text": "revise"
+          }
+        },
+        [
+          {
+            "lane": 0,
+            "text": "spec v2"
+          },
+          {
+            "lane": 1,
+            "text": "build"
+          },
+          {
+            "lane": 2,
+            "text": "ok, approve"
+          }
+        ]
+      ]
+    }
+  },
+  {
+    "kind": "gantt",
+    "title": "Release plan, in weeks",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "research",
+        "start": 0,
+        "end": 2
+      },
+      {
+        "label": "design",
+        "start": 1,
+        "end": 4
+      },
+      {
+        "label": "build",
+        "start": 3,
+        "end": 8
+      },
+      {
+        "label": "beta",
+        "start": 7,
+        "end": 9
+      }
+    ],
+    "options": {
+      "scale": 10,
+      "width": 40,
+      "unit": " wk"
+    }
+  },
+  {
+    "kind": "statusKey",
+    "title": "Status ladder",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "level": 4,
+        "label": "shipped"
+      },
+      {
+        "level": 3,
+        "label": "in review"
+      },
+      {
+        "level": 2,
+        "label": "in progress"
+      },
+      {
+        "level": 1,
+        "label": "supporting"
+      },
+      {
+        "level": 0,
+        "label": "not yet"
+      }
+    ]
+  },
+  {
+    "kind": "decisionLog",
+    "title": "Decisions",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "date": "Oct 2",
+        "decision": "CSV first, not PDF",
+        "why": "8 of 10 asks were CSV",
+        "owner": "Design"
+      },
+      {
+        "date": "Oct 9",
+        "decision": "Parse dates in the browser",
+        "why": "Server change is 3 sprints",
+        "owner": "Eng"
+      }
+    ]
+  }
+]

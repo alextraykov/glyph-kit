@@ -1,0 +1,305 @@
+{
+  "title": "Pave motion audit",
+  "subtitle": "Every place in the front end where something moves, read and scored against one motion language.",
+  "byline": "Real work · figures from the published write-up",
+  "theme": "ink",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Pave motion audit",
+      "subtitle": "Every place in the front end where something moves, read and scored against one motion language.",
+      "byline": "Real work · figures from the published write-up",
+      "notes": "About 750 transitions and animations across about 350 stylesheets, which became 47 proposed fixes."
+    },
+    {
+      "type": "statement",
+      "kicker": "The finding that started it",
+      "text": "The same spinner ran at four different speeds.",
+      "notes": "Its keyframes had been copied from file to file. A slow spinner makes the app feel slow at the same load time."
+    },
+    {
+      "type": "section",
+      "kicker": "01",
+      "title": "How it was read"
+    },
+    {
+      "kind": "flow",
+      "title": "Every stylesheet read, not sampled",
+      "source": "Pave motion audit, Quickbase, 2026. Figures as published in the write-up; internal names removed.",
+      "data": [
+        "350 stylesheets",
+        "8 auditor shards",
+        "750 motion sites",
+        "47 fixes"
+      ],
+      "present": {
+        "notes": "Each site was scored on duration, easing, the property animated and reduced motion."
+      }
+    },
+    {
+      "kind": "barChart",
+      "title": "One spinner, four speeds",
+      "intent": "One rotation, measured in each copy of the keyframes.",
+      "source": "Pave motion audit, Quickbase, 2026. Figures as published in the write-up; internal names removed.",
+      "data": [
+        {
+          "label": "copy 1",
+          "value": 1.2,
+          "text": "1.2 s"
+        },
+        {
+          "label": "copy 2",
+          "value": 1,
+          "text": "1.0 s"
+        },
+        {
+          "label": "copy 3",
+          "value": 0.8,
+          "text": "0.8 s"
+        },
+        {
+          "label": "copy 4",
+          "value": 0.6,
+          "text": "0.6 s"
+        }
+      ],
+      "options": {
+        "width": 30
+      },
+      "present": {
+        "steps": [
+          {
+            "lines": [
+              2,
+              2
+            ],
+            "say": "The fix: one shared keyframe at 0.8 s."
+          }
+        ],
+        "notes": "Whatever your spinner is made of, define its speed once."
+      }
+    },
+    {
+      "type": "section",
+      "kicker": "02",
+      "title": "What a finding looks like"
+    },
+    {
+      "kind": "motionTiming",
+      "title": "Toast enter: today and proposed",
+      "source": "Pave motion audit, Quickbase, 2026. Figures as published in the write-up; internal names removed.",
+      "data": [
+        {
+          "label": "today",
+          "ms": 200,
+          "easing": "ease",
+          "easingName": "ease"
+        },
+        {
+          "label": "proposed",
+          "ms": 150,
+          "easing": [
+            0.33,
+            1,
+            0.68,
+            1
+          ],
+          "easingName": "reveal-ease"
+        }
+      ],
+      "present": {
+        "steps": [
+          {
+            "lines": [
+              0,
+              0
+            ],
+            "say": "The default ease speeds up before it slows down, so entrances feel late."
+          },
+          {
+            "lines": [
+              1,
+              1
+            ],
+            "say": "Shorter, and fastest at the start."
+          }
+        ],
+        "notes": "Duration ruler: 20 cells of 25 ms on a fixed 500 ms scale. Speed glyph: progress in each eighth of the time."
+      }
+    },
+    {
+      "kind": "easingTable",
+      "title": "Eight characters per curve",
+      "intent": "Speed over time for each easing in the audit.",
+      "source": "Pave motion audit, Quickbase, 2026. Figures as published in the write-up; internal names removed.",
+      "data": [
+        {
+          "name": "linear",
+          "curve": "linear",
+          "use": "progress only"
+        },
+        {
+          "name": "ease",
+          "curve": "ease",
+          "use": "the browser default"
+        },
+        {
+          "name": "ease-out",
+          "curve": "ease-out",
+          "use": ""
+        },
+        {
+          "name": "decelerate",
+          "curve": [
+            0,
+            0,
+            0.2,
+            1
+          ],
+          "use": "most UI"
+        },
+        {
+          "name": "reveal",
+          "curve": [
+            0.33,
+            1,
+            0.68,
+            1
+          ],
+          "use": "entrances"
+        },
+        {
+          "name": "spring",
+          "curve": [
+            0.44,
+            1.3,
+            0.15,
+            1
+          ],
+          "use": "overshoots, then settles"
+        }
+      ],
+      "present": {
+        "steps": [
+          {
+            "lines": [
+              5,
+              5
+            ],
+            "say": "A spring: the visible motion is over in a quarter of the time; the rest is settling."
+          }
+        ]
+      }
+    },
+    {
+      "kind": "gantt",
+      "title": "Overlaps nobody saw in review",
+      "source": "Pave motion audit, Quickbase, 2026. Figures as published in the write-up; internal names removed.",
+      "data": [
+        {
+          "label": ".toast slide-in",
+          "start": 0,
+          "end": 240
+        },
+        {
+          "label": ".dot pulse",
+          "start": 0,
+          "end": 1000,
+          "loop": true
+        },
+        {
+          "label": ".icon pop",
+          "start": 120,
+          "end": 370
+        },
+        {
+          "label": ".toast fade",
+          "start": 200,
+          "end": 360
+        }
+      ],
+      "options": {
+        "scale": 1000,
+        "width": 40
+      },
+      "present": {
+        "flag": "→",
+        "steps": [
+          {
+            "lines": [
+              0,
+              3
+            ],
+            "say": "Two animations on the toast overlap by 40 ms, and the pulse never stops."
+          }
+        ]
+      }
+    },
+    {
+      "type": "section",
+      "kicker": "03",
+      "title": "Handing off the hero"
+    },
+    {
+      "kind": "compare",
+      "title": "The hero cut against the product",
+      "intent": "The marketing hero drifted all the time; the product grid mostly holds still.",
+      "source": "Hero animation handoff, 60-second recordings of both versions, every line position logged per frame.",
+      "data": [
+        {
+          "label": "vertical lines moving",
+          "a": 1,
+          "aText": "100%",
+          "b": 0.23,
+          "bText": "23%, in 17 pushes"
+        },
+        {
+          "label": "row lines moving",
+          "a": 0,
+          "aText": "0%",
+          "b": 0.11,
+          "bText": "11%"
+        },
+        {
+          "label": "a drawing's build",
+          "a": 0.27,
+          "aText": "2.7 s",
+          "b": 0.77,
+          "bText": "7.7 s"
+        },
+        {
+          "label": "a drawing's exit",
+          "a": 0.08,
+          "aText": "0.8 s",
+          "b": 0.46,
+          "bText": "4.6 s"
+        }
+      ],
+      "options": {
+        "headers": [
+          "MEASURE",
+          "HERO CUT",
+          "PRODUCT"
+        ]
+      },
+      "present": {
+        "steps": [
+          {
+            "lines": [
+              1,
+              1
+            ],
+            "say": "Always moving, against moving a quarter of the time."
+          }
+        ],
+        "notes": "A measurement, not an opinion. Ten cells is enough for the comparison."
+      }
+    },
+    {
+      "type": "statement",
+      "kicker": "What changed",
+      "text": "One duration scale, one easing set, one spinner speed.",
+      "notes": "And the glyph code got tests: it had shown the wrong easing name on 25 of the 47 findings."
+    }
+  ]
+}

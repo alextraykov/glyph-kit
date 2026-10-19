@@ -1,0 +1,7 @@
+interface:
+  display_name: "Glyph kit"
+  short_description: "Product-design figures as text: charts, flows, wireframes, decks and reports"
+  icon_small: "./assets/icon.svg"
+  icon_large: "./assets/icon.svg"
+  brand_color: "#080808"
+  default_prompt: "Summarise these results as a chart for the PR description, with the source under it."

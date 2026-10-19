@@ -1,0 +1,20 @@
+Notification settings
+
+╔═ Settings ═════════════════════════════════╗
+║  Profile │ Notifications │ Billing         ║
+║           ━━━━━━━━━━━━━━━                  ║
+║                                            ║
+║ Email me when a report is ready   [ ■] on  ║ [1]
+║ Weekly summary                    [■ ] off ║
+║ Digest day  [ Monday                    ▼] ║
+║ Send to  [team@example.com_______________] ║
+╠════════════════════════════════════════════╣
+║                     [ Cancel ]  [[ Save ]] ║ [2]
+╚════════════════════════════════════════════╝
+
+[1] Off by default for new teams.
+[2] Save is disabled until something changes.
+
+                                       SAMPLE DATA
+
+Source: Sample data, made up for this example

@@ -1,0 +1,13 @@
+{
+  "name": "glyph-kit",
+  "version": "0.1.0",
+  "description": "Product-design figures as text: research, metrics, flows, wireframes, plans, design-system docs, handoff and motion, drawn in block and box characters from a small spec, then exported as Markdown, MDX, HTML, SVG, PNG or PDF, a deck or a prototype.",
+  "author": {
+    "name": "Alexander Traykov",
+    "url": "https://traykov.cc"
+  },
+  "homepage": "https://glyph-kit.traykov.cc",
+  "repository": "https://github.com/alextraykov/glyph-kit",
+  "license": "MIT",
+  "keywords": ["design", "diagrams", "ascii", "wireframes", "charts", "decks", "reports", "motion", "product-design"]
+}

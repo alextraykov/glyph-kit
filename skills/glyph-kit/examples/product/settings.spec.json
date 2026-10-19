@@ -1,0 +1,71 @@
+{
+  "kind": "screen",
+  "title": "Notification settings",
+  "intent": "Agree on content and order before visual design.",
+  "source": "Sample data, made up for this example",
+  "data": {
+    "title": "Settings",
+    "rows": [
+      {
+        "type": "tabs",
+        "items": [
+          "Profile",
+          "Notifications",
+          "Billing"
+        ],
+        "selected": "Notifications"
+      },
+      {
+        "type": "space"
+      },
+      {
+        "type": "toggle",
+        "label": "Email me when a report is ready",
+        "on": true,
+        "note": "1"
+      },
+      {
+        "type": "toggle",
+        "label": "Weekly summary",
+        "on": false
+      },
+      {
+        "type": "select",
+        "label": "Digest day",
+        "value": "Monday",
+        "options": [
+          "Monday",
+          "Wednesday",
+          "Friday"
+        ]
+      },
+      {
+        "type": "input",
+        "label": "Send to",
+        "value": "team@example.com"
+      },
+      {
+        "type": "divider"
+      },
+      {
+        "type": "buttons",
+        "items": [
+          {
+            "label": "Cancel"
+          },
+          {
+            "label": "Save",
+            "primary": true,
+            "untilChange": true
+          }
+        ],
+        "align": "right",
+        "note": "2"
+      }
+    ],
+    "notes": {
+      "1": "Off by default for new teams.",
+      "2": "Save is disabled until something changes."
+    }
+  }
+}

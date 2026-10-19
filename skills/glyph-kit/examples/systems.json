@@ -1,0 +1,197 @@
+[
+  {
+    "kind": "spacingScale",
+    "title": "Spacing tokens",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "name": "space-1",
+        "value": 4
+      },
+      {
+        "name": "space-2",
+        "value": 8
+      },
+      {
+        "name": "space-3",
+        "value": 16
+      },
+      {
+        "name": "space-4",
+        "value": 24
+      },
+      {
+        "name": "space-5",
+        "value": 40
+      }
+    ]
+  },
+  {
+    "kind": "typeScale",
+    "title": "Type scale",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "name": "display",
+        "size": 44,
+        "lineHeight": 48
+      },
+      {
+        "name": "heading",
+        "size": 22,
+        "lineHeight": 28
+      },
+      {
+        "name": "body",
+        "size": 16,
+        "lineHeight": 24
+      },
+      {
+        "name": "caption",
+        "size": 11,
+        "lineHeight": 16
+      }
+    ]
+  },
+  {
+    "kind": "contrast",
+    "title": "Text contrast",
+    "intent": "Catch failing pairs before they reach a screen.",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "ink on paper",
+        "fg": "#080808",
+        "bg": "#fbfbf8"
+      },
+      {
+        "label": "muted on paper",
+        "fg": "#9a9a92",
+        "bg": "#fbfbf8"
+      },
+      {
+        "label": "link on panel",
+        "fg": "#04764e",
+        "bg": "#f1f1ec"
+      }
+    ]
+  },
+  {
+    "kind": "stateMatrix",
+    "title": "Button states",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "variants": [
+        "primary",
+        "secondary",
+        "text"
+      ],
+      "states": [
+        "rest",
+        "hover",
+        "focus",
+        "pressed",
+        "disabled",
+        "loading"
+      ],
+      "cells": {
+        "primary": {
+          "rest": "done",
+          "hover": "done",
+          "focus": "done",
+          "pressed": "done",
+          "disabled": "progress",
+          "loading": "missing"
+        },
+        "secondary": {
+          "rest": "done",
+          "hover": "done",
+          "focus": "progress",
+          "pressed": "missing",
+          "disabled": "missing",
+          "loading": "na"
+        },
+        "text": {
+          "rest": "done",
+          "hover": "done",
+          "focus": "done",
+          "pressed": "na",
+          "disabled": "done",
+          "loading": "na"
+        }
+      }
+    }
+  },
+  {
+    "kind": "layerStack",
+    "title": "Layers",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "name": "page",
+        "z": 0
+      },
+      {
+        "name": "card",
+        "z": 100
+      },
+      {
+        "name": "dimmer",
+        "z": 300
+      },
+      {
+        "name": "dialog",
+        "z": 400
+      }
+    ]
+  },
+  {
+    "kind": "tokenTable",
+    "title": "Colour roles",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "name": "ink",
+        "value": "#080808",
+        "use": "text, borders, primary buttons"
+      },
+      {
+        "name": "paper",
+        "value": "#fbfbf8",
+        "use": "page background"
+      },
+      {
+        "name": "signal-fail",
+        "value": "#b8421f",
+        "use": "errors only"
+      }
+    ]
+  },
+  {
+    "kind": "table",
+    "title": "Breakpoints",
+    "source": "Sample data, made up for this example",
+    "data": [
+      [
+        "Name",
+        "Min width",
+        "Columns"
+      ],
+      [
+        "phone",
+        "0",
+        "4"
+      ],
+      [
+        "tablet",
+        "700",
+        "8"
+      ],
+      [
+        "desktop",
+        "1180",
+        "12"
+      ]
+    ]
+  }
+]

@@ -1,0 +1,1 @@
+{ "kind": "rollout", "title": "Rolling out the new editor", "intent": "Agree the stages, the guard and what happens when it trips.", "source": "Illustrative.", "data": { "stages": [1, 5, 25, 50, 100], "metric": "Error rate", "limit": 2, "breachAt": 25 } }

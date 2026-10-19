@@ -1,0 +1,135 @@
+[
+  {
+    "kind": "intentCard",
+    "title": "Toast enters",
+    "intent": "Write the motion down as a decision before anyone animates it.",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "name": "Toast enters",
+      "purpose": "Confirm the save without taking focus",
+      "trigger": "Save succeeds",
+      "from": "below the edge, transparent",
+      "to": "in place, opaque",
+      "ms": 200,
+      "easing": [
+        0.33,
+        1,
+        0.68,
+        1
+      ],
+      "easingName": "reveal",
+      "reduced": "Appears in place, no movement; stays for the same time"
+    }
+  },
+  {
+    "kind": "transitionSpec",
+    "title": "Card lifts",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "property": "opacity",
+        "from": "0",
+        "to": "1",
+        "start": 0,
+        "end": 150
+      },
+      {
+        "property": "transform",
+        "from": "y 8px",
+        "to": "y 0",
+        "start": 0,
+        "end": 200
+      },
+      {
+        "property": "shadow",
+        "from": "none",
+        "to": "md",
+        "start": 100,
+        "end": 200
+      }
+    ]
+  },
+  {
+    "kind": "stagger",
+    "title": "Cards enter",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "count": 5,
+      "duration": 200,
+      "delay": 60,
+      "curve": "ease-out",
+      "label": "card"
+    }
+  },
+  {
+    "kind": "filmstrip",
+    "title": "Ease-out, frame by frame",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "frames": 8,
+      "easing": "ease-out",
+      "ms": 240
+    }
+  },
+  {
+    "kind": "motionTiming",
+    "title": "Toast, today and proposed",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "today",
+        "ms": 200,
+        "easing": "ease",
+        "easingName": "ease"
+      },
+      {
+        "label": "proposed",
+        "ms": 150,
+        "easing": [
+          0.33,
+          1,
+          0.68,
+          1
+        ],
+        "easingName": "reveal"
+      }
+    ]
+  },
+  {
+    "kind": "easingTable",
+    "title": "Easing tokens",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "name": "ease-standard",
+        "curve": [
+          0.2,
+          0,
+          0,
+          1
+        ],
+        "use": "most UI"
+      },
+      {
+        "name": "ease-reveal",
+        "curve": [
+          0.33,
+          1,
+          0.68,
+          1
+        ],
+        "use": "entrances"
+      },
+      {
+        "name": "ease-exit",
+        "curve": [
+          0.4,
+          0,
+          1,
+          1
+        ],
+        "use": "leaving the screen"
+      }
+    ]
+  }
+]

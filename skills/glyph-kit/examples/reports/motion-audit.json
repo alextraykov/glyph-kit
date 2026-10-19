@@ -1,0 +1,259 @@
+{
+  "title": "Pave motion audit",
+  "subtitle": "Every place in the front end where something moves, read and scored against one motion language.",
+  "author": "Alexander Traykov",
+  "date": "2026",
+  "theme": "paper",
+  "summary": [
+    "About 750 transitions and animations across about 350 stylesheets became 47 proposed fixes.",
+    "The same spinner ran at four different speeds, because its keyframes were copied from file to file.",
+    "The browser default `ease` speeds up before it slows down, so entrances feel late.",
+    "The marketing hero moved all the time; the product grid moves about a quarter of the time."
+  ],
+  "sections": [
+    {
+      "title": "How it was read",
+      "takeaway": "Every stylesheet was read, not sampled.",
+      "text": [
+        "Each place where something moves was scored on four things: duration, easing, the property animated and what happens under reduced motion. Findings that broke the motion language became proposed fixes."
+      ],
+      "figures": [
+        {
+          "kind": "flow",
+          "title": "Every stylesheet read, not sampled",
+          "source": "Pave motion audit, Quickbase, 2026. Figures as published in the write-up; internal names removed.",
+          "data": [
+            "350 stylesheets",
+            "8 auditor shards",
+            "750 motion sites",
+            "47 fixes"
+          ]
+        }
+      ]
+    },
+    {
+      "title": "One spinner, four speeds",
+      "takeaway": "A slow spinner makes the app feel slow at the same load time.",
+      "text": [
+        "The keyframes had been copied from file to file, and each copy drifted. The fix was one shared keyframe at 0.8 seconds."
+      ],
+      "figures": [
+        {
+          "kind": "barChart",
+          "title": "One spinner, four speeds",
+          "intent": "One rotation, measured in each copy of the keyframes.",
+          "source": "Pave motion audit, Quickbase, 2026. Figures as published in the write-up; internal names removed.",
+          "data": [
+            {
+              "label": "copy 1",
+              "value": 1.2,
+              "text": "1.2 s"
+            },
+            {
+              "label": "copy 2",
+              "value": 1,
+              "text": "1.0 s"
+            },
+            {
+              "label": "copy 3",
+              "value": 0.8,
+              "text": "0.8 s"
+            },
+            {
+              "label": "copy 4",
+              "value": 0.6,
+              "text": "0.6 s"
+            }
+          ],
+          "options": {
+            "width": 30
+          }
+        }
+      ],
+      "note": "Whatever a spinner is made of, define its speed once."
+    },
+    {
+      "title": "What a finding looks like",
+      "takeaway": "Each finding shows how long the motion takes and how its speed changes, today against proposed.",
+      "text": [
+        "The duration ruler is 20 cells of 25 ms on a fixed 500 ms scale, so every finding in the report compares with every other one. The speed glyph shows how much progress happens in each eighth of the time."
+      ],
+      "figures": [
+        {
+          "kind": "motionTiming",
+          "title": "Toast enter: today and proposed",
+          "source": "Pave motion audit, Quickbase, 2026. Figures as published in the write-up; internal names removed.",
+          "data": [
+            {
+              "label": "today",
+              "ms": 200,
+              "easing": "ease",
+              "easingName": "ease"
+            },
+            {
+              "label": "proposed",
+              "ms": 150,
+              "easing": [
+                0.33,
+                1,
+                0.68,
+                1
+              ],
+              "easingName": "reveal-ease"
+            }
+          ]
+        },
+        {
+          "kind": "easingTable",
+          "title": "Eight characters per curve",
+          "intent": "Speed over time for each easing in the audit.",
+          "source": "Pave motion audit, Quickbase, 2026. Figures as published in the write-up; internal names removed.",
+          "data": [
+            {
+              "name": "linear",
+              "curve": "linear",
+              "use": "progress only"
+            },
+            {
+              "name": "ease",
+              "curve": "ease",
+              "use": "the browser default"
+            },
+            {
+              "name": "ease-out",
+              "curve": "ease-out",
+              "use": ""
+            },
+            {
+              "name": "decelerate",
+              "curve": [
+                0,
+                0,
+                0.2,
+                1
+              ],
+              "use": "most UI"
+            },
+            {
+              "name": "reveal",
+              "curve": [
+                0.33,
+                1,
+                0.68,
+                1
+              ],
+              "use": "entrances"
+            },
+            {
+              "name": "spring",
+              "curve": [
+                0.44,
+                1.3,
+                0.15,
+                1
+              ],
+              "use": "overshoots, then settles"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Overlaps nobody saw in review",
+      "takeaway": "Two animations on one element overlapped by 40 ms, and a pulse never stopped.",
+      "figures": [
+        {
+          "kind": "gantt",
+          "title": "Overlaps nobody saw in review",
+          "source": "Pave motion audit, Quickbase, 2026. Figures as published in the write-up; internal names removed.",
+          "data": [
+            {
+              "label": ".toast slide-in",
+              "start": 0,
+              "end": 240
+            },
+            {
+              "label": ".dot pulse",
+              "start": 0,
+              "end": 1000,
+              "loop": true
+            },
+            {
+              "label": ".icon pop",
+              "start": 120,
+              "end": 370
+            },
+            {
+              "label": ".toast fade",
+              "start": 200,
+              "end": 360
+            }
+          ],
+          "options": {
+            "scale": 1000,
+            "width": 40
+          }
+        }
+      ]
+    },
+    {
+      "title": "Handing off the hero",
+      "takeaway": "The marketing hero drifted all the time; the product grid mostly holds still.",
+      "text": [
+        "Both versions were recorded for 60 seconds at the same size, and every line position was logged on every frame."
+      ],
+      "figures": [
+        {
+          "kind": "compare",
+          "title": "The hero cut against the product",
+          "intent": "The marketing hero drifted all the time; the product grid mostly holds still.",
+          "source": "Hero animation handoff, 60-second recordings of both versions, every line position logged per frame.",
+          "data": [
+            {
+              "label": "vertical lines moving",
+              "a": 1,
+              "aText": "100%",
+              "b": 0.23,
+              "bText": "23%, in 17 pushes"
+            },
+            {
+              "label": "row lines moving",
+              "a": 0,
+              "aText": "0%",
+              "b": 0.11,
+              "bText": "11%"
+            },
+            {
+              "label": "a drawing's build",
+              "a": 0.27,
+              "aText": "2.7 s",
+              "b": 0.77,
+              "bText": "7.7 s"
+            },
+            {
+              "label": "a drawing's exit",
+              "a": 0.08,
+              "aText": "0.8 s",
+              "b": 0.46,
+              "bText": "4.6 s"
+            }
+          ],
+          "options": {
+            "headers": [
+              "MEASURE",
+              "HERO CUT",
+              "PRODUCT"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "title": "What it cost to get right",
+      "takeaway": "The glyph code had two bugs that reached the published audit.",
+      "text": [
+        "25 of the 47 findings showed the wrong easing name next to a correct glyph: the parser took the first CSS variable it found, which was a speed multiplier. And a value of 57 out of 100 drew one cell short, because a rounding remainder of 8/8 had no glyph. Both are covered by tests now."
+      ]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+name: Check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tests
+        run: node --test skills/glyph-kit/scripts/*.test.mjs
+      - name: Checker on every guide
+        run: node skills/glyph-kit/scripts/lint.mjs skills/glyph-kit/SKILL.md skills/glyph-kit/README.md skills/glyph-kit/reference/*.md skills/glyph-kit/reference/areas/*.md
+      - name: Versions agree
+        run: node scripts/check-version.mjs
+      - name: Site builds
+        run: node site/build.mjs

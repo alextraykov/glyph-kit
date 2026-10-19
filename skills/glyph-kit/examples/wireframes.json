@@ -1,0 +1,231 @@
+[
+  {
+    "kind": "screen",
+    "title": "Notification settings",
+    "intent": "Agree on content and order before visual design.",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "title": "Settings",
+      "rows": [
+        {
+          "type": "tabs",
+          "items": [
+            "Profile",
+            "Notifications",
+            "Billing"
+          ],
+          "selected": "Notifications"
+        },
+        {
+          "type": "space"
+        },
+        {
+          "type": "toggle",
+          "label": "Email me when a report is ready",
+          "on": true,
+          "note": "1"
+        },
+        {
+          "type": "toggle",
+          "label": "Weekly summary",
+          "on": false
+        },
+        {
+          "type": "select",
+          "label": "Digest day",
+          "value": "Monday",
+          "options": [
+            "Monday",
+            "Wednesday",
+            "Friday"
+          ]
+        },
+        {
+          "type": "input",
+          "label": "Send to",
+          "value": "team@example.com"
+        },
+        {
+          "type": "divider"
+        },
+        {
+          "type": "buttons",
+          "items": [
+            {
+              "label": "Cancel"
+            },
+            {
+              "label": "Save",
+              "primary": true,
+              "untilChange": true
+            }
+          ],
+          "align": "right",
+          "note": "2"
+        }
+      ],
+      "notes": {
+        "1": "Off by default for new teams.",
+        "2": "Save is disabled until something changes."
+      }
+    }
+  },
+  {
+    "kind": "screen",
+    "title": "Delete a project",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "title": "Projects",
+      "rows": [
+        {
+          "type": "search",
+          "placeholder": "Search",
+          "hint": "Ctrl K"
+        },
+        {
+          "type": "divider"
+        },
+        {
+          "type": "list",
+          "items": [
+            {
+              "text": "Home page",
+              "meta": "2h",
+              "selected": true
+            },
+            {
+              "text": "Pricing table",
+              "meta": "1d"
+            },
+            {
+              "text": "Onboarding v3",
+              "meta": "3d"
+            },
+            {
+              "text": "Q2 launch",
+              "meta": "archived",
+              "disabled": true
+            },
+            {
+              "text": "Brand refresh",
+              "meta": "5d"
+            }
+          ]
+        },
+        {
+          "type": "divider"
+        },
+        {
+          "type": "buttons",
+          "items": [
+            {
+              "label": "New project",
+              "primary": true
+            },
+            {
+              "label": "Import"
+            }
+          ]
+        }
+      ],
+      "overlay": {
+        "title": "Delete project?",
+        "width": 30,
+        "rows": [
+          {
+            "type": "text",
+            "text": "Pricing table and its 12 views."
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Delete",
+                "primary": true
+              }
+            ]
+          }
+        ]
+      }
+    }
+  },
+  {
+    "kind": "screen",
+    "title": "Empty state",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "title": "Views",
+      "width": 40,
+      "rows": [
+        {
+          "type": "empty",
+          "text": "No saved views yet. Save a filter to find it here.",
+          "action": "Save this view"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "responsive",
+    "title": "Report, desktop and mobile",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "Desktop",
+        "spec": {
+          "title": "Report",
+          "width": 40,
+          "rows": [
+            {
+              "type": "image",
+              "label": "chart",
+              "height": 3
+            },
+            {
+              "type": "text",
+              "text": "Revenue by month, last 12 months."
+            },
+            {
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Export",
+                  "primary": true
+                },
+                {
+                  "label": "Share"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "label": "Mobile",
+        "spec": {
+          "title": "Report",
+          "width": 24,
+          "rows": [
+            {
+              "type": "image",
+              "label": "chart",
+              "height": 3
+            },
+            {
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Export",
+                  "primary": true
+                }
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

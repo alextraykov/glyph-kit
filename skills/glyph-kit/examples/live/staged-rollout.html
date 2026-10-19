@@ -1,0 +1,1045 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rolling out the new editor</title>
+<style>
+:root{color-scheme:light}
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#f7f6f1;color:#151513;font:15px/1.5 system-ui,sans-serif}
+figure{margin:0;padding:48px 40px;display:grid;gap:20px;max-width:100%}
+h1{margin:0;font-size:20px;font-weight:600}
+p{margin:0;color:#6d6c66;max-width:68ch}
+pre{margin:0;padding:28px 32px;overflow-x:auto;background:#efede6;font:13px/1.25 Menlo,"SF Mono",Consolas,"DejaVu Sans Mono",monospace;font-variant-ligatures:none;white-space:pre}
+.stamp{color:#c4401c;font:600 12px/1.4 Menlo,monospace;letter-spacing:.06em;text-transform:uppercase}
+.gl-ok{color:#0a7a50}.gl-fail{color:#c4401c}.gl-mute{color:#6d6c66}
+</style>
+</head>
+<body>
+<figure>
+<h1>Rolling out the new editor</h1>
+<p>Agree the stages, the guard and what happens when it trips.</p>
+<pre role="img" aria-label="Rollout to 1%, 5%, 25%, 50%, 100%, guarded by Error rate at 2%; it trips at 25% and rolls back.">                    1%         5%           25%         50%       100%
+ROLLOUT             ▓━━━━━━━━━━━▓────────────┼───────────┼───────────┼
+
+PEOPLE              ··············▓······················▓············
+5% on               ·········▓··········▓·····························
+                    ··················································
+                    ········▓·················▓···▓▓········▓·▓·······
+
+
+ERROR RATE
+limit 2%            ┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄
+                    ▒▒▒ ▒▒▒ ▒▒▒ ▒▒ ▒▒▒▒▒▒▒▒ ▒▒  ▒▒▒▒▒   ▒▒▒▒▒▒▒ ▒▒▒▒▒▒
+
+                    holding at 5%, watching</pre>
+<p class="stamp">Sample data: made up to show the idea, not real numbers</p>
+<p>Source: Illustrative.</p>
+</figure>
+<script type="module">
+// The kit's layout rules for the inside of a figure: padding, gaps, labels and how much is solid.
+// Generators and the moving grid read these numbers; lint.mjs and the tests check the result.
+// reference/layout.md explains each rule with examples.
+
+/** Sizes, in character cells and rows. */
+const LAYOUT = {
+  pad: 2, // spaces between a box's side and its text, each side (never under 1, sides differ by at most 1)
+  gap: 4, // cells between two boxes on one line: room for an arrow ──►
+  labelGap: 2, // cells between a label and the meter, bar or line it names
+  band: 1, // blank rows between two bands of a figure (two lanes, two teams)
+  maxWidth: 80 // columns; wider figures scroll in their own box
+};
+
+/** The density ladder, the same scale as the site: what each shade may mean. */
+const DENSITY = {
+  "▓": "current, measured, done or shipped: what the eye should land on",
+  "▒": "in progress, waiting or blocked",
+  "░": "supporting: a trail, a projection, the empty part of a scale",
+  "·": "not yet, or an empty cell"
+};
+
+const TOP_LEFT = "┌╔┏";
+const TOP_RIGHT = "┐╗┓";
+const BOTTOM_LEFT = "└╚┗";
+const BOTTOM_RIGHT = "┘╝┛";
+const SIDE = "│║┃┆";
+const DIVIDER_LEFT = "├╠┣╟╞";
+const FILL = "░▒▓█·";
+
+/** Width of a box that fits `text` with the standard padding. */
+const fit = (text, pad = LAYOUT.pad) => [...text].length + pad * 2 + 2;
+
+/**
+ * Find closed boxes in a figure and report text that touches a side.
+ * Returns [{ line, col, text }] (1-based), one entry per offending row.
+ */
+function checkBoxes(figure) {
+  const rows = figure.split("\n").map((l) => [...l]);
+  const problems = [];
+  rows.forEach((row, r) => {
+    row.forEach((ch, c) => {
+      if (!TOP_LEFT.includes(ch)) return;
+      const d = row.findIndex((x, i) => i > c && TOP_RIGHT.includes(x));
+      if (d < 0) return;
+      const content = [];
+      for (let y = r + 1; y < rows.length; y++) {
+        const a = rows[y][c];
+        const b = rows[y][d];
+        if (BOTTOM_LEFT.includes(a) && BOTTOM_RIGHT.includes(b)) {
+          content.forEach((yy) => {
+            const inner = rows[yy].slice(c + 1, d).join("");
+            if (!inner.trim()) return;
+            // A shade fill (a dimmed backdrop, a skeleton) may run to the frame; text may not.
+            const fill = (x) => !x || FILL.includes(x);
+            const left = inner.length - inner.trimStart().length;
+            const right = inner.length - inner.trimEnd().length;
+            if ((left || fill(inner[0])) && (right || fill(inner.at(-1)))) return;
+            if (left < 1 || right < 1) problems.push({ line: yy + 1, col: c + 1, text: inner.trim() });
+          });
+          return;
+        }
+        if (DIVIDER_LEFT.includes(a)) continue;
+        if (!SIDE.includes(a) || !SIDE.includes(b)) return;
+        content.push(y);
+      }
+    });
+  });
+  return problems;
+}
+
+// Data guardrails. Made-up numbers must never look real:
+//   1. No source, no numbers. A spec whose data holds numbers must say where they came from.
+//   2. A source that starts with "Illustrative" or "Sample" stamps SAMPLE DATA on the figure itself.
+//   3. Each kind can check its own data (a funnel never grows, a range holds its value…) and
+//      explains a failure in a sentence a designer understands.
+// No DOM and no file access, so it runs in Node and in a browser.
+
+const SAMPLE = "SAMPLE DATA";
+
+/** True when the source says the numbers are made up. */
+const isSample = (source) => /^\s*(illustrative|sample)/i.test(source ?? "");
+
+/** True when a value holds a number anywhere inside it. */
+function hasNumbers(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  if (Array.isArray(value)) return value.some(hasNumbers);
+  if (value && typeof value === "object") return Object.values(value).some(hasNumbers);
+  return false;
+}
+
+const name = (spec, fallback) => (spec.title ? `"${spec.title}"` : `This ${fallback ?? spec.kind}`);
+
+/**
+ * Throw a plain-language error when a spec breaks a data rule. `check` is the kind's own
+ * check: data → list of problem sentences.
+ */
+function guard(spec, { check, label } = {}) {
+  if (typeof spec.data === "string" && spec.data.startsWith("@"))
+    throw new Error(`${name(spec, label)} reads its data from ${spec.data.slice(1)}, which hasn't been loaded. Render it with the command line (scripts/glyph-kit.mjs), which reads the file.`);
+  if (hasNumbers(spec.data) && !String(spec.source ?? "").trim())
+    throw new Error(`${name(spec, label)} has numbers but no source. Say where they came from in "source", or start it with "Illustrative" if they're made up.`);
+  const problems = check ? check(spec.data).filter(Boolean) : [];
+  if (problems.length) throw new Error(`${name(spec, label)}: ${problems.join(" ")}`);
+}
+
+/** Add the SAMPLE DATA stamp under a text figure, right-aligned to its width. Line numbers above
+ *  it don't move, so deck steps that point at lines still land. */
+function stamp(text) {
+  const width = Math.max(SAMPLE.length, ...text.split("\n").map((l) => [...l].length));
+  return `${text}\n\n${" ".repeat(width - SAMPLE.length)}${SAMPLE}`;
+}
+
+// Checks shared by the kinds. Each returns a sentence, or nothing when the data is fine.
+const rows = (data) => (Array.isArray(data) ? data : []);
+const what = (row, i) => (row && (row.label ?? row.name ?? row.text)) || `row ${i + 1}`;
+
+const checks = {
+  /** Every row's field is a number at or above zero. */
+  notNegative: (data, field, noun = field) => {
+    const bad = rows(data).filter((r) => typeof r?.[field] === "number" && r[field] < 0);
+    return bad.length ? `${what(bad[0], rows(data).indexOf(bad[0]))} has a negative ${noun} (${bad[0][field]}).` : "";
+  },
+  /** Every row's field sits between lo and hi. */
+  within: (data, field, lo, hi, noun = field) => {
+    const list = rows(data);
+    const i = list.findIndex((r) => typeof r?.[field] === "number" && (r[field] < lo || r[field] > hi));
+    return i < 0 ? "" : `${what(list[i], i)} has a ${noun} of ${list[i][field]}, outside ${lo} to ${hi}.`;
+  },
+  /** A field never grows from one row to the next. */
+  neverGrows: (data, field, noun = "step") => {
+    const list = rows(data);
+    const i = list.findIndex((r, k) => k > 0 && r[field] > list[k - 1][field]);
+    return i < 0 ? "" : `${what(list[i], i)} (${list[i][field]}) is larger than the ${noun} before it (${list[i - 1][field]}); a funnel only loses people.`;
+  },
+  /** Fields are in order inside each row, e.g. low ≤ value ≤ high. */
+  ordered: (data, fields, noun) => {
+    const list = rows(data);
+    const i = list.findIndex((r) => fields.some((f, k) => k > 0 && typeof r[f] === "number" && typeof r[fields[k - 1]] === "number" && r[f] < r[fields[k - 1]]));
+    return i < 0 ? "" : `${what(list[i], i)} has ${fields.map((f) => `${f} ${list[i][f]}`).join(", ")}; ${noun ?? `they should run from ${fields[0]} to ${fields.at(-1)}`}.`;
+  },
+  /** Shares (0–1 or 0–100) add up to the whole, within a point. */
+  sumsToWhole: (values, noun = "shares") => {
+    const nums = values.filter((v) => typeof v === "number");
+    if (!nums.length) return "";
+    const total = nums.reduce((a, b) => a + b, 0);
+    const whole = nums.every((v) => v <= 1) ? 1 : 100;
+    return Math.abs(total - whole) <= whole / 100 ? "" : `The ${noun} add up to ${+total.toFixed(2)}, not ${whole}.`;
+  },
+  /** Dates (or numbers) never go backwards. */
+  inTimeOrder: (data, field, noun = "date") => {
+    const list = rows(data);
+    const time = (v) => (typeof v === "number" ? v : Date.parse(/\d{4}/.test(v) ? v : `${v} 2000`));
+    const i = list.findIndex((r, k) => k > 0 && time(r[field]) < time(list[k - 1][field]));
+    return i < 0 || Number.isNaN(time(list[i][field])) ? "" : `${what(list[i], i)} (${list[i][field]}) comes before the ${noun} above it (${list[i - 1][field]}); keep them in time order.`;
+  }
+};
+
+// Moving diagrams: a character grid that animates. No DOM, no dependencies.
+//
+// Two layers. The structure (boxes, lines, labels, meters) sits on the grid and changes in steps.
+// Everything that travels (work, cursors, moving boxes) is deposited as light at fractional
+// positions and turned into · ░ ▒ ▓ when the grid is written out, so it glides smoothly while every
+// mark stays a character.
+//   - packet / stream: ▓▒░ heads glide along a route, round corners included
+//   - flash:    a box that receives work lights its border ▓ → ▒ → ░ → line
+//   - chase:    a waiting box has a ▓▒░ run going round its border
+//   - scramble: changed text settles left to right through " .:+*#%@"
+//   - drawIn / dissolveLine: lines appear cell by cell, or break up ▓ → ▒ → ░ → ·
+//
+// Sizes and the density ladder come from ../layout.mjs: boxes fit their text with LAYOUT.pad cells
+// each side, and ▓ is kept for what is current, measured or done.
+//
+// A diagram is a function (step, frac) → Grid. step is a whole tick (STEP_MS each), frac the
+// fraction of the next one; structure reads step, anything gliding reads step + frac.
+
+const STEP_MS = 120;
+const TRAIL = ["▓", "▒", "░"];
+const FADE = ["▓", "▒", "░", "·"];
+const RAMP = " .:+*#%@";
+const HEADS = { right: "►", left: "◄", down: "▼", up: "▲" };
+
+const esc = (c) => (c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === "&" ? "&amp;" : c);
+
+/** A seeded random number generator, so every run of a diagram is the same. */
+const rand = (seed) => () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646;
+const hash = (a, b) => {
+  const x = Math.sin(a * 127.1 + b * 311.7) * 43758.5453;
+  return x - Math.floor(x);
+};
+const quant = (v, n) => Math.round(v * n) / n;
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const mod = (v, n) => ((v % n) + n) % n;
+const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+
+/** Remembers when a value last changed, so text can scramble only when it changes. */
+const changes = () => {
+  const seen = new Map();
+  return (key, value, step) => {
+    const prev = seen.get(key);
+    if (!prev || prev.value !== value) seen.set(key, { value, at: prev ? step : -99 });
+    return step - seen.get(key).at;
+  };
+};
+
+class Grid {
+  /** While true, scrambled text shows settled: for stills, print and Markdown. */
+  static settled = false;
+  constructor(rows, cols) {
+    this.rows = rows;
+    this.cols = cols;
+    this.ch = Array.from({ length: rows }, () => Array(cols).fill(" "));
+    this.cl = Array.from({ length: rows }, () => Array(cols).fill(""));
+    this.lum = new Map();
+  }
+  get(r, c) { return this.ch[r]?.[c]; }
+  put(r, c, ch, cls = "") {
+    if (this.ch[r]?.[c] === undefined) return;
+    this.ch[r][c] = ch;
+    this.cl[r][c] = cls;
+  }
+  // Light a cell with an intensity (0–1). The strongest light on a cell wins.
+  deposit(r, c, v, cls = "") {
+    if (this.ch[r]?.[c] === undefined || v <= 0) return;
+    const key = r * this.cols + c;
+    const prev = this.lum.get(key);
+    if (!prev || v > prev.v) this.lum.set(key, { v, cls });
+  }
+  glide(r, c, ch, cls = "") {
+    const level = { "▓": 1, "▒": 0.7, "░": 0.45, "·": 0.2 }[ch];
+    if (level) this.deposit(Math.round(r), Math.round(c), level, cls);
+    else this.put(Math.round(r), Math.round(c), ch, cls);
+  }
+  text(r, c, s, cls = "") { [...s].forEach((ch, i) => this.put(r, c + i, ch, cls)); }
+  /** Centre text between columns c0 and c1. */
+  center(r, c0, c1, s, cls = "") { this.text(r, Math.round((c0 + c1 + 1 - s.length) / 2), s, cls); }
+  /** Centred text that stays on top of anything gliding underneath it. */
+  label(r, c0, c1, s, cls = "") {
+    const c = Math.round((c0 + c1 + 1 - s.length) / 2);
+    this.text(r, c, s, cls);
+    for (let i = 0; i < s.length; i++) this.lum.delete(r * this.cols + c + i);
+  }
+
+  scramble(r, c, s, age, step, cls = "") {
+    if (Grid.settled) age = Infinity;
+    const frame = Math.floor(step);
+    [...s].forEach((ch, i) => {
+      const settled = age >= i * 0.25 + 2;
+      const glyph = settled || ch === " " ? ch : RAMP[1 + Math.floor(hash(frame, i + r * 7) * (RAMP.length - 1))];
+      this.put(r, c + i, glyph, cls);
+    });
+  }
+
+  boxLines(w, label, style = "solid") {
+    const inner = w - 2;
+    const left = Math.floor((inner - label.length) / 2);
+    const h = style === "dotted" ? "┄" : "─";
+    const v = style === "dotted" ? "┆" : "│";
+    const mid = `${v}${" ".repeat(Math.max(0, left))}${label}${" ".repeat(Math.max(0, inner - left - label.length))}${v}`;
+    return [`┌${h.repeat(inner)}┐`, mid, `└${h.repeat(inner)}┘`];
+  }
+  box(r, c, w, label, cls = "", style = "solid") {
+    this.boxLines(w, label, style).forEach((line, i) => this.text(r + i, c, line, cls));
+  }
+  /** A box with changing text in it (a counter), centred with equal padding. Size it with fit() on
+   *  the longest text it will hold. */
+  counter(r, c, w, text, cls = "", { age = Infinity, step = 0, style = "solid" } = {}) {
+    this.box(r, c, w, "", cls, style);
+    this.scramble(r + 1, c + 1 + Math.floor((w - 2 - [...text].length) / 2), text, age, step, cls);
+  }
+  glideBox(r, c, w, label, cls = "") { this.box(Math.round(r), Math.round(c), w, label, cls); }
+  perimeter(r, c, w, h = 3) {
+    const cells = [];
+    for (let x = c; x < c + w; x++) cells.push([r, x]);
+    for (let y = r + 1; y < r + h; y++) cells.push([y, c + w - 1]);
+    for (let x = c + w - 2; x >= c; x--) cells.push([r + h - 1, x]);
+    for (let y = r + h - 2; y > r; y--) cells.push([y, c]);
+    return cells;
+  }
+  flash(r, c, w, level, cls = "") {
+    const lv = Math.ceil(level);
+    if (lv <= 0) return;
+    const ch = TRAIL[3 - Math.min(3, lv)];
+    this.perimeter(r, c, w).forEach(([y, x]) => this.put(y, x, ch, cls));
+  }
+  // A comet of light: a soft leading edge, a full head and a tail that fades over `tail` cells.
+  comet(cells, f, cls = "", tail = 3.2, wrap = false) {
+    const n = cells.length;
+    for (let x = Math.floor(f - tail) - 1; x <= Math.ceil(f); x++) {
+      const d = f - x;
+      const v = d < 0 ? 1 + d : clamp(1 - d / tail);
+      const cell = wrap ? cells[mod(x, n)] : cells[x];
+      if (cell) this.deposit(cell[0], cell[1], v, cls);
+    }
+  }
+  chase(r, c, w, pos, cls = "") { this.comet(this.perimeter(r, c, w), pos, cls, 4, true); }
+  drawIn(r, c, w, label, progress, cls = "") {
+    const cells = this.perimeter(r, c, w);
+    const lines = this.boxLines(w, label);
+    const n = Math.floor(progress * cells.length);
+    cells.forEach(([y, x], i) => {
+      if (i < n) this.put(y, x, lines[y - r][x - c], cls);
+      else if (i < n + 3) this.put(y, x, TRAIL[i - n], cls);
+    });
+    if (progress >= 1) this.text(r + 1, c + 1, lines[1].slice(1, -1), cls);
+  }
+  meter(r, c, w, value, step, cls = "") {
+    const full = value * w;
+    const lead = Math.floor(full);
+    for (let i = 0; i < w; i++) {
+      const v = full - i;
+      let ch = v >= 1 ? "▓" : v >= 0.66 ? "▒" : v >= 0.33 ? "░" : "·";
+      if (i === lead && value > 0 && value < 1) ch = Math.floor(step * 2) % 2 ? "▒" : "░";
+      this.put(r, c + i, ch, v > 0.33 || (i === lead && value > 0) ? cls : "mute");
+    }
+  }
+
+  route(points) {
+    const cells = [points[0]];
+    for (let i = 1; i < points.length; i++) {
+      const [r1, c1] = points[i];
+      let [r, c] = cells[cells.length - 1];
+      while (r !== r1 || c !== c1) {
+        r += Math.sign(r1 - r);
+        c += Math.sign(c1 - c);
+        cells.push([r, c]);
+      }
+    }
+    return cells;
+  }
+  glyphs(cells, head = true) {
+    const side = (a, b) => (b[0] < a[0] ? "up" : b[0] > a[0] ? "down" : b[1] < a[1] ? "left" : "right");
+    return cells.map((cell, i) => {
+      const prev = cells[i - 1];
+      const next = cells[i + 1];
+      if (!next) return head ? HEADS[side(prev, cell)] : cell[1] === prev[1] ? "│" : "─";
+      if (!prev || side(prev, cell) === side(cell, next)) return cell[1] === next[1] ? "│" : "─";
+      const ends = new Set([side(cell, prev), side(cell, next)]);
+      return ends.has("up") ? (ends.has("right") ? "└" : "┘") : ends.has("right") ? "┌" : "┐";
+    });
+  }
+  line(points, cls = "", { head = true, progress = 1 } = {}) {
+    const cells = this.route(points);
+    const glyphs = this.glyphs(cells, head);
+    const n = Math.round(progress * cells.length);
+    cells.forEach(([r, c], i) => {
+      if (i < n) this.put(r, c, glyphs[i], cls);
+      else if (i < n + 2 && progress < 1) this.put(r, c, TRAIL[i - n + 1], cls);
+    });
+    return head ? cells.slice(0, -1) : cells;
+  }
+  dissolveLine(points, age, cls = "") {
+    const cells = this.route(points);
+    const glyphs = this.glyphs(cells);
+    cells.forEach(([r, c], i) => {
+      const k = Math.floor(age - hash(r, c) * 3);
+      if (k < 0) this.put(r, c, glyphs[i], cls);
+      else if (k < FADE.length) this.put(r, c, FADE[k], cls);
+    });
+  }
+  /** Break the whole grid up into dither and blank it, for the end of a loop. k runs 0 → 1. */
+  dissolve(k) {
+    for (let r = 0; r < this.rows; r++) for (let c = 0; c < this.cols; c++) {
+      const f = Math.floor(k * 6 - hash(r, c) * 3);
+      if (this.ch[r][c] !== " " && f >= 0) this.put(r, c, f < 4 ? FADE[f] : " ", this.cl[r][c]);
+    }
+    this.lum.clear();
+  }
+
+  /** A fractional position along a route, interpolated between cells (and round corners). */
+  at(route, f) {
+    const i = Math.floor(f);
+    const a = route[i];
+    const b = route[i + 1] || a;
+    const t = f - i;
+    return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  }
+  packet(route, f, cls = "") {
+    if (f < -1 || f > route.length + 3) return;
+    this.comet(route, f, cls);
+  }
+  // Packets every `spacing` cells, moved on by `shift`. Returns how long ago (in steps) one
+  // last reached the end of the route.
+  stream(route, shift, spacing, cls = "") {
+    for (let head = mod(shift, spacing); head < route.length + 3; head += spacing) this.packet(route, head, cls);
+    return mod(shift - (route.length - 1), spacing);
+  }
+
+  #settle() {
+    this.lum.forEach(({ v, cls }, key) => {
+      const ch = v >= 0.82 ? "▓" : v >= 0.58 ? "▒" : v >= 0.33 ? "░" : v >= 0.12 ? "·" : null;
+      if (ch) this.put(Math.floor(key / this.cols), key % this.cols, ch, cls);
+    });
+    this.lum.clear();
+  }
+  /** Plain text, for Markdown, tickets and anywhere colour doesn't travel. */
+  toText() {
+    this.#settle();
+    return this.ch.map((row) => row.join("").replace(/\s+$/, "")).join("\n").replace(/\n+$/, "");
+  }
+  /** HTML with a span per run of one role: `${prefix}ok`, `${prefix}fail`, `${prefix}mute`. */
+  toHtml(prefix = "gl-") {
+    this.#settle();
+    return this.ch.map((row, r) => {
+      let out = "";
+      let open = "";
+      row.forEach((ch, c) => {
+        const cls = this.cl[r][c];
+        if (cls !== open) {
+          if (open) out += "</span>";
+          if (cls) out += `<span class="${prefix}${cls}">`;
+          open = cls;
+        }
+        out += esc(ch);
+      });
+      if (open) out += "</span>";
+      return out.replace(/\s+$/, "");
+    }).join("\n");
+  }
+}
+
+// Moving diagrams from a spec. Each kind takes { kind, title, intent, source, data } and returns a
+// factory: call it for a fresh diagram, a function (step, frac) → Grid. `still` is the step that
+// stands in for the whole animation when motion is off, in print and in Markdown.
+
+const pad = (n, w) => String(n).padStart(w, " ");
+const boxW = (labels, min = 8) => Math.max(min, ...labels.map((l) => l.length + 4));
+
+/* Loop: work moves through stages; some of it is sent back from one stage to an earlier one. ------ */
+// data: { stages: ["Design", "Build", "QA", "Ship"], back: { from: "QA", to: "Build", share: 0.3, label } }
+function loop({ data }) {
+  const stages = data.stages;
+  const back = data.back ?? null;
+  const W = boxW(stages, 10);
+  const GAP = 9;
+  const T = 3;
+  const xs = stages.map((_, i) => i * (W + GAP));
+  const cols = xs.at(-1) + W + 18;
+  const from = back ? stages.indexOf(back.from) : -1;
+  const to = back ? stages.indexOf(back.to) : -1;
+  const share = back?.share ?? 0;
+  const r = rand(11);
+  const PLAN = Array.from({ length: 80 }, (_, i) => ({ born: i * 7, rework: r() < share }));
+  const CYCLE = 420;
+  const since = changes();
+
+  return () => (step, frac) => {
+    const s = (step % CYCLE) + frac;
+    const g = new Grid(back ? 12 : 8, cols);
+    stages.forEach((label, i) => g.box(T - 1, xs[i], W, label.toUpperCase(), i === stages.length - 1 ? "ok" : ""));
+    const legs = stages.slice(1).map((_, i) => g.line([[T, xs[i] + W], [T, xs[i + 1] - 1]], "mute"));
+    let ret = null;
+    if (back) {
+      const a = xs[from] + Math.floor(W / 2);
+      const b = xs[to] + Math.floor(W / 2);
+      ret = g.line([[T + 2, a], [T + 5, a], [T + 5, b], [T + 2, b]], "fail");
+      g.center(T + 6, b, a, back.label ?? `${Math.round(share * 100)}% sent back`, "fail");
+    }
+    // Each item: a leg takes `len` cells, every stage holds it for HOLD steps; rework adds a lap.
+    const HOLD = 6;
+    let shipped = 0;
+    let reworked = 0;
+    let lastShip = 99;
+    const busy = new Set();
+    PLAN.forEach(({ born, rework }) => {
+      let t = s - born;
+      if (t < 0) return;
+      const path = [];
+      for (let i = 0; i < stages.length - 1; i++) path.push({ hold: i }, { leg: i });
+      if (rework) {
+        const at = path.findIndex((p) => p.hold === from) + 1;
+        const redo = [{ ret: true }];
+        for (let i = to; i < from; i++) redo.push({ hold: i }, { leg: i });
+        redo.push({ hold: from });
+        path.splice(at, 0, ...redo);
+      }
+      for (const p of path) {
+        const len = p.hold !== undefined ? HOLD : p.ret ? ret.length : legs[p.leg].length;
+        if (t < len) {
+          if (p.hold !== undefined) busy.add(p.hold);
+          else g.packet(p.ret ? ret : legs[p.leg], t, p.ret ? "fail" : "");
+          return;
+        }
+        t -= len;
+      }
+      shipped++;
+      if (rework) reworked++;
+      lastShip = Math.min(lastShip, t);
+    });
+    busy.forEach((i) => g.chase(T - 1, xs[i], W, s * 2.2 + i * 9));
+    const last = stages.length - 1;
+    g.flash(T - 1, xs[last], W, 2 - lastShip, "ok");
+    g.scramble(0, xs[last], `${pad(shipped, 2)} shipped`, since("s", shipped, step), step, "ok");
+    if (back) g.scramble(0, xs[from], `${pad(reworked, 2)} came back`, since("r", reworked, step), step, "fail");
+    return g;
+  };
+}
+loop.still = 260;
+
+/* Funnel: people fall through the steps; the ones who leave drift out to the side and fade. ------ */
+// data: { steps: [{ label, value }, ...] } in order, largest first.
+function funnel({ data }) {
+  const steps = data.steps;
+  const LABEL = Math.max(...steps.map((s) => s.label.length)) + 3;
+  const BAR = 44;
+  const top = steps[0].value;
+  const cols = LABEL + BAR + 16;
+  const ROW = 3;
+  const rows = (steps.length - 1) * ROW + 1;
+  const span = (k) => {
+    const width = Math.max(2, Math.round((steps[k].value / top) * BAR));
+    const from = LABEL + Math.floor((BAR - width) / 2);
+    return [from, width];
+  };
+  // Each person reaches step k with the funnel's own odds; seeded, so every run is the same.
+  const r = rand(7);
+  const people = Array.from({ length: 360 }, (_, i) => {
+    let reach = 0;
+    while (reach < steps.length - 1 && r() < steps[reach + 1].value / steps[reach].value) reach++;
+    return { born: i * 1.05, reach, lane: r(), side: r() < 0.5 ? -1 : 1 };
+  });
+  const CYCLE = 400;
+  const FALL = 5; // steps to fall from one bar to the next
+
+  return () => (step, frac) => {
+    const s = (step % CYCLE) + frac;
+    const g = new Grid(rows, cols);
+    steps.forEach((st, k) => {
+      const row = k * ROW;
+      const [from, width] = span(k);
+      g.text(row, 0, st.label, k === steps.length - 1 ? "ok" : "");
+      for (let c = 0; c < width; c++) g.put(row, from + c, "▒", k === steps.length - 1 ? "ok" : "mute");
+      g.text(row, LABEL + BAR + 2, st.value.toLocaleString("en-US"));
+      if (k) {
+        const kept = st.value / steps[k - 1].value;
+        g.text(row, LABEL + BAR + 10, `${Math.round(kept * 100)}%`, kept < 0.5 ? "fail" : "mute");
+      }
+    });
+    const xAt = (p, k) => {
+      const [from, width] = span(Math.min(k, steps.length - 1));
+      return from + p.lane * (width - 1);
+    };
+    people.forEach((p) => {
+      const t = (s - p.born) / FALL;
+      if (t < 0 || t > steps.length + 2) return;
+      const k = Math.floor(t);
+      const into = t - k;
+      if (k < p.reach) {
+        // Falling from bar k to bar k + 1, drawn toward the narrower bar's centre.
+        const y = k * ROW + into * ROW;
+        const x = xAt(p, k) + (xAt(p, k + 1) - xAt(p, k)) * easeInOut(into);
+        g.glide(y, x, "▓");
+        g.glide(y - 0.7, x, "░");
+      } else if (k === p.reach && k < steps.length - 1) {
+        // Left at this step: drift out past the end of the bar and fade.
+        const [from, width] = span(k);
+        const edge = p.side < 0 ? from - 1 : from + width;
+        const x = edge + p.side * into * 6;
+        const level = Math.min(3, Math.floor(into * 4));
+        g.put(k * ROW + 1, Math.round(x), FADE[level], "fail");
+      } else if (k === p.reach) {
+        g.deposit(k * ROW, Math.round(xAt(p, k)), 1 - into * 0.5, "ok");
+      }
+    });
+    return g;
+  };
+}
+funnel.still = 260;
+
+/* States: a state machine, and one path through it played by a token. ----------------------------- */
+// data: { states: ["Idle", ...], transitions: [{ from, to, label }], path: ["Idle", "Loading", ...] }
+function states({ data }) {
+  const names = data.states;
+  const W = boxW(names, 11);
+  const GAP = 10;
+  const xs = names.map((_, i) => i * (W + GAP));
+  const cols = xs.at(-1) + W + 2;
+  const idx = (n) => names.indexOf(n);
+  const mid = (i) => xs[i] + Math.floor(W / 2);
+  // Forward neighbours run straight along the row; every other transition gets its own lane,
+  // above the row going forward and below it going back. Labels sit on their line.
+  const shape = data.transitions.map((t) => ({ ...t, a: idx(t.from), b: idx(t.to) }));
+  const ups = shape.filter((e) => e.b > e.a + 1).length;
+  const downs = shape.filter((e) => e.b < e.a).length;
+  const T = 2 + ups * 2 + 1; // the box row's middle line
+  let up = 0;
+  let down = 0;
+  const edges = shape.map((e) => {
+    const { a, b } = e;
+    if (b === a + 1) return { ...e, pts: [[T, xs[a] + W], [T, xs[b] - 1]], label: e.label, lab: [T, xs[a] + W, xs[b] - 1] };
+    const off = b > a ? 2 : -2;
+    const ca = mid(a) + off;
+    const cb = mid(b) - off;
+    const y = b > a ? T - 3 - up++ * 2 : T + 3 + down++ * 2;
+    const edge = b > a ? T - 2 : T + 2;
+    return { ...e, pts: [[edge, ca], [y, ca], [y, cb], [edge, cb]], lab: [y, Math.min(ca, cb), Math.max(ca, cb)] };
+  });
+  const rows = T + 3 + downs * 2 + 1;
+  const HOLD = 14;
+  const legs = data.path.slice(1).map((n, i) => edges.find((e) => e.from === data.path[i] && e.to === n));
+  const since = changes();
+
+  return () => {
+    const routes = legs.map((e) => (e ? new Grid(1, 1).route(e.pts) : []));
+    const CYCLE = routes.reduce((sum, r) => sum + HOLD + r.length, 0) + HOLD;
+    return (step, frac) => {
+      const s = (step % CYCLE) + frac;
+      const g = new Grid(rows, cols);
+      let at = idx(data.path[0]);
+      let moving = null;
+      let t = s;
+      for (let i = 0; i < legs.length; i++) {
+        if (t < HOLD) break;
+        t -= HOLD;
+        if (t < routes[i].length) { moving = { i, t }; at = -1; break; }
+        t -= routes[i].length;
+        at = idx(data.path[i + 1]);
+      }
+      if (at === idx(data.path.at(-1)) && !moving && s > CYCLE - HOLD) at = idx(data.path[0]);
+      edges.forEach((e) => g.line(e.pts, moving && legs[moving.i] === e ? "" : "mute"));
+      if (moving) g.packet(routes[moving.i], moving.t);
+      edges.forEach((e) => {
+        const on = moving && legs[moving.i] === e;
+        if (e.label) {
+          const [y, c0, c1] = e.lab;
+          g.label(y, c0, c1, ` ${e.label} `, on ? "" : "mute");
+        }
+      });
+      names.forEach((n, i) => {
+        const here = i === at;
+        const role = /error|fail/i.test(n) ? "fail" : /ready|done|success|saved|sent/i.test(n) ? "ok" : "";
+        g.box(T - 1, xs[i], W, n.toUpperCase(), here ? role : "mute");
+        if (here) g.chase(T - 1, xs[i], W, s * 2.4, role);
+      });
+      const now = moving ? `${legs[moving.i].from} → ${legs[moving.i].to}` : names[at] ?? "";
+      g.scramble(0, 0, now, since("now", now, step), step);
+      return g;
+    };
+  };
+}
+states.still = 8;
+
+/* Queue: columns with work-in-progress limits. The slowest column fills up and the rest wait. ----- */
+// data: { columns: [{ label, limit, pace }] }  pace = steps a card spends there. The first column
+// is the backlog (no limit), the last is done.
+function queue({ data }) {
+  const cols = data.columns;
+  const W = boxW(cols.map((c) => c.label), 12);
+  const GAP = 3;
+  const xs = cols.map((_, i) => i * (W + GAP));
+  const H = 8;
+  const width = xs.at(-1) + W;
+  const CYCLE = 460;
+  const since = changes();
+
+  return () => {
+    let lastStep = -1;
+    let cards = [];
+    let id = 0;
+    const advance = (s) => {
+      if (s === 0) (cards = []), (id = 0);
+      if (s % 9 === 0 && s < CYCLE - 60) cards.push({ id: id++, col: 0, since: s, moved: -99 });
+      // Pull from the right, so a full column blocks the one before it.
+      for (let c = cols.length - 2; c >= 0; c--) {
+        const here = cards.filter((k) => k.col === c).sort((a, b) => a.since - b.since);
+        const nextLimit = cols[c + 1].limit ?? Infinity;
+        for (const k of here) {
+          const done = s - k.since >= (cols[c].pace ?? 0);
+          const room = cards.filter((x) => x.col === c + 1).length < nextLimit;
+          if (done && room) Object.assign(k, { col: c + 1, since: s, moved: s, from: c });
+        }
+      }
+    };
+    return (step, frac) => {
+      while (lastStep < step) { lastStep++; advance(lastStep % CYCLE); }
+      const s = (step % CYCLE) + frac;
+      const g = new Grid(H + 3, width);
+      cols.forEach((c, i) => {
+        const inCol = cards.filter((k) => k.col === i);
+        const isFull = c.limit && inCol.length >= c.limit;
+        const last = i === cols.length - 1;
+        g.text(0, xs[i], c.label.toUpperCase(), isFull ? "fail" : last ? "ok" : "");
+        const cap = c.limit ? `${inCol.length}/${c.limit}` : String(inCol.length);
+        g.scramble(0, xs[i] + W - cap.length, cap, since(`c${i}`, cap, step), step, isFull ? "fail" : "mute");
+        for (let x = 0; x < W; x++) g.put(1, xs[i] + x, "─", isFull ? "fail" : "mute");
+        // Cards stack from the top; the ones that can't move on show as waiting (▒).
+        inCol.sort((a, b) => a.since - b.since).forEach((k, n) => {
+          const row = 2 + Math.floor(n / 2);
+          if (row > H) return;
+          const x = xs[i] + (n % 2) * Math.ceil(W / 2);
+          const waiting = !last && s - k.since >= (c.pace ?? 0);
+          const just = s - k.moved < 3;
+          const span = Math.ceil(W / 2) - 1;
+          const role = last ? "ok" : i === 0 ? "mute" : waiting ? "fail" : "";
+          for (let j = 0; j < span; j++) g.put(row, x + j, just ? FADE[Math.min(3, Math.floor(s - k.moved))] : waiting ? "▒" : "▓", role);
+        });
+      });
+      // The bottleneck: a full column whose next column has room, so its own work is the limit.
+      const count = (i) => cards.filter((k) => k.col === i).length;
+      const full = (i) => cols[i].limit && count(i) >= cols[i].limit;
+      const worst = cols.findLastIndex((c, i) => i > 0 && i < cols.length - 1 && full(i) && !full(i + 1) && count(i - 1) > 0);
+      const msg = worst > 0 ? `▲ ${cols[worst].label} holds everything up` : "";
+      g.scramble(H + 2, worst > 0 ? Math.min(xs[worst], width - msg.length) : 0, msg, since("b", msg, step), step, "fail");
+      return g;
+    };
+  };
+}
+queue.still = 220;
+
+/* Rollout: a feature goes out in stages, a guard metric watches, a breach rolls it back. ---------- */
+// data: { stages: [1, 5, 25, 50, 100], metric: "Error rate", limit: 2, breachAt: 25 }
+function rollout({ data }) {
+  const stages = data.stages;
+  const COLS = 50;
+  const ROWS = 4;
+  const people = COLS * ROWS;
+  const GX = 20;
+  const width = GX + COLS + 16;
+  const HOLD = 46;
+  const breach = stages.indexOf(data.breachAt ?? -1);
+  // Timeline: each stage holds; at the breach stage the guard trips, it rolls back to the stage
+  // before, waits for the fix, then carries on.
+  const plan = [];
+  stages.forEach((p, i) => {
+    plan.push({ pct: p, i, hold: HOLD, ok: true });
+    if (i === breach) plan.push({ pct: p, i, hold: 18, ok: false }, { pct: stages[i - 1] ?? 0, i: i - 1, hold: 40, ok: true, back: true });
+  });
+  const CYCLE = plan.reduce((a, p) => a + p.hold, 0) + 30;
+  const order = Array.from({ length: people }, (_, i) => i).sort((a, b) => hash(a, 3) - hash(b, 3));
+  const since = changes();
+
+  return () => (step, frac) => {
+    const s = (step % CYCLE) + frac;
+    let t = s;
+    let k = 0;
+    while (k < plan.length - 1 && t >= plan[k].hold) t -= plan[k++].hold;
+    const cur = plan[k];
+    const prev = plan[k - 1];
+    const g = new Grid(ROWS + 10, width);
+    // Stage ladder.
+    g.text(1, 0, "ROLLOUT");
+    const stageX = (i) => GX + Math.round((i / (stages.length - 1)) * (COLS - 1));
+    const role = cur.ok ? "ok" : "fail";
+    for (let c = 0; c < COLS; c++) g.put(1, GX + c, GX + c <= stageX(Math.max(0, cur.i)) ? "━" : "─", GX + c <= stageX(Math.max(0, cur.i)) ? role : "mute");
+    stages.forEach((p, i) => {
+      const reached = cur.i >= i;
+      const label = `${p}%`;
+      g.put(1, stageX(i), reached ? "▓" : "┼", reached ? role : "mute");
+      g.text(0, Math.min(GX + COLS - label.length, Math.max(GX, stageX(i) - Math.floor(label.length / 2))), label, reached ? role : "mute");
+    });
+    // People: switch on in a stable random order, so a stage's share is always the same people.
+    const ease = clamp(t / 8);
+    const target = (cur.pct / 100) * people;
+    const from = prev ? (prev.pct / 100) * people : 0;
+    const on = from + (target - from) * easeInOut(ease);
+    order.forEach((p, n) => {
+      const r = Math.floor(p / COLS);
+      const c = p % COLS;
+      const lit = n < on;
+      const edge = n >= on - 2 && n < on && ease < 1;
+      g.put(3 + r, GX + c, lit ? (edge ? "▒" : "▓") : "·", lit ? (cur.ok ? "ok" : "fail") : "mute");
+    });
+    g.text(3, 0, "PEOPLE");
+    g.scramble(4, 0, `${Math.round((on / people) * 100)}% on`, Math.floor(ease * 8), step, cur.ok ? "ok" : "fail");
+    // Guard metric: a strip chart that scrolls; it spikes during the breach.
+    const Y = ROWS + 5;
+    g.text(Y, 0, (data.metric ?? "Guard").toUpperCase());
+    g.text(Y + 1, 0, `limit ${data.limit ?? 2}%`, "fail");
+    for (let c = 0; c < COLS; c++) {
+      const when = s - (COLS - 1 - c) * 0.9;
+      let tt = when;
+      let kk = 0;
+      while (kk < plan.length - 1 && tt >= plan[kk].hold) tt -= plan[kk++].hold;
+      const bad = when > 0 && !plan[kk].ok;
+      const v = bad ? 0.75 + hash(c, 9) * 0.25 : 0.12 + hash(Math.floor(when), 2) * 0.2;
+      const h = Math.round(v * 3);
+      for (let y = 0; y < 3; y++) g.put(Y + 2 - y, GX + c, y < h ? (y === h - 1 ? "▒" : "▓") : y === 1 ? "┄" : " ", y < h ? (bad ? "fail" : "") : "fail");
+    }
+    const status = !cur.ok ? "guard tripped: rolling back" : cur.back ? "fixing, held at the last safe stage" : cur.pct === 100 ? "everyone has it" : `holding at ${cur.pct}%, watching`;
+    g.scramble(Y + 4, GX, status, since("st", status, step), step, !cur.ok ? "fail" : cur.pct === 100 ? "ok" : "mute");
+    return g;
+  };
+}
+rollout.still = 90;
+
+/* Loading: what someone sees in the first two seconds, against a time ruler. ---------------------- */
+// data: { duration: 1800, phases: [{ at: 0, show: "tap" }, { at: 120, show: "skeleton" },
+//         { at: 700, show: "text" }, { at: 1100, show: "image" }] }
+function loading({ data }) {
+  const D = data.duration ?? 1800;
+  const phases = data.phases;
+  const CARD = 34;
+  const RX = CARD + 6;
+  const RW = 34;
+  const width = RX + RW + 8;
+  const MS_PER_STEP = 40; // the ruler runs at a third of real time, so each phase can be seen
+  const HOLD = 30;
+  const CYCLE = Math.ceil(D / MS_PER_STEP) + HOLD;
+  const LINES = ["Weekly report", "Signups up 12% on last week,", "most of it from the new invite", "flow. Activation is flat."];
+  const since = changes();
+  const phaseAt = (ms) => phases.filter((p) => p.at <= ms).at(-1)?.show ?? "";
+
+  return () => (step, frac) => {
+    const s = (step % CYCLE) + frac;
+    const ms = Math.min(D, s * MS_PER_STEP);
+    const show = phaseAt(ms);
+    const has = (name) => phases.some((p) => p.show === name && p.at <= ms);
+    const age = (name) => (ms - (phases.find((p) => p.show === name)?.at ?? 0)) / MS_PER_STEP;
+    const g = new Grid(14, width);
+    // The card.
+    g.text(0, 0, `┌${"─".repeat(CARD - 2)}┐`, "mute");
+    for (let r = 1; r < 13; r++) { g.put(r, 0, "│", "mute"); g.put(r, CARD - 1, "│", "mute"); }
+    g.text(13, 0, `└${"─".repeat(CARD - 2)}┘`, "mute");
+    if (show === "tap" || (!has("skeleton") && ms > 0)) {
+      const k = Math.floor(s) % 4;
+      g.center(6, 1, CARD - 2, ["·", "░", "▒", "▓"][k] + " tapped", "mute");
+    }
+    const skeleton = has("skeleton");
+    // Image block: dither fills in from top to bottom when the image arrives.
+    for (let r = 1; r <= 5; r++) for (let c = 2; c < CARD - 2; c++) {
+      if (has("image")) {
+        // A small landscape: sky ░, a ridge ▒, ground ▓. It develops from the top down.
+        const ground = 5 - Math.round(1.6 + 1.4 * Math.sin(c / 4.5));
+        const pixel = r > ground ? "▓" : r === ground ? "▒" : "░";
+        const v = clamp((age("image") - r * 0.8) / 4);
+        g.put(r, c, v >= 1 ? pixel : v > 0.5 ? "▒" : v > 0 ? "░" : "·", v >= 1 && r < ground ? "mute" : "");
+      } else if (skeleton) {
+        const shine = mod(s * 1.4 - c - r, 40) < 4;
+        g.put(r, c, shine ? "▒" : "░", "mute");
+      }
+    }
+    LINES.forEach((line, i) => {
+      const r = 7 + i + (i ? 1 : 0);
+      if (has("text")) g.scramble(r, 2, line, age("text") * 1.4 - i * 2, step);
+      else if (skeleton) {
+        const len = i ? 26 - i * 3 : 14;
+        for (let c = 0; c < len; c++) g.put(r, 2 + c, mod(s * 1.4 - c - r, 40) < 4 ? "▒" : "░", "mute");
+      }
+    });
+    // The ruler.
+    g.text(0, RX, "TIME");
+    const xOf = (t) => RX + Math.round((t / D) * (RW - 1));
+    for (let c = 0; c < RW; c++) g.put(2, RX + c, RX + c <= xOf(ms) ? "═" : "─", RX + c <= xOf(ms) ? "" : "mute");
+    for (let t = 0; t <= D; t += 500) { g.put(1, xOf(t), "╷", "mute"); g.text(3, xOf(t), `${t}`, "mute"); }
+    g.glide(2, RX + (ms / D) * (RW - 1), "▓");
+    phases.forEach((p, i) => {
+      const reached = p.at <= ms;
+      const r = 6 + i * 2;
+      g.put(r, xOf(p.at), reached ? "▓" : "·", reached ? "ok" : "mute");
+      g.text(r, xOf(p.at) + 2, `${p.at}ms ${p.show}`, reached ? "" : "mute");
+    });
+    g.scramble(13, RX, `showing: ${show || "nothing yet"}`, since("sh", show, step), step, show === "image" ? "ok" : "mute");
+    return g;
+  };
+}
+loading.still = 70;
+
+// Each kind: label, how to make it, a summary for screen readers, and its own data checks.
+const has = (list, name, what) => (list.includes(name) ? "" : `"${name}" isn't one of the ${what}.`);
+const LIVE = {
+  loop: {
+    label: "Rework loop",
+    make: loop,
+    summary: (d) => `Work moves through ${d.stages.join(", ")}${d.back ? `; about ${Math.round(d.back.share * 100)}% is sent back from ${d.back.from} to ${d.back.to}` : ""}.`,
+    check: (d) => !d.back ? [] : [
+      has(d.stages, d.back.from, "stages"),
+      has(d.stages, d.back.to, "stages"),
+      d.stages.indexOf(d.back.to) >= d.stages.indexOf(d.back.from) ? `Work can only be sent back to an earlier stage than ${d.back.from}.` : "",
+      d.back.share < 0 || d.back.share > 1 ? `The share sent back is ${d.back.share}; write 30% as 0.3.` : ""
+    ]
+  },
+  funnel: {
+    label: "Moving funnel",
+    make: funnel,
+    summary: (d) => `Funnel: ${d.steps.map((s) => `${s.label} ${s.value.toLocaleString("en-US")}`).join(", ")}.`,
+    check: (d) => [checks.notNegative(d.steps, "value", "count"), checks.neverGrows(d.steps, "value")]
+  },
+  states: {
+    label: "State machine",
+    make: states,
+    summary: (d) => `States ${d.states.join(", ")}; the token plays the path ${d.path.join(" → ")}.`,
+    check: (d) => [
+      ...d.transitions.flatMap((t) => [has(d.states, t.from, "states"), has(d.states, t.to, "states")]),
+      ...d.path.slice(1).map((n, i) => (d.transitions.some((t) => t.from === d.path[i] && t.to === n) ? "" : `The path goes from ${d.path[i]} to ${n}, but there's no transition for that.`))
+    ]
+  },
+  queue: {
+    label: "Work queue",
+    make: queue,
+    summary: (d) => `Columns ${d.columns.map((c) => `${c.label}${c.limit ? ` (limit ${c.limit})` : ""}`).join(", ")}. Work piles up before the slowest column.`,
+    check: (d) => [checks.within(d.columns, "limit", 1, 99, "limit"), checks.notNegative(d.columns, "pace", "time per card")]
+  },
+  rollout: {
+    label: "Staged rollout",
+    make: rollout,
+    summary: (d) => `Rollout to ${d.stages.join("%, ")}%, guarded by ${d.metric ?? "a metric"} at ${d.limit ?? 2}%${d.breachAt ? `; it trips at ${d.breachAt}% and rolls back` : ""}.`,
+    check: (d) => [
+      d.stages.some((p, i) => p < 0 || p > 100 || (i && p <= d.stages[i - 1])) ? "Rollout stages should climb from above 0 to at most 100%." : "",
+      d.breachAt !== undefined && !d.stages.includes(d.breachAt) ? `The guard trips at ${d.breachAt}%, which isn't one of the stages.` : ""
+    ]
+  },
+  loading: {
+    label: "Loading sequence",
+    make: loading,
+    summary: (d) => `In ${d.duration ?? 1800}ms: ${d.phases.map((p) => `${p.show} at ${p.at}ms`).join(", ")}.`,
+    check: (d) => [
+      checks.inTimeOrder(d.phases, "at", "phase"),
+      d.phases.some((p) => p.at > (d.duration ?? 1800)) ? `A phase starts after the ${d.duration ?? 1800}ms the sequence lasts.` : "",
+      ...d.phases.map((p) => has(["tap", "skeleton", "text", "image"], p.show, "things a loading sequence can show (tap, skeleton, text, image)"))
+    ]
+  }
+};
+
+/** A spec → { frame: (step, frac) → Grid, still, label, summary }. */
+function live(spec) {
+  const def = LIVE[spec.kind];
+  if (!def) throw new Error(`Unknown moving diagram "${spec.kind}". Known: ${Object.keys(LIVE).join(", ")}.`);
+  guard(spec, def);
+  const make = def.make(spec);
+  return { make, still: def.make.still, label: def.label, summary: spec.summary ?? def.summary(spec.data) };
+}
+
+/** Run a fresh diagram up to its still step and return that frame, with text settled. */
+function stillGrid(make, still) {
+  const frame = make();
+  let g;
+  for (let s = 0; s < still; s++) frame(s, 0);
+  Grid.settled = true;
+  try { g = frame(still, 0); } finally { Grid.settled = false; }
+  return g;
+}
+
+/** The still frame as text: runs a fresh diagram up to its still step. */
+function stillText(spec) {
+  const { make, still } = live(spec);
+  const text = stillGrid(make, still).toText();
+  return isSample(spec.source) ? stamp(text) : text;
+}
+
+// Play a moving diagram into a <pre>. The caller owns the clock: call advance(ms) on every frame or
+// tick while it should move, and still() when motion stops (reduced motion, paused, off screen).
+// Time is accumulated, not read from a wall clock, so pausing and resuming carries on smoothly.
+
+function player(pre, make, still, { prefix = "gl-" } = {}) {
+  let frame = null;
+  let pos = still;
+  let last = "";
+  const draw = (g) => {
+    const html = g.toHtml(prefix);
+    if (html !== last) pre.innerHTML = last = html;
+  };
+  return {
+    /** Move on by ms of real time. Starts from the still frame, so nothing jumps. */
+    advance(ms) {
+      if (!frame) {
+        frame = make();
+        for (let s = 0; s < Math.floor(pos); s++) frame(s, 0);
+      }
+      pos += Math.min(ms, 200) / STEP_MS;
+      const step = Math.floor(pos);
+      draw(frame(step, pos - step));
+    },
+    /** Show the still frame and forget the running state. */
+    still() {
+      frame = null;
+      pos = still;
+      draw(stillGrid(make, still));
+    }
+  };
+}
+
+/** A self-running player for standalone pages: requestAnimationFrame, paused off screen and
+ *  for reduced motion. Returns a stop function. */
+function autoplay(pre, make, still) {
+  const p = player(pre, make, still);
+  const reduce = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)");
+  let visible = true;
+  let prev = 0;
+  let raf = 0;
+  const loop = (now) => {
+    if (prev) p.advance(now - prev);
+    prev = now;
+    raf = requestAnimationFrame(loop);
+  };
+  const sync = () => {
+    cancelAnimationFrame(raf);
+    prev = 0;
+    if (reduce?.matches) p.still();
+    else if (visible) raf = requestAnimationFrame(loop);
+  };
+  new IntersectionObserver((entries) => {
+    visible = entries.some((e) => e.isIntersecting);
+    sync();
+  }).observe(pre);
+  reduce?.addEventListener?.("change", sync);
+  p.still();
+  sync();
+  return () => cancelAnimationFrame(raf);
+}
+
+const spec = {"kind":"rollout","title":"Rolling out the new editor","intent":"Agree the stages, the guard and what happens when it trips.","source":"Illustrative.","data":{"stages":[1,5,25,50,100],"metric":"Error rate","limit":2,"breachAt":25}};
+const { make, still } = live(spec);
+autoplay(document.querySelector("pre"), make, still);
+</script>
+</body>
+</html>
+

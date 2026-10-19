@@ -1,0 +1,162 @@
+[
+  {
+    "kind": "likert",
+    "title": "How people rated the export flow",
+    "intent": "Show where opinion splits before we pick what to fix.",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "Easy to find export",
+        "counts": [
+          2,
+          3,
+          2,
+          8,
+          5
+        ]
+      },
+      {
+        "label": "Trust the numbers",
+        "counts": [
+          6,
+          5,
+          4,
+          3,
+          2
+        ]
+      },
+      {
+        "label": "Would use it weekly",
+        "counts": [
+          1,
+          2,
+          5,
+          7,
+          5
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "themeMatrix",
+    "title": "Themes across six interviews",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "can't find export",
+        "by": [
+          "P1",
+          "P2",
+          "P4",
+          "P5",
+          "P6"
+        ]
+      },
+      {
+        "label": "distrusts totals",
+        "by": [
+          "P1",
+          "P3",
+          "P5"
+        ]
+      },
+      {
+        "label": "wants keyboard",
+        "by": [
+          "P2",
+          "P3"
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "affinity",
+    "title": "Notes per cluster",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "export",
+        "count": 5
+      },
+      {
+        "label": "permissions",
+        "count": 3
+      },
+      {
+        "label": "search",
+        "count": 2
+      }
+    ],
+    "options": {
+      "total": 6
+    }
+  },
+  {
+    "kind": "quoteCard",
+    "title": "Evidence for 'can't find export'",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "quote": "I looked for export in settings, then gave up and screenshotted the table.",
+      "who": "P4, operations lead",
+      "source": "interview 3, 12:40",
+      "theme": "can't find export"
+    }
+  },
+  {
+    "kind": "taskStats",
+    "title": "Usability test, eight people",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "find export",
+        "min": 38,
+        "q1": 44,
+        "median": 52,
+        "q3": 70,
+        "max": 95,
+        "done": 5,
+        "of": 8
+      },
+      {
+        "label": "share a view",
+        "min": 12,
+        "q1": 18,
+        "median": 21,
+        "q3": 30,
+        "max": 41,
+        "done": 8,
+        "of": 8
+      }
+    ],
+    "options": {
+      "scale": 120
+    }
+  },
+  {
+    "kind": "emotionCurve",
+    "title": "How the first week felt",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "discover",
+        "score": 1
+      },
+      {
+        "label": "sign up",
+        "score": 0
+      },
+      {
+        "label": "import",
+        "score": -2
+      },
+      {
+        "label": "first chart",
+        "score": 2
+      },
+      {
+        "label": "share",
+        "score": 1
+      }
+    ]
+  }
+]

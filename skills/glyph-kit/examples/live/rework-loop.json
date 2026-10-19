@@ -1,0 +1,1 @@
+{ "kind": "loop", "title": "Where the week goes", "intent": "Show how much finished work comes back from QA for another lap.", "source": "Illustrative: sample numbers.", "data": { "stages": ["Design", "Build", "QA", "Ship"], "back": { "from": "QA", "to": "Build", "share": 0.3, "label": "about 1 in 3 comes back from QA" } } }

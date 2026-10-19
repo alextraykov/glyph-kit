@@ -1,0 +1,425 @@
+{
+  "title": "Fixing export",
+  "subtitle": "What interviews, a usability test and a funnel told us, and what we're building first.",
+  "byline": "Design review · sample data",
+  "theme": "paper",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Fixing export",
+      "subtitle": "What interviews, a usability test and a funnel told us, and what we're building first.",
+      "byline": "Design review · sample data",
+      "notes": "Twenty minutes. Research first, then the numbers, then the plan. Stop me on any slide."
+    },
+    {
+      "type": "statement",
+      "kicker": "The problem",
+      "text": "People can't find export, and when they do, their dates break.",
+      "notes": "Both halves came up in every source. The rest of the deck is the evidence."
+    },
+    {
+      "type": "section",
+      "kicker": "01",
+      "title": "What we heard"
+    },
+    {
+      "kind": "themeMatrix",
+      "title": "Themes across six interviews",
+      "source": "Sample data, made up for this example",
+      "data": [
+        {
+          "label": "can't find export",
+          "by": [
+            "P1",
+            "P2",
+            "P4",
+            "P5",
+            "P6"
+          ]
+        },
+        {
+          "label": "distrusts totals",
+          "by": [
+            "P1",
+            "P3",
+            "P5"
+          ]
+        },
+        {
+          "label": "wants keyboard",
+          "by": [
+            "P2",
+            "P3"
+          ]
+        }
+      ],
+      "present": {
+        "command": "glyph-kit render themes.json",
+        "steps": [
+          {
+            "lines": [
+              1,
+              1
+            ],
+            "say": "Five of six people couldn't find export."
+          },
+          {
+            "lines": [
+              2,
+              2
+            ],
+            "say": "Half didn't trust the totals once they had them."
+          }
+        ],
+        "notes": "The command is the citation: this chart is generated from the synthesis file, not drawn."
+      }
+    },
+    {
+      "kind": "quoteCard",
+      "title": "Evidence for 'can't find export'",
+      "source": "Sample data, made up for this example",
+      "data": {
+        "quote": "I looked for export in settings, then gave up and screenshotted the table.",
+        "who": "P4, operations lead",
+        "source": "interview 3, 12:40",
+        "theme": "can't find export"
+      },
+      "present": {
+        "notes": "Read it out. It's the clearest description of the workaround everyone uses."
+      }
+    },
+    {
+      "kind": "likert",
+      "title": "How people rated the export flow",
+      "intent": "Show where opinion splits before we pick what to fix.",
+      "source": "Sample data, made up for this example",
+      "data": [
+        {
+          "label": "Easy to find export",
+          "counts": [
+            2,
+            3,
+            2,
+            8,
+            5
+          ]
+        },
+        {
+          "label": "Trust the numbers",
+          "counts": [
+            6,
+            5,
+            4,
+            3,
+            2
+          ]
+        },
+        {
+          "label": "Would use it weekly",
+          "counts": [
+            1,
+            2,
+            5,
+            7,
+            5
+          ]
+        }
+      ],
+      "present": {
+        "steps": [
+          {
+            "lines": [
+              2,
+              2
+            ],
+            "say": "Trust is the bigger problem: a quarter agree they trust the numbers."
+          }
+        ],
+        "notes": "Findability is fixable with placement. Trust needs the date fix."
+      }
+    },
+    {
+      "kind": "taskStats",
+      "title": "Usability test, eight people",
+      "source": "Sample data, made up for this example",
+      "data": [
+        {
+          "label": "find export",
+          "min": 38,
+          "q1": 44,
+          "median": 52,
+          "q3": 70,
+          "max": 95,
+          "done": 5,
+          "of": 8
+        },
+        {
+          "label": "share a view",
+          "min": 12,
+          "q1": 18,
+          "median": 21,
+          "q3": 30,
+          "max": 41,
+          "done": 8,
+          "of": 8
+        }
+      ],
+      "options": {
+        "scale": 120
+      },
+      "present": {
+        "steps": [
+          {
+            "lines": [
+              0,
+              0
+            ],
+            "say": "Three of eight never found export at all."
+          }
+        ],
+        "notes": "Median 52 seconds for the ones who did. Sharing a view is fine, for comparison."
+      }
+    },
+    {
+      "type": "section",
+      "kicker": "02",
+      "title": "What the numbers say"
+    },
+    {
+      "kind": "funnel",
+      "title": "Signup to paid, last 30 days",
+      "source": "Sample data, made up for this example",
+      "data": [
+        {
+          "label": "visited",
+          "value": 12400
+        },
+        {
+          "label": "signed up",
+          "value": 6100
+        },
+        {
+          "label": "activated",
+          "value": 2300
+        },
+        {
+          "label": "paid",
+          "value": 610
+        }
+      ],
+      "present": {
+        "command": "glyph-kit render funnel.json",
+        "steps": [
+          {
+            "lines": [
+              2,
+              2
+            ],
+            "say": "Activation is where we lose the most people."
+          }
+        ],
+        "notes": "Activation means a first chart exported or shared. Same 30-day window for every step."
+      }
+    },
+    {
+      "kind": "abResult",
+      "title": "New empty state, conversion to first chart",
+      "intent": "Decide whether the new empty state ships.",
+      "source": "Sample data, made up for this example",
+      "data": [
+        {
+          "label": "control",
+          "value": 4.1,
+          "low": 3.6,
+          "high": 4.6
+        },
+        {
+          "label": "new empty state",
+          "value": 5.3,
+          "low": 4.8,
+          "high": 5.9
+        }
+      ],
+      "options": {
+        "min": 3,
+        "max": 7
+      },
+      "present": {
+        "notes": "The new empty state already won. It ships regardless of the export work."
+      }
+    },
+    {
+      "type": "section",
+      "kicker": "03",
+      "title": "What we're building"
+    },
+    {
+      "kind": "branchFlow",
+      "title": "Export, with its failure paths",
+      "intent": "Agree on every path before anyone designs a screen.",
+      "source": "Sample data, made up for this example",
+      "data": [
+        {
+          "label": "open export"
+        },
+        {
+          "label": "has data",
+          "type": "decision",
+          "no": {
+            "label": "empty state",
+            "to": "import data"
+          }
+        },
+        {
+          "label": "choose format"
+        },
+        {
+          "label": "file ready",
+          "type": "decision",
+          "no": {
+            "label": "show error",
+            "to": "choose format"
+          }
+        },
+        {
+          "label": "download"
+        }
+      ],
+      "present": {
+        "flag": "no ──►",
+        "steps": [
+          {
+            "lines": [
+              4,
+              7
+            ],
+            "say": "No data: send people to import instead of a blank file."
+          },
+          {
+            "lines": [
+              13,
+              16
+            ],
+            "say": "A failed file goes back to format, with the reason."
+          }
+        ],
+        "notes": "Every no-branch has a destination. Today both of these are dead ends."
+      }
+    },
+    {
+      "kind": "screen",
+      "title": "The new export dialog",
+      "intent": "Format first, then the two options people asked for. Nothing else.",
+      "source": "Sample data, made up for this example",
+      "data": {
+        "title": "Export “Sales by region”",
+        "rows": [
+          {
+            "type": "radio",
+            "label": "Format",
+            "options": [
+              "CSV",
+              "Excel",
+              "PDF"
+            ],
+            "selected": "CSV",
+            "note": "1"
+          },
+          {
+            "type": "select",
+            "label": "Dates as",
+            "value": "2026-10-18",
+            "options": [
+              "18/10/2026",
+              "10/18/2026",
+              "18 Oct 2026"
+            ],
+            "note": "2"
+          },
+          {
+            "type": "checkbox",
+            "label": "Include hidden columns",
+            "checked": false
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Export 4,000 rows",
+                "primary": true
+              }
+            ],
+            "align": "right"
+          }
+        ],
+        "notes": {
+          "1": "CSV is the default: 8 of 10 requests asked for it.",
+          "2": "Dates keep the format they had in the sheet; this only changes it on purpose."
+        }
+      },
+      "present": {
+        "kicker": "What we're building",
+        "notes": "This is the prototype from the same spec as the text wireframe. Click around: it's live."
+      }
+    },
+    {
+      "kind": "intentCard",
+      "title": "When the file is ready",
+      "intent": "Write the motion down as a decision before anyone animates it.",
+      "source": "Sample data, made up for this example",
+      "data": {
+        "name": "Toast enters",
+        "purpose": "Confirm the save without taking focus",
+        "trigger": "Save succeeds",
+        "from": "below the edge, transparent",
+        "to": "in place, opaque",
+        "ms": 200,
+        "easing": [
+          0.33,
+          1,
+          0.68,
+          1
+        ],
+        "easingName": "reveal",
+        "reduced": "Appears in place, no movement; stays for the same time"
+      },
+      "present": {
+        "kicker": "Motion",
+        "notes": "One motion in the whole feature, and it has a reason. Reduced motion shows it in place."
+      }
+    },
+    {
+      "kind": "board",
+      "title": "Order of work",
+      "source": "Sample data, made up for this example",
+      "data": {
+        "now": [
+          "Export to CSV",
+          "Fix date parsing on import"
+        ],
+        "next": [
+          "Saved views",
+          "Keyboard shortcuts for tables"
+        ],
+        "later": [
+          "Scheduled reports"
+        ]
+      },
+      "present": {
+        "notes": "Date parsing and CSV first. Saved views wait for the next funnel read."
+      }
+    },
+    {
+      "type": "statement",
+      "kicker": "Decision",
+      "text": "Ship CSV and date parsing first. Read the funnel again in four weeks.",
+      "notes": "Ask for the decision here."
+    }
+  ]
+}

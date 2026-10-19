@@ -1,0 +1,1 @@
+{ "kind": "loading", "title": "Opening a report", "intent": "Agree what someone sees in the first two seconds.", "source": "Illustrative timings.", "data": { "duration": 1800, "phases": [ { "at": 0, "show": "tap" }, { "at": 100, "show": "skeleton" }, { "at": 700, "show": "text" }, { "at": 1100, "show": "image" } ] } }

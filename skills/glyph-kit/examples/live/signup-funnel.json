@@ -1,0 +1,1 @@
+{ "kind": "funnel", "title": "Signup to paid, last 30 days", "intent": "Show where people leave, as people, not percentages.", "source": "Illustrative: sample numbers.", "data": { "steps": [ { "label": "Visited", "value": 12400 }, { "label": "Signed up", "value": 6100 }, { "label": "Activated", "value": 2300 }, { "label": "Paid", "value": 610 } ] } }

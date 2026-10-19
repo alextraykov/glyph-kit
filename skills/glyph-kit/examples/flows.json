@@ -1,0 +1,133 @@
+[
+  {
+    "kind": "branchFlow",
+    "title": "Export, with its failure paths",
+    "intent": "Agree on every path before anyone designs a screen.",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "open export"
+      },
+      {
+        "label": "has data",
+        "type": "decision",
+        "no": {
+          "label": "empty state",
+          "to": "import data"
+        }
+      },
+      {
+        "label": "choose format"
+      },
+      {
+        "label": "file ready",
+        "type": "decision",
+        "no": {
+          "label": "show error",
+          "to": "choose format"
+        }
+      },
+      {
+        "label": "download"
+      }
+    ]
+  },
+  {
+    "kind": "stateMachine",
+    "title": "Saving a report",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "from": "idle",
+        "event": "submit",
+        "to": "saving"
+      },
+      {
+        "from": "saving",
+        "event": "ok",
+        "to": "saved"
+      },
+      {
+        "from": "saving",
+        "event": "error",
+        "to": "failed"
+      },
+      {
+        "from": "failed",
+        "event": "retry",
+        "to": "saving"
+      }
+    ]
+  },
+  {
+    "kind": "journeyMap",
+    "title": "First week",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "Discover",
+        "doing": "Finds the tool through a colleague",
+        "thinking": "Will this replace my sheet?",
+        "feeling": 1
+      },
+      {
+        "label": "Import",
+        "doing": "Uploads a CSV with 4,000 rows",
+        "thinking": "Why did my dates break?",
+        "feeling": -2
+      },
+      {
+        "label": "First chart",
+        "doing": "Picks a template and edits labels",
+        "thinking": "Oh, that was quick",
+        "feeling": 2
+      }
+    ]
+  },
+  {
+    "kind": "flow",
+    "title": "Request to preview",
+    "source": "Sample data, made up for this example",
+    "data": [
+      "request",
+      "plan",
+      "build",
+      "preview"
+    ]
+  },
+  {
+    "kind": "tree",
+    "title": "Settings sitemap",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "name": "Settings",
+      "children": [
+        {
+          "name": "Profile"
+        },
+        {
+          "name": "Notifications",
+          "children": [
+            {
+              "name": "Email"
+            },
+            {
+              "name": "Digest"
+            }
+          ]
+        },
+        {
+          "name": "Billing",
+          "children": [
+            {
+              "name": "Plan"
+            },
+            {
+              "name": "Invoices"
+            }
+          ]
+        }
+      ]
+    }
+  }
+]

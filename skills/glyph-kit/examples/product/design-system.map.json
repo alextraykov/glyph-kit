@@ -1,0 +1,48 @@
+{
+  "name": "traykov.cc",
+  "about": "The map for this portfolio's own design system (src/styles/global.css), used in the worked example in reference/fidelity.md.",
+  "tokens": {
+    "ink": "var(--ink, #080808)",
+    "surface": "var(--paper, #fbfbf8)",
+    "panel": "var(--panel, rgba(8, 8, 8, 0.035))",
+    "muted": "var(--muted, #666660)",
+    "line": "var(--line, rgba(8, 8, 8, 0.16))",
+    "accent": "var(--ink, #080808)",
+    "onAccent": "var(--paper, #fbfbf8)",
+    "danger": "var(--signal-fail, #b8421f)",
+    "space": "var(--space-2, 10px)",
+    "radius": "var(--radius-0, 0)",
+    "font": "var(--sans, system-ui, sans-serif)",
+    "mono": "var(--mono, Menlo, monospace)",
+    "durationBase": "200ms",
+    "easingBase": "var(--ease-snap, cubic-bezier(0.2, 0, 0, 1))",
+    "ok": "var(--signal-ok, #04764e)"
+  },
+  "components": {
+    "button": {
+      "name": "<a data-ascii-action>",
+      "primary": "data-ascii-action=\"primary\"",
+      "secondary": "data-ascii-action=\"secondary\""
+    },
+    "toggle": {
+      "name": "<button aria-pressed>",
+      "note": "segmented controls use .case-switch"
+    },
+    "select": {
+      "name": "the shared styled select (tool panels, section 23)"
+    },
+    "tabs": {
+      "name": ".case-switch"
+    },
+    "list": {
+      "name": "<ol> with a solid marker on hover"
+    }
+  },
+  "motion": {
+    "easings": {
+      "standard": "var(--ease-snap, cubic-bezier(0.2, 0, 0, 1))",
+      "reveal": "var(--ease-out-expo, cubic-bezier(0.16, 1, 0.3, 1))"
+    },
+    "reducedMotion": "html[data-motion] gates motion; reduced motion is readable at rest."
+  }
+}

@@ -1,0 +1,104 @@
+{
+  "name": "Your design system",
+  "about": "Copy this file into your project as design-system.map.json and replace the right-hand sides with your own names. Glyph kit uses the tokens to style HTML prototypes and decks; agents use the components and motion entries to build production code with your real parts. Give every token a fallback, var(--your-token, #value), so prototypes also render outside your project. Set \"stylesheet\" to load your design system's CSS into prototypes and decks.",
+  "stylesheet": "",
+  "tokens": {
+    "ink": "var(--color-text, #111110)",
+    "surface": "var(--color-background, #ffffff)",
+    "panel": "var(--color-surface-subtle, #f4f4f2)",
+    "muted": "var(--color-text-secondary, #6b6b66)",
+    "line": "var(--color-border, #d6d6cf)",
+    "accent": "var(--color-primary, #1f4fd6)",
+    "onAccent": "var(--color-on-primary, #ffffff)",
+    "danger": "var(--color-danger, #b8421f)",
+    "space": "var(--space-2, 8px)",
+    "radius": "var(--radius-md, 6px)",
+    "font": "var(--font-body, system-ui, sans-serif)",
+    "mono": "var(--font-mono, Menlo, monospace)",
+    "durationBase": "var(--duration-base, 200ms)",
+    "easingBase": "var(--ease-standard, cubic-bezier(0.2, 0, 0, 1))",
+    "ok": "var(--color-success, #0a7a50)"
+  },
+  "components": {
+    "button": {
+      "name": "Button",
+      "import": "@your/ui",
+      "primary": "variant=\"primary\"",
+      "disabled": "disabled"
+    },
+    "input": {
+      "name": "TextField",
+      "import": "@your/ui"
+    },
+    "search": {
+      "name": "SearchField",
+      "import": "@your/ui"
+    },
+    "select": {
+      "name": "Select",
+      "import": "@your/ui"
+    },
+    "checkbox": {
+      "name": "Checkbox",
+      "import": "@your/ui"
+    },
+    "radio": {
+      "name": "RadioGroup",
+      "import": "@your/ui"
+    },
+    "toggle": {
+      "name": "Switch",
+      "import": "@your/ui"
+    },
+    "tabs": {
+      "name": "Tabs",
+      "import": "@your/ui"
+    },
+    "list": {
+      "name": "List",
+      "import": "@your/ui",
+      "selected": "aria-current"
+    },
+    "table": {
+      "name": "DataTable",
+      "import": "@your/ui"
+    },
+    "dialog": {
+      "name": "Dialog",
+      "import": "@your/ui"
+    },
+    "skeleton": {
+      "name": "Skeleton",
+      "import": "@your/ui"
+    },
+    "emptyState": {
+      "name": "EmptyState",
+      "import": "@your/ui"
+    },
+    "image": {
+      "name": "Image",
+      "import": "@your/ui"
+    },
+    "heading": {
+      "name": "Heading",
+      "import": "@your/ui"
+    },
+    "text": {
+      "name": "Text",
+      "import": "@your/ui"
+    }
+  },
+  "motion": {
+    "durations": {
+      "fast": "var(--duration-fast)",
+      "base": "var(--duration-base)",
+      "slow": "var(--duration-slow)"
+    },
+    "easings": {
+      "standard": "var(--ease-standard)",
+      "reveal": "var(--ease-reveal)",
+      "exit": "var(--ease-exit)"
+    },
+    "reducedMotion": "Every animated state has a designed still. Use the project's reduced-motion hook or media query."
+  }
+}

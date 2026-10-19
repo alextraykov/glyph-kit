@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fixing export</title>
+
+<style>:root{--gk-ink:#16161a;--gk-surface:#ffffff;--gk-panel:#f3f3f1;--gk-muted:#6b6b70;--gk-line:#e2e2de;--gk-accent:#16161a;--gk-on-accent:#ffffff;--gk-danger:#c4401c;--gk-ok:#0a7a50;--gk-space:8px;--gk-radius:10px;--gk-font:ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;--gk-mono:Menlo, "DejaVu Sans Mono", Consolas, "Cascadia Mono", monospace;--gk-duration-base:200ms;--gk-easing-base:cubic-bezier(0.2, 0, 0, 1)}:root{--gk-deck-bg:#f7f6f1;--gk-deck-ink:#151513;--gk-deck-muted:#6d6c66;--gk-deck-data:#151513;--gk-deck-frame:#a3a199;--gk-deck-flag:#c4401c;--gk-deck-ok:#0a7a50}
+:root{--gk-data:var(--gk-accent);--gk-frame:var(--gk-muted);--gk-flag:var(--gk-danger)}
+.gk-d{color:var(--gk-data)}.gk-e{color:var(--gk-data);opacity:.45}.gk-f{color:var(--gk-frame)}.gk-x{color:var(--gk-flag)}.gk-ok{color:var(--gk-ok)}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;color-scheme:light}
+body{margin:0;background:var(--gk-surface);color:var(--gk-ink);font:15px/1.5 var(--gk-font);-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--gk-accent);outline-offset:2px}
+.gk-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.gk-top{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 16px;padding:14px 24px;background:var(--gk-surface);border-bottom:1px solid var(--gk-line)}
+.gk-top h1{margin:0;font-size:15px;font-weight:600}
+.gk-top p{margin:0;color:var(--gk-muted);font-size:14px}
+.gk-chip--sample{justify-self:center;align-self:center;color:var(--gk-danger);border-color:currentColor}.gk-chip{padding:2px 8px;border:1px solid var(--gk-line);border-radius:999px;color:var(--gk-muted);font:500 11px/1.6 var(--gk-mono);letter-spacing:.04em;text-transform:uppercase}
+.gk-canvas{min-height:calc(100vh - 53px);display:grid;place-items:center;padding:56px 24px;background-color:var(--gk-panel);background-image:radial-gradient(color-mix(in srgb,var(--gk-ink) 14%,transparent) 1px,transparent 1px);background-size:16px 16px}
+.gk-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;padding:12px 24px;color:var(--gk-muted);font-size:13px;border-top:1px solid var(--gk-line);background:var(--gk-surface)}
+.gk-foot details summary{cursor:pointer}
+.gk-foot pre{max-width:100%;overflow:auto}
+pre.gk-figure{margin:0;padding:32px 36px;background:var(--gk-surface);border:1px solid var(--gk-line);border-radius:var(--gk-radius);font:13.5px/1.25 var(--gk-mono);white-space:pre;overflow-x:auto;font-variant-ligatures:none;letter-spacing:0;max-width:100%}
+.gk-board{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:28px}
+.gk-screen{position:relative;width:min(100%,max(320px,calc(var(--w) * 11.5px)));background:var(--gk-surface);border:1px solid var(--gk-line);border-radius:var(--gk-radius);box-shadow:0 1px 2px rgb(0 0 0 / .05),0 18px 48px rgb(0 0 0 / .09)}
+.gk-screen__bar{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid var(--gk-line);font-weight:600}
+.gk-body{display:grid;gap:14px;padding:20px}
+.gk-h{margin:0;color:var(--gk-muted);font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.gk-p{margin:0}.gk-muted,.gk-meta{color:var(--gk-muted)}
+.gk-gap{height:2px}
+.gk-rule{margin:4px -20px;border:0;border-top:1px solid var(--gk-line)}
+.gk-row{display:flex;align-items:center;gap:12px;min-height:36px}
+.gk-row--toggle{justify-content:space-between}
+.gk-row--field{display:grid;grid-template-columns:minmax(96px,34%) 1fr}
+.gk-row--field label{color:var(--gk-muted)}
+.gk-input,.gk-select select{width:100%;height:38px;padding:0 12px;border:1px solid var(--gk-line);border-radius:calc(var(--gk-radius) * .7);background:var(--gk-surface);color:var(--gk-ink);font:inherit;transition:border-color var(--gk-duration-base) var(--gk-easing-base)}
+.gk-input:hover,.gk-select select:hover{border-color:color-mix(in srgb,var(--gk-ink) 35%,var(--gk-line))}
+.gk-select{position:relative;display:block}
+.gk-select select{appearance:none;-webkit-appearance:none;padding-right:40px;cursor:pointer}
+.gk-select::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;border-right:1.5px solid var(--gk-muted);border-bottom:1.5px solid var(--gk-muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
+.gk-switch{appearance:none;-webkit-appearance:none;position:relative;flex:none;width:40px;height:24px;margin:0;border-radius:999px;background:color-mix(in srgb,var(--gk-ink) 18%,transparent);cursor:pointer;transition:background var(--gk-duration-base) var(--gk-easing-base)}
+.gk-switch::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:var(--gk-surface);box-shadow:0 1px 2px rgb(0 0 0 / .25);transition:transform var(--gk-duration-base) var(--gk-easing-base)}
+.gk-switch:checked{background:var(--gk-accent)}.gk-switch:checked::after{transform:translateX(16px)}
+.gk-check,.gk-radio{width:18px;height:18px;margin:0;accent-color:var(--gk-accent)}
+.gk-radios{display:flex;flex-wrap:wrap;gap:8px 20px;margin:0;padding:0;border:0}.gk-radios label{display:inline-flex;align-items:center;gap:8px}
+.gk-actions{display:flex;flex-wrap:wrap;gap:10px}.gk-actions--end{justify-content:flex-end}
+.gk-btn{height:38px;padding:0 16px;border:1px solid var(--gk-line);border-radius:calc(var(--gk-radius) * .7);background:var(--gk-surface);color:var(--gk-ink);font:500 14px/1 var(--gk-font);cursor:pointer;transition:background var(--gk-duration-base) var(--gk-easing-base),opacity var(--gk-duration-base) var(--gk-easing-base)}
+.gk-btn:hover{background:var(--gk-panel)}
+.gk-btn--primary{background:var(--gk-accent);border-color:var(--gk-accent);color:var(--gk-on-accent)}.gk-btn--primary:hover{background:color-mix(in srgb,var(--gk-accent) 86%,var(--gk-surface))}
+.gk-btn--danger{background:var(--gk-danger);border-color:var(--gk-danger);color:#fff}
+.gk-btn:disabled{opacity:.4;cursor:not-allowed}
+.gk-search{position:relative;display:flex;align-items:center}.gk-search .gk-input{padding-left:36px;padding-right:72px}
+.gk-search__icon{position:absolute;left:13px;width:11px;height:11px;border:1.5px solid var(--gk-muted);border-radius:50%}.gk-search__icon::after{content:"";position:absolute;right:-5px;bottom:-4px;width:6px;height:1.5px;background:var(--gk-muted);transform:rotate(45deg)}
+.gk-search kbd{position:absolute;right:10px;padding:2px 6px;border:1px solid var(--gk-line);border-radius:5px;color:var(--gk-muted);font:11px var(--gk-mono)}
+.gk-tabs{display:flex;gap:4px;margin:-6px -4px 0;border-bottom:1px solid var(--gk-line)}
+.gk-tabs button{position:relative;padding:8px 10px 12px;border:0;background:none;color:var(--gk-muted);font:500 14px/1 var(--gk-font);cursor:pointer}
+.gk-tabs button[aria-selected=true]{color:var(--gk-ink)}
+.gk-tabs button[aria-selected=true]::after{content:"";position:absolute;left:8px;right:8px;bottom:-1px;height:2px;background:var(--gk-accent)}
+.gk-list{margin:0 -20px;padding:0;list-style:none}
+.gk-list li{display:flex;justify-content:space-between;gap:12px;padding:10px 20px;border-top:1px solid var(--gk-line)}
+.gk-list li:last-child{border-bottom:1px solid var(--gk-line)}
+.gk-list [aria-current]{background:color-mix(in srgb,var(--gk-accent) 8%,transparent);box-shadow:inset 3px 0 var(--gk-accent);font-weight:500}
+.gk-list [aria-disabled]{color:var(--gk-muted)}
+.gk-table{width:100%;border-collapse:collapse;font-size:14px}.gk-table th{color:var(--gk-muted);font-weight:500;text-align:left}.gk-table :is(th,td){padding:8px 0;border-bottom:1px solid var(--gk-line)}
+.gk-image{display:grid;place-items:center;min-height:calc(var(--rows) * 30px);border-radius:calc(var(--gk-radius) * .7);background:repeating-linear-gradient(135deg,var(--gk-panel) 0 8px,color-mix(in srgb,var(--gk-panel) 50%,var(--gk-surface)) 8px 16px)}
+.gk-image span{padding:2px 8px;border-radius:999px;background:var(--gk-surface);color:var(--gk-muted);font:12px var(--gk-mono)}
+.gk-skeleton{display:grid;gap:10px}.gk-skeleton span{height:12px;border-radius:6px;background:var(--gk-panel)}.gk-skeleton span:nth-child(2){width:72%}.gk-skeleton span:nth-child(3){width:84%}
+.gk-empty{display:grid;justify-items:center;gap:12px;padding:28px 12px;text-align:center}.gk-empty p{max-width:30ch;margin:0;color:var(--gk-muted)}
+.gk-empty__mark{font:22px/1 var(--gk-mono);letter-spacing:2px;color:var(--gk-muted)}
+.gk-noted{position:relative}
+.gk-pin{display:inline-grid;place-items:center;flex:none;width:22px;height:22px;border-radius:50%;background:var(--gk-accent);color:var(--gk-on-accent);font:600 12px/1 var(--gk-font)}
+.gk-noted > .gk-pin{position:absolute;right:-33px;top:50%;transform:translateY(-50%);box-shadow:0 0 0 3px var(--gk-surface)}
+.gk-notes{display:grid;gap:12px;width:min(100%,260px);margin:0;padding:16px;list-style:none;background:var(--gk-surface);border:1px solid var(--gk-line);border-radius:var(--gk-radius);font-size:14px}
+.gk-notes li{display:flex;gap:10px;align-items:flex-start}
+.gk-dimmer{position:absolute;inset:0;display:grid;place-items:center;padding:20px;border-radius:inherit;background:rgb(10 10 12 / .42)}
+.gk-dimmer[hidden]{display:none}
+.gk-dialog{width:min(100%,360px);background:var(--gk-surface);border-radius:var(--gk-radius);box-shadow:0 24px 64px rgb(0 0 0 / .28)}
+.gk-dialog h3{margin:0;padding:18px 20px 0;font-size:16px}
+.gk-dialog .gk-body{padding-top:10px}
+.gk-pair{display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-start;gap:40px}
+.gk-pair figure{display:grid;gap:12px;margin:0}.gk-pair figcaption{color:var(--gk-muted);font:500 12px var(--gk-mono)}
+.gk-stage{display:grid;gap:14px;width:min(100%,520px);padding:20px;background:var(--gk-surface);border:1px solid var(--gk-line);border-radius:var(--gk-radius)}
+.gk-stage p{margin:0;color:var(--gk-muted);font-size:13px}
+.gk-actor{width:120px;height:72px;border-radius:calc(var(--gk-radius) * .7);background:var(--gk-accent)}
+.gk-actor--small{width:56px;height:56px}.gk-actors{display:flex;gap:10px}
+.gk-figure-wrap{display:grid;justify-items:center;gap:20px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:0s!important;animation-duration:0s!important}.gk-play{display:none}}
+
+html,body{height:100%;margin:0;overflow:hidden;background:var(--gk-deck-bg)}
+body{color:var(--gk-deck-ink)}
+.gk-deck{position:fixed;inset:0 0 36px;overflow:hidden}
+.gk-stagebox{position:absolute;left:50%;top:50%;width:1600px;height:900px;transform-origin:center}
+.gk-slide{position:absolute;inset:0;display:none;grid-template-rows:auto minmax(0,1fr) auto;gap:28px;padding:72px 88px 56px;background:var(--gk-deck-bg)}
+.gk-slide.is-current{display:grid}
+.gk-kicker{margin:0;color:var(--gk-deck-muted);font:500 18px/1.4 var(--gk-mono);letter-spacing:.04em;text-transform:uppercase}
+.gk-slide h2{margin:6px 0 0;font:600 60px/1.05 var(--gk-font);letter-spacing:-.025em;max-width:24ch}
+.gk-lead{margin:14px 0 0;max-width:60ch;color:var(--gk-deck-muted);font:400 26px/1.4 var(--gk-font)}
+.gk-view{position:relative;overflow:hidden;min-height:0}
+.gk-world{position:absolute;left:0;top:0;transform-origin:0 0;transition:transform 700ms cubic-bezier(.2,0,0,1)}
+.gk-fig{margin:0;font:20px/1.25 var(--gk-mono);font-variant-ligatures:none;letter-spacing:0;color:var(--gk-deck-ink)}
+.gk-ln{display:block;width:max-content;min-height:1.25em;white-space:pre;transition:opacity 400ms ease}
+.gk-cmd{display:block;width:max-content;margin-bottom:.6em;color:var(--gk-deck-muted);white-space:pre}
+.gk-cmd b{color:var(--gk-deck-ink);font-weight:400}
+.gk-dim .gk-ln:not(.is-focus),.gk-dim .gk-cmd{opacity:.2}
+.gk-say{display:flex;gap:16px;align-items:baseline;min-height:42px;margin:0;font:400 28px/1.35 var(--gk-font)}
+.gk-say:empty{visibility:hidden}
+.gk-say::before{content:"►";color:var(--gk-deck-data);font:18px var(--gk-mono)}
+.gk-source-line{margin:0;color:var(--gk-deck-muted);font:400 15px/1.4 var(--gk-mono)}
+.gk-slide--title,.gk-slide--statement{align-content:center;grid-template-rows:auto}
+.gk-slide--title h2{font-size:104px;max-width:14ch}
+.gk-slide--title .gk-lead{font-size:32px}
+.gk-ramp{margin-bottom:32px;color:var(--gk-deck-data);font:64px/1 var(--gk-mono);letter-spacing:14px}
+.gk-slide--section{align-content:end;grid-template-rows:auto}
+.gk-slide--section h2{font-size:88px}
+.gk-statement{margin:0;max-width:24ch;font:600 72px/1.12 var(--gk-font);letter-spacing:-.025em}
+.gk-proto{width:max-content}
+.gk-proto .gk-board{flex-wrap:nowrap}
+.gk-proto .gk-screen{width:max(320px,calc(var(--w) * 11.5px))}
+.gk-proto .gk-notes{width:260px}
+.gk-bar{position:fixed;left:0;right:0;bottom:0;height:36px;display:flex;align-items:center;gap:16px;padding:0 16px;color:var(--gk-deck-muted);font:13px/1 var(--gk-mono);pointer-events:none}
+.gk-ticks{letter-spacing:1px;white-space:nowrap;overflow:hidden}
+.gk-count{margin-left:auto}
+.gk-notes-panel{position:fixed;left:16px;right:16px;bottom:44px;max-height:30vh;overflow:auto;margin:0;padding:16px 20px;border:1px solid var(--gk-deck-muted);background:var(--gk-deck-bg);color:var(--gk-deck-ink);font:17px/1.5 var(--gk-font);white-space:pre-wrap}
+.gk-notes-panel[hidden]{display:none}
+.gk-hint{position:fixed;right:16px;top:12px;margin:0;color:var(--gk-deck-muted);font:12px var(--gk-mono)}
+@keyframes gk-type{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
+@keyframes gk-flash{0%,49%{background:var(--gk-deck-flag);color:var(--gk-deck-bg)}50%,100%{background:transparent}}
+.is-printing .gk-ln,.is-printing .gk-cmd,.is-typing{animation:gk-type var(--d,160ms) steps(var(--n,18),end) both;animation-delay:var(--at,0ms)}
+.is-printing .gk-ln.is-flag{animation:gk-type 160ms steps(18,end) both var(--at,0ms),gk-flash 260ms steps(1) calc(var(--at,0ms) + 220ms) 2}
+@media (prefers-reduced-motion:reduce){.gk-world{transition:none}.is-printing .gk-ln,.is-printing .gk-cmd,.is-typing,.is-printing .gk-ln.is-flag{animation:none!important;clip-path:none}}
+@media print{
+  @page{size:1600px 900px;margin:0}
+  html,body{overflow:visible;height:auto}
+  .gk-deck{position:static;display:block}
+  .gk-stagebox{position:static;transform:none!important;height:auto}
+  .gk-slide{position:relative;display:grid!important;width:1600px;height:900px;break-after:page}
+  .gk-bar,.gk-notes-panel,.gk-hint{display:none!important}
+  .gk-ln,.gk-cmd,.gk-title{opacity:1!important;animation:none!important;clip-path:none!important}
+  /* No camera on paper: the figure sits at a fixed presentation size. */
+  .gk-view{overflow:visible}
+  .gk-world{position:static;transform:none!important}
+  .gk-fig{font-size:30px}
+  .gk-proto{zoom:1.4}
+}
+.gk-d{color:var(--gk-deck-data)}.gk-e{color:var(--gk-deck-data);opacity:.45}.gk-f{color:var(--gk-deck-frame)}.gk-x{color:var(--gk-deck-flag)}.gk-ok{color:var(--gk-deck-ok)}</style>
+</head>
+<body>
+<main class="gk-deck"><div class="gk-stagebox">
+<section class="gk-slide gk-slide--title" aria-roledescription="slide" aria-label="1 of 16" data-steps="[]"><div><div class="gk-ramp" aria-hidden="true">░▒▓█</div><h2 class="gk-title">Fixing export</h2><p class="gk-lead">What interviews, a usability test and a funnel told us, and what we&#39;re building first.</p><p class="gk-kicker" style="margin-top:40px">Design review · sample data</p></div><template class="gk-notes-src">Twenty minutes. Research first, then the numbers, then the plan. Stop me on any slide.</template></section>
+<section class="gk-slide gk-slide--statement" aria-roledescription="slide" aria-label="2 of 16" data-steps="[]"><div><p class="gk-kicker" style="margin-bottom:24px">The problem</p><p class="gk-statement gk-title">People can&#39;t find export, and when they do, their dates break.</p></div><template class="gk-notes-src">Both halves came up in every source. The rest of the deck is the evidence.</template></section>
+<section class="gk-slide gk-slide--section" aria-roledescription="slide" aria-label="3 of 16" data-steps="[]"><div><p class="gk-kicker">01</p><h2 class="gk-title">What we heard</h2></div><template class="gk-notes-src"></template></section>
+<section class="gk-slide" data-steps="[{&quot;lines&quot;:[1,1],&quot;say&quot;:&quot;Five of six people couldn&#39;t find export.&quot;},{&quot;lines&quot;:[2,2],&quot;say&quot;:&quot;Half didn&#39;t trust the totals once they had them.&quot;}]" data-flag="" aria-roledescription="slide" aria-label="4 of 16">
+<header><p class="gk-kicker">What we heard</p><h2 class="gk-title">Themes across six interviews</h2></header>
+<div class="gk-view"><div class="gk-world"><pre class="gk-fig" role="img" aria-label="Themes across six interviews. can&#39;t find export: 5 participants. distrusts totals: 3 participants. wants keyboard: 2 participants"><span class="gk-cmd">$ <b>glyph-kit render themes.json</b></span><span class="gk-ln" data-l="0">                   P1 P2 P3 P4 P5 P6   n</span><span class="gk-ln" data-l="1">can&#39;t find export  <span class="gk-d">■  ■  </span><span class="gk-f">·  </span><span class="gk-d">■  ■  ■    </span>5</span><span class="gk-ln" data-l="2">distrusts totals   <span class="gk-d">■  </span><span class="gk-f">·  </span><span class="gk-d">■  </span><span class="gk-f">·  </span><span class="gk-d">■  </span><span class="gk-f">·    </span>3</span><span class="gk-ln" data-l="3">wants keyboard     <span class="gk-f">·  </span><span class="gk-d">■  ■  </span><span class="gk-f">·  ·  ·    </span>2</span><span class="gk-ln" data-l="4"> </span><span class="gk-ln" data-l="5">                             <span class="gk-f">SAMPLE DATA</span></span></pre></div></div>
+<footer><p class="gk-say" aria-live="polite"></p><p class="gk-source-line">Source: Sample data, made up for this example</p></footer>
+<template class="gk-notes-src">The command is the citation: this chart is generated from the synthesis file, not drawn.</template>
+</section>
+<section class="gk-slide" data-steps="[]" data-flag="" aria-roledescription="slide" aria-label="5 of 16">
+<header><p class="gk-kicker">What we heard</p><h2 class="gk-title">Evidence for &#39;can&#39;t find export&#39;</h2></header>
+<div class="gk-view"><div class="gk-world"><pre class="gk-fig" role="img" aria-label="Evidence for &#39;can&#39;t find export&#39;. P4, operations lead said: I looked for export in settings, then gave up and screenshotted the table."><span class="gk-ln" data-l="0"><span class="gk-f">┌─ </span>can&#39;t find export <span class="gk-f">──────────────────────┐</span></span><span class="gk-ln" data-l="1"><span class="gk-f">│ </span>“I looked for export in settings, then   <span class="gk-f">│</span></span><span class="gk-ln" data-l="2"><span class="gk-f">│ </span>gave up and screenshotted the table.”    <span class="gk-f">│</span></span><span class="gk-ln" data-l="3"><span class="gk-f">│                                          │</span></span><span class="gk-ln" data-l="4"><span class="gk-f">│ </span>P4, operations lead <span class="gk-f">· </span>interview 3, 12:40 <span class="gk-f">│</span></span><span class="gk-ln" data-l="5"><span class="gk-f">└──────────────────────────────────────────┘</span></span><span class="gk-ln" data-l="6"> </span><span class="gk-ln" data-l="7">                                 <span class="gk-f">SAMPLE DATA</span></span></pre></div></div>
+<footer><p class="gk-say" aria-live="polite"></p><p class="gk-source-line">Source: Sample data, made up for this example</p></footer>
+<template class="gk-notes-src">Read it out. It&#39;s the clearest description of the workaround everyone uses.</template>
+</section>
+<section class="gk-slide" data-steps="[{&quot;lines&quot;:[2,2],&quot;say&quot;:&quot;Trust is the bigger problem: a quarter agree they trust the numbers.&quot;}]" data-flag="" aria-roledescription="slide" aria-label="6 of 16">
+<header><p class="gk-kicker">What we heard</p><h2 class="gk-title">How people rated the export flow</h2><p class="gk-lead">Show where opinion splits before we pick what to fix.</p></header>
+<div class="gk-view"><div class="gk-world"><pre class="gk-fig" role="img" aria-label="How people rated the export flow. Easy to find export: 2, 3, 2, 8, 5 from strongly disagree to strongly agree. Trust the numbers: 6, 5, 4, 3, 2 from strongly disagree to strongly agree. Would use it weekly: 1, 2, 5, 7, 5 from strongly disagree to strongly agree"><span class="gk-ln" data-l="0">                                 disagree<span class="gk-f">│</span>agree</span><span class="gk-ln" data-l="1">Easy to find export          <span class="gk-d">████▒▒▒▒▒▒</span><span class="gk-e">░░</span><span class="gk-f">│</span><span class="gk-e">░░</span><span class="gk-d">▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒██  </span>65% agree</span><span class="gk-ln" data-l="2">Trust the numbers    <span class="gk-d">██████▒▒▒▒▒▒▒▒▒▒</span><span class="gk-e">░░░░</span><span class="gk-f">│</span><span class="gk-e">░░░░</span><span class="gk-d">▒▒▒▒▒▒████        </span>25% agree</span><span class="gk-ln" data-l="3">Would use it weekly           <span class="gk-d">██▒▒▒▒</span><span class="gk-e">░░░░░</span><span class="gk-f">│</span><span class="gk-e">░░░░░</span><span class="gk-d">▒▒▒▒▒▒▒▒▒▒▒▒▒▒█  </span>60% agree</span><span class="gk-ln" data-l="4"> </span><span class="gk-ln" data-l="5"><span class="gk-d">█ </span>strongly   <span class="gk-d">▒ </span>somewhat   <span class="gk-e">░ </span>neutral</span><span class="gk-ln" data-l="6"> </span><span class="gk-ln" data-l="7">                                                              <span class="gk-f">SAMPLE DATA</span></span></pre></div></div>
+<footer><p class="gk-say" aria-live="polite"></p><p class="gk-source-line">Source: Sample data, made up for this example</p></footer>
+<template class="gk-notes-src">Findability is fixable with placement. Trust needs the date fix.</template>
+</section>
+<section class="gk-slide" data-steps="[{&quot;lines&quot;:[0,0],&quot;say&quot;:&quot;Three of eight never found export at all.&quot;}]" data-flag="" aria-roledescription="slide" aria-label="7 of 16">
+<header><p class="gk-kicker">What we heard</p><h2 class="gk-title">Usability test, eight people</h2></header>
+<div class="gk-view"><div class="gk-world"><pre class="gk-fig" role="img" aria-label="Usability test, eight people. find export: median 52 seconds, 5 of 8 finished. share a view: median 21 seconds, 8 of 8 finished"><span class="gk-ln" data-l="0">find export             <span class="gk-f">├</span><span class="gk-d">██</span><span class="gk-f">│</span><span class="gk-d">█████</span><span class="gk-f">─────┤        </span>median 52s <span class="gk-f">· </span>5/8 <span class="gk-ok">done</span></span><span class="gk-ln" data-l="1">share a view     <span class="gk-f">├─│</span><span class="gk-d">███</span><span class="gk-f">─┤                      </span>median 21s <span class="gk-f">· </span>8/8 <span class="gk-ok">done</span></span><span class="gk-ln" data-l="2">              0s            60s          120s</span><span class="gk-ln" data-l="3"> </span><span class="gk-ln" data-l="4"><span class="gk-f">├─ </span>fastest   <span class="gk-d">█ </span>middle half   <span class="gk-f">│ </span>median   <span class="gk-f">─┤ </span>slowest</span><span class="gk-ln" data-l="5"> </span><span class="gk-ln" data-l="6">                                                         <span class="gk-f">SAMPLE DATA</span></span></pre></div></div>
+<footer><p class="gk-say" aria-live="polite"></p><p class="gk-source-line">Source: Sample data, made up for this example</p></footer>
+<template class="gk-notes-src">Median 52 seconds for the ones who did. Sharing a view is fine, for comparison.</template>
+</section>
+<section class="gk-slide gk-slide--section" aria-roledescription="slide" aria-label="8 of 16" data-steps="[]"><div><p class="gk-kicker">02</p><h2 class="gk-title">What the numbers say</h2></div><template class="gk-notes-src"></template></section>
+<section class="gk-slide" data-steps="[{&quot;lines&quot;:[2,2],&quot;say&quot;:&quot;Activation is where we lose the most people.&quot;}]" data-flag="" aria-roledescription="slide" aria-label="9 of 16">
+<header><p class="gk-kicker">What the numbers say</p><h2 class="gk-title">Signup to paid, last 30 days</h2></header>
+<div class="gk-view"><div class="gk-world"><pre class="gk-fig" role="img" aria-label="Signup to paid, last 30 days. visited: 12,400, signed up: 6,100, activated: 2,300, paid: 610"><span class="gk-cmd">$ <b>glyph-kit render funnel.json</b></span><span class="gk-ln" data-l="0">visited    <span class="gk-d">██████████████████████████████  </span>12,400  100%</span><span class="gk-ln" data-l="1">signed up  <span class="gk-d">██████████████▊                  </span>6,100   49%  <span class="gk-f">▼ </span>49% kept</span><span class="gk-ln" data-l="2">activated  <span class="gk-d">█████▋                           </span>2,300   19%  <span class="gk-f">▼ </span>38% kept</span><span class="gk-ln" data-l="3">paid       <span class="gk-d">█▌                                 </span>610    5%  <span class="gk-f">▼ </span>27% kept</span><span class="gk-ln" data-l="4"> </span><span class="gk-ln" data-l="5">                                                        <span class="gk-f">SAMPLE DATA</span></span></pre></div></div>
+<footer><p class="gk-say" aria-live="polite"></p><p class="gk-source-line">Source: Sample data, made up for this example</p></footer>
+<template class="gk-notes-src">Activation means a first chart exported or shared. Same 30-day window for every step.</template>
+</section>
+<section class="gk-slide" data-steps="[]" data-flag="" aria-roledescription="slide" aria-label="10 of 16">
+<header><p class="gk-kicker">What the numbers say</p><h2 class="gk-title">New empty state, conversion to first chart</h2><p class="gk-lead">Decide whether the new empty state ships.</p></header>
+<div class="gk-view"><div class="gk-world"><pre class="gk-fig" role="img" aria-label="New empty state, conversion to first chart. control: 4.1 (3.6 to 4.6). new empty state: 5.3 (4.8 to 5.9)"><span class="gk-ln" data-l="0">control               <span class="gk-f">├────</span><span class="gk-d">█</span><span class="gk-f">───┤                        </span>4.1% (3.6%–4.6%)</span><span class="gk-ln" data-l="1">new empty state                  <span class="gk-f">├────</span><span class="gk-d">█</span><span class="gk-f">────┤            </span>5.3% (4.8%–5.9%)</span><span class="gk-ln" data-l="2">                 3.0%             5.0%            7.0%</span><span class="gk-ln" data-l="3"> </span><span class="gk-ln" data-l="4">The intervals don&#39;t overlap.</span><span class="gk-ln" data-l="5"> </span><span class="gk-ln" data-l="6">                                                             <span class="gk-f">SAMPLE DATA</span></span></pre></div></div>
+<footer><p class="gk-say" aria-live="polite"></p><p class="gk-source-line">Source: Sample data, made up for this example</p></footer>
+<template class="gk-notes-src">The new empty state already won. It ships regardless of the export work.</template>
+</section>
+<section class="gk-slide gk-slide--section" aria-roledescription="slide" aria-label="11 of 16" data-steps="[]"><div><p class="gk-kicker">03</p><h2 class="gk-title">What we&#39;re building</h2></div><template class="gk-notes-src"></template></section>
+<section class="gk-slide" data-steps="[{&quot;lines&quot;:[4,7],&quot;say&quot;:&quot;No data: send people to import instead of a blank file.&quot;},{&quot;lines&quot;:[13,16],&quot;say&quot;:&quot;A failed file goes back to format, with the reason.&quot;}]" data-flag="no ──►" aria-roledescription="slide" aria-label="12 of 16">
+<header><p class="gk-kicker">What we&#39;re building</p><h2 class="gk-title">Export, with its failure paths</h2><p class="gk-lead">Agree on every path before anyone designs a screen.</p></header>
+<div class="gk-view"><div class="gk-world"><pre class="gk-fig" role="img" aria-label="Export, with its failure paths. open export, then has data? if not, empty state, then choose format, then file ready? if not, show error, then download"><span class="gk-ln" data-l="0"><span class="gk-f">┌─────────────────┐</span></span><span class="gk-ln" data-l="1"><span class="gk-f">│   </span>open export   <span class="gk-f">│</span></span><span class="gk-ln" data-l="2"><span class="gk-f">└────────┬────────┘</span></span><span class="gk-ln" data-l="3">         <span class="gk-f">│</span></span><span class="gk-ln" data-l="4">         <span class="gk-f">▼</span></span><span class="gk-ln" data-l="5"><span class="gk-f">┌</span>┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄<span class="gk-f">┐           ┌─────────────────┐</span></span><span class="gk-ln" data-l="6">┆    has data?    <span class="gk-f">├─── </span>no <span class="gk-f">───►│   </span>empty state   <span class="gk-f">│</span></span><span class="gk-ln" data-l="7"><span class="gk-f">└</span>┄┄┄┄┄┄┄┄<span class="gk-f">┬</span>┄┄┄┄┄┄┄┄<span class="gk-f">┘           │  → </span>import data  <span class="gk-f">│</span></span><span class="gk-ln" data-l="8">         <span class="gk-f">│ </span>yes                <span class="gk-f">└─────────────────┘</span></span><span class="gk-ln" data-l="9">         <span class="gk-f">▼</span></span><span class="gk-ln" data-l="10"><span class="gk-f">┌─────────────────┐</span></span><span class="gk-ln" data-l="11"><span class="gk-f">│  </span>choose format  <span class="gk-f">│</span></span><span class="gk-ln" data-l="12"><span class="gk-f">└────────┬────────┘</span></span><span class="gk-ln" data-l="13">         <span class="gk-f">│</span></span><span class="gk-ln" data-l="14">         <span class="gk-f">▼</span></span><span class="gk-ln" data-l="15"><span class="gk-f">┌</span>┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄┄<span class="gk-f">┐           ┌───────────────────┐</span></span><span class="gk-ln" data-l="16">┆   file ready?   <span class="gk-f">├─── </span>no <span class="gk-f">───►│    </span>show error     <span class="gk-f">│</span></span><span class="gk-ln" data-l="17"><span class="gk-f">└</span>┄┄┄┄┄┄┄┄<span class="gk-f">┬</span>┄┄┄┄┄┄┄┄<span class="gk-f">┘           │  → </span>choose format  <span class="gk-f">│</span></span><span class="gk-ln" data-l="18">         <span class="gk-f">│ </span>yes                <span class="gk-f">└───────────────────┘</span></span><span class="gk-ln" data-l="19">         <span class="gk-f">▼</span></span><span class="gk-ln" data-l="20"><span class="gk-f">╔═════════════════╗</span></span><span class="gk-ln" data-l="21"><span class="gk-f">║    </span>download     <span class="gk-f">║</span></span><span class="gk-ln" data-l="22"><span class="gk-f">╚═════════════════╝</span></span><span class="gk-ln" data-l="23"> </span><span class="gk-ln" data-l="24">                                        <span class="gk-f">SAMPLE DATA</span></span></pre></div></div>
+<footer><p class="gk-say" aria-live="polite"></p><p class="gk-source-line">Source: Sample data, made up for this example</p></footer>
+<template class="gk-notes-src">Every no-branch has a destination. Today both of these are dead ends.</template>
+</section>
+<section class="gk-slide" data-steps="[]" data-flag="" aria-roledescription="slide" aria-label="13 of 16">
+<header><p class="gk-kicker">What we&#39;re building</p><h2 class="gk-title">The new export dialog</h2><p class="gk-lead">Format first, then the two options people asked for. Nothing else.</p></header>
+<div class="gk-view"><div class="gk-world"><div class="gk-proto"><span class="gk-chip gk-chip--sample">Sample data</span><div class="gk-board"><section class="gk-screen" aria-label="Export “Sales by region”" style="--w:46" data-screen><header class="gk-screen__bar"><span>Export “Sales by region”</span></header><div class="gk-body"><div class="gk-noted"><fieldset class="gk-radios" data-component="radio"><legend class="gk-sr">Format</legend><label><input class="gk-radio" type="radio" name="gk-f1" value="0" checked> CSV</label><label><input class="gk-radio" type="radio" name="gk-f1" value="1"> Excel</label><label><input class="gk-radio" type="radio" name="gk-f1" value="2"> PDF</label></fieldset><span class="gk-pin" aria-hidden="true">1</span></div>
+<div class="gk-noted"><div class="gk-row gk-row--field"><label for="gk-f2">Dates as</label><span class="gk-select"><select id="gk-f2" data-component="select"><option>2026-10-18</option><option>18/10/2026</option><option>10/18/2026</option><option>18 Oct 2026</option></select></span></div><span class="gk-pin" aria-hidden="true">2</span></div>
+<div class="gk-row"><input class="gk-check" type="checkbox" id="gk-f3" data-component="checkbox"><label for="gk-f3">Include hidden columns</label></div>
+<hr class="gk-rule">
+<div class="gk-actions gk-actions--end"><button type="button" class="gk-btn" data-component="button">Cancel</button><button type="button" class="gk-btn gk-btn--primary" data-component="button">Export 4,000 rows</button></div></div></section><ol class="gk-notes" aria-label="Notes"><li><span class="gk-pin" aria-hidden="true">1</span><span><span class="gk-sr">Note 1: </span>CSV is the default: 8 of 10 requests asked for it.</span></li><li><span class="gk-pin" aria-hidden="true">2</span><span><span class="gk-sr">Note 2: </span>Dates keep the format they had in the sheet; this only changes it on purpose.</span></li></ol></div></div></div></div>
+<footer><p class="gk-say" aria-live="polite"></p><p class="gk-source-line">Source: Sample data, made up for this example</p></footer>
+<template class="gk-notes-src">This is the prototype from the same spec as the text wireframe. Click around: it&#39;s live.</template>
+</section>
+<section class="gk-slide" data-steps="[]" data-flag="" aria-roledescription="slide" aria-label="14 of 16">
+<header><p class="gk-kicker">Motion</p><h2 class="gk-title">When the file is ready</h2><p class="gk-lead">Write the motion down as a decision before anyone animates it.</p></header>
+<div class="gk-view"><div class="gk-world"><pre class="gk-fig" role="img" aria-label="When the file is ready. Confirm the save without taking focus. Save succeeds. 200ms. Reduced motion: Appears in place, no movement; stays for the same time"><span class="gk-ln" data-l="0"><span class="gk-f">┌─ </span>Toast enters <span class="gk-f">───────────────────────────────────────┐</span></span><span class="gk-ln" data-l="1"><span class="gk-f">│ </span>why       Confirm the save without taking focus      <span class="gk-f">│</span></span><span class="gk-ln" data-l="2"><span class="gk-f">│ </span>when      Save succeeds                              <span class="gk-f">│</span></span><span class="gk-ln" data-l="3"><span class="gk-f">│ </span>change    below the edge, transparent <span class="gk-f">→ </span>in place,    <span class="gk-f">│</span></span><span class="gk-ln" data-l="4"><span class="gk-f">│           </span>opaque                                     <span class="gk-f">│</span></span><span class="gk-ln" data-l="5"><span class="gk-f">│ </span>timing    <span class="gk-f">▕</span><span class="gk-d">████████</span><span class="gk-f">············</span><span class="gk-d">▏ </span>200ms               <span class="gk-f">│</span></span><span class="gk-ln" data-l="6"><span class="gk-f">│ </span>easing    <span class="gk-d">█▆▅▄▃▂▁▁  </span>reveal                           <span class="gk-f">│</span></span><span class="gk-ln" data-l="7"><span class="gk-f">│ </span>reduced   Appears in place, no movement; stays for   <span class="gk-f">│</span></span><span class="gk-ln" data-l="8"><span class="gk-f">│           </span>the same time                              <span class="gk-f">│</span></span><span class="gk-ln" data-l="9"><span class="gk-f">└──────────────────────────────────────────────────────┘</span></span><span class="gk-ln" data-l="10"> </span><span class="gk-ln" data-l="11">                                             <span class="gk-f">SAMPLE DATA</span></span></pre></div></div>
+<footer><p class="gk-say" aria-live="polite"></p><p class="gk-source-line">Source: Sample data, made up for this example</p></footer>
+<template class="gk-notes-src">One motion in the whole feature, and it has a reason. Reduced motion shows it in place.</template>
+</section>
+<section class="gk-slide" data-steps="[]" data-flag="" aria-roledescription="slide" aria-label="15 of 16">
+<header><p class="gk-kicker">What we&#39;re building</p><h2 class="gk-title">Order of work</h2></header>
+<div class="gk-view"><div class="gk-world"><pre class="gk-fig" role="img" aria-label="Order of work. now: Export to CSV, Fix date parsing on import. next: Saved views, Keyboard shortcuts for tables. later: Scheduled reports"><span class="gk-ln" data-l="0"><span class="gk-f">┌─ </span>NOW <span class="gk-f">──────────────┬─ </span>NEXT <span class="gk-f">─────────────┬─ </span>LATER <span class="gk-f">────────────┐</span></span><span class="gk-ln" data-l="1"><span class="gk-f">│ · </span>Export to CSV    <span class="gk-f">│ · </span>Saved views      <span class="gk-f">│ · </span>Scheduled        <span class="gk-f">│</span></span><span class="gk-ln" data-l="2"><span class="gk-f">│ · </span>Fix date parsing <span class="gk-f">│ · </span>Keyboard         <span class="gk-f">│   </span>reports          <span class="gk-f">│</span></span><span class="gk-ln" data-l="3"><span class="gk-f">│   </span>on import        <span class="gk-f">│   </span>shortcuts for    <span class="gk-f">│                    │</span></span><span class="gk-ln" data-l="4"><span class="gk-f">│                    │   </span>tables           <span class="gk-f">│                    │</span></span><span class="gk-ln" data-l="5"><span class="gk-f">└────────────────────┴────────────────────┴────────────────────┘</span></span><span class="gk-ln" data-l="6"> </span><span class="gk-ln" data-l="7">                                                     <span class="gk-f">SAMPLE DATA</span></span></pre></div></div>
+<footer><p class="gk-say" aria-live="polite"></p><p class="gk-source-line">Source: Sample data, made up for this example</p></footer>
+<template class="gk-notes-src">Date parsing and CSV first. Saved views wait for the next funnel read.</template>
+</section>
+<section class="gk-slide gk-slide--statement" aria-roledescription="slide" aria-label="16 of 16" data-steps="[]"><div><p class="gk-kicker" style="margin-bottom:24px">Decision</p><p class="gk-statement gk-title">Ship CSV and date parsing first. Read the funnel again in four weeks.</p></div><template class="gk-notes-src">Ask for the decision here.</template></section>
+</div></main>
+<div class="gk-bar" aria-hidden="true"><span class="gk-ticks"></span><span class="gk-count"></span></div>
+<pre class="gk-notes-panel" hidden aria-label="Presenter notes"></pre>
+<p class="gk-hint" aria-hidden="true">→ next · ← back · N notes · F full screen</p>
+<script>
+document.querySelectorAll("[data-gk-stage]").forEach((s)=>{const b=s.querySelector("[data-gk-play]");const play=()=>{s.classList.add("is-from");void s.offsetWidth;requestAnimationFrame(()=>requestAnimationFrame(()=>s.classList.remove("is-from")))};b&&b.addEventListener("click",play);if(!matchMedia("(prefers-reduced-motion: reduce)").matches)play()});
+document.querySelectorAll(".gk-tabs").forEach((t)=>t.addEventListener("click",(e)=>{const b=e.target.closest("[role=tab]");if(!b)return;t.querySelectorAll("[role=tab]").forEach((x)=>x.setAttribute("aria-selected",String(x===b)))}));
+document.querySelectorAll("[data-screen]").forEach((screen)=>{const wake=()=>screen.querySelectorAll("[data-until-change]").forEach((b)=>b.disabled=false);screen.addEventListener("input",wake);screen.addEventListener("change",wake);const d=screen.querySelector("[data-dialog]");if(!d)return;d.querySelectorAll("[data-close]").forEach((b)=>b.addEventListener("click",()=>{d.hidden=true;screen.querySelector("[data-reopen]")?.removeAttribute("hidden")}));addEventListener("keydown",(e)=>{if(e.key==="Escape")d.hidden=true});screen.querySelector(".gk-list")?.addEventListener("click",()=>{d.hidden=false})});
+(function runtime() {
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const box = document.querySelector(".gk-stagebox");
+  const slides = [...document.querySelectorAll(".gk-slide")];
+  const ticks = document.querySelector(".gk-ticks");
+  const count = document.querySelector(".gk-count");
+  const panel = document.querySelector(".gk-notes-panel");
+  let slide = 0;
+  let step = 0;
+
+  const fitStage = () => {
+    const k = Math.min(innerWidth / 1600, (innerHeight - 36) / 900);
+    box.style.transform = `translate(-50%, -50%) scale(${k})`;
+  };
+  const stepsOf = (s) => JSON.parse(s.dataset.steps || "[]");
+
+  // Fit the figure into the view, or zoom to a range of lines and dim the rest.
+  const camera = (s, target) => {
+    const view = s.querySelector(".gk-view");
+    const world = s.querySelector(".gk-world");
+    if (!view || !world) return;
+    const fig = world.firstElementChild;
+    const vw = view.clientWidth;
+    const vh = view.clientHeight;
+    let x = 0;
+    let y = 0;
+    let w = fig.scrollWidth;
+    let h = fig.scrollHeight;
+    const lns = [...world.querySelectorAll(".gk-ln")];
+    lns.forEach((l) => l.classList.remove("is-focus"));
+    world.classList.toggle("gk-dim", Boolean(target));
+    if (target && lns.length) {
+      const pick = lns.slice(target.lines[0], target.lines[1] + 1);
+      pick.forEach((l) => l.classList.add("is-focus"));
+      x = Math.min(...pick.map((l) => l.offsetLeft));
+      y = pick[0].offsetTop;
+      w = Math.max(...pick.map((l) => l.offsetLeft + l.offsetWidth)) - x;
+      h = pick.at(-1).offsetTop + pick.at(-1).offsetHeight - y;
+    }
+    const k = Math.min(vw / w, vh / h, target ? 3 : 2.2);
+    world.style.transform = `translate(${(vw - w * k) / 2 - x * k}px, ${target ? (vh - h * k) / 2 - y * k : 0}px) scale(${k})`;
+  };
+
+  // Type the title, type the command, print the figure line by line, flash flagged lines.
+  const play = (s) => {
+    if (reduce) return;
+    const title = s.querySelector(".gk-title");
+    if (title) {
+      const n = title.textContent.length;
+      title.style.setProperty("--n", n);
+      title.style.setProperty("--d", `${Math.min(n * 22, 420)}ms`);
+      title.classList.remove("is-typing");
+      void title.offsetWidth;
+      title.classList.add("is-typing");
+    }
+    const fig = s.querySelector(".gk-fig");
+    if (!fig) return;
+    const flag = s.dataset.flag ? new RegExp(s.dataset.flag) : null;
+    let at = 320;
+    const cmd = fig.querySelector(".gk-cmd");
+    if (cmd) {
+      const n = cmd.textContent.length;
+      cmd.style.setProperty("--n", n);
+      cmd.style.setProperty("--d", `${n * 34}ms`);
+      cmd.style.setProperty("--at", `${at}ms`);
+      at += n * 34 + 280;
+    }
+    fig.querySelectorAll(".gk-ln").forEach((l, i) => {
+      l.style.setProperty("--at", `${at + i * 42}ms`);
+      l.classList.toggle("is-flag", Boolean(flag && flag.test(l.textContent)));
+    });
+    fig.classList.remove("is-printing");
+    void fig.offsetWidth;
+    fig.classList.add("is-printing");
+  };
+
+  const decode = (t) => t.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
+
+  const render = (animate) => {
+    const s = slides[slide];
+    slides.forEach((x, i) => x.classList.toggle("is-current", i === slide));
+    const steps = stepsOf(s);
+    const target = step > 0 ? steps[step - 1] : null;
+    camera(s, target);
+    const say = s.querySelector(".gk-say");
+    if (say) say.textContent = target?.say ?? "";
+    if (animate) play(s);
+    ticks.textContent = slides.map((_, i) => (i < slide ? "█" : i === slide ? "▓" : "░")).join("");
+    count.textContent = `${slide + 1} / ${slides.length}${steps.length ? ` · step ${step} of ${steps.length}` : ""}`;
+    panel.textContent = decode(s.querySelector(".gk-notes-src")?.innerHTML ?? "") || "No notes for this slide.";
+    history.replaceState(null, "", `#${slide + 1}.${step}`);
+  };
+
+  const go = (dir) => {
+    const steps = stepsOf(slides[slide]).length;
+    if (dir > 0) {
+      if (step < steps) step += 1;
+      else if (slide < slides.length - 1) {
+        slide += 1;
+        step = 0;
+        return render(true);
+      }
+    } else if (step > 0) step -= 1;
+    else if (slide > 0) {
+      slide -= 1;
+      step = stepsOf(slides[slide]).length;
+    }
+    render(false);
+  };
+
+  addEventListener("keydown", (e) => {
+    if (e.target.closest?.("input, select, textarea")) return;
+    const key = e.key.toLowerCase();
+    if (["arrowright", "pagedown", " ", "enter"].includes(key)) {
+      e.preventDefault();
+      go(1);
+    } else if (["arrowleft", "pageup", "backspace"].includes(key)) {
+      e.preventDefault();
+      go(-1);
+    } else if (key === "home") {
+      slide = 0;
+      step = 0;
+      render(true);
+    } else if (key === "end") {
+      slide = slides.length - 1;
+      step = 0;
+      render(true);
+    } else if (key === "n") panel.hidden = !panel.hidden;
+    else if (key === "f") document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen?.();
+  });
+  document.querySelector(".gk-deck").addEventListener("click", (e) => {
+    if (e.target.closest("button, a, input, select, label, [role=tab], .gk-screen")) return;
+    go(e.clientX > innerWidth / 4 ? 1 : -1);
+  });
+  addEventListener("resize", () => {
+    fitStage();
+    camera(slides[slide], step ? stepsOf(slides[slide])[step - 1] : null);
+  });
+
+  const [s0, st0] = location.hash.slice(1).split(".").map((n) => parseInt(n, 10));
+  slide = Math.min(Math.max((s0 || 1) - 1, 0), slides.length - 1);
+  step = Math.min(st0 || 0, stepsOf(slides[slide]).length);
+  fitStage();
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => render(true));
+})();</script>
+</body>
+</html>

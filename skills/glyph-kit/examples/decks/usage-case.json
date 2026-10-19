@@ -1,0 +1,147 @@
+{
+  "title": "Paying for AI usage",
+  "subtitle": "A short case, read straight from the usage logs.",
+  "byline": "Real work · figures shown as an index",
+  "theme": "phosphor",
+  "slides": [
+    {
+      "type": "title",
+      "title": "Paying for AI usage",
+      "subtitle": "A short case, read straight from the usage logs.",
+      "byline": "Real work · figures shown as an index",
+      "notes": "Every number on the next slides comes from a command you can run again."
+    },
+    {
+      "kind": "forecast",
+      "title": "Usage, month by month",
+      "intent": "Measured in █, the rest of October at the current pace in ░.",
+      "source": "Usage logs, as an index of July. Real figures stay private.",
+      "data": [
+        {
+          "label": "Jul",
+          "measured": 1,
+          "text": "1.0×"
+        },
+        {
+          "label": "Aug",
+          "measured": 2.3,
+          "text": "2.3×"
+        },
+        {
+          "label": "Sep",
+          "measured": 4.1,
+          "text": "4.1×"
+        },
+        {
+          "label": "Oct",
+          "measured": 2.5,
+          "projected": 2.5,
+          "text": "on pace for ~5×"
+        }
+      ],
+      "options": {
+        "width": 36,
+        "max": 5,
+        "legend": "░ = rest of October at the current pace"
+      },
+      "present": {
+        "steps": [
+          {
+            "lines": [
+              3,
+              3
+            ],
+            "say": "October is on pace for about five times July."
+          }
+        ]
+      }
+    },
+    {
+      "kind": "calendarStrip",
+      "title": "Days the weekly limit ran out",
+      "intent": "One character per day, Sep 15 to Oct 15.",
+      "source": "Usage logs",
+      "data": [
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        false,
+        false,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        true
+      ],
+      "options": {
+        "gap": " "
+      },
+      "present": {
+        "notes": "The limit runs out by the middle of each week."
+      }
+    },
+    {
+      "kind": "barChart",
+      "title": "Where it goes",
+      "source": "Usage logs, last 30 days",
+      "data": [
+        {
+          "label": "main product repo",
+          "value": 91,
+          "text": "91%"
+        },
+        {
+          "label": "everything else",
+          "value": 9,
+          "text": "9%"
+        }
+      ],
+      "options": {
+        "width": 30,
+        "max": 100
+      },
+      "present": {
+        "command": "usage --where"
+      }
+    },
+    {
+      "kind": "meter",
+      "title": "This month, against the cap",
+      "source": "Usage logs",
+      "data": {
+        "value": 84,
+        "cap": 100
+      },
+      "options": {
+        "width": 36
+      }
+    },
+    {
+      "type": "statement",
+      "kicker": "The ask",
+      "text": "Change how this is paid for, before the limit decides when work stops.",
+      "notes": "Ask for the decision here."
+    }
+  ]
+}

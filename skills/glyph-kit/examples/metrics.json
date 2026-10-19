@@ -1,0 +1,311 @@
+[
+  {
+    "kind": "funnel",
+    "title": "Signup to paid, last 30 days",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "visited",
+        "value": 12400
+      },
+      {
+        "label": "signed up",
+        "value": 6100
+      },
+      {
+        "label": "activated",
+        "value": 2300
+      },
+      {
+        "label": "paid",
+        "value": 610
+      }
+    ]
+  },
+  {
+    "kind": "cohort",
+    "title": "Monthly retention",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "Jan",
+        "size": 120,
+        "values": [
+          1,
+          0.62,
+          0.48,
+          0.41
+        ]
+      },
+      {
+        "label": "Feb",
+        "size": 140,
+        "values": [
+          1,
+          0.7,
+          0.55
+        ]
+      },
+      {
+        "label": "Mar",
+        "size": 98,
+        "values": [
+          1,
+          0.58
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "abResult",
+    "title": "New empty state, conversion to first chart",
+    "intent": "Decide whether the new empty state ships.",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "control",
+        "value": 4.1,
+        "low": 3.6,
+        "high": 4.6
+      },
+      {
+        "label": "new empty state",
+        "value": 5.3,
+        "low": 4.8,
+        "high": 5.9
+      }
+    ],
+    "options": {
+      "min": 3,
+      "max": 7
+    }
+  },
+  {
+    "kind": "metricPanel",
+    "title": "Weekly health",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "weekly active",
+        "values": [
+          820,
+          860,
+          900,
+          880,
+          940,
+          1010
+        ]
+      },
+      {
+        "label": "time to first chart",
+        "values": [
+          9.2,
+          8.8,
+          7.1,
+          6.4
+        ],
+        "unit": " min"
+      },
+      {
+        "label": "support tickets",
+        "values": [
+          40,
+          38,
+          41,
+          45
+        ]
+      }
+    ]
+  },
+  {
+    "kind": "barChart",
+    "title": "Design QA issues by area",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "Design QA",
+        "value": 42,
+        "text": "42"
+      },
+      {
+        "label": "Handoff",
+        "value": 17,
+        "text": "17"
+      },
+      {
+        "label": "Research",
+        "value": 3,
+        "text": "3"
+      },
+      {
+        "label": "Copy",
+        "value": 0.4,
+        "text": "<1"
+      }
+    ],
+    "options": {
+      "width": 24
+    }
+  },
+  {
+    "kind": "forecast",
+    "title": "Usage against July",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "Jul",
+        "measured": 1,
+        "text": "1.0×"
+      },
+      {
+        "label": "Aug",
+        "measured": 2.3,
+        "text": "2.3×"
+      },
+      {
+        "label": "Sep",
+        "measured": 4.1,
+        "text": "4.1×"
+      },
+      {
+        "label": "Oct",
+        "measured": 2.5,
+        "projected": 2.5,
+        "text": "on pace for ~5×"
+      }
+    ],
+    "options": {
+      "width": 36,
+      "max": 5
+    }
+  },
+  {
+    "kind": "meter",
+    "title": "Seats used",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "value": 84,
+      "cap": 100
+    },
+    "options": {
+      "width": 30
+    }
+  },
+  {
+    "kind": "sparkline",
+    "title": "Requests a day",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "label": "requests",
+      "values": [
+        3,
+        4,
+        4,
+        6,
+        9,
+        7,
+        8,
+        12,
+        15,
+        14,
+        18,
+        21
+      ]
+    }
+  },
+  {
+    "kind": "heatmap",
+    "title": "Activity by weekday",
+    "source": "Sample data, made up for this example",
+    "data": [
+      [
+        0,
+        0.2,
+        0.4,
+        0.9,
+        1,
+        0.6,
+        0
+      ],
+      [
+        0.1,
+        0.3,
+        0.5,
+        1,
+        0.8,
+        0.4,
+        0
+      ],
+      [
+        0,
+        0,
+        0.2,
+        0.6,
+        0.7,
+        0.3,
+        0.1
+      ]
+    ],
+    "options": {
+      "rowLabels": [
+        "wk 1",
+        "wk 2",
+        "wk 3"
+      ],
+      "colLabels": "M T W T F S S "
+    }
+  },
+  {
+    "kind": "calendarStrip",
+    "title": "Days the limit was hit",
+    "source": "Sample data, made up for this example",
+    "data": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false
+    ],
+    "options": {
+      "gap": " "
+    }
+  },
+  {
+    "kind": "compare",
+    "title": "Hero animation, before and after",
+    "source": "Sample data, made up for this example",
+    "data": [
+      {
+        "label": "lines moving",
+        "a": 1,
+        "aText": "100%",
+        "b": 0.23,
+        "bText": "23%"
+      },
+      {
+        "label": "build time",
+        "a": 0.27,
+        "aText": "2.7 s",
+        "b": 0.77,
+        "bText": "7.7 s"
+      }
+    ],
+    "options": {
+      "headers": [
+        "MEASURE",
+        "BEFORE",
+        "AFTER"
+      ]
+    }
+  }
+]

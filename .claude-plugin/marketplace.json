@@ -1,0 +1,26 @@
+{
+  "name": "traykov",
+  "owner": {
+    "name": "Alexander Traykov",
+    "url": "https://traykov.cc"
+  },
+  "metadata": {
+    "description": "Tools for product designers by Alexander Traykov."
+  },
+  "plugins": [
+    {
+      "name": "glyph-kit",
+      "source": "./",
+      "description": "Product-design figures as text, drawn from a small spec and exported to Markdown, MDX, HTML, SVG, PNG, PDF, decks and prototypes.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Alexander Traykov"
+      },
+      "homepage": "https://glyph-kit.traykov.cc",
+      "repository": "https://github.com/alextraykov/glyph-kit",
+      "license": "MIT",
+      "keywords": ["design", "diagrams", "ascii", "wireframes", "charts"],
+      "category": "design"
+    }
+  ]
+}

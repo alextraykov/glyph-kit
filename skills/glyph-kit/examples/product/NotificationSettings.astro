@@ -1,0 +1,68 @@
+---
+// Product fidelity for examples/product/settings.spec.json, built with traykov.cc's own parts
+// (examples/product/design-system.map.json). Each element names the wireframe primitive it came from.
+//
+//   tabs     → .case-switch            (the site's segmented control)
+//   toggle   → <button aria-pressed>    (selected is solid ink)
+//   select   → the shared styled select (tool panels, section 23)
+//   input    → a labelled text field
+//   buttons  → data-ascii-action="secondary" | "primary" (one primary per view)
+//   notes    → [1] off by default for new teams; [2] Save is disabled until something changes
+//
+// This file is an example in the skill. It isn't routed on the site.
+const tabs = ["Profile", "Notifications", "Billing"];
+---
+<section class="settings" aria-labelledby="settings-title">
+  <h2 id="settings-title">Settings</h2>
+
+  <div class="case-switch" role="tablist" aria-label="Settings sections"><!-- primitive: tabs -->
+    {tabs.map((tab) => <button type="button" role="tab" aria-selected={tab === "Notifications" ? "true" : "false"}>{tab}</button>)}
+  </div>
+
+  <form class="settings__form" data-settings>
+    <div class="settings__row"><!-- primitive: toggle, note 1 -->
+      <span id="email-ready">Email me when a report is ready</span>
+      <button type="button" aria-pressed="true" aria-labelledby="email-ready">On</button>
+    </div>
+    <div class="settings__row"><!-- primitive: toggle -->
+      <span id="weekly">Weekly summary</span>
+      <button type="button" aria-pressed="false" aria-labelledby="weekly">Off</button>
+    </div>
+    <label class="settings__row"><!-- primitive: select -->
+      <span>Digest day</span>
+      <select name="digest"><option>Monday</option><option>Friday</option></select>
+    </label>
+    <label class="settings__row"><!-- primitive: input -->
+      <span>Send to</span>
+      <input type="email" name="to" value="team@example.com" />
+    </label>
+    <div class="settings__actions"><!-- primitive: buttons, note 2 -->
+      <button type="reset" data-ascii-action="secondary">Cancel</button>
+      <button type="submit" data-ascii-action="primary" disabled>Save</button>
+    </div>
+  </form>
+</section>
+
+<style>
+  .settings { display: grid; gap: var(--space-4); }
+  .settings__form { display: grid; gap: var(--space-3); border-top: var(--hairline) solid var(--line); padding-top: var(--space-4); }
+  .settings__row { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
+  .settings__actions { display: flex; justify-content: flex-end; gap: var(--space-2); border-top: var(--hairline) solid var(--ink); padding-top: var(--space-4); }
+</style>
+
+<script>
+  // Note 2: Save stays disabled until something changes.
+  document.querySelectorAll<HTMLFormElement>("[data-settings]").forEach((form) => {
+    const save = form.querySelector<HTMLButtonElement>('[type="submit"]');
+    const enable = () => save && (save.disabled = false);
+    form.addEventListener("input", enable);
+    form.querySelectorAll<HTMLButtonElement>("[aria-pressed]").forEach((toggle) =>
+      toggle.addEventListener("click", () => {
+        const on = toggle.getAttribute("aria-pressed") !== "true";
+        toggle.setAttribute("aria-pressed", String(on));
+        toggle.textContent = on ? "On" : "Off";
+        enable();
+      })
+    );
+  });
+</script>
