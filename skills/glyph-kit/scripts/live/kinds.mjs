@@ -2,11 +2,16 @@
 // factory: call it for a fresh diagram, a function (step, frac) → Grid. `still` is the step that
 // stands in for the whole animation when motion is off, in print and in Markdown.
 import { checks, guard, isSample, stamp } from "../guard.mjs";
-import { width as textWidth } from "../text.mjs";
+import { cut, width as textWidth } from "../text.mjs";
 import { FADE, Grid, changes, clamp, easeInOut, hash, mod, rand } from "./grid.mjs";
 
 const pad = (n, w) => String(n).padStart(w, " ");
-const boxW = (labels, min = 8) => Math.max(min, ...labels.map((l) => textWidth(l) + 4));
+const boxW = (labels, min = 8) => Math.max(min, ...labels.map((l) => textWidth(cut(l.toUpperCase(), 24)) + 4));
+const liveGap = (count, width, gap, reserve = 0) => {
+  const room = 80 - count * width - reserve;
+  if (!count || room < Math.max(0, count - 1)) throw new Error(`These labels fit at most ${Math.floor((80 - reserve + 1) / (width + 1))} columns; this diagram has ${count}.`);
+  return count > 1 ? Math.min(gap, Math.floor(room / (count - 1))) : gap;
+};
 
 /* Loop: work moves through stages; some of it is sent back from one stage to an earlier one. ------ */
 // data: { stages: ["Design", "Build", "QA", "Ship"], back: { from: "QA", to: "Build", share: 0.3, label } }
@@ -14,10 +19,10 @@ function loop({ data }) {
   const stages = data.stages;
   const back = data.back ?? null;
   const W = boxW(stages, 10);
-  const GAP = 9;
+  const GAP = liveGap(stages.length, W, 9, 13);
   const T = 3;
   const xs = stages.map((_, i) => i * (W + GAP));
-  const cols = xs.at(-1) + W + 18;
+  const cols = xs.at(-1) + W + 13;
   const from = back ? stages.indexOf(back.from) : -1;
   const to = back ? stages.indexOf(back.to) : -1;
   const share = back?.share ?? 0;
@@ -29,14 +34,15 @@ function loop({ data }) {
   return () => (step, frac) => {
     const s = (step % CYCLE) + frac;
     const g = new Grid(back ? 12 : 8, cols);
-    stages.forEach((label, i) => g.box(T - 1, xs[i], W, label.toUpperCase(), i === stages.length - 1 ? "ok" : ""));
+    stages.forEach((label, i) => g.box(T - 1, xs[i], W, cut(label.toUpperCase(), 24), i === stages.length - 1 ? "ok" : ""));
     const legs = stages.slice(1).map((_, i) => g.line([[T, xs[i] + W], [T, xs[i + 1] - 1]], "mute"));
     let ret = null;
     if (back) {
       const a = xs[from] + Math.floor(W / 2);
       const b = xs[to] + Math.floor(W / 2);
       ret = g.line([[T + 2, a], [T + 5, a], [T + 5, b], [T + 2, b]], "fail");
-      g.center(T + 6, b, a, back.label ?? `${Math.round(share * 100)}% sent back`, "fail");
+      const labelRoom = Math.min(cols, 2 * Math.min(Math.floor((a + b) / 2), cols - Math.ceil((a + b) / 2)));
+      g.center(T + 6, b, a, cut(back.label ?? `${Math.round(share * 100)}% sent back`, labelRoom), "fail");
     }
     // Each item: a leg takes `len` cells, every stage holds it for HOLD steps; rework adds a lap.
     const HOLD = 6;
@@ -83,9 +89,10 @@ loop.still = 260;
 // data: { steps: [{ label, value }, ...] } in order, largest first.
 function funnel({ data }) {
   const steps = data.steps;
-  const LABEL = Math.max(...steps.map((s) => textWidth(s.label))) + 3;
-  const BAR = 44;
-  const top = steps[0].value;
+  if (!steps.length || steps.length > 16) throw new Error("A moving funnel supports between 1 and 16 steps.");
+  const LABEL = Math.max(...steps.map((s) => textWidth(cut(s.label, 24)))) + 3;
+  const BAR = Math.min(44, 80 - LABEL - 16);
+  const top = steps[0].value || 1;
   const cols = LABEL + BAR + 16;
   const ROW = 3;
   const rows = (steps.length - 1) * ROW + 1;
@@ -110,11 +117,11 @@ function funnel({ data }) {
     steps.forEach((st, k) => {
       const row = k * ROW;
       const [from, width] = span(k);
-      g.text(row, 0, st.label, k === steps.length - 1 ? "ok" : "");
+      g.text(row, 0, cut(st.label, 24), k === steps.length - 1 ? "ok" : "");
       for (let c = 0; c < width; c++) g.put(row, from + c, "▒", k === steps.length - 1 ? "ok" : "mute");
-      g.text(row, LABEL + BAR + 2, st.value.toLocaleString("en-US"));
+      g.text(row, LABEL + BAR + 2, cut(st.value.toLocaleString("en-US"), 7));
       if (k) {
-        const kept = st.value / steps[k - 1].value;
+        const kept = steps[k - 1].value ? st.value / steps[k - 1].value : 0;
         g.text(row, LABEL + BAR + 10, `${Math.round(kept * 100)}%`, kept < 0.5 ? "fail" : "mute");
       }
     });
@@ -154,7 +161,7 @@ funnel.still = 260;
 function states({ data }) {
   const names = data.states;
   const W = boxW(names, 11);
-  const GAP = 10;
+  const GAP = liveGap(names.length, W, 10, 2);
   const xs = names.map((_, i) => i * (W + GAP));
   const cols = xs.at(-1) + W + 2;
   const idx = (n) => names.indexOf(n);
@@ -205,17 +212,17 @@ function states({ data }) {
         const on = moving && legs[moving.i] === e;
         if (e.label) {
           const [y, c0, c1] = e.lab;
-          g.label(y, c0, c1, ` ${e.label} `, on ? "" : "mute");
+          g.label(y, c0, c1, cut(` ${e.label} `, Math.max(1, c1 - c0 + 1)), on ? "" : "mute");
         }
       });
       names.forEach((n, i) => {
         const here = i === at;
         const role = /error|fail/i.test(n) ? "fail" : /ready|done|success|saved|sent/i.test(n) ? "ok" : "";
-        g.box(T - 1, xs[i], W, n.toUpperCase(), here ? role : "mute");
+        g.box(T - 1, xs[i], W, cut(n.toUpperCase(), 24), here ? role : "mute");
         if (here) g.chase(T - 1, xs[i], W, s * 2.4, role);
       });
       const now = moving ? `${legs[moving.i].from} → ${legs[moving.i].to}` : names[at] ?? "";
-      g.scramble(0, 0, now, since("now", now, step), step);
+      g.scramble(0, 0, cut(now, cols), since("now", now, step), step);
       return g;
     };
   };
@@ -228,7 +235,7 @@ states.still = 8;
 function queue({ data }) {
   const cols = data.columns;
   const W = boxW(cols.map((c) => c.label), 12);
-  const GAP = 3;
+  const GAP = liveGap(cols.length, W, 3);
   const xs = cols.map((_, i) => i * (W + GAP));
   const H = 8;
   const width = xs.at(-1) + W;
@@ -261,8 +268,8 @@ function queue({ data }) {
         const inCol = cards.filter((k) => k.col === i);
         const isFull = c.limit && inCol.length >= c.limit;
         const last = i === cols.length - 1;
-        g.text(0, xs[i], c.label.toUpperCase(), isFull ? "fail" : last ? "ok" : "");
         const cap = c.limit ? `${inCol.length}/${c.limit}` : String(inCol.length);
+        g.text(0, xs[i], cut(c.label.toUpperCase(), W - textWidth(cap) - 1), isFull ? "fail" : last ? "ok" : "");
         g.scramble(0, xs[i] + W - textWidth(cap), cap, since(`c${i}`, cap, step), step, isFull ? "fail" : "mute");
         for (let x = 0; x < W; x++) g.put(1, xs[i] + x, "─", isFull ? "fail" : "mute");
         // Cards stack from the top; the ones that can't move on show as waiting (▒).
@@ -281,7 +288,7 @@ function queue({ data }) {
       const count = (i) => cards.filter((k) => k.col === i).length;
       const full = (i) => cols[i].limit && count(i) >= cols[i].limit;
       const worst = cols.findLastIndex((c, i) => i > 0 && i < cols.length - 1 && full(i) && !full(i + 1) && count(i - 1) > 0);
-      const msg = worst > 0 ? `▲ ${cols[worst].label} holds everything up` : "";
+      const msg = worst > 0 ? `▲ ${cut(cols[worst].label, Math.max(1, width - 22))} holds everything up` : "";
       g.scramble(H + 2, worst > 0 ? Math.min(xs[worst], width - textWidth(msg)) : 0, msg, since("b", msg, step), step, "fail");
       return g;
     };
@@ -293,11 +300,12 @@ queue.still = 220;
 // data: { stages: [1, 5, 25, 50, 100], metric: "Error rate", limit: 2, breachAt: 25 }
 function rollout({ data }) {
   const stages = data.stages;
+  if (stages.length < 2 || stages.length > 8) throw new Error("A rollout supports between 2 and 8 stages.");
   const COLS = 50;
   const ROWS = 4;
   const people = COLS * ROWS;
   const GX = 20;
-  const width = GX + COLS + 16;
+  const width = GX + COLS + 10;
   const HOLD = 46;
   const breach = stages.indexOf(data.breachAt ?? -1);
   // Timeline: each stage holds; at the breach stage the guard trips, it rolls back to the stage
@@ -346,7 +354,7 @@ function rollout({ data }) {
     g.scramble(4, 0, `${Math.round((on / people) * 100)}% on`, Math.floor(ease * 8), step, cur.ok ? "ok" : "fail");
     // Guard metric: a strip chart that scrolls; it spikes during the breach.
     const Y = ROWS + 5;
-    g.text(Y, 0, (data.metric ?? "Guard").toUpperCase());
+    g.text(Y, 0, cut((data.metric ?? "Guard").toUpperCase(), GX - 2));
     g.text(Y + 1, 0, `limit ${data.limit ?? 2}%`, "fail");
     for (let c = 0; c < COLS; c++) {
       const when = s - (COLS - 1 - c) * 0.9;
@@ -371,10 +379,12 @@ rollout.still = 90;
 function loading({ data }) {
   const D = data.duration ?? 1800;
   const phases = data.phases;
+  if (D < 1 || D > 15000) throw new Error("The loading ruler supports durations from 1 to 15000 milliseconds.");
+  if (phases.length > 4) throw new Error("The loading card fits at most 4 phases.");
   const CARD = 34;
   const RX = CARD + 6;
   const RW = 34;
-  const width = RX + RW + 8;
+  const width = RX + RW + 6;
   const MS_PER_STEP = 40; // the ruler runs at a third of real time, so each phase can be seen
   const HOLD = 30;
   const CYCLE = Math.ceil(D / MS_PER_STEP) + HOLD;

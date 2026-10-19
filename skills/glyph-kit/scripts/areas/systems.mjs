@@ -1,23 +1,35 @@
 // Design system docs: scales, contrast, component states, layers, token tables.
 import { checks } from "../guard.mjs";
-import { bar, clamp, join, len, padEnd, padStart, place, table } from "../core.mjs";
+import { bar, clamp, cut, join, len, padEnd, padStart, place, table } from "../core.mjs";
+import { LAYOUT, capRows, fitLabels } from "../layout.mjs";
 
 /** Spacing tokens drawn to scale, one cell per `unit` pixels. tokens: [{ name, value }] */
-export function spacingScale(tokens, { unit = 4 } = {}) {
-  const nameW = Math.max(...tokens.map((t) => len(t.name)));
-  const maxCells = Math.max(...tokens.map((t) => Math.round(t.value / unit)));
+export function spacingScale(tokens, { unit = 4, maxWidth = LAYOUT.maxWidth } = {}) {
+  const capped = capRows(tokens);
+  const labels = fitLabels(capped.rows.map((t) => t.name));
+  const nameW = Math.max(0, ...labels.map(len));
+  const natural = Math.max(...capped.rows.map((t) => Math.round(t.value / unit)));
+  const suffixW = Math.max(0, ...capped.rows.map((t) => len(`${t.value}px`)));
+  const maxCells = Math.max(1, Math.min(natural, maxWidth - nameW - suffixW - 4));
   return join([
-    ...tokens.map((t) => `${padEnd(t.name, nameW)}  ${padEnd("█".repeat(Math.max(1, Math.round(t.value / unit))), maxCells)}  ${t.value}px`),
+    ...capped.rows.map((t, i) => `${padEnd(labels[i], nameW)}  ${padEnd("█".repeat(Math.max(1, Math.min(maxCells, Math.round(t.value / unit)))), maxCells)}  ${t.value}px`),
+    ...(capped.note ? [capped.note] : []),
     "",
     `One █ is ${unit}px.`
   ]);
 }
 
 /** Type sizes as bars proportional to size, with line height. steps: [{ name, size, lineHeight }] */
-export function typeScale(steps, { width = 28 } = {}) {
-  const nameW = Math.max(...steps.map((s) => len(s.name)));
+export function typeScale(steps, { width: preferred = 28, maxWidth = LAYOUT.maxWidth } = {}) {
+  const capped = capRows(steps);
+  steps = capped.rows;
+  const labels = fitLabels(steps.map((s) => s.name));
+  const nameW = Math.max(0, ...labels.map(len));
   const top = Math.max(...steps.map((s) => s.size));
-  return join(steps.map((s) => `${padEnd(s.name, nameW)}  ${bar(s.size, top, { width })}  ${s.size}/${s.lineHeight ?? Math.round(s.size * 1.4)}`));
+  const suffixW = Math.max(0, ...steps.map((s) => len(`${s.size}/${s.lineHeight ?? Math.round(s.size * 1.4)}`)));
+  const width = Math.max(4, Math.min(preferred, maxWidth - nameW - suffixW - 4));
+  const lines = steps.map((s, i) => `${padEnd(labels[i], nameW)}  ${bar(s.size, top, { width })}  ${s.size}/${s.lineHeight ?? Math.round(s.size * 1.4)}`);
+  return join(capped.note ? [...lines, capped.note] : lines);
 }
 
 const channel = (c) => {
@@ -40,48 +52,66 @@ export function contrastRatio(fg, bg) {
  * Contrast of colour pairs against WCAG 2 thresholds. pairs: [{ label, fg, bg }]
  * The scale runs to 21:1; the thresholds 3, 4.5 and 7 are marked above it.
  */
-export function contrast(pairs, { width = 42 } = {}) {
-  const labelW = Math.max(...pairs.map((p) => len(p.label)));
+export function contrast(pairs, { width: preferred = 42, maxWidth = LAYOUT.maxWidth } = {}) {
+  const capped = capRows(pairs);
+  pairs = capped.rows;
+  const labels = fitLabels(pairs.map((p) => p.label));
+  const labelW = Math.max(0, ...labels.map(len));
+  const suffixWidth = Math.max(0, ...pairs.map((p) => {
+    const ratio = contrastRatio(p.fg, p.bg);
+    const grade = ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : ratio >= 3 ? "AA large text only" : "fails";
+    return len(`  ${padStart(ratio.toFixed(1), 4)}:1  ${grade}`);
+  }));
+  const width = Math.max(8, Math.min(preferred, maxWidth - labelW - 2 - suffixWidth));
   const at = (r) => Math.round((r / 21) * width);
   const marks = place([[labelW + 2 + at(3), "3"], [labelW + 2 + at(4.5), "4.5"], [labelW + 2 + at(7), "7"], [labelW + 2 + width - 3, "21:1"]]);
-  const rows = pairs.map((p) => {
+  const rows = pairs.map((p, i) => {
     const ratio = contrastRatio(p.fg, p.bg);
     const grade = ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : ratio >= 3 ? "AA large text only" : "fails";
     const cells = [...bar(ratio, 21, { width, empty: "·" })];
     for (const t of [3, 4.5, 7]) if (cells[at(t)] === "·") cells[at(t)] = "┊";
-    return `${padEnd(p.label, labelW)}  ${cells.join("")}  ${padStart(ratio.toFixed(1), 4)}:1  ${grade}`;
+    return `${padEnd(labels[i], labelW)}  ${cells.join("")}  ${padStart(ratio.toFixed(1), 4)}:1  ${grade}`;
   });
-  return join([marks, ...rows]);
+  return join([marks, ...rows, ...(capped.note ? [capped.note] : [])]);
 }
 
 /**
  * Which component states are designed, built or missing.
  * { variants: [...], states: [...], cells: { variant: { state: "done" | "progress" | "missing" | "na" } } }
  */
-export function stateMatrix({ variants, states, cells }) {
+export function stateMatrix({ variants, states, cells }, { maxWidth = LAYOUT.maxWidth } = {}) {
   const glyph = { done: "██", progress: "▒▒", missing: "░░", na: "  " };
-  const vW = Math.max(...variants.map(len));
-  const colW = Math.max(...states.map(len)) + 2;
-  const head = " ".repeat(vW + 2) + states.map((s) => padEnd(s, colW)).join("");
-  const rows = variants.map((v) => `${padEnd(v, vW)}  ${states.map((s) => padEnd(glyph[cells[v]?.[s] ?? "missing"], colW)).join("")}`);
-  return join([head, ...rows, "", "█ done   ▒ in progress   ░ missing   blank: doesn't apply"]);
+  const capped = capRows(variants, LAYOUT.rowsMax, "variants");
+  const variantLabels = fitLabels(capped.rows);
+  const vW = Math.max(0, ...variantLabels.map(len));
+  const available = Math.floor((maxWidth - vW - 2) / Math.max(1, states.length));
+  if (available < 4) throw new Error(`A component state table fits at most ${Math.floor((maxWidth - vW - 2) / 4)} states at ${maxWidth} cells; this one has ${states.length}.`);
+  const colW = Math.min(Math.max(...states.map(len)) + 2, available);
+  const stateLabels = states.map((state) => cut(state, colW - 1));
+  const head = " ".repeat(vW + 2) + stateLabels.map((s) => padEnd(s, colW)).join("");
+  const rows = capped.rows.map((v, i) => `${padEnd(variantLabels[i], vW)}  ${states.map((s) => padEnd(glyph[cells[v]?.[s] ?? "missing"], colW)).join("")}`);
+  return join([head, ...rows, ...(capped.note ? [capped.note] : []), "", "█ done   ▒ in progress   ░ missing   blank: doesn't apply"]);
 }
 
 /** Layers from front to back, wider as they go back. levels: [{ name, z }] (any order) */
-export function layerStack(levels, { width = 12, step = 4 } = {}) {
-  const sorted = [...levels].sort((a, b) => b.z - a.z);
-  const nameW = Math.max(...sorted.map((l) => len(l.name)));
+export function layerStack(levels, { width: preferred = 12, step = 4, maxWidth = LAYOUT.maxWidth } = {}) {
+  const capped = capRows([...levels].sort((a, b) => b.z - a.z));
+  const sorted = capped.rows;
+  const labels = fitLabels(sorted.map((l) => l.name));
+  const nameW = Math.max(0, ...labels.map(len));
   const fills = ["█", "▓", "▒", "░"];
-  const total = width + step * (sorted.length - 1);
-  return join(
-    sorted.map((l, i) => {
-      const w = width + step * i;
+  const fixed = nameW + 6 + Math.max(4, ...sorted.map((l) => len(String(l.z))));
+  const stepSize = sorted.length > 1 ? Math.max(0, Math.min(step, Math.floor((maxWidth - fixed - 4) / (sorted.length - 1)))) : 0;
+  const width = Math.max(4, Math.min(preferred, maxWidth - fixed - stepSize * Math.max(0, sorted.length - 1)));
+  const total = width + stepSize * (sorted.length - 1);
+  const lines = sorted.map((l, i) => {
+      const w = width + stepSize * i;
       const last = i === sorted.length - 1;
       const fill = last ? "─" : fills[Math.min(i, fills.length - 1)];
       const pad = Math.floor((total - w) / 2);
-      return `${padEnd(l.name, nameW)}  z ${padEnd(String(l.z), 4)}  ${" ".repeat(pad)}${fill.repeat(w)}`;
-    })
-  );
+      return `${padEnd(labels[i], nameW)}  z ${padEnd(String(l.z), 4)}  ${" ".repeat(pad)}${fill.repeat(w)}`;
+    });
+  return join(capped.note ? [...lines, capped.note] : lines);
 }
 
 /** Design tokens as a table. tokens: [{ name, value, use }] */

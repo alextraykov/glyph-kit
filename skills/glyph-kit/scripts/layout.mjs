@@ -2,7 +2,7 @@
 // Generators and the moving grid read these numbers; lint.mjs and the tests check the result.
 // reference/layout.md explains each rule with examples.
 
-import { cells, width } from "./text.mjs";
+import { cells, cut, width } from "./text.mjs";
 
 /** Sizes, in character cells and rows. */
 export const LAYOUT = {
@@ -10,7 +10,9 @@ export const LAYOUT = {
   gap: 4, // cells between two boxes on one line: room for an arrow ──►
   labelGap: 2, // cells between a label and the meter, bar or line it names
   band: 1, // blank rows between two bands of a figure (two lanes, two teams)
-  maxWidth: 80 // columns; wider figures scroll in their own box
+  maxWidth: 80, // columns; generated figures never grow past this
+  labelMax: 24,
+  rowsMax: 16
 };
 
 /** The density ladder, the same scale as the site: what each shade may mean. */
@@ -31,6 +33,45 @@ const FILL = "░▒▓█·";
 
 /** Width of a box that fits `text` with the standard padding. */
 export const fit = (text, pad = LAYOUT.pad) => width(text) + pad * 2 + 2;
+
+/** Cut a set of labels to the shared limit, always marking removed text. */
+export const fitLabels = (labels, max = LAYOUT.labelMax) => labels.map((label) => cut(String(label ?? ""), max));
+
+/** Keep the first rows and report exactly what was left out. */
+export function capRows(rows, max = LAYOUT.rowsMax, noun = "rows") {
+  const list = Array.from(rows ?? []);
+  const omitted = Math.max(0, list.length - max);
+  return {
+    rows: list.slice(0, max),
+    omitted,
+    note: omitted ? `… and ${omitted} more ${omitted === 1 ? noun.replace(/s$/, "") : noun}` : ""
+  };
+}
+
+/** Column widths for a framed table. Widest columns give up space first. */
+export function fitColumns(rows, { maxWidth = LAYOUT.maxWidth, min = 4 } = {}) {
+  const cols = Math.max(0, ...rows.map((row) => row.length));
+  if (!cols) return [];
+  const overhead = cols * 3 + 1; // one space each side, dividers, outer sides
+  if (overhead + cols * min > maxWidth) throw new Error(`This table has ${cols} columns; ${Math.floor((maxWidth - 1) / (min + 3))} fit at ${maxWidth} cells.`);
+  const widths = Array.from({ length: cols }, (_, c) => Math.max(min, ...rows.map((row) => width(String(row[c] ?? "")))));
+  while (widths.reduce((a, b) => a + b, overhead) > maxWidth) {
+    const widest = Math.max(...widths);
+    const c = widths.findIndex((n) => n === widest && n > min);
+    if (c < 0) break;
+    widths[c]--;
+  }
+  return widths;
+}
+
+/** Test helper: the generated figure obeys the width and closed-frame contract. */
+export function assertFits(figure, maxWidth = LAYOUT.maxWidth) {
+  const line = figure.split("\n").find((row) => width(row) > maxWidth);
+  if (line) throw new Error(`A generated line is ${width(line)} cells wide; the limit is ${maxWidth}.`);
+  const boxes = checkBoxes(figure);
+  if (boxes.length) throw new Error(`A generated frame is open or its text touches the side on line ${boxes[0].line}.`);
+  return figure;
+}
 
 /**
  * Find closed boxes in a figure and report text that touches a side.

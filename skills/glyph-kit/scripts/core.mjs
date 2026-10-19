@@ -16,6 +16,7 @@ import {
   width,
   wrap
 } from "./text.mjs";
+import { LAYOUT, capRows, fitColumns, fitLabels } from "./layout.mjs";
 
 export { cellWidth, center, cut, formatNumber, graphemes, isRtl, padEnd, padStart, textCells, upper, width, wrap };
 
@@ -60,12 +61,16 @@ export function bar(value, max, { width = 20, empty = " " } = {}) {
 }
 
 /** Labelled horizontal bar chart. rows: [{ label, value, text? }] */
-export function barChart(rows, { width = 24, max, format = String, empty = " " } = {}) {
+export function barChart(rows, { width: preferred = 24, max, format = String, empty = " ", maxWidth = LAYOUT.maxWidth } = {}) {
   const top = max ?? Math.max(...rows.map((r) => r.value), 0);
-  const labelW = Math.max(...rows.map((r) => len(r.label)));
-  return join(
-    rows.map((r) => `${padEnd(r.label, labelW)}  ${bar(r.value, top, { width, empty })}  ${r.text ?? format(r.value)}`)
-  );
+  const capped = capRows(rows);
+  const labels = fitLabels(capped.rows.map((r) => r.label));
+  const values = capped.rows.map((r) => cut(r.text ?? format(r.value), 16));
+  const labelW = Math.max(0, ...labels.map(len));
+  const valueW = Math.max(0, ...values.map(len));
+  const width = Math.max(4, Math.min(preferred, maxWidth - labelW - valueW - 4 - (max != null ? 1 : 0)));
+  const lines = capped.rows.map((r, i) => `${padEnd(labels[i], labelW)}  ${bar(r.value, top, { width, empty })}  ${values[i]}`);
+  return join(capped.note ? [...lines, capped.note] : lines);
 }
 
 /**
@@ -79,31 +84,44 @@ export function cells(fraction, { width = 10 } = {}) {
 }
 
 /** Side-by-side comparison table. rows: [{ label, a, b, aText, bText }] with a and b as 0..1. */
-export function compare(rows, { headers = ["", "A", "B"], width = 10 } = {}) {
-  const labelW = Math.max(len(headers[0]), ...rows.map((r) => len(r.label)));
-  const cell = (f, t) => `${cells(f, { width })} ${t}`;
-  const aCol = rows.map((r) => cell(r.a, r.aText));
+export function compare(rows, { headers = ["", "A", "B"], width: preferred = 10, maxWidth = LAYOUT.maxWidth } = {}) {
+  const capped = capRows(rows);
+  const labels = fitLabels(capped.rows.map((r) => r.label));
+  const texts = capped.rows.flatMap((r) => [cut(r.aText ?? "", 12), cut(r.bText ?? "", 12)]);
+  const labelW = Math.max(len(headers[0]), ...labels.map(len));
+  const textW = Math.max(0, ...texts.map(len));
+  const width = Math.max(2, Math.min(preferred, Math.floor((maxWidth - labelW - textW * 2 - 7) / 2)));
+  const cell = (f, t) => `${cells(f, { width })} ${cut(t ?? "", 12)}`;
+  const aCol = capped.rows.map((r) => cell(r.a, r.aText));
   const colW = Math.max(len(headers[1]), ...aCol.map(len)) + 2;
-  return join([
+  const lines = [
     `${padEnd(headers[0], labelW)}  ${padEnd(headers[1], colW)}${headers[2]}`,
-    ...rows.map((r, i) => `${padEnd(r.label, labelW)}  ${padEnd(aCol[i], colW)}${cell(r.b, r.bText)}`)
-  ]);
+    ...capped.rows.map((r, i) => `${padEnd(labels[i], labelW)}  ${padEnd(aCol[i], colW)}${cell(r.b, r.bText)}`)
+  ];
+  return join(capped.note ? [...lines, capped.note] : lines);
 }
 
 /**
  * Measured values in █, projected values in ░, in the same bar.
  * rows: [{ label, measured, projected?, text? }]
  */
-export function forecast(rows, { width = 36, max, legend = "░ = projected at the current pace" } = {}) {
-  const top = max ?? Math.max(...rows.map((r) => (r.measured ?? 0) + (r.projected ?? 0)));
-  const labelW = Math.max(...rows.map((r) => len(r.label)));
-  const lines = rows.map((r) => {
+export function forecast(rows, { width: preferred = 36, max, legend = "░ = projected at the current pace", maxWidth = LAYOUT.maxWidth } = {}) {
+  const top = (max ?? Math.max(...rows.map((r) => (r.measured ?? 0) + (r.projected ?? 0)))) || 1;
+  if (rows.some((r) => (r.measured ?? 0) < 0 || (r.projected ?? 0) < 0 || (r.measured ?? 0) + (r.projected ?? 0) > top)) throw new Error("Forecast values must fit between zero and the scale maximum.");
+  const capped = capRows(rows);
+  const labels = fitLabels(capped.rows.map((r) => r.label));
+  const texts = capped.rows.map((r) => cut(r.text ?? "", 18));
+  const labelW = Math.max(0, ...labels.map(len));
+  const textW = Math.max(0, ...texts.map(len));
+  const width = Math.max(4, Math.min(preferred, maxWidth - labelW - textW - 3));
+  const lines = capped.rows.map((r, i) => {
     const m = Math.round(((r.measured ?? 0) / top) * width);
     const p = Math.round((((r.measured ?? 0) + (r.projected ?? 0)) / top) * width) - m;
     const body = "█".repeat(m) + "░".repeat(Math.max(0, p));
-    return `${padEnd(r.label, labelW)} ${padEnd(body, width)}  ${r.text ?? ""}`;
+    return `${padEnd(labels[i], labelW)} ${padEnd(body, width)}  ${texts[i]}`;
   });
-  return join(rows.some((r) => r.projected) ? [...lines, legend] : lines);
+  if (capped.note) lines.push(capped.note);
+  return join(rows.some((r) => r.projected) ? [...lines, cut(legend, maxWidth)] : lines);
 }
 
 /** A bracketed meter against a cap: [ ████████░░░░ ] 64% of the cap */
@@ -127,40 +145,53 @@ export function sparkline(values, { min, max } = {}) {
 }
 
 /** Density grid. Each value 0..1 picks blank, ░, ▒, ▓ or █. */
-export function heatmap(grid, { rowLabels = [], colLabels = "", levels = SHADES, cellWidth = 2 } = {}) {
-  const labelW = Math.max(0, ...rowLabels.map(len));
+export function heatmap(grid, { rowLabels = [], colLabels = "", levels = SHADES, cellWidth = 2, maxWidth = LAYOUT.maxWidth } = {}) {
+  const capped = capRows(grid);
+  const labels = fitLabels(capped.rows.map((_, i) => rowLabels[i] ?? ""));
+  const labelW = Math.max(0, ...labels.map(len));
+  const maxCols = Math.max(1, Math.floor((maxWidth - (labelW ? labelW + 1 : 0)) / cellWidth));
+  const omittedCols = Math.max(0, ...capped.rows.map((row) => row.length - maxCols));
   const pick = (v) => {
     if (!Number.isFinite(v) || v <= 0) return levels[0];
     return levels[clamp(Math.ceil(v * (levels.length - 1)), 1, levels.length - 1)];
   };
-  const lines = grid.map((row, i) => {
-    const lead = rowLabels.length ? padEnd(rowLabels[i] ?? "", labelW) + " " : "";
-    return lead + row.map((v) => pick(v).repeat(cellWidth)).join("");
+  const lines = capped.rows.map((row, i) => {
+    const lead = rowLabels.length ? padEnd(labels[i], labelW) + " " : "";
+    return lead + row.slice(0, maxCols).map((v) => pick(v).repeat(cellWidth)).join("");
   });
-  if (colLabels) lines.unshift((labelW ? " ".repeat(labelW + 1) : "") + colLabels);
+  if (colLabels) lines.unshift(cut((labelW ? " ".repeat(labelW + 1) : "") + colLabels, maxWidth));
+  if (omittedCols) lines.push(`… and ${omittedCols} more columns`);
+  if (capped.note) lines.push(capped.note);
   return join(lines);
 }
 
 /** One character per day: ■ for a hit, · for a miss, blank for no data. */
-export function calendarStrip(days, { hit = "■", miss = "·", gap = "  " } = {}) {
-  return days.map((d) => (d == null ? " " : d ? hit : miss)).join(gap);
+export function calendarStrip(days, { hit = "■", miss = "·", gap = "  ", maxWidth = LAYOUT.maxWidth } = {}) {
+  const room = Math.max(1, Math.floor((maxWidth + len(gap)) / (1 + len(gap))));
+  const omitted = Math.max(0, days.length - room);
+  const line = days.slice(0, room).map((d) => (d == null ? " " : d ? hit : miss)).join(gap);
+  return omitted ? `${line}\n… and ${omitted} more days` : line;
 }
 
 /**
  * Timeline (Gantt) strip. tracks: [{ label, start, end, loop? }] in ms.
  * A loop runs to the end of the scale and ends with →.
  */
-export function gantt(tracks, { scale, width = 40, unit = "ms", ticks = 3 } = {}) {
-  const top = scale ?? Math.max(...tracks.map((t) => t.end));
-  const labelW = Math.max(...tracks.map((t) => len(t.label)));
+export function gantt(tracks, { scale, width: preferred = 40, unit = "ms", ticks = 3, maxWidth = LAYOUT.maxWidth } = {}) {
+  const top = (scale ?? Math.max(...tracks.map((t) => t.end))) || 1;
+  const capped = capRows(tracks);
+  const labels = fitLabels(capped.rows.map((t) => t.label));
+  const labelW = Math.max(0, ...labels.map(len));
   const at = (ms) => clamp(Math.round((ms / top) * width), 0, width);
   const fmt = (ms) => (unit === "ms" && ms >= 1000 ? `${+(ms / 1000).toFixed(2)}s` : `${ms}${unit}`);
-  const lines = tracks.map((t) => {
+  const ranges = capped.rows.map((t) => t.loop ? `${fmt(t.start)}, repeats` : `${fmt(t.start)}–${fmt(t.end)}`);
+  const rangeW = Math.max(0, ...ranges.map(len));
+  const width = Math.max(4, Math.min(preferred, maxWidth - labelW - rangeW - 3));
+  const lines = capped.rows.map((t, i) => {
     const s = at(t.start);
-    const e = t.loop ? width : Math.max(s + 1, at(t.end));
+    const e = t.loop ? width : Math.min(width, Math.max(s + 1, at(t.end)));
     const strip = "·".repeat(s) + "█".repeat(e - s) + "·".repeat(width - e);
-    const range = t.loop ? `${fmt(t.start)}, repeats` : `${fmt(t.start)}–${fmt(t.end)}`;
-    return `${padEnd(t.label, labelW)} ${strip}${t.loop ? "→" : " "} ${range}`;
+    return `${padEnd(labels[i], labelW)} ${strip}${t.loop ? "→" : " "} ${ranges[i]}`;
   });
   const axis = Array(width + 1).fill(" ");
   const marks = [];
@@ -172,12 +203,14 @@ export function gantt(tracks, { scale, width = 40, unit = "ms", ticks = 3 } = {}
     const start = i === marks.length - 1 ? Math.max(0, pos - len(text) + 1) : pos;
     textCells(text).forEach((ch, k) => (axis[start + k] = ch));
   });
+  if (capped.note) lines.push(capped.note);
   return join([...lines, " ".repeat(labelW + 1) + axis.join("")]);
 }
 
 /** Duration ruler: 20 cells of 25ms by default. ▌ marks a half cell, + a value past the scale. */
 export function ruler(ms, { scaleMs = 500, cells: n = 20 } = {}) {
   if (ms == null) return "·".repeat(n);
+  if (ms < 0) throw new Error("A duration must be zero or greater.");
   const per = scaleMs / n;
   const full = Math.floor(ms / per);
   if (full >= n) return "█".repeat(n) + "+";
@@ -246,49 +279,86 @@ export function box(text, { title, style = "light", padding = 1 } = {}) {
 }
 
 /** Boxes in a row joined by arrows: ┌───┐ ──► ┌───┐ */
-export function flow(steps, { arrow = " ──► ", style = "light" } = {}) {
-  const boxes = steps.map((s) => box(s, { style }).split("\n"));
-  const height = Math.max(...boxes.map((b) => b.length));
-  const mid = Math.floor(height / 2);
-  const out = [];
-  for (let row = 0; row < height; row++) {
-    const link = row === mid ? arrow : " ".repeat(len(arrow));
-    out.push(boxes.map((b) => b[row] ?? " ".repeat(len(b[0]))).join(link));
+export function flow(steps, { arrow = " ──► ", style = "light", maxWidth = LAYOUT.maxWidth } = {}) {
+  const capped = capRows(steps, LAYOUT.rowsMax, "steps");
+  const labels = fitLabels(capped.rows);
+  const boxes = labels.map((s) => box(s, { style }).split("\n"));
+  const draw = (group) => {
+    const height = Math.max(...group.map((b) => b.length));
+    const mid = Math.floor(height / 2);
+    return Array.from({ length: height }, (_, row) => {
+      const link = row === mid ? arrow : " ".repeat(len(arrow));
+      return group.map((b) => b[row] ?? " ".repeat(len(b[0]))).join(link);
+    });
+  };
+  const natural = draw(boxes);
+  if (boxes.length <= 4 && natural.every((line) => len(line) <= maxWidth) && !capped.note) return join(natural);
+  const groups = [];
+  let group = [];
+  for (const current of boxes) {
+    const next = [...group, current];
+    if (group.length && (next.length > 4 || draw(next).some((line) => len(line) > maxWidth))) {
+      groups.push(group);
+      group = [current];
+    } else group = next;
   }
+  if (group.length) groups.push(group);
+  const out = [];
+  groups.forEach((row, i) => {
+    out.push(...draw(row));
+    if (i < groups.length - 1) out.push("│", "▼");
+  });
+  if (capped.note) out.push(capped.note);
   return join(out);
 }
 
 /** File or concept tree. node: { name, note?, children? } or an array of them. */
-export function tree(nodes, { noteColumn } = {}) {
+export function tree(nodes, { noteColumn, maxWidth = LAYOUT.maxWidth, maxDepth = 3 } = {}) {
   const rows = [];
-  const walk = (list, prefix) =>
+  const descendants = (node) => 1 + (node.children ?? []).reduce((n, child) => n + descendants(child), 0);
+  const walk = (list, prefix, depth) =>
     list.forEach((n, i) => {
       const last = i === list.length - 1;
-      rows.push([prefix + (last ? "└── " : "├── ") + n.name, n.note]);
-      if (n.children) walk(n.children, prefix + (last ? "    " : "│   "));
+      rows.push([prefix + (last ? "└── " : "├── ") + cut(n.name, LAYOUT.labelMax), n.note]);
+      if (n.children?.length && depth >= maxDepth) rows.push([prefix + (last ? "    " : "│   ") + `└── … and ${n.children.reduce((sum, child) => sum + descendants(child), 0)} more`, ""]);
+      else if (n.children) walk(n.children, prefix + (last ? "    " : "│   "), depth + 1);
     });
   const roots = Array.isArray(nodes) ? nodes : [nodes];
   roots.forEach((r) => {
-    rows.push([r.name, r.note]);
-    if (r.children) walk(r.children, "");
+    rows.push([cut(r.name, LAYOUT.labelMax), r.note]);
+    if (r.children) walk(r.children, "", 1);
   });
-  const col = noteColumn ?? Math.max(...rows.map(([t]) => len(t))) + 3;
-  return join(rows.map(([t, note]) => (note ? padEnd(t, col) + note : t)));
+  const capped = capRows(rows);
+  const col = Math.min(noteColumn ?? Math.max(...capped.rows.map(([t]) => len(t))) + 3, Math.floor(maxWidth * 0.65));
+  const out = capped.rows.map(([t, note]) => note ? padEnd(cut(t, col - 1), col) + cut(note, maxWidth - col) : cut(t, maxWidth));
+  if (capped.note) out.push(capped.note);
+  return join(out);
 }
 
 /** Table drawn with box characters. rows: arrays of strings; first row is the header. */
-export function table(rows, { style = "light", align = [] } = {}) {
+export function table(rows, { style = "light", align = [], maxWidth = LAYOUT.maxWidth } = {}) {
   const b = BOX[style];
   const cols = Math.max(...rows.map((r) => r.length));
-  const w = Array.from({ length: cols }, (_, c) => Math.max(...rows.map((r) => len(String(r[c] ?? "")))));
+  const [headRaw = [], ...bodyRaw] = rows;
+  const capped = capRows(bodyRaw);
+  const logical = [headRaw, ...capped.rows];
+  if (capped.note) logical.push([capped.note]);
+  const w = fitColumns(logical, { maxWidth });
   const cell = (v, c) => (align[c] === "right" ? padStart(String(v ?? ""), w[c]) : padEnd(String(v ?? ""), w[c]));
   const rule = (l, m, r) => l + w.map((n) => b.h.repeat(n + 2)).join(m) + r;
-  const line = (r) => b.v + r.map((v, c) => ` ${cell(v, c)} `).join(b.v) + b.v;
-  const [head, ...body] = rows.map((r) => Array.from({ length: cols }, (_, c) => r[c] ?? ""));
-  return [rule(b.tl, b.tt, b.tr), line(head), rule(b.lt, b.x, b.rt), ...body.map(line), rule(b.bl, b.bt, b.br)].join("\n");
+  const lines = (r) => {
+    const wrapped = Array.from({ length: cols }, (_, c) => wrap(String(r[c] ?? ""), w[c]));
+    const h = Math.max(...wrapped.map((parts) => parts.length));
+    return Array.from({ length: h }, (_, i) => b.v + wrapped.map((parts, c) => ` ${cell(parts[i] ?? "", c)} `).join(b.v) + b.v);
+  };
+  const [head, ...body] = logical.map((r) => Array.from({ length: cols }, (_, c) => r[c] ?? ""));
+  return [rule(b.tl, b.tt, b.tr), ...lines(head), rule(b.lt, b.x, b.rt), ...body.flatMap(lines), rule(b.bl, b.bt, b.br)].join("\n");
 }
 
 /** A status key on the density ladder. items: [{ level: 0..4, label }] */
 export function statusKey(items, { width = 12 } = {}) {
-  return join(items.map((i) => `${SHADES[clamp(i.level, 0, 4)].repeat(width)}  ${i.label}`));
+  const capped = capRows(items);
+  const labels = fitLabels(capped.rows.map((i) => i.label));
+  const lines = capped.rows.map((i, n) => `${SHADES[Math.round(clamp(i.level, 0, 4))].repeat(width)}  ${labels[n]}`);
+  return join(capped.note ? [...lines, capped.note] : lines);
 }
