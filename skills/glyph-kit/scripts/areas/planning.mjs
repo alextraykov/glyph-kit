@@ -1,3 +1,4 @@
+import { upper } from "../text.mjs";
 import { motionGantt, motionBoard, motionSwimlane } from "../motion/planning.mjs";
 // Planning: boards, impact and effort, ownership, timelines, decisions, status.
 import { checks } from "../guard.mjs";
@@ -5,7 +6,7 @@ import { BOX, clamp, cut, gantt, join, len, padEnd, place, statusKey, table, wra
 import { LAYOUT, capRows } from "../layout.mjs";
 
 /** Now / next / later (or any columns). columns: { now: [...], next: [...], later: [...] } */
-export function board(columns, { colWidth: preferred = 22, maxWidth = LAYOUT.maxWidth } = {}) {
+export function board(columns, { colWidth: preferred = 22, maxWidth = LAYOUT.maxWidth, lang } = {}) {
   const b = BOX.light;
   const names = Object.keys(columns);
   const available = Math.floor((maxWidth - 1) / Math.max(1, names.length)) + 1;
@@ -19,7 +20,7 @@ export function board(columns, { colWidth: preferred = 22, maxWidth = LAYOUT.max
   });
   const h = Math.max(...cols.map((c) => c.length));
   const top = b.tl + names.map((n) => {
-    const label = ` ${cut(n.toUpperCase(), colWidth - 5)} `;
+    const label = ` ${cut(upper(n, lang), colWidth - 5)} `;
     return b.h + label + b.h.repeat(Math.max(0, colWidth - 3 - len(label)));
   }).join(b.tt) + b.tr;
   const body = Array.from({ length: h }, (_, i) => b.v + cols.map((c) => ` ${padEnd(c[i] ?? "", colWidth - 3)}`).join(b.v) + b.v);
@@ -67,14 +68,14 @@ export function impactEffort(items, { width = 40, height = 12 } = {}) {
  * rows: [[{ lane, text }, …]] items in one row are joined with ──►;
  * or { back: { from, to, text } } for a return to an earlier lane.
  */
-export function swimlane(lanes, rows, { colWidth: preferred = 18, maxWidth = LAYOUT.maxWidth } = {}) {
+export function swimlane(lanes, rows, { colWidth: preferred = 18, maxWidth = LAYOUT.maxWidth, lang } = {}) {
   const available = Math.floor(maxWidth / Math.max(1, lanes.length));
   if (available < 10) throw new Error(`A swimlane fits at most ${Math.floor(maxWidth / 10)} lanes at ${maxWidth} cells; this one has ${lanes.length}.`);
   const colWidth = Math.min(preferred, available);
   const col = (lane) => lane * colWidth;
   const laneLabels = lanes.map((lane) => cut(lane, colWidth - 2));
   const out = [
-    place(laneLabels.map((l, i) => [col(i), l.toUpperCase()])),
+    place(laneLabels.map((l, i) => [col(i), upper(l, lang)])),
     place(laneLabels.map((l, i) => [col(i), "─".repeat(Math.min(colWidth - 2, Math.max(len(l), 8)))]))
   ];
   const capped = capRows(rows);

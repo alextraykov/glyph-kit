@@ -61,7 +61,7 @@ export function bar(value, max, { width = 20, empty = " " } = {}) {
 }
 
 /** Labelled horizontal bar chart. rows: [{ label, value, text? }] */
-export function barChart(rows, { width: preferred = 24, max, format = String, empty = " ", maxWidth = LAYOUT.maxWidth } = {}) {
+export function barChart(rows, { width: preferred = 24, max, lang, format = lang ? (n) => new Intl.NumberFormat(lang).format(n) : String, empty = " ", maxWidth = LAYOUT.maxWidth } = {}) {
   const top = max ?? Math.max(...rows.map((r) => r.value), 0);
   const capped = capRows(rows);
   const labels = fitLabels(capped.rows.map((r) => r.label));

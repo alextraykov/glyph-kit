@@ -26,7 +26,7 @@ function figure(spec, number, colors) {
 <figcaption class="r-fig__head"><span class="r-fig__n">Figure ${number}</span><span class="r-fig__title">${esc(spec.title ?? def.label)}</span></figcaption>
 ${spec.intent ? `<p class="r-fig__intent">${inline(spec.intent)}</p>` : ""}
 <div class="r-fig__panel">${svg}</div>
-<div class="r-fig__foot">${spec.source ? `<span>Source: ${esc(spec.source)}</span>` : "<span></span>"}<details><summary>As text</summary><pre>${esc(text)}</pre></details></div>
+<div class="r-fig__foot">${spec.source ? `<span>Source: ${esc(spec.source)}</span>` : "<span></span>"}<details><summary>As text</summary><pre lang="${esc(spec.lang ?? "en")}">${esc(text)}</pre></details></div>
 </figure>`;
 }
 
@@ -106,7 +106,7 @@ ${s.note ? `<aside class="r-note"><p>${inline(s.note)}</p></aside>` : ""}
     })
     .join("\n");
   return `<!doctype html>
-<html lang="en">
+<html lang="${esc(report.lang ?? "en")}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

@@ -774,7 +774,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     };
     if (!build || reduce.matches) return done();
     const skel = skeleton(drawn.cells);
-    const plan = planBuild(drawn.cells);
+    const plan = planBuild(drawn.cells, { lang: result.spec.lang });
     animate((t) => {
       if (t >= plan.total) {
         done();

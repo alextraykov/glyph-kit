@@ -1,3 +1,4 @@
+import { upper, formatNumber } from "../text.mjs";
 // Moving diagrams from a spec. Each kind takes { kind, title, intent, source, data } and returns a
 // factory: call it for a fresh diagram, a function (step, frac) → Grid. `still` is the step that
 // stands in for the whole animation when motion is off, in print and in Markdown.
@@ -6,7 +7,7 @@ import { cycle, motionProgress } from "./shared.mjs";
 import { FADE, Grid, changes, clamp, easeInOut, hash, mod, rand } from "../live/grid.mjs";
 
 const pad = (n, w) => String(n).padStart(w, " ");
-const boxW = (labels, min = 8) => Math.max(min, ...labels.map((l) => textWidth(cut(l.toUpperCase(), 24)) + 4));
+const boxW = (labels, min = 8, lang) => Math.max(min, ...labels.map((l) => textWidth(cut(upper(l, lang), 24)) + 4));
 const liveGap = (count, width, gap, reserve = 0) => {
   const room = 80 - count * width - reserve;
   if (!count || room < Math.max(0, count - 1)) throw new Error(`These labels fit at most ${Math.floor((80 - reserve + 1) / (width + 1))} columns; this diagram has ${count}.`);
@@ -15,10 +16,10 @@ const liveGap = (count, width, gap, reserve = 0) => {
 
 /* Loop: work moves through stages; some of it is sent back from one stage to an earlier one. ------ */
 // data: { stages: ["Design", "Build", "QA", "Ship"], back: { from: "QA", to: "Build", share: 0.3, label } }
-function processLoop({ data }) {
+function processLoop({ data, options = {} }) {
   const stages = data.stages;
   const back = data.back ?? null;
-  const W = boxW(stages, 10);
+  const W = boxW(stages, 10, options.lang);
   const GAP = liveGap(stages.length, W, 9, 13);
   const T = 3;
   const xs = stages.map((_, i) => i * (W + GAP));
@@ -35,7 +36,7 @@ function processLoop({ data }) {
     return (step, frac) => {
     const s = (step % CYCLE) + frac;
     const g = new Grid(back ? 12 : 8, cols);
-    stages.forEach((label, i) => g.box(T - 1, xs[i], W, cut(label.toUpperCase(), 24), i === stages.length - 1 ? "ok" : ""));
+    stages.forEach((label, i) => g.box(T - 1, xs[i], W, cut(upper(label, options.lang), 24), i === stages.length - 1 ? "ok" : ""));
     const legs = stages.slice(1).map((_, i) => g.line([[T, xs[i] + W], [T, xs[i + 1] - 1]], "mute"));
     let ret = null;
     if (back) {
@@ -89,7 +90,7 @@ processLoop.still = 260;
 
 /* Funnel: people fall through the steps; the ones who leave drift out to the side and fade. ------ */
 // data: { steps: [{ label, value }, ...] } in order, largest first.
-function processFunnel({ data }) {
+function processFunnel({ data, options = {} }) {
   const steps = data.steps;
   if (!steps.length || steps.length > 16) throw new Error("A moving funnel supports between 1 and 16 steps.");
   const LABEL = Math.max(...steps.map((s) => textWidth(cut(s.label, 24)))) + 3;
@@ -121,7 +122,7 @@ function processFunnel({ data }) {
       const [from, width] = span(k);
       g.text(row, 0, cut(st.label, 24), k === steps.length - 1 ? "ok" : "");
       for (let c = 0; c < width; c++) g.put(row, from + c, "▒", k === steps.length - 1 ? "ok" : "mute");
-      g.text(row, LABEL + BAR + 2, cut(st.value.toLocaleString("en-US"), 7));
+      g.text(row, LABEL + BAR + 2, cut(formatNumber(st.value, options.lang ?? "en-US"), 7));
       if (k) {
         const kept = steps[k - 1].value ? st.value / steps[k - 1].value : 0;
         g.text(row, LABEL + BAR + 10, `${Math.round(kept * 100)}%`, kept < 0.5 ? "fail" : "mute");
@@ -162,7 +163,7 @@ processFunnel.still = 260;
 // data: { states: ["Idle", ...], transitions: [{ from, to, label }], path: ["Idle", "Loading", ...] }
 function processStates({ data, options = {} }) {
   const names = data.states;
-  const W = boxW(names, 11);
+  const W = boxW(names, 11, options.lang);
   const GAP = liveGap(names.length, W, 10, 2);
   const xs = names.map((_, i) => i * (W + GAP));
   const cols = xs.at(-1) + W + 2;
@@ -220,7 +221,7 @@ function processStates({ data, options = {} }) {
       names.forEach((n, i) => {
         const here = i === at;
         const role = /error|fail/i.test(n) ? "fail" : /ready|done|success|saved|sent/i.test(n) ? "ok" : "";
-        g.box(T - 1, xs[i], W, cut(n.toUpperCase(), 24), here ? role : "mute");
+        g.box(T - 1, xs[i], W, cut(upper(n, options.lang), 24), here ? role : "mute");
         if (here) g.chase(T - 1, xs[i], W, s * 2.4, role);
       });
       const now = moving ? `${legs[moving.i].from} → ${legs[moving.i].to}` : names[at] ?? "";
@@ -236,9 +237,9 @@ processStates.still = 8;
 /* Queue: columns with work-in-progress limits. The slowest column fills up and the rest wait. ----- */
 // data: { columns: [{ label, limit, pace }] }  pace = steps a card spends there. The first column
 // is the backlog (no limit), the last is done.
-function processQueue({ data }) {
+function processQueue({ data, options = {} }) {
   const cols = data.columns;
-  const W = boxW(cols.map((c) => c.label), 12);
+  const W = boxW(cols.map((c) => c.label), 12, options.lang);
   const GAP = liveGap(cols.length, W, 3);
   const xs = cols.map((_, i) => i * (W + GAP));
   const H = 8;
@@ -273,7 +274,7 @@ function processQueue({ data }) {
         const isFull = c.limit && inCol.length >= c.limit;
         const last = i === cols.length - 1;
         const cap = c.limit ? `${inCol.length}/${c.limit}` : String(inCol.length);
-        g.text(0, xs[i], cut(c.label.toUpperCase(), W - textWidth(cap) - 1), isFull ? "fail" : last ? "ok" : "");
+        g.text(0, xs[i], cut(upper(c.label, options.lang), W - textWidth(cap) - 1), isFull ? "fail" : last ? "ok" : "");
         g.scramble(0, xs[i] + W - textWidth(cap), cap, since(`c${i}`, cap, step), step, isFull ? "fail" : "mute");
         for (let x = 0; x < W; x++) g.put(1, xs[i] + x, "─", isFull ? "fail" : "mute");
         // Cards stack from the top; the ones that can't move on show as waiting (▒).
@@ -302,7 +303,7 @@ processQueue.still = 220;
 
 /* Rollout: a feature goes out in stages, a guard metric watches, a breach rolls it back. ---------- */
 // data: { stages: [1, 5, 25, 50, 100], metric: "Error rate", limit: 2, breachAt: 25 }
-function processRollout({ data }) {
+function processRollout({ data, options = {} }) {
   const stages = data.stages;
   if (stages.length < 2 || stages.length > 8) throw new Error("A rollout supports between 2 and 8 stages.");
   const COLS = 50;
@@ -359,7 +360,7 @@ function processRollout({ data }) {
     g.scramble(4, 0, `${Math.round((on / people) * 100)}% on`, Math.floor(ease * 8), step, cur.ok ? "ok" : "fail");
     // Guard metric: a strip chart that scrolls; it spikes during the breach.
     const Y = ROWS + 5;
-    g.text(Y, 0, cut((data.metric ?? "Guard").toUpperCase(), GX - 2));
+    g.text(Y, 0, cut(upper(data.metric ?? "Guard", options.lang), GX - 2));
     g.text(Y + 1, 0, `limit ${data.limit ?? 2}%`, "fail");
     for (let c = 0; c < COLS; c++) {
       const when = s - (COLS - 1 - c) * 0.9;
@@ -382,7 +383,7 @@ processRollout.still = 90;
 /* Loading: what someone sees in the first two seconds, against a time ruler. ---------------------- */
 // data: { duration: 1800, phases: [{ at: 0, show: "tap" }, { at: 120, show: "skeleton" },
 //         { at: 700, show: "text" }, { at: 1100, show: "image" }] }
-function processLoading({ data }) {
+function processLoading({ data, options = {} }) {
   const D = data.duration ?? 1800;
   const phases = data.phases;
   if (D < 1 || D > 15000) throw new Error("The loading ruler supports durations from 1 to 15000 milliseconds.");

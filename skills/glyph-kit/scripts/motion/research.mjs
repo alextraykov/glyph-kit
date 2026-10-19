@@ -4,7 +4,7 @@ import { Grid } from "../live/grid.mjs";
 export function motionLikert(data, options, render) {
   const canvas = motionCanvas(render(data, options));
   const marks = motionMarks(canvas, /[█▒░]/u);
-  const counters = motionCounters(canvas, marks);
+  const counters = motionCounters(canvas, marks, options?.lang);
   return motionFactory(canvas, (grid, time) => {
     marks.forEach((line, row) => {
       const middle = canvas.matrix[row].indexOf("│");
@@ -12,17 +12,17 @@ export function motionLikert(data, options, render) {
       growBar(grid, row, line.filter((col) => col < middle), progress, { reverse: true });
       growBar(grid, row, line.filter((col) => col > middle), progress);
     });
-    counters.forEach((c) => countUp(grid, c.row, c.col, c.value, motionProgress(time, c.row * 4, 100), c.size));
+    counters.forEach((c) => countUp(grid, c.row, c.col, c.value, motionProgress(time, c.row * 4, 100), c.size, c.format));
   });
 }
 
 export function motionTaskStats(data, options, render) {
   const canvas = motionCanvas(render(data, options));
   const marks = motionMarks(canvas, /[─█├┤│]/u);
-  const counters = motionCounters(canvas, marks);
+  const counters = motionCounters(canvas, marks, options?.lang);
   return motionFactory(canvas, (grid, time) => {
     marks.forEach((line, row) => growBar(grid, row, line, motionProgress(time, row * 5, 100)));
-    counters.forEach((c) => countUp(grid, c.row, c.col, c.value, motionProgress(time, c.row * 5, 100), c.size));
+    counters.forEach((c) => countUp(grid, c.row, c.col, c.value, motionProgress(time, c.row * 5, 100), c.size, c.format));
   });
 }
 

@@ -100,7 +100,7 @@ function figureSlide(spec, i, total, map, kicker) {
   const moving = spec.motion && moves(spec.kind);
   const fig = screen
     ? `<div class="gk-proto">${fragment(spec, { map })}</div>`
-    : `<pre class="gk-fig" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(moving ? stillText(spec) : body(spec))}</pre>`;
+    : `<pre lang="${esc(spec.lang ?? "en")}" class="gk-fig" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(moving ? stillText(spec) : body(spec))}</pre>`;
   return `<section class="gk-slide" data-steps="${esc(JSON.stringify(p.steps ?? []))}" data-flag="${esc(p.flag ?? "")}" aria-roledescription="slide" aria-label="${i + 1} of ${total}">
 <header><p class="gk-kicker">${esc(kicker || def.label)}</p><h2 class="gk-title">${esc(spec.title ?? def.label)}</h2>${spec.intent ? `<p class="gk-lead">${esc(spec.intent)}</p>` : ""}</header>
 <div class="gk-view"><div class="gk-world">${fig}</div></div>
@@ -300,7 +300,7 @@ export function renderDeck(deck, { title: titleOverride, map } = {}) {
     })
     .join("\n");
   return `<!doctype html>
-<html lang="en">
+<html lang="${esc(d.lang ?? d.slides.find(s => s.lang)?.lang ?? "en")}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

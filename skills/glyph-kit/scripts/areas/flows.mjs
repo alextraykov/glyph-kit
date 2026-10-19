@@ -1,3 +1,4 @@
+import { upper } from "../text.mjs";
 import { motionFlow, motionBranchFlow, motionStateMachine, motionJourneyMap } from "../motion/flows.mjs";
 // UX flows: linear and branching flows, state machines, journey maps, sitemaps.
 import { checks } from "../guard.mjs";
@@ -106,7 +107,7 @@ export function stateMachine(transitions, { initial, maxWidth = LAYOUT.maxWidth 
  * Journey map: stages across, rows for what people do, think and how they feel (-2..2).
  * stages: [{ label, doing, thinking, feeling }]
  */
-export function journeyMap(stages, { colWidth: preferred = 18, maxWidth = LAYOUT.maxWidth } = {}) {
+export function journeyMap(stages, { colWidth: preferred = 18, maxWidth = LAYOUT.maxWidth, lang } = {}) {
   const labelW = 9;
   const available = Math.floor((maxWidth - labelW) / Math.max(1, stages.length));
   if (available < 10) throw new Error(`A journey map fits at most ${Math.floor((maxWidth - labelW) / 10)} stages at ${maxWidth} cells; this one has ${stages.length}.`);
@@ -123,7 +124,7 @@ export function journeyMap(stages, { colWidth: preferred = 18, maxWidth = LAYOUT
   const feel = (v) => ({ 2: "▲▲ great", 1: "▲ good", 0: "· neutral", "-1": "▼ poor", "-2": "▼▼ bad" })[Math.round(v)] ?? "";
   const rule = " ".repeat(labelW) + stages.map(() => "─".repeat(colWidth - 2) + "  ").join("");
   return join([
-    padEnd("STAGE", labelW) + stages.map((s, i) => padEnd(labels[i].toUpperCase(), colWidth)).join(""),
+    padEnd("STAGE", labelW) + stages.map((s, i) => padEnd(upper(labels[i], lang), colWidth)).join(""),
     rule,
     ...row("doing", (s) => s.doing),
     "",

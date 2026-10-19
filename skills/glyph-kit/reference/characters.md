@@ -53,7 +53,7 @@ Don't mix light and heavy in one junction unless the font has the mixed glyph (`
 - **Braille** (U+2800–28FF): great 2 × 4 bitmaps for spinners, but most monospace fonts don't include them, so they come from a fallback with a different width.
 - **Sextants and legacy computing** (U+1FB00–1FBFF): teletext mosaics, very poor font coverage.
 - **Emoji-capable symbols** (`✳ ❇ ⚠`): can render as colour emoji. Add U+FE0E or pick another glyph.
-- **East Asian wide characters** in labels: two cells each, which breaks every column after them.
+- **East Asian wide characters** in labels count as two cells each. The renderer reserves both cells; the browser font must draw them at that width.
 
 ## Fonts
 
@@ -95,6 +95,14 @@ console.table(glyphs.map((g) => ({ g, cells: +(ctx.measureText(g).width / cell).
 ```
 
 An empty table means every glyph is one cell.
+
+## Languages
+
+Set `lang` on a spec for locale-aware numbers and uppercase labels. Cyrillic and CJK labels use the same bounded layout contract. No additional fonts are required or bundled for language coverage; missing glyphs use the existing system fallback, whose widths need checking in the target browser.
+
+Arabic and Hebrew labels remain whole text runs, but a browser may reorder a mixed line inside one `<pre>`. Prefer SVG or PNG for these figures: the exporter positions text on the cell grid. Lint reports RTL text as information, not an error.
+
+The font measurements above are the existing measured set. Iosevka, Sarasa Mono and Noto Sans Mono CJK were not measured or added.
 
 ## Line height
 

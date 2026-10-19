@@ -7,8 +7,9 @@ import { stillGrid } from "../motion/shared.mjs";
 /** The diagram as plain text. Made-up data carries a SAMPLE DATA stamp in the figure itself. */
 export function body(spec) {
   const def = resolve(spec);
-  const moving = spec.motion && def.motion ? def.motion(def.data, spec.options ?? {}) : null;
-  const text = moving ? stillGrid(moving.make, moving.still).toText() : def.render(def.data, spec.options ?? {});
+  const options = { ...spec.options, ...(spec.lang ? { lang: spec.lang } : {}) };
+  const moving = spec.motion && def.motion ? def.motion(def.data, options) : null;
+  const text = moving ? stillGrid(moving.make, moving.still).toText() : def.render(def.data, options);
   return isSample(spec.source) ? stamp(text) : text;
 }
 
@@ -16,7 +17,7 @@ export function body(spec) {
 export function label(spec) {
   if (spec.label) return spec.label;
   const def = resolve(spec);
-  const summary = def.summary ? def.summary(def.data) : "";
+  const summary = def.summary ? def.summary(def.data, { ...spec.options, ...(spec.lang ? { lang: spec.lang } : {}) }) : "";
   return [spec.title ?? def.label, summary].filter(Boolean).join(". ").replace(/\.\./g, ".");
 }
 

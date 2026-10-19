@@ -128,7 +128,7 @@ test("wireframes: frame widths hold with notes, overlay and long text", () => {
 
 test("html: charts stay labelled text, screens become elements named by the map", () => {
   const chart = renderHtml(examples.metrics[0]);
-  assert.match(chart, /<pre class="gk-figure" role="img" aria-label="Signup to paid/);
+  assert.match(chart, /<pre lang="en" class="gk-figure" role="img" aria-label="Signup to paid/);
   const map = { tokens: { accent: "#3355ff" }, components: { button: { name: "Button" }, toggle: { name: "Switch" } } };
   const page = renderHtml(examples.wireframes[0], { map });
   assert.match(page, /--gk-accent:#3355ff/);

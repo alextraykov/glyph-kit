@@ -19,7 +19,7 @@ const legacy = {
   funnel: {
     label: "Moving funnel",
     motion: motionFunnel,
-    summary: (d) => `Funnel: ${d.steps.map((s) => `${s.label} ${s.value.toLocaleString("en-US")}`).join(", ")}.`,
+    summary: (d, { lang } = {}) => `Funnel: ${d.steps.map((s) => `${s.label} ${s.value.toLocaleString(lang ?? "en-US")}`).join(", ")}.`,
     check: (d) => [checks.notNegative(d.steps, "value", "count"), checks.neverGrows(d.steps, "value")]
   },
   states: {

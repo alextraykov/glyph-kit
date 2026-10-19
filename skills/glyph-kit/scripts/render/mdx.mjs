@@ -40,7 +40,7 @@ const frontmatter = (fields) =>
 export function renderMdx(doc, { mode = "static", theme = "paper", importPath = "./Glyph.astro" } = {}) {
   const head = mode === "component" ? `\nimport Glyph from "${importPath}";\n` : "";
   if (doc.sections) {
-    const out = [frontmatter({ title: doc.title, description: doc.subtitle, author: doc.author, date: doc.date }), head];
+    const out = [frontmatter({ title: doc.title, description: doc.subtitle, author: doc.author, date: doc.date, lang: doc.lang ?? "en" }), head];
     if (doc.summary?.length) out.push("## In short\n", ...doc.summary.map((s, i) => `${i + 1}. ${prose(s)}`), "");
     let n = 0;
     for (const s of doc.sections) {
@@ -53,5 +53,5 @@ export function renderMdx(doc, { mode = "static", theme = "paper", importPath = 
     return out.join("\n");
   }
   const specs = Array.isArray(doc) ? doc : [doc];
-  return [frontmatter({ title: specs.length === 1 ? specs[0].title : undefined }), head, ...specs.map((s) => figureMdx(s, mode, theme, specs.length > 1 ? 0 : 0))].join("\n");
+  return [frontmatter({ lang: specs[0]?.lang ?? "en", title: specs.length === 1 ? specs[0].title : undefined }), head, ...specs.map((s) => figureMdx(s, mode, theme, specs.length > 1 ? 0 : 0))].join("\n");
 }

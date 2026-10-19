@@ -42,12 +42,17 @@ export function motionMarks(canvas, pattern) {
   return canvas.matrix.map((row) => row.flatMap((char, col) => char && pattern.test(char) ? [col] : []));
 }
 
-export function motionCounters(canvas, marks) {
+export function motionCounters(canvas, marks, lang) {
+  const parts = new Intl.NumberFormat(lang ?? "en-US").formatToParts(12345.6);
+  const group = parts.find(p => p.type === "group")?.value ?? ",";
+  const decimal = parts.find(p => p.type === "decimal")?.value ?? ".";
+  const parse = (text) => Number(text.split(group).join("").replace(decimal, "."));
+  const format = lang ? (n) => new Intl.NumberFormat(lang).format(n) : String;
   return canvas.lines.flatMap((line, row) => {
     if (!marks[row]?.length) return [];
     const start = marks[row].at(-1) + 1;
     const tail = canvas.matrix[row].slice(start).join("");
-    return [...tail.matchAll(/-?\d+(?:[,.]\d+)*(?:e[+-]?\d+)?/g)].map((match) => ({ row, col: start + width(tail.slice(0, match.index)), size: width(match[0]), value: Number(match[0].replace(/,/g, "")) })).filter((item) => Number.isFinite(item.value));
+    return [...tail.matchAll(/-?\d+(?:[,.]\d+)*(?:e[+-]?\d+)?/g)].map((match) => ({ row, col: start + width(tail.slice(0, match.index)), size: width(match[0]), value: parse(match[0]), format })).filter((item) => Number.isFinite(item.value));
   });
 }
 

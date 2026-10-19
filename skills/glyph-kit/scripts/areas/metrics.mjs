@@ -21,15 +21,15 @@ import {
 import { LAYOUT, capRows, fitLabels } from "../layout.mjs";
 import { motionFunnel } from "../motion/process.mjs";
 
-const fmt = (n) => (Number.isInteger(n) ? n.toLocaleString("en") : String(n));
+const fmt = (n, lang) => lang ? new Intl.NumberFormat(lang).format(n) : (Number.isInteger(n) ? n.toLocaleString("en") : String(n));
 const pct = (n) => `${Math.round(n * 100)}%`;
 
 /** Steps of a funnel. Shows the share of the start and the step-to-step drop. steps: [{ label, value }] */
-export function funnel(steps, { width: preferred = 30, maxWidth = LAYOUT.maxWidth } = {}) {
+export function funnel(steps, { width: preferred = 30, lang, maxWidth = LAYOUT.maxWidth } = {}) {
   const start = steps[0]?.value || 1;
   const capped = capRows(steps, LAYOUT.rowsMax, "steps");
   const labels = fitLabels(capped.rows.map((s) => s.label));
-  const values = capped.rows.map((s) => cut(fmt(s.value), 16));
+  const values = capped.rows.map((s) => cut(fmt(s.value, lang), 16));
   const labelW = Math.max(0, ...labels.map(len));
   const valueW = Math.max(0, ...values.map(len));
   const width = Math.max(4, Math.min(preferred, maxWidth - labelW - valueW - 23));
@@ -148,7 +148,7 @@ export const kinds = {
   funnel: { label: "Funnel",
     normalize: (data) => Array.isArray(data) ? data : data.steps,
     motion: motionFunnel,
-    check: (d) => [checks.notNegative(d, "value", "count"), checks.neverGrows(d, "value")], render: funnel, summary: (s) => s.map((x) => `${x.label}: ${fmt(x.value)}`).join(", ") },
+    check: (d) => [checks.notNegative(d, "value", "count"), checks.neverGrows(d, "value")], render: funnel, summary: (s, { lang } = {}) => s.map((x) => `${x.label}: ${fmt(x.value, lang)}`).join(", ") },
   cohort: {
     label: "Retention cohorts",
     check: (d) => d.map((r) => ((r.values ?? []).some((v) => v < 0 || v > 1) ? `${r.label} has retention outside 0 to 1 (write 48% as 0.48).` : "")),

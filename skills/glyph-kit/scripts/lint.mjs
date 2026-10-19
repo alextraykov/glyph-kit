@@ -7,7 +7,7 @@
 // Usage: node scripts/lint.mjs <file.md>…   Exits 1 when anything fails.
 import { checkBoxes } from "./layout.mjs";
 import { budget } from "./tokens.mjs";
-import { cells, graphemes, width } from "./text.mjs";
+import { cells, graphemes, width, isRtl } from "./text.mjs";
 import { readFileSync } from "node:fs";
 
 // Measured at exactly one cell in Departure Mono 11px and Menlo 13px (Chrome, macOS).
@@ -23,6 +23,7 @@ const BOTTOM = /[└╚┗╰]/;
 export function lintBlock(text, offset = 0) {
   const problems = [];
   const lines = text.split("\n");
+  if (isRtl(text)) problems.push({ level: "info", line: offset + 1, message: "Mixed RTL text can reorder in a browser pre; prefer SVG or PNG for cell-positioned labels." });
   lines.forEach((line, i) => {
     for (const cluster of new Set(graphemes(line))) {
       if (/\p{Emoji_Presentation}|\p{Regional_Indicator}|\ufe0f/u.test(cluster)) {
@@ -91,7 +92,7 @@ if (typeof process !== "undefined" && process.argv?.[1] && import.meta.url === `
   for (const file of process.argv.slice(2)) {
     for (const p of lintMarkdown(readFileSync(file, "utf8"))) {
       if (p.level === "error") failed = true;
-      console.log(`${file}:${p.line}  ${p.level === "error" ? "error" : "warn "}  ${p.message}`);
+      console.log(`${file}:${p.line}  ${p.level}  ${p.message}`);
     }
   }
   process.exit(failed ? 1 : 0);

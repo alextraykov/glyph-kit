@@ -1,3 +1,4 @@
+import { upper } from "../text.mjs";
 // Wireframes: a screen built from a layout spec, using a small primitive vocabulary.
 // The same primitive names map to real components in design-system.map.json (see reference/spec.md).
 import { BOX, center, cut, join, len, padEnd, padStart, textCells, wrap } from "../core.mjs";
@@ -8,7 +9,7 @@ import { LAYOUT, capRows } from "../layout.mjs";
  * Every row may carry `note: "1"`; the marker [1] is drawn outside the frame.
  */
 export const PRIMITIVES = {
-  heading: (r, w) => [cut(r.text.toUpperCase(), w)],
+  heading: (r, w, lang) => [cut(upper(r.text, lang), w)],
   text: (r, w) => wrap(r.text, w),
   muted: (r, w) => wrap(r.text, w).map((l) => l), // shown in the text form as plain text; the HTML form greys it
   input: (r, w) => {
@@ -80,7 +81,7 @@ export const PRIMITIVES = {
  * overlay: { title, rows } draws a dialog over a ░ dimmer.
  * Notes: rows with `note` get a marker outside the frame; spec.notes: { "1": "text" } are listed below.
  */
-export function screen(spec, { width, maxWidth = LAYOUT.maxWidth } = {}) {
+export function screen(spec, { width, maxWidth = LAYOUT.maxWidth, lang } = {}) {
   const W = Math.min(spec.width ?? width ?? 46, maxWidth);
   if (W < 12) throw new Error("A screen needs at least 12 cells to keep its frame and content readable.");
   const inner = W - 4;
@@ -94,7 +95,7 @@ export function screen(spec, { width, maxWidth = LAYOUT.maxWidth } = {}) {
     }
     const draw = PRIMITIVES[row.type];
     if (!draw) throw new Error(`Unknown wireframe primitive: ${row.type}`);
-    draw(row, inner).forEach((line, i) => {
+    draw(row, inner, lang).forEach((line, i) => {
       body.push(line);
       marks.push(i === 0 && row.note ? `[${row.note}]` : "");
     });
@@ -110,7 +111,7 @@ export function screen(spec, { width, maxWidth = LAYOUT.maxWidth } = {}) {
     else lines.push(`${b.v} ${padEnd(cut(line, inner), inner)} ${b.v}`);
   });
   lines.push(b.bl + b.h.repeat(W - 2) + b.br);
-  if (spec.overlay) lines = overlay(lines, spec.overlay, W);
+  if (spec.overlay) lines = overlay(lines, spec.overlay, W, lang);
   const withMarks = lines.map((l, i) => {
     if (!marks[i - 1]) return l;
     if (maxWidth - W < 4) throw new Error("Leave at least four cells beside the screen for note markers.");
@@ -120,9 +121,9 @@ export function screen(spec, { width, maxWidth = LAYOUT.maxWidth } = {}) {
   return join(notes.length ? [...withMarks, "", ...notes] : withMarks);
 }
 
-function overlay(lines, dialog, W) {
+function overlay(lines, dialog, W, lang) {
   const dw = Math.min(W - 8, dialog.width ?? 30);
-  const box = screen({ title: dialog.title, width: dw, rows: dialog.rows }).split("\n").map((l) => l.replace(/═/g, "─").replace(/║/g, "│").replace(/[╔╗╚╝]/g, (c) => ({ "╔": "┌", "╗": "┐", "╚": "└", "╝": "┘" })[c]).replace(/[╠╣]/g, (c) => (c === "╠" ? "├" : "┤")));
+  const box = screen({ title: dialog.title, width: dw, rows: dialog.rows }, { lang }).split("\n").map((l) => l.replace(/═/g, "─").replace(/║/g, "│").replace(/[╔╗╚╝]/g, (c) => ({ "╔": "┌", "╗": "┐", "╚": "└", "╝": "┘" })[c]).replace(/[╠╣]/g, (c) => (c === "╠" ? "├" : "┤")));
   const top = Math.max(1, Math.floor((lines.length - box.length) / 2));
   if (box.length > lines.length - 2) throw new Error("The dialog needs a taller screen to keep all of its content visible.");
   const left = Math.floor((W - dw) / 2);
@@ -137,8 +138,8 @@ function overlay(lines, dialog, W) {
 }
 
 /** Two screens side by side, labelled, e.g. desktop and mobile. screens: [{ label, spec }] */
-export function responsive(screens, { gap = 4, maxWidth = LAYOUT.maxWidth } = {}) {
-  const drawn = screens.map((s) => [s.label, ...screen(s.spec).split("\n")]);
+export function responsive(screens, { gap = 4, maxWidth = LAYOUT.maxWidth, lang } = {}) {
+  const drawn = screens.map((s) => [s.label, ...screen(s.spec, { lang }).split("\n")]);
   const widths = drawn.map((d) => Math.max(...d.map(len)));
   const total = widths.reduce((a, b) => a + b, 0) + gap * Math.max(0, screens.length - 1);
   if (total > maxWidth) throw new Error(`${screens.length} screens need ${total} cells side by side; ${maxWidth} fit. Make the screens narrower or show them separately.`);

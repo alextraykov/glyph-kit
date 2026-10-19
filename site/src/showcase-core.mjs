@@ -72,7 +72,10 @@ const curve = (x) => (x >= 1 ? 1 : (1 - Math.pow(2, -8 * x)) / (1 - Math.pow(2, 
 const scrambleGlyph = (r, c, k) => RAMP[1 + ((r * 31 + c * 17 + k * 7) % (RAMP.length - 1))];
 
 /** Plan how a box builds in: for every cell, what kind of mark it is and when it starts (ms). */
-export function planBuild(box) {
+export function planBuild(box, { lang } = {}) {
+  const parts = new Intl.NumberFormat(lang ?? "en-US").formatToParts(12345.6);
+  const group = parts.find(p => p.type === "group")?.value ?? ",";
+  const decimal = parts.find(p => p.type === "decimal")?.value ?? ".";
   const H = box.ch.length;
   const W = box.ch[0]?.length ?? 0;
   const at = (r, c) => curve(Math.min(1, (c / Math.max(1, W)) * 0.7 + (r / Math.max(1, H)) * 0.3));
@@ -84,14 +87,15 @@ export function planBuild(box) {
     const line = row.join("");
     // Quantities count up, keeping their width, commas and decimals. Small whole numbers are labels
     // (note markers, steps), so they scramble in like words instead.
-    for (const m of line.matchAll(/\d[\d,]*(?:\.\d+)?/g)) {
+    for (const m of line.matchAll(/\d+(?:[,.]\d+)*/g)) {
       const raw = m[0];
-      if (!raw.includes(".") && Number(raw.replace(/,/g, "")) < 10) continue;
+      const value = Number(raw.split(group).join("").replace(decimal, "."));
+      if (!raw.includes(decimal) && value < 10) continue;
       const tok = {
         len: raw.length,
-        value: Number(raw.replace(/,/g, "")),
-        decimals: raw.includes(".") ? raw.split(".")[1].length : 0,
-        grouped: raw.includes(","),
+        value,
+        decimals: raw.includes(decimal) ? raw.split(decimal)[1].length : 0,
+        grouped: raw.includes(group),
         d: 240 + at(r, m.index) * 620
       };
       for (let k = 0; k < raw.length; k++) plan[r][m.index + k] = { kind: "num", tok, k };
@@ -126,16 +130,16 @@ export function planBuild(box) {
       }
     });
   });
-  return { plan, total };
+  return { plan, total, lang };
 }
 
-const format = (tok, v) => {
-  const s = tok.grouped ? v.toLocaleString("en-US", { minimumFractionDigits: tok.decimals, maximumFractionDigits: tok.decimals }) : v.toFixed(tok.decimals);
+const format = (tok, v, lang) => {
+  const s = lang || tok.grouped ? v.toLocaleString(lang ?? "en-US", { useGrouping: tok.grouped, minimumFractionDigits: tok.decimals, maximumFractionDigits: tok.decimals }) : v.toFixed(tok.decimals);
   return s.length >= tok.len ? s.slice(-tok.len) : " ".repeat(tok.len - s.length) + s;
 };
 
 /** One frame of a box building in, t ms after it started. */
-export function buildFrame(box, { plan }, t) {
+export function buildFrame(box, { plan, lang }, t) {
   const ch = box.ch.map((row) => row.map(() => " "));
   const cl = box.cl.map((row) => row.map(() => ""));
   plan.forEach((row, r) =>
@@ -151,7 +155,7 @@ export function buildFrame(box, { plan }, t) {
       else if (p.kind === "num") {
         const progress = Math.min(1, k / COUNT_STEPS);
         const v = progress >= 1 ? p.tok.value : Number((p.tok.value * progress).toFixed(p.tok.decimals));
-        out = format(p.tok, v)[p.k];
+        out = format(p.tok, v, lang)[p.k];
       }
       ch[r][c] = out;
       cl[r][c] = box.cl[r][c];
