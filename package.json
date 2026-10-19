@@ -1,0 +1,29 @@
+{
+  "name": "glyph-kit",
+  "version": "1.0.0",
+  "description": "Glyph kit - A skill for drawing figures in Claude",
+  "type": "module",
+  "scripts": {
+    "build": "node site/build.mjs",
+    "test": "node tests/run.mjs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alextraykov/glyph-kit.git"
+  },
+  "keywords": [
+    "claude",
+    "ai",
+    "diagrams",
+    "visualization"
+  ],
+  "author": "Alexander Traykov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alextraykov/glyph-kit/issues"
+  },
+  "homepage": "https://github.com/alextraykov/glyph-kit#readme",
+  "devDependencies": {
+    "@vercel/analytics": "^1.4.1"
+  }
+}
