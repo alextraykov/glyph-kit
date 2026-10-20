@@ -4,7 +4,7 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 
 ## Unreleased (0.3.0)
 
-- **Document layouts.** Five new kinds put a whole deliverable on one page: `readout`, `dashboard`, `prSummary`, `designReview` and `statusUpdate`. Each has fixed slots: a sentence, short lists and ordinary specs. Code places everything within 80 cells. Figures keep their order and natural width, and share a row only when they fit with a 4-cell gap. Figures without a source use the layout's. HTML and PDF export give one page in Departure Mono and the kit's palette. Guide: `reference/areas/layouts.md`.
+- **Document layouts.** Five new kinds put a whole deliverable on one page: `readout`, `dashboard`, `prSummary`, `designReview` and `statusUpdate`. Each has fixed slots: a sentence, short lists and ordinary specs. Code places everything within 80 cells. Figures keep their order and natural width, and share a row only when they fit with a 4-cell gap. Figures without a source use the layout's. HTML and PDF export give one page in Departure Mono and the kit's palette, with figures drawn on the text grid as SVG. A list of layouts exports as one document, a layout to a page. Guide: `reference/areas/layouts.md`.
 - **Screen layouts.** `appShell` (header, sidebar, content), `cardGrid`, `listDetail` and `modal` place the screen primitives in regions inside one frame.
 - **Faster text.** Measuring text that is only ASCII, box drawing, blocks and the kit's symbols skips Unicode segmentation. Output is unchanged, and figures draw about 4× faster.
 - Existing specs need no changes.

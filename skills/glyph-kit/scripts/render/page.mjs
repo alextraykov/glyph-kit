@@ -1,8 +1,10 @@
 // A document layout as one page of HTML (and PDF through export.mjs). It draws the same blocks as
 // the text form (areas/layouts.mjs compose()), in the same order and the same rows, in the kit's own
-// type (Departure Mono) and palette (themes.mjs). Figures stay text, coloured by role.
+// type (Departure Mono) and palette (themes.mjs). Figures are drawn as inline SVG on the text's grid
+// (render/svg.mjs), so bars stop short of the next row as they do in every other picture of a figure.
+// Several layouts make one document, one layout to a page.
 import { FONT_CSS } from "./font.mjs";
-import { PAINT_CSS, paint } from "./paint.mjs";
+import { figureSvg } from "./svg.mjs";
 import { SPACING, palette } from "./themes.mjs";
 import { isSample } from "../guard.mjs";
 import { resolve } from "../registry.mjs";
@@ -10,6 +12,8 @@ import { compose } from "../areas/layouts.mjs";
 import { body as textBody, drawInside, label } from "./text.mjs";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const CELL = 9;
+const ROW = 21;
 const MARK = { number: (i) => String(i + 1), arrow: () => "→", dot: () => "·", cross: () => "x" };
 
 const CSS = (p) => `
@@ -17,7 +21,8 @@ const CSS = (p) => `
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 var(--mono);-webkit-font-smoothing:antialiased;font-variant-ligatures:none}
-.p{max-width:calc(80ch + 112px);margin:0 auto;padding:72px 56px 88px;display:grid;gap:32px}
+.p{max-width:${80 * CELL + 112}px;margin:0 auto;padding:72px 56px 88px;display:grid;gap:32px}
+.p + .p{border-top:1px solid var(--frame)}
 .p-kicker{margin:0;color:var(--muted);font-size:12px;letter-spacing:.08em;text-transform:uppercase}
 .p-head{display:grid;gap:12px}
 .p-head h1{margin:0;font-size:28px;line-height:1.2;font-weight:400}
@@ -30,19 +35,24 @@ body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 var(--mono);-w
 .p-list{display:grid;gap:6px;margin:0;padding:0;list-style:none}
 .p-list li{display:grid;grid-template-columns:3ch 1fr;max-width:${SPACING.measure}ch}
 .p-list .m{color:var(--frame)}.p-list .m-cross{color:var(--flag)}
-.p-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:20px 4ch;break-inside:avoid}
+.p-row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:20px ${4 * CELL}px;break-inside:avoid}
 .p-fig{display:grid;gap:8px;margin:0;min-width:0}
 .p-fig figcaption{color:var(--muted)}
-.p-fig pre{margin:0;font:13px/${SPACING.figureLine} var(--mono);white-space:pre;overflow-x:auto}
+.p-fig svg{display:block;max-width:100%;height:auto}
 .p-more,.p-sources{margin:0;color:var(--muted)}
 .p-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;padding-top:20px;border-top:1px solid var(--frame);color:var(--muted);font-size:12px}
 .p-foot summary{cursor:pointer}
 .p-foot pre{margin:12px 0 0;padding:16px;overflow-x:auto;background:var(--panel);color:var(--ink);font:12px/${SPACING.figureLine} var(--mono)}
-${PAINT_CSS("--")}
 @page{size:A4;margin:16mm 14mm;background:${p.bg}}
 @media (max-width:700px){.p{padding:40px 16px 56px}}
-@media print{body{font-size:9.5pt;background:var(--bg)}.p{max-width:none;padding:0;gap:22px}.p-fig pre{font-size:8.6pt;overflow:visible}.p-foot details{display:none}}
+@media print{body{font-size:9.5pt;background:var(--bg)}.p{max-width:none;padding:0;gap:22px}.p + .p{border:0;break-before:page}.p-foot details{display:none}}
 `;
+
+function figureHtml(it, ctx) {
+  const fig = figureSvg(it.lines.join("\n"), { colors: ctx.colors, cell: CELL, row: ROW });
+  const name = label({ ...it.spec, source: it.spec.source ?? ctx.source });
+  return `<svg viewBox="0 0 ${fig.width} ${fig.height}" width="${fig.width}" height="${fig.height}" role="img" aria-label="${esc(name)}"><defs>${fig.defs}</defs><g font-family="'Departure Mono', Menlo, 'DejaVu Sans Mono', monospace" font-size="${ROW * 0.66}">${fig.svg}</g></svg>`;
+}
 
 function blockHtml(b, ctx) {
   if (b.type === "lead") return `<p class="p-lead">${esc(b.text)}</p>`;
@@ -52,18 +62,18 @@ function blockHtml(b, ctx) {
   if (b.type === "figures")
     return (
       b.rows
-        .map((row) => `<div class="p-row">${row.map((it) => `<figure class="p-fig">${it.caption ? `<figcaption>${esc(it.caption)}</figcaption>` : ""}<pre lang="${esc(it.spec.lang ?? ctx.lang)}" role="img" aria-label="${esc(label({ ...it.spec, source: it.spec.source ?? ctx.source }))}">${paint(it.lines.join("\n"))}</pre></figure>`).join("")}</div>`)
+        .map((row) => `<div class="p-row">${row.map((it) => `<figure class="p-fig">${it.caption ? `<figcaption>${esc(it.caption)}</figcaption>` : ""}${figureHtml(it, ctx)}</figure>`).join("")}</div>`)
         .join("") + (b.more ? `<p class="p-more">${esc(b.more)}</p>` : "")
     );
   return "";
 }
 
-/** One document layout spec as a self-contained page. theme: paper | ink | phosphor | gilt. */
-export function renderLayoutPage(spec, { theme } = {}) {
+/** One layout as a section of the document. */
+function layoutHtml(spec, colors) {
   const def = resolve(spec);
   const lang = spec.lang ?? "en";
   const blocks = compose(spec.kind, def.data, { source: spec.source, lang: spec.lang, draw: drawInside });
-  const ctx = { lang, source: spec.source };
+  const ctx = { lang, source: spec.source, colors };
   const sections = [];
   let open = null;
   for (const b of blocks) {
@@ -71,32 +81,39 @@ export function renderLayoutPage(spec, { theme } = {}) {
     if (b.type === "heading") {
       open = { heading: b.text, parts: [] };
       sections.push(open);
-    } else if (b.type === "lead" && !open) sections.push({ parts: [b] });
-    else if (open) open.parts.push(b);
+    } else if (open) open.parts.push(b);
     else sections.push({ parts: [b] });
   }
   const sources = [spec.source, ...(blocks.find((b) => b.type === "sources")?.list ?? [])].filter(Boolean);
   const body = sections
     .map((s) => (s.heading ? `<section class="p-sec"><h2>${esc(s.heading)}</h2>${s.parts.map((b) => blockHtml(b, ctx)).join("")}</section>` : s.parts.map((b) => blockHtml(b, ctx)).join("")))
     .join("\n");
-  const title = spec.title ?? def.label;
-  const text = textBody(spec);
+  return `<main class="p" lang="${esc(lang)}">
+<header class="p-head"><p class="p-kicker">${esc(def.label)}</p><h1>${esc(spec.title ?? def.label)}</h1>${isSample(spec.source) ? `<span class="p-chip">Sample data</span>` : ""}${spec.intent ? `<p class="p-line">${esc(spec.intent)}</p>` : ""}</header>
+${body}
+<footer class="p-foot"><span>${sources.length ? `${sources.length > 1 ? "Sources" : "Source"}: ${sources.map(esc).join("; ")}` : "Made with Glyph kit"}</span><details><summary>As text</summary><pre lang="${esc(lang)}">${esc(textBody(spec))}</pre></details></footer>
+</main>`;
+}
+
+/** Document layouts as one self-contained HTML document, one layout to a page when printed.
+ *  theme: paper | ink | phosphor | gilt; title names the document (default: the first layout's). */
+export function renderLayoutPages(specs, { theme, title } = {}) {
+  const list = [specs].flat();
+  const p = palette(theme ?? list[0]?.theme);
   return `<!doctype html>
-<html lang="${esc(lang)}">
+<html lang="${esc(list[0]?.lang ?? "en")}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(title)}</title>
-<style>${FONT_CSS}${CSS(palette(theme ?? spec.theme))}</style>
+<title>${esc(title ?? list[0]?.title ?? "Glyph kit")}</title>
+<style>${FONT_CSS}${CSS(p)}</style>
 </head>
 <body>
-<main class="p">
-<header class="p-head"><p class="p-kicker">${esc(def.label)}</p><h1>${esc(title)}</h1>${isSample(spec.source) ? `<span class="p-chip">Sample data</span>` : ""}${spec.intent ? `<p class="p-line">${esc(spec.intent)}</p>` : ""}</header>
-${body}
-<footer class="p-foot"><span>${sources.length ? `${sources.length > 1 ? "Sources" : "Source"}: ${sources.map(esc).join("; ")}` : "Made with Glyph kit"}</span><details><summary>As text</summary><pre lang="${esc(lang)}">${esc(text)}</pre></details></footer>
-</main>
+${list.map((spec) => layoutHtml(spec, p)).join("\n")}
 </body>
 </html>
 `;
 }
 
+/** One document layout spec as a self-contained page. */
+export const renderLayoutPage = (spec, options = {}) => renderLayoutPages([spec], options);

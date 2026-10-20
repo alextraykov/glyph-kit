@@ -6,7 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { body } from "../skills/glyph-kit/scripts/render/text.mjs";
 import { renderHtml } from "../skills/glyph-kit/scripts/render/html.mjs";
-import { renderLayoutPage } from "../skills/glyph-kit/scripts/render/page.mjs";
+import { renderLayoutPage, renderLayoutPages } from "../skills/glyph-kit/scripts/render/page.mjs";
 import { classify } from "../skills/glyph-kit/scripts/render/paint.mjs";
 import { assertFits, checkBoxes } from "../skills/glyph-kit/scripts/layout.mjs";
 import { pack } from "../skills/glyph-kit/scripts/areas/layouts.mjs";
@@ -94,6 +94,18 @@ test("the page uses the kit's type and palette and carries the same text", () =>
   assert.match(html, /<h2>Summary<\/h2>/);
   assert.ok(html.includes("It worked."));
   assert.equal(renderHtml(spec), renderLayoutPage(spec));
+  // Figures are SVG on the text grid, so a bar stops short of the row below it.
+  assert.match(html, /<svg viewBox="0 0 \d+ \d+"[^>]*role="img"/);
+  assert.match(html, /font-family="'Departure Mono'/);
+  assert.match(html, /height="15\.12"/);
+});
+
+test("several layouts make one document, one layout to a printed page", () => {
+  const html = renderLayoutPages([readout({}, { title: "One" }), { kind: "dashboard", title: "Two", source: "s", data: { tiles: [spark("A"), spark("B")] } }], { title: "Study" });
+  assert.equal(html.match(/<main class="p"/g).length, 2);
+  assert.match(html, /<title>Study<\/title>/);
+  assert.match(html, /\.p \+ \.p\{border:0;break-before:page\}/);
+  assert.equal(html.match(/@font-face/g).length, 1);
 });
 
 test("data files inside a layout's figures are read", () => {
