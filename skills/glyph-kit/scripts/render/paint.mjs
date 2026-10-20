@@ -3,14 +3,16 @@
 //   gk-d  data      █ ▓ ▒ eighth blocks, sparkline steps, ■        (the measured thing)
 //   gk-e  empty     ░                                              (the rest of a scale, projected, missing)
 //   gk-f  frame     box drawing, rulers, · and arrows              (structure)
-//   gk-x  problem   "fails", "blocked", "x missing", "▼▼ bad", "over"
+//   gk-x  problem   "fails", "blocked", "x missing", "▼▼ bad", "over" (a verdict, at the line's end)
 //   gk-ok success   "AAA", "AA", "done", "ok", "▲▲ great"
 import { cellWidth, graphemes } from "../text.mjs";
 
 const DATA = "█▓▒▀▄▌▐▏▎▍▋▊▉▁▂▃▅▆▇■";
 const EMPTY = "░";
 const FRAME = "─│┌┐└┘├┤┬┴┼━┃┏┓┗┛┣┫┳┻╋═║╔╗╚╝╠╣╦╩╬▕·┊►◄▲▼→↺";
-const PROBLEM = /\b(fails|blocked|x missing[a-z ]*|over)\b|▼▼ bad|\bx (?=[a-z])|^x(?=  )/g;
+// "fails" and "over" are verdicts: they count only at the end of a line, after the value, so a label
+// such as "Processes over time" stays plain.
+const PROBLEM = /\b(fails|over)(?=\s*$)|\b(blocked|x missing[a-z ]*)\b|▼▼ bad|\bx (?=[a-z])|^x(?=  )/g;
 const SAMPLE_STAMP = /SAMPLE DATA/g;
 const SUCCESS = /\b(AAA|AA large text only|AA|done|ok, approve|ok)\b|▲▲ great/g;
 

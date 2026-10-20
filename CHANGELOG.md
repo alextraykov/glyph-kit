@@ -2,6 +2,15 @@
 
 Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor version may change the spec format; the change is listed here with what to update.
 
+## Unreleased
+
+**Fixes**
+
+- **A comparison arrives as one move.** The before column steps in, and the after column starts as soon as it has settled, instead of 600ms later. A journey map's stages follow each other within 240ms, so the whole map lands within about 600ms.
+- **"over" in a label stays plain.** "over" and "fails" are painted as problems only as the verdict at the end of a line, so a label such as "Processes over time" is no longer red.
+- **Contrast thresholds on a narrow scale.** The 3, 4.5 and 7 labels keep a space between them; one that would touch its neighbour is dropped and its ┊ still marks the place.
+- `tools/gaps.mjs` reports how long each example's arrival sits still; the tests hold every example under 300ms.
+
 ## 0.2.0 — 2026-10-20
 
 **Motion**

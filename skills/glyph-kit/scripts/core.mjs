@@ -96,10 +96,11 @@ function compareLayout(rows, { headers = ["", "A", "B"], width: preferred = 10, 
   return { headers, capped, labels, labelW, cell, aCol, colW };
 }
 
-/** Where the after column starts, in cells. A deck prints it one step after the before column. */
+/** Where the before and after columns start, in cells. The before column steps in, and the after
+ *  column starts as soon as it has settled, so the pair reads as one comparison. */
 export function compareColumns(rows, options) {
   const { labelW, colW } = compareLayout(rows, options);
-  return { cuts: [labelW + 2 + colW], step: 600 };
+  return { cuts: [labelW + 2, labelW + 2 + colW], step: 120 };
 }
 
 /** Side-by-side comparison table. rows: [{ label, a, b, aText, bText }] with a and b as 0..1. */

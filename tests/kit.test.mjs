@@ -14,6 +14,7 @@ import { filmstrip, intentCard, stagger } from "../skills/glyph-kit/scripts/area
 import { anatomy, qaChecklist, redline } from "../skills/glyph-kit/scripts/areas/handoff.mjs";
 import { screen } from "../skills/glyph-kit/scripts/areas/wireframes.mjs";
 import { KIND_DOCS } from "../tools/docs.mjs";
+import { arrivalGap } from "../tools/gaps.mjs";
 import { lintBlock } from "../skills/glyph-kit/scripts/lint.mjs";
 import { AREAS, KINDS, resolve } from "../skills/glyph-kit/scripts/registry.mjs";
 import { renderDeck } from "../skills/glyph-kit/scripts/render/deck.mjs";
@@ -107,6 +108,13 @@ test("systems: contrast is computed, not guessed", () => {
   assert.equal(contrastRatio("#000000", "#ffffff").toFixed(0), "21");
   assert.equal(contrastRatio("#fff", "#777777").toFixed(2), "4.48");
   assert.match(contrast([{ label: "grey", fg: "#777777", bg: "#ffffff" }]), /4\.5:1  AA large text only/);
+  // Threshold labels never run together: on a narrow scale one is dropped instead ("3 4.57" at 24).
+  const pairs = [{ label: "ink", fg: "#111111", bg: "#ffffff" }];
+  for (let width = 8; width <= 42; width++) {
+    const head = contrast(pairs, { width }).split("\n")[0].trim().split(/\s+/);
+    assert.ok(head.every((m) => ["3", "4.5", "7", "21:1"].includes(m)) && head.at(-1) === "21:1", `width ${width}: ${head.join(" ")}`);
+  }
+  assert.equal(contrast(pairs, { width: 24 }).split("\n")[0].trim(), "3 4.5             21:1");
   assert.match(stateMatrix({ variants: ["a"], states: ["rest"], cells: {} }), /a  ░░/); // unknown means missing
 });
 
@@ -195,6 +203,10 @@ test("paint: roles, not decoration", async () => {
   assert.match(paintLine("x blocked  thing"), /<span class="gk-x">x blocked/);
   assert.match(paintLine("ratio 19.3:1  AAA"), /<span class="gk-ok">AAA<\/span>/);
   assert.equal(paintLine("<b>"), "&lt;b&gt;");
+  // "over" and "fails" are verdicts at the end of a line, not words in a label.
+  assert.doesNotMatch(paintLine("Processes over time  ████  12"), /gk-x/);
+  assert.doesNotMatch(paintLine("Checkout fails less  ████  12"), /gk-x/);
+  assert.match(paintLine("[ ████ ] 112% of the cap over"), /<span class="gk-x">over<\/span>/);
 });
 
 test("deck: one slide per spec, and markdown keeps the description", () => {
@@ -257,11 +269,21 @@ test("arrival: types with an order arrive in HTML and decks, and end on the exac
     const columns = { compare: compareColumns, emotionCurve: emotionColumns, journeyMap: journeyColumns }[spec.kind](def.data, spec.options ?? {});
     for (const cut of columns.cuts) assert.ok(lines.some((l) => l[cut] && l[cut] !== " " && l[cut - 1] === " "), `${spec.kind}: a column starts at ${cut}`);
   }
+  // No arrival sits still for more than 300ms before it settles: the after column of a comparison
+  // starts as soon as the before column has stepped, and journey stages follow each other closely.
+  for (const spec of specs) {
+    const g = arrivalGap(spec);
+    assert.ok(g.gap <= 300 && g.still <= 300, `${spec.kind}: still for ${Math.max(g.gap, g.still)}ms`);
+  }
+  const cmp = examples.metrics.find((s) => s.kind === "compare");
+  const order = KINDS.compare.arrive(body(cmp).split("\n"), resolve(cmp).data, cmp.options ?? {});
+  const [before, after] = compareColumns(resolve(cmp).data, cmp.options ?? {}).cuts;
+  assert.ok(order(1, before, "█") > 0 && order(1, after, "█") - order(1, before, "█") <= 120, "the after column follows the before column");
   // Reading order: frame first, then rows top to bottom.
   const log = examples.planning.find((s) => s.kind === "decisionLog");
-  const order = KINDS.decisionLog.arrive(body(log).split("\n"), log.data, {});
-  assert.equal(order(0, 0, "┌"), 0);
-  assert.ok(order(1, 2, "D") < order(3, 2, "O") && order(3, 2, "O") < order(4, 2, "O"));
+  const read = KINDS.decisionLog.arrive(body(log).split("\n"), log.data, {});
+  assert.equal(read(0, 0, "┌"), 0);
+  assert.ok(read(1, 2, "D") < read(3, 2, "O") && read(3, 2, "O") < read(4, 2, "O"));
   // Types without an order print as before (the processes keep their own motion).
   assert.doesNotMatch(renderHtml(examples.metrics.find((s) => s.kind === "funnel")), /class="gk-figure" data-arrive/);
   assert.doesNotMatch(renderDeck(examples.metrics.filter((s) => s.kind === "funnel")), /class="gk-fig gk-fig--arrive"/);
