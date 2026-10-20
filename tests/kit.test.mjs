@@ -11,7 +11,7 @@ import { board, impactEffort, swimlane } from "../skills/glyph-kit/scripts/areas
 import { contrastRatio, contrast, stateMatrix } from "../skills/glyph-kit/scripts/areas/systems.mjs";
 import { likert, quoteCard, taskStats, themeMatrix } from "../skills/glyph-kit/scripts/areas/research.mjs";
 import { filmstrip, intentCard, stagger } from "../skills/glyph-kit/scripts/areas/motion.mjs";
-import { qaChecklist, redline } from "../skills/glyph-kit/scripts/areas/handoff.mjs";
+import { anatomy, qaChecklist, redline } from "../skills/glyph-kit/scripts/areas/handoff.mjs";
 import { screen } from "../skills/glyph-kit/scripts/areas/wireframes.mjs";
 import { KIND_DOCS } from "../tools/docs.mjs";
 import { lintBlock } from "../skills/glyph-kit/scripts/lint.mjs";
@@ -113,6 +113,25 @@ test("systems: contrast is computed, not guessed", () => {
 test("handoff: labels never truncated, empty checklist", () => {
   assert.match(redline([{ label: "a long label", size: 1 }, { label: "8", size: 1000 }], { width: 10 }), /◄ a long label ►/);
   assert.match(qaChecklist([]), /^0 of 0 done/);
+});
+
+test("anatomy: numbered parts, dashed when optional, and refusals in plain words", () => {
+  const parts = [{ label: "Icon", optional: true }, { label: "Label", size: 3 }, { label: "Chevron", size: 1 }];
+  const row = anatomy({ container: { label: "Button" }, parts });
+  assert.match(row, /^┌ 1 ─+┐$/m);
+  assert.match(row, /┌ 2 ┄+┐  ┌ 3 ─+┐  ┌ 4 ─+┐/);
+  assert.match(row, /^2  Icon\s+optional$/m);
+  assert.match(row, /┄ dashed edge: an optional part/);
+  const card = anatomy({ direction: "column", container: { label: "Card" }, parts: [{ label: "Media", size: 3 }, { label: "Title" }] }).split("\n");
+  assert.equal(card.filter((l) => /^│  │\s+│  │$/.test(l)).length, 2); // Media keeps two extra lines of room
+  assert.ok(!card.join("\n").includes("dashed"));
+  const refuse = (data, re) => assert.throws(() => resolve({ kind: "anatomy", source: "s", data }), re);
+  refuse({ parts: [{ label: "a" }] }, /at least 2 parts/);
+  refuse({ parts: [{ label: "a" }, { label: "a" }] }, /Two parts are called "a"/);
+  refuse({ parts: Array.from({ length: 9 }, (_, i) => ({ label: `p${i}` })) }, /at most 8/);
+  refuse({ direction: "grid", parts: [] }, /use "row" or "column"/);
+  refuse({ parts: [{ label: "a", size: 0 }, { label: "b" }] }, /a size is a number above zero/);
+  refuse({ parts: ["one", "two", "three"].map((n) => ({ label: `A long name for part ${n}` })) }, /set direction to "column"/);
 });
 
 test("motion: stagger spacing, overshoot, wrapped intent", () => {

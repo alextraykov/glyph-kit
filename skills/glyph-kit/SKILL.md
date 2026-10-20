@@ -26,7 +26,7 @@ Work in the user's folder, not this skill's, so specs and outputs land there. `<
    | Roadmaps, priorities, ownership, timelines, decisions | `board` `impactEffort` `swimlane` `gantt` `statusKey` `decisionLog` |
    | Screens: one screen, an app shell, a card grid, list and detail, a modal | `screen` `responsive` `appShell` `cardGrid` `listDetail` `modal` |
    | Tokens, scales, contrast, component states, layers | `spacingScale` `typeScale` `contrast` `stateMatrix` `layerStack` `tokenTable` `table` |
-   | Redlines, QA checklists, before and after | `redline` `qaChecklist` `compare` |
+   | Redlines, QA checklists, component anatomy, before and after | `redline` `qaChecklist` `anatomy` `compare` |
    | Motion intent, timing, transitions, stagger, easing | `motionTiming` `intentCard` `transitionSpec` `stagger` `filmstrip` `easingTable` |
    | Work moving over time: rework loops, state machines, queues, rollouts, loading | `loop` `states` `queue` `rollout` `loading` |
    | A whole deliverable on one page: readout, dashboard, PR summary, design review, status update | `readout` `dashboard` `prSummary` `designReview` `statusUpdate` |
