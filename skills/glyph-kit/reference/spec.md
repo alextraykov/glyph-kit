@@ -17,17 +17,17 @@ Every artifact the kit makes is described by one JSON object:
 
 | Field | Required | What it is |
 |---|---|---|
-| `kind` | yes | One of the kinds listed by `node scripts/glyph-kit.mjs kinds`. |
-| `data` | yes | The shape each kind expects. Every area guide shows a full spec per kind. Or `"@file.csv"` / `"@file.json"`, read from next to the spec by the command line: CSV becomes a list of rows keyed by the header, with numbers as numbers. |
+| `kind` | yes | One of the types listed by `node scripts/glyph-kit.mjs types`. |
+| `data` | yes | The shape each type expects. Every area guide shows a full spec per type. Or `"@file.csv"` / `"@file.json"`, read from next to the spec by the command line: CSV becomes a list of rows keyed by the header, with numbers as numbers. |
 | `title` | no | A short name. Shown above the figure, used as the slide title. |
 | `intent` | no | Why this artifact exists, in one sentence. Goes into Markdown, HTML and decks; not into the bare text figure. |
 | `source` | when there are numbers | Where the data came from, printed under the figure in every form. A spec whose data holds numbers is refused without one. Starting it with "Illustrative" or "Sample" stamps SAMPLE DATA on the figure. With `"@file"` data and no source, the source names the file. |
 | `label` | no | The sentence screen readers get. Generated from the data when absent. |
 | `options` | no | Layout settings: widths, scales, column labels. |
-| `motion` | no | For a `funnel`: `true` plays it as people moving through the steps. The other moving kinds always move; every other kind stays still. |
+| `motion` | no | For a `funnel`: `true` plays it as people moving through the steps. The six processes always move; every other type arrives once in HTML pages and decks, then stays still. |
 | `lang` | no | A BCP 47 language tag, such as `de` or `tr`, for numbers, casing and export language. |
 
-Each kind also checks its own data and refuses what can't be true, in plain words: a funnel that grows, a value outside its range, a test result outside its interval, a timeline that ends before it starts, dates out of order, a moving state machine whose path skips a transition.
+Each type also checks its own data and refuses what can't be true, in plain words: a funnel that grows, a value outside its range, a test result outside its interval, a timeline that ends before it starts, dates out of order, a moving state machine whose path skips a transition.
 
 A file may hold one spec or a list of them. Keep specs next to the document that uses them (`docs/specs/*.json`), so the figure, its data and its text change in one commit.
 
@@ -75,7 +75,7 @@ To find line numbers for `steps`, render the spec with `--to text` and count fro
 
 **Themes and colour.** `theme` picks a palette: `paper` (light, the default), `ink` (dark), `phosphor` (Synapse's green on near-black) or `gilt` (Our Saints' gold on black). In decks and HTML prototypes, figures are coloured by role, never for decoration: data glyphs (`█▓▒`, eighths, `■`) in the data colour, the empty part of a scale (`░`) dimmed, frames and rulers muted, problems (`fails`, `blocked`, `x missing`, `over`) in the warning colour, passes (`AA`, `AAA`, `done`, `ok`) in the success colour. In prototypes the roles come from the map's `accent`, `muted`, `danger` and `ok` tokens. The text form stays plain.
 
-Three decks ship as examples: `export-review.json` (fictional, every kind of slide), `motion-audit.json` and `usage-case.json` (real work, with the figures already published).
+Three decks ship as examples: `export-review.json` (fictional, every type of slide), `motion-audit.json` and `usage-case.json` (real work, with the figures already published).
 
 ## The design-system map
 

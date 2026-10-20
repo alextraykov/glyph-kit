@@ -36,9 +36,9 @@ for (const [area, { label: areaLabel, kinds }] of Object.entries(AREAS)) {
     "",
     AREA_DOCS[area],
     "",
-    `Kinds: ${Object.keys(kinds).map((k) => `\`${k}\``).join(", ")}.`,
+    `Types: ${Object.keys(kinds).map((k) => `\`${k}\``).join(", ")}.`,
     "",
-    `Each kind shows its figure and the spec that made it. \`node scripts/glyph-kit.mjs guide <kind>\` prints one kind's section without the figure.`,
+    `Each type shows its figure and the spec that made it; the spec's \`kind\` field names the type. \`node scripts/glyph-kit.mjs guide <type>\` prints one type's section without the figure.`,
     ""
   ];
   for (const [kind, def] of Object.entries(kinds)) {
@@ -81,14 +81,14 @@ What the kit is good for, measured on its own ${r.length} example specs, and wha
 
 | Claim | Result |
 |---|---|
-| Fast to compute | Median **${med(r.map((x) => x.us)).toFixed(1)} μs** to generate a figure in Node; the slowest kind took ${Math.max(...r.map((x) => x.us)).toFixed(1)} μs. Nothing runs on a GPU and nothing is drawn to pixels. |
+| Fast to compute | Median **${med(r.map((x) => x.us)).toFixed(1)} μs** to generate a figure in Node; the slowest type took ${Math.max(...r.map((x) => x.us)).toFixed(1)} μs. Nothing runs on a GPU and nothing is drawn to pixels. |
 | Small | Median **${med(r.map((x) => x.textBytes))} bytes** as text. The same figure as a PNG screenshot (2× density, cropped to the figure) has a median of **${kb(med(r.map((x) => x.pngBytes)))}**, about ${med(r.map((x) => x.pngBytes / x.textBytes)).toFixed(0)}× larger. As a self-contained HTML page: median ${kb(med(r.map((x) => x.htmlBytes)))}, most of it the shared stylesheet. |
 | Image tokens | Those PNGs cost **${Math.min(...r.map((x) => x.imageTokens))}–${Math.max(...r.map((x) => x.imageTokens))} image tokens** each (median ${med(r.map((x) => x.imageTokens))}) by Anthropic's formula, ⌈width ÷ 28⌉ × ⌈height ÷ 28⌉, whatever the figure says. |
 ${tokenRow}
 
 Selected rows:
 
-| Kind | Generate | Text | HTML page | PNG | Image tokens |
+| Type | Generate | Text | HTML page | PNG | Image tokens |
 |---|---|---|---|---|---|
 ${tbl}
 
@@ -110,7 +110,7 @@ Made-up numbers must never look real, and drawings shouldn't fill a model's cont
 - **No source, no numbers.** A spec whose data holds numbers is refused without a \`source\`.
 - **Sample data is stamped.** A source that starts with "Illustrative" or "Sample" puts SAMPLE DATA on the figure in every format: text, Markdown, MDX, SVG, PNG, PDF, decks, prototypes and moving diagrams.
 - **Data from files.** \`"data": "@results.csv"\` reads the numbers from your file, not from a model's memory, and the source line names the file.
-- **Each kind checks its data.** A funnel that grows, a value outside its range, a timeline that ends before it starts or dates out of order are refused with a sentence that says what's wrong.
+- **Each type checks its data.** A funnel that grows, a value outside its range, a timeline that ends before it starts or dates out of order are refused with a sentence that says what's wrong.
 - **Ask, don't invent.** The skill tells the agent to ask for missing data, or to mark it illustrative.
 - **Agents pass specs, people see drawings.** A spec is a few hundred bytes of plain JSON. Drawings are made when a person needs one; \`--compact\` gives plain ASCII for the times a drawing has to go into a model's context, and the checker warns when a figure likely costs more as text than as an image.
 
@@ -126,4 +126,4 @@ Made-up numbers must never look real, and drawings shouldn't fill a model's cont
   console.log("docs/benefits.md");
 }
 
-writeFileSync(join(root, "reference/live.md"), LIVE_DOC + "| Kind | Motion |\n|---|---|\n" + Object.entries(KINDS).filter(([, def]) => def.motion).map(([kind, def]) => `| \`${kind}\` | ${KIND_DOCS[kind]?.motion ?? def.label} |`).join("\n") + "\n");
+writeFileSync(join(root, "reference/live.md"), LIVE_DOC + "| Type | Motion |\n|---|---|\n" + Object.entries(KINDS).filter(([, def]) => def.motion).map(([kind, def]) => `| \`${kind}\` | ${KIND_DOCS[kind]?.motion ?? def.label} |`).join("\n") + "\n");

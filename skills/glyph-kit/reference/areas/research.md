@@ -2,9 +2,9 @@
 
 Turn interviews, surveys and usability tests into evidence a team can read in a PR or a ticket. Every figure keeps who said it and where it came from.
 
-Kinds: `likert`, `themeMatrix`, `affinity`, `quoteCard`, `taskStats`, `emotionCurve`.
+Types: `likert`, `themeMatrix`, `affinity`, `quoteCard`, `taskStats`, `emotionCurve`.
 
-Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
+Each type shows its figure and the spec that made it; the spec's `kind` field names the type. `node scripts/glyph-kit.mjs guide <type>` prints one type's section without the figure.
 
 ## Likert answers
 

@@ -2,9 +2,9 @@
 
 Write motion down as a decision before anyone animates it: why it moves, what starts it, how long, which curve, and what reduced motion shows instead. The HTML form plays it.
 
-Kinds: `motionTiming`, `intentCard`, `transitionSpec`, `stagger`, `filmstrip`, `easingTable`.
+Types: `motionTiming`, `intentCard`, `transitionSpec`, `stagger`, `filmstrip`, `easingTable`.
 
-Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
+Each type shows its figure and the spec that made it; the spec's `kind` field names the type. `node scripts/glyph-kit.mjs guide <type>` prints one type's section without the figure.
 
 ## Motion timing
 

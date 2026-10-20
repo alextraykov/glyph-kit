@@ -36,7 +36,7 @@ for (const [area, { kinds }] of Object.entries(AREAS)) {
 export function resolve(spec) {
   if (!spec || typeof spec !== "object") throw new Error("A spec must be an object with a kind and data.");
   const def = KINDS[spec.kind];
-  if (!def) throw new Error(`Unknown kind "${spec.kind}". Known kinds: ${Object.keys(KINDS).join(", ")}.`);
+  if (!def) throw new Error(`Unknown type "${spec.kind}". Known types: ${Object.keys(KINDS).join(", ")}.`);
   if (spec.data === undefined) throw new Error(`The ${spec.kind} spec has no data.`);
   if (typeof spec.data === "string" && spec.data.startsWith("@")) guard(spec, { label: def.label });
   const data = def.normalize ? def.normalize(spec.data) : spec.data;

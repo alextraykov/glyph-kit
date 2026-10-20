@@ -10,15 +10,15 @@ metadata:
 
 # Glyph kit
 
-You write a **spec**, a small JSON object; a script with no dependencies draws it. The kit lays out every figure, so its output always lines up: never draw a figure by hand when a kind covers it.
+You write a **spec**, a small JSON object; a script with no dependencies draws it. The kit lays out every figure, so its output always lines up: never draw a figure by hand when a type covers it.
 
 Work in the user's folder, not this skill's, so specs and outputs land there. `<skill>` below is this skill's folder; file paths in this guide are relative to it.
 
 ## Make one
 
-1. **Pick the kind** from this table.
+1. **Pick the type** from this table; it goes in the spec's `kind` field.
 
-   | The task is about | Kinds |
+   | The task is about | Types |
    |---|---|
    | Interviews, surveys, usability tests, quotes | `likert` `themeMatrix` `affinity` `quoteCard` `taskStats` `emotionCurve` |
    | Funnels, retention, A/B results, metrics, charts | `funnel` `cohort` `abResult` `metricPanel` `barChart` `compare` `forecast` `meter` `sparkline` `heatmap` `calendarStrip` |
@@ -31,7 +31,7 @@ Work in the user's folder, not this skill's, so specs and outputs land there. `<
    | Work moving over time: rework loops, state machines, queues, rollouts, loading | `loop` `states` `queue` `rollout` `loading` |
    | A whole deliverable on one page: readout, dashboard, PR summary, design review, status update | `readout` `dashboard` `prSummary` `designReview` `statusUpdate` |
 
-   Unsure between two? Read the area's guide, `reference/areas/<area>.md` (research, metrics, flows, planning, wireframes, systems, handoff, motion, process, layouts): it shows each kind drawn.
+   Unsure between two? Read the area's guide, `reference/areas/<area>.md` (research, metrics, flows, planning, wireframes, systems, handoff, motion, process, layouts): it shows each type drawn.
 2. **Get its data shape**: `node <skill>/scripts/glyph-kit.mjs guide <kind>` prints the kind's example spec and what to watch for. Copy that shape; don't read the scripts.
 3. **Write the spec** as JSON next to the document that uses it:
 
@@ -82,7 +82,7 @@ When another agent or a later turn needs the figure, pass the spec (a few hundre
 3. **Numbers are printed as text** next to the glyphs, and every figure with numbers shows its source.
 4. **Labels may use any script.** Width is counted in cells: CJK takes two. Set `lang` for casing and number format. Font and right-to-left limits: `reference/characters.md`.
 5. **Every type moves in HTML and decks.** The processes and a test result with readings over time keep moving; every other type arrives once, in the order that carries its point, then stays still. Each keeps a still that makes the same point; it is what reduced motion, print and Markdown show. Say what the motion shows in the sentence next to it.
-6. **Drawing by hand** (only when no kind fits): use the glyphs in `reference/characters.md`, follow `reference/layout.md` (two cells of padding inside a box, four between boxes, at most 80 columns), then lint.
+6. **Drawing by hand** (only when no type fits): use the glyphs in `reference/characters.md`, follow `reference/layout.md` (two cells of padding inside a box, four between boxes, at most 80 columns), then lint.
 7. **Going up in fidelity** (prototype, production code): use only the components and tokens the design-system map names, and ask when it has no entry. `reference/spec.md` describes the spec fields and the map.
 
 If figures look misaligned where the user reads them, the font is drawing a glyph at the wrong width: suggest Departure Mono (free, departuremono.com), never require it.

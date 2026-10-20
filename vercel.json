@@ -7,6 +7,16 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/kinds{/}?",
+      "destination": "/types/",
+      "permanent": true
+    },
+    {
+      "source": "/glyph-kit/kinds{/}?",
+      "destination": "/glyph-kit/types/",
+      "permanent": true
+    },
+    {
       "source": "/",
       "missing": [
         {

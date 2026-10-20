@@ -2,9 +2,9 @@
 
 Processes over time: work moving between stages, waiting, returning and finishing.
 
-Kinds: `loop`, `states`, `queue`, `rollout`, `loading`.
+Types: `loop`, `states`, `queue`, `rollout`, `loading`.
 
-Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
+Each type shows its figure and the spec that made it; the spec's `kind` field names the type. `node scripts/glyph-kit.mjs guide <type>` prints one type's section without the figure.
 
 ## Rework loop
 

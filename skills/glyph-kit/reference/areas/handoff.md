@@ -2,9 +2,9 @@
 
 Measurements and checklists for handing work to engineering and checking what came back.
 
-Kinds: `redline`, `qaChecklist`, `compare`.
+Types: `redline`, `qaChecklist`, `compare`.
 
-Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
+Each type shows its figure and the spec that made it; the spec's `kind` field names the type. `node scripts/glyph-kit.mjs guide <type>` prints one type's section without the figure.
 
 ## Spacing redline
 

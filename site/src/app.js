@@ -72,7 +72,7 @@ document.addEventListener("click", (event) => {
 });
 document.querySelector("[data-try]")?.addEventListener("submit", () => track("Build figure"));
 
-// The Kinds page's area menu stays under the top bar and marks the area in view.
+// The Types page's area menu stays under the top bar and marks the area in view.
 const jump = document.querySelector(".jump");
 if (jump) {
   const top = document.querySelector(".top");

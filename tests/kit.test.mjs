@@ -58,7 +58,7 @@ test("every example renders, lints clean and has a readable label", () => {
 });
 
 test("specs are checked in plain words", () => {
-  assert.throws(() => resolve({ kind: "pie", data: [] }), /Unknown kind "pie"/);
+  assert.throws(() => resolve({ kind: "pie", data: [] }), /Unknown type "pie"/);
   assert.throws(() => resolve({ kind: "funnel" }), /has no data/);
   assert.throws(() => screen({ rows: [{ type: "carousel" }] }), /Unknown wireframe primitive: carousel/);
 });

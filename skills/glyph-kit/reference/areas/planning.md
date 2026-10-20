@@ -2,9 +2,9 @@
 
 Roadmaps, priorities, ownership and decisions in a form that lives next to the work and diffs when plans change.
 
-Kinds: `board`, `impactEffort`, `swimlane`, `gantt`, `statusKey`, `decisionLog`.
+Types: `board`, `impactEffort`, `swimlane`, `gantt`, `statusKey`, `decisionLog`.
 
-Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
+Each type shows its figure and the spec that made it; the spec's `kind` field names the type. `node scripts/glyph-kit.mjs guide <type>` prints one type's section without the figure.
 
 ## Now, next, later
 

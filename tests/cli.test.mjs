@@ -25,7 +25,7 @@ test("guide covers decks, reports and the spec, and names the kinds when it does
   for (const topic of ["deck", "report", "spec"]) assert.match(run(["guide", topic]).stdout, /^## /);
   const r = run(["guide", "pie"]);
   assert.equal(r.status, 1);
-  assert.match(r.stderr, /Unknown kind "pie"\. Known kinds: .*branchFlow/);
+  assert.match(r.stderr, /Unknown type "pie"\. Known types: .*branchFlow/);
 });
 
 test("labels cut to fit are listed on stderr with their limit; stdout is unchanged", () => {

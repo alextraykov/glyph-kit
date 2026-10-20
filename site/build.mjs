@@ -102,6 +102,9 @@ const stats = {
   tokensLow: Math.min(...m.map((r) => r.imageTokens)),
   tokensHigh: Math.max(...m.map((r) => r.imageTokens))
 };
+// The cost study: the kit against text drawn by hand and HTML/JS, in Claude Code and through the API.
+const study = JSON.parse(readFileSync(join(root, "docs/cost-study.json"), "utf8"));
+const usd = (n) => `$${n.toFixed(2)}`;
 const kindCount = Object.keys(KINDS).length;
 const areaCount = Object.keys(AREAS).length;
 // Size of the release zip, when it has been packed (node scripts/pack.mjs); otherwise left out.
@@ -206,7 +209,7 @@ ${current === "home" && TURNSTILE_SITE_KEY ? '<script src="https://challenges.cl
 <body>
 <header class="top"><div class="shell">
   <a class="brand" href="/"><img src="/icon.svg" alt="" width="22" height="22">Glyph kit</a>
-  <nav class="nav" aria-label="Site"><a href="/how-to-use/"${current === "guide" ? ' aria-current="page"' : ""}>How to use</a><a href="/kinds/"${current === "kinds" ? ' aria-current="page"' : ""}>Kinds</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a><a href="${REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changes</a><a href="https://traykov.cc">traykov.cc</a><button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme">Dark</button></nav>
+  <nav class="nav" aria-label="Site"><a href="/how-to-use/"${current === "guide" ? ' aria-current="page"' : ""}>How to use</a><a href="/types/"${current === "types" ? ' aria-current="page"' : ""}>Types</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a><a href="${REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changes</a><a href="https://traykov.cc">traykov.cc</a><button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme">Dark</button></nav>
 </div></header>
 <main class="shell">
 ${content}
@@ -396,7 +399,7 @@ const guide = page({
 <nav class="jump" aria-label="Formats"><a href="#start">Start</a><a href="#rules">Quality</a>${GUIDE.map((g) => `<a href="#${g.id}">${esc(g.title)}</a>`).join("")}<a href="#handover">Before you hand over</a><a href="#wrong">When it looks wrong</a></nav>
 
 <section class="section" id="start" aria-labelledby="start-title">
-  <header class="heading"><h2 id="start-title">Start</h2><p>Install once, then ask the way you'd ask a colleague. The agent picks the kind of figure, writes the data as a small spec, and code draws it.</p></header>
+  <header class="heading"><h2 id="start-title">Start</h2><p>Install once, then ask the way you'd ask a colleague. The agent picks the type of figure, writes the data as a small spec, and code draws it.</p></header>
   ${moved("start")}
   ${install}
   <ul class="asks">${USE_ASKS.map((a) => `<li>“${esc(a)}”</li>`).join("")}</ul>
@@ -447,7 +450,7 @@ const home = page({
   content: `
 <section class="hero" aria-labelledby="title">
   <div class="hero__inner" data-depth="0.5" data-lag>
-    <p class="kicker">Free · MIT · ${kindCount} kinds · v${plugin.version}</p>
+    <p class="kicker">Free · MIT · ${kindCount} types · v${plugin.version}</p>
     <h1 id="title">Glyph kit.</h1>
     <div class="hero__body">
       <div class="hero__copy">
@@ -467,10 +470,12 @@ const home = page({
 <section class="section" aria-labelledby="cheap">
   <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Cost</p><h2 id="cheap">Less to make. Less to send.</h2></header>
   <div class="stats">
+    <article class="stat"><p class="label">Fewer tokens written</p><strong>${Math.round(study.outputVsHtml.moving)}×</strong><p>For a moving diagram, against HTML/JS; about ${Math.round(study.outputVsHtml.funnel)}× for a funnel or a screen. Fewer on every run.</p></article>
+    <article class="stat"><p class="label">A moving diagram in Claude Code</p><strong>${usd(study.claudeCode.moving.kit)}</strong><p>Against ${usd(study.claudeCode.moving.html)} as HTML/JS. Cheaper on every run for a funnel, a screen, a deck and a moving diagram; for a simple flow, HTML cost less.</p></article>
+    <article class="stat"><p class="label">Ended correct</p><strong>${study.correct.kit} of ${study.correct.runs}</strong><p>Drawn by hand: ${study.correct.byHand}. HTML/JS: ${study.correct.html}.</p></article>
     <article class="stat"><p class="label">To draw a figure</p><strong>${stats.us} μs</strong><p>Median, no browser.</p></article>
-    <article class="stat"><p class="label">As text</p><strong>${stats.text} bytes</strong><p>${stats.ratio}× smaller than an image.</p></article>
-    <article class="stat"><p class="label">As an image, for a model</p><strong>${stats.tokens} tokens</strong><p>Median.</p></article>
   </div>
+  <p class="stats-note">${study.model}, ${study.runs} runs, ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}, at ${study.prices}.</p>
 </section>
 
 <section class="section" aria-labelledby="use">
@@ -488,7 +493,7 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="areas">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Coverage</p><h2 id="areas">${kindCount} kinds. ${areaCount} areas.</h2><a class="text-link" href="/kinds/">Every kind</a></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Coverage</p><h2 id="areas">${kindCount} types. ${areaCount} areas.</h2><a class="text-link" href="/types/">Every type</a></header>
   <div class="areas">${Object.entries(AREAS).map(([id, area], i) => `<article class="area"><h3>${esc(area.label)}</h3>${figure(examples[id][0])}<p>${Object.values(area.kinds).map((k) => esc(k.label)).join(" · ")}</p></article>`).join("\n")}</div>
 </section>
 
@@ -533,12 +538,12 @@ const home = page({
 
 // ── Every kind ─────────────────────────────────────────────────────────────────────────────────
 const kinds = page({
-  path: "/kinds/",
-  current: "kinds",
-  title: "Every kind · Glyph kit",
-  description: `All ${kindCount} kinds of figure in Glyph kit, each with its motion and what it is for.`,
+  path: "/types/",
+  current: "types",
+  title: "Every type · Glyph kit",
+  description: `All ${kindCount} types of figure in Glyph kit, each with its motion and what it is for.`,
   content: `
-<header class="heading"><p class="kicker">Every kind</p><h2>${kindCount} figures. Every one moves.</h2><p>Each is drawn here by the kit itself, from its example data. All of it is sample data, and it says so on the figure.</p></header>
+<header class="heading"><p class="kicker">Every type</p><h2>${kindCount} figures. Every one moves.</h2><p>Each is drawn here by the kit itself, from its example data. All of it is sample data, and it says so on the figure.</p></header>
 <nav class="jump" aria-label="Areas">${Object.entries(AREAS).map(([id, a]) => `<a href="#${id}">${esc(a.label)}</a>`).join("")}<a href="#moving">Moving diagrams</a></nav>
 ${Object.entries(AREAS).map(([id, area]) => {
   const seen = new Set();
@@ -565,9 +570,9 @@ for (const id of Object.keys(liveSpecs)) {
 
 // ── Write ──────────────────────────────────────────────────────────────────────────────────────
 rmSync(dist, { recursive: true, force: true });
-mkdirSync(join(out, "kinds"), { recursive: true });
+mkdirSync(join(out, "types"), { recursive: true });
 writeFileSync(join(out, "index.html"), based(home));
-writeFileSync(join(out, "kinds/index.html"), based(kinds));
+writeFileSync(join(out, "types/index.html"), based(kinds));
 mkdirSync(join(out, "how-to-use"), { recursive: true });
 writeFileSync(join(out, "how-to-use/index.html"), based(guide));
 cpSync(join(root, "site/src/style.css"), join(out, "style.css"));
@@ -598,4 +603,4 @@ for (const spec of Object.values(liveSpecs)) {
   skeletons[`moving:${spec.kind}`] = stillGrid(make, still).toText();
 }
 writeFileSync(join(out, "skeletons.json"), JSON.stringify(skeletons));
-console.log(`site/dist: ${readdirSync(out).length} entries, ${moving.length} moving diagrams, ${kindCount} kinds`);
+console.log(`site/dist: ${readdirSync(out).length} entries, ${moving.length} moving diagrams, ${kindCount} types`);

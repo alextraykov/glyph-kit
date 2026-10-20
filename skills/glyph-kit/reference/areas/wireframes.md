@@ -2,9 +2,9 @@
 
 Screens built from a small set of primitives. The same primitive names map to real components in the design-system map, which is what lets a text wireframe become a prototype and then production code without reinterpretation.
 
-Kinds: `screen`, `responsive`, `appShell`, `cardGrid`, `listDetail`, `modal`.
+Types: `screen`, `responsive`, `appShell`, `cardGrid`, `listDetail`, `modal`.
 
-Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
+Each type shows its figure and the spec that made it; the spec's `kind` field names the type. `node scripts/glyph-kit.mjs guide <type>` prints one type's section without the figure.
 
 ## Screen wireframe
 

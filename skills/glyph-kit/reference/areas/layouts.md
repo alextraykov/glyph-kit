@@ -2,9 +2,9 @@
 
 Whole deliverables on one page: a readout, a dashboard, a PR summary, a design review or a status update. Fill the slots with a sentence, short lists and ordinary specs; code places everything within 80 cells, putting narrow figures side by side and stacking the rest. Figures without their own source use the layout's. Export to HTML or PDF for a finished page in the kit's type; a file holding a list of layouts exports as one document, a layout to a page. Pick by the ask: a write-up or one-pager is a readout; weekly numbers a dashboard; what a PR changed a prSummary; choosing between options a designReview; where work stands a statusUpdate. When unsure, use a readout.
 
-Kinds: `readout`, `dashboard`, `prSummary`, `designReview`, `statusUpdate`.
+Types: `readout`, `dashboard`, `prSummary`, `designReview`, `statusUpdate`.
 
-Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
+Each type shows its figure and the spec that made it; the spec's `kind` field names the type. `node scripts/glyph-kit.mjs guide <type>` prints one type's section without the figure.
 
 ## Readout
 
@@ -125,7 +125,7 @@ Tickets fell after the onboarding fix.
 }
 ```
 
-**Watch for:** Tiles keep their natural width and share a row when they fit in 80 cells: narrow kinds (meter, sparkline) pack two or three to a row.
+**Watch for:** Tiles keep their natural width and share a row when they fit in 80 cells: narrow types (meter, sparkline) pack two or three to a row.
 
 ## PR summary
 
@@ -179,7 +179,7 @@ RISKS ────────────────────────�
 }
 ```
 
-**Watch for:** Before and after use the same kind and scale; each up to 38 cells wide sits side by side.
+**Watch for:** Before and after use the same type and scale; each up to 38 cells wide sits side by side.
 
 ## Design review
 
@@ -234,7 +234,7 @@ OPEN QUESTIONS ─────────────────────�
 }
 ```
 
-**Watch for:** Give each option a title; draw them with the same kind. Options up to 38 cells wide sit side by side.
+**Watch for:** Give each option a title; draw them with the same type. Options up to 38 cells wide sit side by side.
 
 ## Status update
 

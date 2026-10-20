@@ -4,7 +4,7 @@
 //   node glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map design-system.map.json]
 //                         (the file may hold one spec or a list of them)
 //   node glyph-kit.mjs deck <deck.json | a.json b.json …> [--title "Name"] [--map …]   (HTML to stdout)
-//   node glyph-kit.mjs kinds                                                  (lists every kind by area)
+//   node glyph-kit.mjs types                                                  (lists every type by area; `kinds` works too)
 //   node glyph-kit.mjs guide <kind | deck | report | spec>                    (one kind's example spec and notes)
 //   node glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme name]   (a moving diagram)
 //
@@ -49,7 +49,7 @@ try {
   const map = mapFile ? read(mapFile) : undefined;
   const [command, ...files] = args;
 
-  if (command === "kinds") {
+  if (command === "types" || command === "kinds") {
     const { AREAS } = await import("./registry.mjs");
     const { moves } = await import("./motion.mjs");
     for (const [area, { label, kinds }] of Object.entries(AREAS)) {
@@ -71,7 +71,7 @@ try {
     else {
       const { KINDS } = await import("./registry.mjs");
       const def = KINDS[name];
-      if (!def) throw new Error(`Unknown kind "${name}". Known kinds: ${Object.keys(KINDS).join(", ")}; or guide deck, report, spec.`);
+      if (!def) throw new Error(`Unknown type "${name}". Known types: ${Object.keys(KINDS).join(", ")}; or guide deck, report, spec.`);
       const lines = readFileSync(join(ref, "areas", `${def.area}.md`), "utf8").split("\n");
       const at = lines.indexOf(`\`kind: "${name}"\``);
       const start = lines.slice(0, at).findLastIndex((l) => /^## /.test(l));

@@ -140,7 +140,7 @@ function editableData(spec, edit, error) {
 }
 function renderData(target, spec, edit) {
   const meta = el("dl", "data__meta");
-  for (const [key, label] of [["kind", "Kind"], ["title", "Title"], ["intent", "Why"], ["source", "Source"]]) {
+  for (const [key, label] of [["kind", "Type"], ["title", "Title"], ["intent", "Why"], ["source", "Source"]]) {
     if (spec[key] === undefined) continue;
     meta.append(el("dt", "label", label), el("dd", "", String(spec[key])));
   }

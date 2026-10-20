@@ -10,9 +10,9 @@ Arrivals play in HTML pages and decks, once, when a figure comes into view; a sm
 
 Cell-grid playback repaints text rather than using compositor transforms. Layout and routes are precomputed, the page is redrawn only when the step changes, and off-screen players stop. When a page has several moving diagrams, only the one most in view plays.
 
-## Kinds that move
+## Types that keep moving
 
-| Kind | Motion |
+| Type | Motion |
 |---|---|
 | `funnel` | People fall through the steps and departures drift out to the side. |
 | `abResult` | Only with readings over time: give `data` as `{ days, readings: [{ day, people, variants }] }`. The intervals narrow reading by reading, numbers change in place and the verdict switches when the intervals part. The still is the last reading, with a line saying how long they overlapped. |

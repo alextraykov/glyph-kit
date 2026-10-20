@@ -2,9 +2,9 @@
 
 Agree on paths, states and journeys before anyone designs a screen. Text flows are quick to change in review and easy for an agent to turn into routes and state.
 
-Kinds: `flow`, `branchFlow`, `stateMachine`, `journeyMap`, `tree`.
+Types: `flow`, `branchFlow`, `stateMachine`, `journeyMap`, `tree`.
 
-Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
+Each type shows its figure and the spec that made it; the spec's `kind` field names the type. `node scripts/glyph-kit.mjs guide <type>` prints one type's section without the figure.
 
 ## Linear flow
 

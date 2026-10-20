@@ -19,7 +19,8 @@ import { compact, countTokens, estimateTextTokens } from "../skills/glyph-kit/sc
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "../skills/glyph-kit");
 const docsDir = join(here, "../docs");
-const specs = Object.keys(AREAS).flatMap((a) => JSON.parse(readFileSync(join(here, "examples", `${a}.json`), "utf8")).map((s) => ({ area: a, ...s })));
+// Per figure: document layouts are pages of other figures, so they are left out.
+const specs = Object.keys(AREAS).filter((a) => a !== "layouts").flatMap((a) => JSON.parse(readFileSync(join(here, "examples", `${a}.json`), "utf8")).map((s) => ({ area: a, ...s })));
 const bytes = (s) => Buffer.byteLength(s, "utf8");
 const median = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
 
@@ -40,7 +41,7 @@ let pngNote = "PNG not measured: Playwright isn't installed.";
 try {
   const { chromium } = await import("playwright");
   const browser = await chromium.launch();
-  const page = await browser.newPage({ deviceScaleFactor: 2, viewport: { width: 1200, height: 900 } });
+  const page = await browser.newPage({ deviceScaleFactor: 2, viewport: { width: 1200, height: 900 }, reducedMotion: "reduce" }); // the still: figures arrive and move otherwise
   for (const [i, row] of rows.entries()) {
     await page.setContent(renderHtml(specs[i]));
     await page.addStyleTag({ content: "pre.gk-figure,.gk-pair{width:max-content}" }); // crop to the figure, not the page width

@@ -2,9 +2,9 @@
 
 Document the design system as data: scales, contrast, component states, layers and tokens. Contrast is computed, not eyeballed.
 
-Kinds: `spacingScale`, `typeScale`, `contrast`, `stateMatrix`, `layerStack`, `tokenTable`, `table`.
+Types: `spacingScale`, `typeScale`, `contrast`, `stateMatrix`, `layerStack`, `tokenTable`, `table`.
 
-Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
+Each type shows its figure and the spec that made it; the spec's `kind` field names the type. `node scripts/glyph-kit.mjs guide <type>` prints one type's section without the figure.
 
 ## Spacing scale
 

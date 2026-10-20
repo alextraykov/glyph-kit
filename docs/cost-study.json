@@ -1,0 +1,10 @@
+{
+  "measured": "2026-10-20",
+  "model": "Sonnet 5.5",
+  "runs": 195,
+  "prices": "published prices",
+  "kit": "0.2.0 before the skill optimisation (9979bd3)",
+  "outputVsHtml": { "funnel": 5.2, "settings": 5.44, "deck": 3.5, "moving": 13.34, "flow": 1.7, "fewerEveryRun": true },
+  "claudeCode": { "moving": { "kit": 0.1566, "html": 0.563 }, "kitCheaperEveryRun": ["funnel", "settings", "deck", "moving"], "htmlCheaperEveryRun": ["flow"] },
+  "correct": { "runs": 65, "kit": 65, "byHand": 61, "html": 64 }
+}

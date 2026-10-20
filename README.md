@@ -55,7 +55,7 @@ Then ask for what you need, the way you'd ask a colleague: "chart these usabilit
 
 <img src="docs/readme/figures.png" alt="Eight areas of figures drawn by the kit: survey ratings, a funnel, a flow with failures, a roadmap, a settings wireframe, spacing tokens, a redline and a motion card." width="100%">
 
-| Area | Kinds |
+| Area | Types |
 |---|---|
 | Research data | Likert answers, themes by participant, affinity counts, quote card, task results, journey feeling |
 | Experiments and metrics | Funnel, retention cohorts, test result, metric panel, bar chart, comparison, forecast, meter, sparkline, heatmap, calendar strip |
@@ -84,7 +84,7 @@ What's measured and what isn't: [benefits](docs/benefits.md). Text tokens aren't
 - **No source, no numbers.** A figure with numbers needs a source.
 - **Made-up data is stamped** SAMPLE DATA in every format.
 - **Data from your files:** `"data": "@results.csv"`.
-- **Each kind refuses data that can't be true**, in plain words.
+- **Each type refuses data that can't be true**, in plain words.
 - **Pass specs, not drawings,** between agents; `--compact` for plain ASCII when a drawing must go into a model's context.
 
 ## Without an agent
@@ -92,7 +92,7 @@ What's measured and what isn't: [benefits](docs/benefits.md). Text tokens aren't
 Node 18 or later, nothing to install:
 
 ```bash
-node skills/glyph-kit/scripts/glyph-kit.mjs kinds
+node skills/glyph-kit/scripts/glyph-kit.mjs types
 node skills/glyph-kit/scripts/glyph-kit.mjs render skills/glyph-kit/examples/product/settings.spec.json --to markdown
 node skills/glyph-kit/scripts/glyph-kit.mjs export skills/glyph-kit/examples/reports/motion-audit.json --to pdf
 ```

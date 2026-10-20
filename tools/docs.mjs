@@ -1,4 +1,4 @@
-// What each area and kind is for, and what to watch for. The area guides in reference/areas/
+// What each area and type is for, and what to watch for. The area guides in reference/areas/
 // are generated from this file and the examples (node scripts/build-reference.mjs).
 
 export const AREA_DOCS = {
@@ -55,9 +55,9 @@ export const KIND_DOCS = {
   listDetail: { when: "Inboxes, master and detail, anything where picking an item shows it.", traps: "Mark the picked item with selected (its index or text)." },
   modal: { when: "A dialog over a page: confirm, delete, a short form.", traps: "The page shows dimmed behind it; make the page tall enough for the dialog." },
   readout: { when: "A one-pager on a test or a study: headline, up to 3 summary lines, up to 4 figures of evidence, next steps.", traps: "The headline is the finding in one sentence, not a topic." },
-  dashboard: { when: "Weekly numbers at a glance: 2 to 6 tiles and a note.", traps: "Tiles keep their natural width and share a row when they fit in 80 cells: narrow kinds (meter, sparkline) pack two or three to a row." },
-  prSummary: { when: "What a pull request changed: one line, before and after side by side, checks, risks.", traps: "Before and after use the same kind and scale; each up to 38 cells wide sits side by side." },
-  designReview: { when: "Choosing between 2 or 3 options: the question, the options, a recommendation, open questions.", traps: "Give each option a title; draw them with the same kind. Options up to 38 cells wide sit side by side." },
+  dashboard: { when: "Weekly numbers at a glance: 2 to 6 tiles and a note.", traps: "Tiles keep their natural width and share a row when they fit in 80 cells: narrow types (meter, sparkline) pack two or three to a row." },
+  prSummary: { when: "What a pull request changed: one line, before and after side by side, checks, risks.", traps: "Before and after use the same type and scale; each up to 38 cells wide sits side by side." },
+  designReview: { when: "Choosing between 2 or 3 options: the question, the options, a recommendation, open questions.", traps: "Give each option a title; draw them with the same type. Options up to 38 cells wide sit side by side." },
   statusUpdate: { when: "Where work stands: the period, progress figures, done, next and blocked lists.", traps: "Each blocked item says why in words." },
   spacingScale: { when: "Documenting spacing tokens.", traps: "State the unit per cell under the chart." },
   typeScale: { when: "Documenting type sizes and line heights.", traps: "Sizes in one unit; bars compare size, not weight." },
@@ -91,6 +91,6 @@ Arrivals play in HTML pages and decks, once, when a figure comes into view; a sm
 
 Cell-grid playback repaints text rather than using compositor transforms. Layout and routes are precomputed, the page is redrawn only when the step changes, and off-screen players stop. When a page has several moving diagrams, only the one most in view plays.
 
-## Kinds that move
+## Types that keep moving
 
 `;
