@@ -48,3 +48,11 @@ test("a moving page carries only the areas its kinds come from", async () => {
   assert.match(loop, /"loop": __glyph/);
   assert.doesNotMatch(loop, /"barChart": __glyph/);
 });
+
+test("a decision label that already asks keeps one question mark", async () => {
+  const { branchFlow } = await import("../skills/glyph-kit/scripts/areas/flows.mjs");
+  const out = branchFlow([{ label: "Start" }, { label: "Account exists?", type: "decision", no: { label: "Same message" } }, { label: "has data", type: "decision" }, { label: "Done" }]);
+  assert.match(out, /Account exists\? /);
+  assert.doesNotMatch(out, /\?\?/);
+  assert.match(out, /has data\?/);
+});

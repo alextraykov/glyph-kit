@@ -12,7 +12,7 @@ metadata:
 
 You write a **spec**, a small JSON object; a script with no dependencies draws it. The kit lays out every figure, so its output always lines up: never draw a figure by hand when a kind covers it.
 
-Commands below run from this skill's folder. From anywhere else, give the script's full path (`node <skill folder>/scripts/glyph-kit.mjs …`); spec and output paths stay relative to where you run it.
+Work in the user's folder, not this skill's, so specs and outputs land there. `<skill>` below is this skill's folder; file paths in this guide are relative to it.
 
 ## Make one
 
@@ -31,7 +31,7 @@ Commands below run from this skill's folder. From anywhere else, give the script
    | Work moving over time: handoffs, retries, caches, queues, rollouts, incidents | `loop` `states` `queue` `rollout` `loading` `handoff` `retry` `cache` `split` `incident` |
 
    Unsure between two? Read the area's guide, `reference/areas/<area>.md` (research, metrics, flows, planning, wireframes, systems, handoff, motion, process): it shows each kind drawn.
-2. **Get its data shape**: `node scripts/glyph-kit.mjs guide <kind>` prints the kind's example spec and what to watch for. Copy that shape; don't read the scripts.
+2. **Get its data shape**: `node <skill>/scripts/glyph-kit.mjs guide <kind>` prints the kind's example spec and what to watch for. Copy that shape; don't read the scripts.
 3. **Write the spec** as JSON next to the document that uses it:
 
    ```json
@@ -48,15 +48,17 @@ Commands below run from this skill's folder. From anywhere else, give the script
 4. **Render, fix, render again** in one command:
 
    ```bash
-   node scripts/glyph-kit.mjs render spec.json --to markdown > figure.md
+   node <skill>/scripts/glyph-kit.mjs render spec.json --to markdown > figure.md
    ```
 
    The kit refuses a spec it can't draw truthfully and says why in a sentence. Labels over the limit (usually 24 cells) are cut with "…", and the kit lists each one on stderr with its limit. Shorten those labels and render again: a figure with "…" loses words.
 5. **Put the conclusion in the sentence around the figure.** The figure supports it.
 
-Kit output needs no further checking: frames close and widths fit by construction. Run `node scripts/lint.mjs <file.md>` only on figures drawn by hand.
+Kit output needs no further checking: frames close and widths fit by construction. Run `node <skill>/scripts/lint.mjs <file.md>` only on figures drawn by hand.
 
 ## Other outputs
+
+Every command is `node <skill>/scripts/glyph-kit.mjs <command>`.
 
 | Output | Command | Read first |
 |---|---|---|

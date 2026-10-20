@@ -5,6 +5,9 @@ import { checks } from "../guard.mjs";
 import { BOX, cut, flow, join, len, padEnd, textCells, tree, wrap } from "../core.mjs";
 import { LAYOUT, capRows, fitLabels } from "../layout.mjs";
 
+/** A decision reads as a question; a label that already ends in one keeps it. */
+const asked = (label) => (/[?？]$/.test(label) ? label : `${label}?`);
+
 /**
  * A top-to-bottom flow with decisions. Each decision can send one branch to the right.
  * steps: [{ label, type?: "step" | "decision" | "end", no?: { label, to? } }]
@@ -16,7 +19,7 @@ export function branchFlow(steps, { gap = 3, maxText = LAYOUT.labelMax, maxWidth
   const capped = capRows(steps, LAYOUT.rowsMax, "steps");
   steps = capped.rows;
   const pad = LAYOUT.pad;
-  const textOf = (s) => cut(s.type === "decision" ? `${s.label}?` : s.label, maxText);
+  const textOf = (s) => cut(s.type === "decision" ? asked(s.label) : s.label, maxText);
   const longest = Math.min(maxText, Math.max(...steps.map((s) => len(textOf(s)))));
   const W = longest + pad * 2 + 2;
   const spine = Math.floor((W - 1) / 2);
@@ -139,7 +142,7 @@ export const kinds = {
   branchFlow: {
     label: "Flow with decisions",
     render: branchFlow,
-    summary: (s) => s.map((x) => (x.type === "decision" ? `${x.label}? if not, ${x.no?.label ?? "stop"}` : x.label)).join(", then ")
+    summary: (s) => s.map((x) => (x.type === "decision" ? `${asked(x.label)} if not, ${x.no?.label ?? "stop"}` : x.label)).join(", then ")
   },
   stateMachine: {
     label: "State machine",
