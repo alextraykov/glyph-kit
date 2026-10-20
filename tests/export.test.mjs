@@ -66,6 +66,8 @@ test("report: cover, summary, contents, numbered figures, print rules", () => {
   assert.equal((html.match(/<section class="r-sec"/g) ?? []).length, report.sections.length);
   assert.match(html, /<li><span>The browser default <code>ease<\/code>/);
   assert.match(html, /@page\{size:A4;margin:18mm 18mm 20mm;background:#f7f6f1/);
+  assert.match(html, /src:url\(data:font\/woff2;base64,[A-Za-z0-9+/]{1000,}={0,2}\)/);
+  assert.doesNotMatch(html, /\$\{font\}/);
   assert.match(renderReport(report, { theme: "phosphor" }), /--data:#58d68d/);
   assert.ok(!/undefined|NaN/.test(html));
 });

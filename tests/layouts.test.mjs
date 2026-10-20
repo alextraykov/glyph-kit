@@ -108,6 +108,12 @@ test("several layouts make one document, one layout to a printed page", () => {
   assert.equal(html.match(/@font-face/g).length, 1);
 });
 
+test("an exported layout page embeds Departure Mono, not the code that reads it", () => {
+  const html = renderLayoutPages([readout({}, { title: "One" })]);
+  assert.match(html, /src:url\(data:font\/woff2;base64,[A-Za-z0-9+/]{1000,}={0,2}\)/);
+  assert.doesNotMatch(html, /\$\{font\}/);
+});
+
 test("data files inside a layout's figures are read", () => {
   const dir = mkdtempSync(join(tmpdir(), "gk-layout-"));
   writeFileSync(join(dir, "ab.json"), JSON.stringify(ab.data));
