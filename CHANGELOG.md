@@ -26,7 +26,7 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 - **Right first time.** Labels cut with `…` are listed on stderr with their limit, so the agent can shorten them. The agent works in the user's folder, not the skill's.
 - **Faster.** The command line loads only what a command needs; text that is only ASCII, box drawing and blocks skips Unicode segmentation, so figures draw about 4× faster.
 - **Reports show the figure as text** in Departure Mono, coloured by role, so the page copies as text. The example report goes from 73 KB to 46 KB.
-- **Smaller install.** The skill holds only what an agent needs; the zip goes from 495 KB to 136 KB, and the plugin installs only `skills/glyph-kit`.
+- **Smaller install.** The skill holds only what an agent needs; the zip is 205 KB with 60 types, down from 495 KB, and the plugin installs only `skills/glyph-kit`.
 
 **Handoff**
 
