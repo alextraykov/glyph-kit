@@ -8,12 +8,26 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { AREA_DOCS, KIND_DOCS, LIVE_DOC } from "./docs.mjs";
 import { AREAS, KINDS } from "../skills/glyph-kit/scripts/registry.mjs";
-import { body, label } from "../skills/glyph-kit/scripts/render/text.mjs";
+import { body } from "../skills/glyph-kit/scripts/render/text.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const root = join(here, "../skills/glyph-kit");
 const docsDir = join(here, "../docs");
 mkdirSync(join(root, "reference/areas"), { recursive: true });
+
+// JSON as an agent would write it: a value stays on one line when that line fits in 72 columns.
+// Fewer lines and less indentation than JSON.stringify(…, null, 2), so the guides cost less to read.
+const jsonFlat = (v) =>
+  v === null || typeof v !== "object" ? JSON.stringify(v)
+    : Array.isArray(v) ? `[${v.map(jsonFlat).join(", ")}]`
+    : Object.keys(v).length ? `{ ${Object.entries(v).map(([k, x]) => `${JSON.stringify(k)}: ${jsonFlat(x)}`).join(", ")} }` : "{}";
+const jsonTight = (value, indent = "") => {
+  const flat = jsonFlat(value);
+  if (indent.length + flat.length <= 72 || value === null || typeof value !== "object") return flat;
+  const inner = indent + "  ";
+  const items = Array.isArray(value) ? value.map((v) => inner + jsonTight(v, inner)) : Object.entries(value).map(([k, v]) => `${inner}${JSON.stringify(k)}: ${jsonTight(v, inner)}`);
+  return Array.isArray(value) ? `[\n${items.join(",\n")}\n${indent}]` : `{\n${items.join(",\n")}\n${indent}}`;
+};
 
 for (const [area, { label: areaLabel, kinds }] of Object.entries(AREAS)) {
   const examples = JSON.parse(readFileSync(join(here, "examples", `${area}.json`), "utf8"));
@@ -22,7 +36,9 @@ for (const [area, { label: areaLabel, kinds }] of Object.entries(AREAS)) {
     "",
     AREA_DOCS[area],
     "",
-    `Each kind below shows the spec that made its figure. Save one as spec.json and render it with \`node scripts/glyph-kit.mjs render spec.json --to markdown\` (or \`--to html\`).`,
+    `Kinds: ${Object.keys(kinds).map((k) => `\`${k}\``).join(", ")}.`,
+    "",
+    `Each kind shows its figure and the spec that made it. \`node scripts/glyph-kit.mjs guide <kind>\` prints one kind's section without the figure.`,
     ""
   ];
   for (const [kind, def] of Object.entries(kinds)) {
@@ -31,8 +47,8 @@ for (const [area, { label: areaLabel, kinds }] of Object.entries(AREAS)) {
     out.push(`## ${def.label}`, "", `\`kind: "${kind}"\``, "");
     if (doc.when) out.push(`**Use it for** ${doc.when.charAt(0).toLowerCase()}${doc.when.slice(1)}`, "");
     if (spec) {
-      out.push("```text", body(spec), "```", "", `*${label(spec)}*`, "");
-      out.push("<details><summary>Spec</summary>", "", "```json", JSON.stringify({ kind: spec.kind, data: spec.data, ...(spec.options ? { options: spec.options } : {}) }, null, 2), "```", "", "</details>", "");
+      out.push("```text", body(spec), "```", "");
+      out.push("```json", jsonTight({ kind: spec.kind, title: spec.title, data: spec.data, ...(spec.options ? { options: spec.options } : {}) }), "```", "");
     }
     if (doc.motion) out.push(`**Motion:** ${doc.motion}`, "");
     if (doc.traps) out.push(`**Watch for:** ${doc.traps}`, "");

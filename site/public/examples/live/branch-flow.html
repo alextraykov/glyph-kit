@@ -121,11 +121,16 @@ function cells(value) {
   return out;
 }
 
+/** Text cut by cut() in this process, with the cells it had: the command line reports these,
+ *  so whoever wrote the spec can shorten a label instead of finding "…" in the figure. */
+const cutLog = new Map();
+
 /** Cut to at most `max` cells without splitting a cluster. Removed text is marked. */
 function cut(value, max, mark = "…") {
   const text = String(value ?? "");
   const limit = Math.max(0, Math.floor(max));
   if (width(text) <= limit) return text;
+  if (!cutLog.has(text) && cutLog.size < 100) cutLog.set(text, limit);
   const suffix = width(mark) <= limit ? String(mark) : "";
   const room = limit - width(suffix);
   let used = 0;
@@ -199,7 +204,7 @@ const upper = (value, lang) => String(value ?? "").toLocaleUpperCase(lang);
 const formatNumber = (value, lang) => new Intl.NumberFormat(lang).format(value);
 const isRtl = (value) => rtlRe.test(String(value ?? ""));
 
-return { graphemes, cellWidth, width, cells, cut, padEnd, padStart, center, wrap, upper, formatNumber, isRtl };
+return { graphemes, cellWidth, width, cells, cutLog, cut, padEnd, padStart, center, wrap, upper, formatNumber, isRtl };
 })();
 __glyph[2] = (() => {
 // Data guardrails. Made-up numbers must never look real:
@@ -768,11 +773,11 @@ function motionCounters(canvas, marks, lang) {
   });
 }
 
-/** Run a fresh diagram up to its still step and return that frame, with text settled. */
+/** The still step of a fresh diagram, with text settled. Every kind draws a frame from its step
+ *  alone (the queue catches itself up), so no earlier frames need drawing first. */
 function stillGrid(make, still) {
   const frame = make();
   let g;
-  for (let s = 0; s < still; s++) frame(s, 0);
   Grid.settled = true;
   try { g = frame(still, 0); } finally { Grid.settled = false; }
   return g;

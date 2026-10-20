@@ -2,7 +2,9 @@
 
 Document the design system as data: scales, contrast, component states, layers and tokens. Contrast is computed, not eyeballed.
 
-Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
+Kinds: `spacingScale`, `typeScale`, `contrast`, `stateMatrix`, `layerStack`, `tokenTable`, `table`.
+
+Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
 
 ## Spacing scale
 
@@ -22,39 +24,19 @@ One █ is 4px.
               SAMPLE DATA
 ```
 
-*Spacing tokens. space-1 4px, space-2 8px, space-3 16px, space-4 24px, space-5 40px*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "spacingScale",
+  "title": "Spacing tokens",
   "data": [
-    {
-      "name": "space-1",
-      "value": 4
-    },
-    {
-      "name": "space-2",
-      "value": 8
-    },
-    {
-      "name": "space-3",
-      "value": 16
-    },
-    {
-      "name": "space-4",
-      "value": 24
-    },
-    {
-      "name": "space-5",
-      "value": 40
-    }
+    { "name": "space-1", "value": 4 },
+    { "name": "space-2", "value": 8 },
+    { "name": "space-3", "value": 16 },
+    { "name": "space-4", "value": 24 },
+    { "name": "space-5", "value": 40 }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** State the unit per cell under the chart.
 
@@ -73,39 +55,18 @@ caption  ███████                       11/16
                                  SAMPLE DATA
 ```
 
-*Type scale. display 44px, heading 22px, body 16px, caption 11px*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "typeScale",
+  "title": "Type scale",
   "data": [
-    {
-      "name": "display",
-      "size": 44,
-      "lineHeight": 48
-    },
-    {
-      "name": "heading",
-      "size": 22,
-      "lineHeight": 28
-    },
-    {
-      "name": "body",
-      "size": 16,
-      "lineHeight": 24
-    },
-    {
-      "name": "caption",
-      "size": 11,
-      "lineHeight": 16
-    }
+    { "name": "display", "size": 44, "lineHeight": 48 },
+    { "name": "heading", "size": 22, "lineHeight": 28 },
+    { "name": "body", "size": 16, "lineHeight": 24 },
+    { "name": "caption", "size": 11, "lineHeight": 16 }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Sizes in one unit; bars compare size, not weight.
 
@@ -124,34 +85,17 @@ link on panel   ██████████····┊···········�
                                                               SAMPLE DATA
 ```
 
-*Text contrast. ink on paper: 19.3 to 1. muted on paper: 2.7 to 1. link on panel: 5.0 to 1*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "contrast",
+  "title": "Text contrast",
   "data": [
-    {
-      "label": "ink on paper",
-      "fg": "#080808",
-      "bg": "#fbfbf8"
-    },
-    {
-      "label": "muted on paper",
-      "fg": "#9a9a92",
-      "bg": "#fbfbf8"
-    },
-    {
-      "label": "link on panel",
-      "fg": "#04764e",
-      "bg": "#f1f1ec"
-    }
+    { "label": "ink on paper", "fg": "#080808", "bg": "#fbfbf8" },
+    { "label": "muted on paper", "fg": "#9a9a92", "bg": "#fbfbf8" },
+    { "label": "link on panel", "fg": "#04764e", "bg": "#f1f1ec" }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** AA needs 4.5:1 for body text and 3:1 for large text and UI parts.
 
@@ -172,27 +116,13 @@ text       ██        ██        ██                  ██
                                                          SAMPLE DATA
 ```
 
-*Button states. 3 variants by 6 states.*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "stateMatrix",
+  "title": "Button states",
   "data": {
-    "variants": [
-      "primary",
-      "secondary",
-      "text"
-    ],
-    "states": [
-      "rest",
-      "hover",
-      "focus",
-      "pressed",
-      "disabled",
-      "loading"
-    ],
+    "variants": ["primary", "secondary", "text"],
+    "states": ["rest", "hover", "focus", "pressed", "disabled", "loading"],
     "cells": {
       "primary": {
         "rest": "done",
@@ -223,8 +153,6 @@ text       ██        ██        ██                  ██
 }
 ```
 
-</details>
-
 **Watch for:** Blank means the state doesn't apply; missing is ░.
 
 ## Layer stack
@@ -242,35 +170,18 @@ page    z 0     ─────────────────────�
                              SAMPLE DATA
 ```
 
-*Layers. page at 0, card at 100, dimmer at 300, dialog at 400*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "layerStack",
+  "title": "Layers",
   "data": [
-    {
-      "name": "page",
-      "z": 0
-    },
-    {
-      "name": "card",
-      "z": 100
-    },
-    {
-      "name": "dimmer",
-      "z": 300
-    },
-    {
-      "name": "dialog",
-      "z": 400
-    }
+    { "name": "page", "z": 0 },
+    { "name": "card", "z": 100 },
+    { "name": "dimmer", "z": 300 },
+    { "name": "dialog", "z": 400 }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Name what each layer is for, not just its number.
 
@@ -292,34 +203,21 @@ page    z 0     ─────────────────────�
                                                SAMPLE DATA
 ```
 
-*Colour roles. ink: #080808, paper: #fbfbf8, signal-fail: #b8421f*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "tokenTable",
+  "title": "Colour roles",
   "data": [
     {
       "name": "ink",
       "value": "#080808",
       "use": "text, borders, primary buttons"
     },
-    {
-      "name": "paper",
-      "value": "#fbfbf8",
-      "use": "page background"
-    },
-    {
-      "name": "signal-fail",
-      "value": "#b8421f",
-      "use": "errors only"
-    }
+    { "name": "paper", "value": "#fbfbf8", "use": "page background" },
+    { "name": "signal-fail", "value": "#b8421f", "use": "errors only" }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Inside Markdown, a Markdown table is easier to edit.
 
@@ -341,38 +239,17 @@ page    z 0     ─────────────────────�
                       SAMPLE DATA
 ```
 
-*Breakpoints. Table with 3 rows: Name, Min width, Columns.*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "table",
+  "title": "Breakpoints",
   "data": [
-    [
-      "Name",
-      "Min width",
-      "Columns"
-    ],
-    [
-      "phone",
-      "0",
-      "4"
-    ],
-    [
-      "tablet",
-      "700",
-      "8"
-    ],
-    [
-      "desktop",
-      "1180",
-      "12"
-    ]
+    ["Name", "Min width", "Columns"],
+    ["phone", "0", "4"],
+    ["tablet", "700", "8"],
+    ["desktop", "1180", "12"]
   ]
 }
 ```
-
-</details>
 
 **Watch for:** In Markdown, use a Markdown table.

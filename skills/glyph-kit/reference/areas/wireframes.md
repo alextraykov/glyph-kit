@@ -2,7 +2,9 @@
 
 Screens built from a small set of primitives. The same primitive names map to real components in the design-system map, which is what lets a text wireframe become a prototype and then production code without reinterpretation.
 
-Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
+Kinds: `screen`, `responsive`.
+
+Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
 
 ## Screen wireframe
 
@@ -29,68 +31,43 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
                                        SAMPLE DATA
 ```
 
-*Notification settings. Settings: tabs, space, toggle, toggle, select, input, divider, buttons.*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "screen",
+  "title": "Notification settings",
   "data": {
     "title": "Settings",
     "rows": [
       {
         "type": "tabs",
-        "items": [
-          "Profile",
-          "Notifications",
-          "Billing"
-        ],
+        "items": ["Profile", "Notifications", "Billing"],
         "selected": "Notifications"
       },
-      {
-        "type": "space"
-      },
+      { "type": "space" },
       {
         "type": "toggle",
         "label": "Email me when a report is ready",
         "on": true,
         "note": "1"
       },
-      {
-        "type": "toggle",
-        "label": "Weekly summary",
-        "on": false
-      },
+      { "type": "toggle", "label": "Weekly summary", "on": false },
       {
         "type": "select",
         "label": "Digest day",
         "value": "Monday",
-        "options": [
-          "Monday",
-          "Wednesday",
-          "Friday"
-        ]
+        "options": ["Monday", "Wednesday", "Friday"]
       },
       {
         "type": "input",
         "label": "Send to",
         "value": "team@example.com"
       },
-      {
-        "type": "divider"
-      },
+      { "type": "divider" },
       {
         "type": "buttons",
         "items": [
-          {
-            "label": "Cancel"
-          },
-          {
-            "label": "Save",
-            "primary": true,
-            "untilChange": true
-          }
+          { "label": "Cancel" },
+          { "label": "Save", "primary": true, "untilChange": true }
         ],
         "align": "right",
         "note": "2"
@@ -103,8 +80,6 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
   }
 }
 ```
-
-</details>
 
 **Watch for:** One screen per sketch; notes go outside the frame; use only the primitives so the map can translate them.
 
@@ -127,13 +102,10 @@ Desktop                                     Mobile
                                                          SAMPLE DATA
 ```
 
-*Report, desktop and mobile. Desktop: image, text, buttons. Mobile: image, buttons*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "responsive",
+  "title": "Report, desktop and mobile",
   "data": [
     {
       "label": "Desktop",
@@ -141,11 +113,7 @@ Desktop                                     Mobile
         "title": "Report",
         "width": 40,
         "rows": [
-          {
-            "type": "image",
-            "label": "chart",
-            "height": 3
-          },
+          { "type": "image", "label": "chart", "height": 3 },
           {
             "type": "text",
             "text": "Revenue by month, last 12 months."
@@ -153,13 +121,8 @@ Desktop                                     Mobile
           {
             "type": "buttons",
             "items": [
-              {
-                "label": "Export",
-                "primary": true
-              },
-              {
-                "label": "Share"
-              }
+              { "label": "Export", "primary": true },
+              { "label": "Share" }
             ]
           }
         ]
@@ -171,19 +134,10 @@ Desktop                                     Mobile
         "title": "Report",
         "width": 24,
         "rows": [
-          {
-            "type": "image",
-            "label": "chart",
-            "height": 3
-          },
+          { "type": "image", "label": "chart", "height": 3 },
           {
             "type": "buttons",
-            "items": [
-              {
-                "label": "Export",
-                "primary": true
-              }
-            ]
+            "items": [{ "label": "Export", "primary": true }]
           }
         ]
       }
@@ -191,7 +145,5 @@ Desktop                                     Mobile
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Show what moves or disappears, not just a narrower copy.

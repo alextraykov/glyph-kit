@@ -63,7 +63,7 @@ PDF and PNG use a Chromium browser already on the machine (see `reference/export
 
 ## Guardrails
 
-Made-up numbers can't pass as real: a spec with numbers and no `source` is refused, an "Illustrative" source stamps SAMPLE DATA on the figure in every format, `"data": "@results.csv"` reads numbers from your file, and each kind refuses data that can't be true (a funnel that grows, dates out of order). For model context, pass the spec, or render with `--compact` for plain ASCII. See `reference/benefits.md`.
+Made-up numbers can't pass as real: a spec with numbers and no `source` is refused, an "Illustrative" source stamps SAMPLE DATA on the figure in every format, `"data": "@results.csv"` reads numbers from your file, and each kind refuses data that can't be true (a funnel that grows, dates out of order). For model context, pass the spec, or render with `--compact` for plain ASCII.
 
 The generators also import directly, in Node or a browser:
 
