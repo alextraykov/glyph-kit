@@ -28,6 +28,7 @@ const { resolve } = await imp("scripts/registry.mjs");
 const { classify } = await imp("scripts/render/paint.mjs");
 const { ARRIVE_CSS, ARRIVE_JS, arriveLines } = await imp("scripts/render/arrive.mjs");
 const core = await import(new URL(`file://${join(root, "site/src/showcase-core.mjs")}`).href);
+const { parseChangelog, markdownToHtml, longDate } = await import(new URL(`file://${join(root, "site/src/changelog.mjs")}`).href);
 
 const read = (p) => readFileSync(join(kit, p), "utf8");
 const json = (p) => JSON.parse(read(p));
@@ -274,12 +275,12 @@ ${current === "home" && TURNSTILE_SITE_KEY ? '<script src="https://challenges.cl
 <body>
 <header class="top"><div class="shell">
   <a class="brand" href="/"><img src="/icon.svg" alt="" width="22" height="22">Glyph kit</a>
-  <nav class="nav" aria-label="Site"><a href="/how-to-use/"${current === "guide" ? ' aria-current="page"' : ""}>How to use</a><a href="/types/"${current === "types" ? ' aria-current="page"' : ""}>Types</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a><a href="${REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">Changes</a><a href="https://traykov.cc">traykov.cc</a><button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme">Dark</button></nav>
+  <nav class="nav" aria-label="Site"><a href="/how-to-use/"${current === "guide" ? ' aria-current="page"' : ""}>How to use</a><a href="/types/"${current === "types" ? ' aria-current="page"' : ""}>Types</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a><a href="/changes/"${current === "changes" ? ' aria-current="page"' : ""}>Changes</a><a href="https://traykov.cc">traykov.cc</a><button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme">Dark</button></nav>
 </div></header>
 <main class="shell">
 ${content}
 </main>
-<footer><div class="shell"><span>Glyph kit ${plugin.version} · MIT · made by <a href="https://traykov.cc">Alexander Traykov</a></span><span><a href="https://traykov.cc/notes/four-characters/">Four characters</a>, the story behind it</span></div></footer>
+<footer><div class="shell"><span>Glyph kit ${plugin.version} · <a href="/changes/">Changes</a> · MIT · made by <a href="https://traykov.cc">Alexander Traykov</a></span><span><a href="https://traykov.cc/notes/four-characters/">Four characters</a>, the story behind it</span></div></footer>
 <script type="application/json" id="live-specs">${JSON.stringify({ ...liveSpecs, ...loopSpecs }).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="try-example">${JSON.stringify({ spec: exampleSpec, mode: "moving" }).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="showcase">${JSON.stringify(showcaseData).replace(/</g, "\\u003c")}</script>
@@ -634,6 +635,26 @@ ${Object.entries(AREAS).map(([id, area]) => {
 </section>`
 });
 
+// ── Changes ────────────────────────────────────────────────────────────────────────────────────
+// CHANGELOG.md is read from this checkout, not fetched from GitHub: the build already has the file,
+// it matches the version the site is built from, and a GitHub outage can't leave the page empty.
+const changelog = parseChangelog(readFileSync(join(root, "CHANGELOG.md"), "utf8"));
+const [latest] = changelog.releases;
+const release = (r) => `<section class="section release" id="${r.id}" aria-labelledby="${r.id}-title">
+  <header class="release__head"><h2 id="${r.id}-title"><a href="#${r.id}">${esc(r.version)}</a></h2>${r.date ? `<time class="label" datetime="${r.date}">${esc(longDate(r.date))}</time>` : ""}<a class="text-link" href="${REPO}/releases/tag/v${esc(r.version)}" target="_blank" rel="noopener">Release on GitHub</a></header>
+  <div class="prose">${markdownToHtml(r.body)}</div>
+</section>`;
+const changes = page({
+  path: "/changes/",
+  current: "changes",
+  title: "Changes · Glyph kit",
+  description: `What changed in each release of Glyph kit, newest first. Latest: ${latest.version}${latest.date ? `, ${longDate(latest.date)}` : ""}.`,
+  content: `
+<header class="heading"><p class="kicker">Changes</p><h2>Every release, newest first.</h2><div class="prose">${markdownToHtml(changelog.intro)}</div><p><a class="text-link" href="${REPO}/blob/main/CHANGELOG.md" target="_blank" rel="noopener">CHANGELOG.md on GitHub</a></p></header>
+<nav class="jump" aria-label="Releases">${changelog.releases.map((r) => `<a href="#${r.id}">${esc(r.version)}${r.date ? ` <span class="jump__n">${esc(r.date)}</span>` : ""}</a>`).join("")}</nav>
+${changelog.releases.map(release).join("\n")}`
+});
+
 /** Root-relative links in a page, moved under BASE. External links are left alone. */
 const based = (html) => html.replace(/(href|src)="\/(?!\/|_vercel\/)/g, `$1="${BASE}/`); // Vercel's own paths stay at the root
 
@@ -650,6 +671,8 @@ writeFileSync(join(out, "index.html"), based(home));
 writeFileSync(join(out, "types/index.html"), based(kinds));
 mkdirSync(join(out, "how-to-use"), { recursive: true });
 writeFileSync(join(out, "how-to-use/index.html"), based(guide));
+mkdirSync(join(out, "changes"), { recursive: true });
+writeFileSync(join(out, "changes/index.html"), based(changes));
 cpSync(join(root, "site/src/style.css"), join(out, "style.css"));
 for (const f of ["app.js", "showcase.js", "showcase-core.mjs", "try.js", "parallax.js", "guide-motion.js"]) cpSync(join(root, "site/src", f), join(out, f));
 writeFileSync(join(out, "showcase-core.mjs"), readFileSync(join(root, "site/src/showcase-core.mjs"), "utf8").replaceAll("../../skills/glyph-kit/scripts/", "./kit/"));
@@ -678,4 +701,4 @@ for (const spec of Object.values(liveSpecs)) {
   skeletons[`moving:${spec.kind}`] = stillGrid(make, still).toText();
 }
 writeFileSync(join(out, "skeletons.json"), JSON.stringify(skeletons));
-console.log(`site/dist: ${readdirSync(out).length} entries, ${moving.length} moving diagrams, ${kindCount} types`);
+console.log(`site/dist: ${readdirSync(out).length} entries, ${moving.length} moving diagrams, ${kindCount} types, ${changelog.releases.length} releases`);
