@@ -38,7 +38,7 @@ By hand, copy this folder into a skills directory:
 Node 18 or later, nothing to install.
 
 ```bash
-node scripts/glyph-kit.mjs kinds                                   # 55 kinds in 9 areas
+node scripts/glyph-kit.mjs kinds                                   # 59 kinds in 10 areas
 node scripts/glyph-kit.mjs render examples/product/settings.spec.json --to markdown
 node scripts/glyph-kit.mjs render examples/product/settings.spec.json --to html > settings.html
 node scripts/glyph-kit.mjs deck examples/decks/export-review.json > deck.html   # a 16-slide review
@@ -98,5 +98,3 @@ node tools/build-reference.mjs          # regenerate the area guides after a cha
 ## Licence
 
 MIT, see `LICENSE`. The history of the characters, with screenshots under their own licences, is in the repository: [docs/history.md](https://github.com/alextraykov/glyph-kit/blob/main/docs/history.md).
-
-In 0.2.0, 34 kinds support `"motion": true` without changing kind or data. Set `lang` for locale-aware numbers and casing. Read `reference/live.md` for the generated list. Existing specs need no migration; regenerate standalone pages. Departure Mono is the existing bundled font for HTML and deck exports; language coverage still uses system fallbacks, with no additional fonts.

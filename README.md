@@ -104,5 +104,3 @@ Issues and ideas are welcome. Run `node --test tests/*.test.mjs` before a pull r
 ## License
 
 MIT. Made by [Alexander Traykov](https://traykov.cc). The story behind it: [Four characters](https://traykov.cc/notes/four-characters/).
-
-Version 0.2.0 has 55 kinds across nine areas; 34 can move. Keep the same kind and add `"motion": true`. Set `"lang": "de"` (or another BCP 47 tag) for locale-aware numbers and casing. Existing specs still work; regenerate standalone pages for the updated player. No new fonts are required.

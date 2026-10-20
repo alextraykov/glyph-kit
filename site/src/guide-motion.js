@@ -120,6 +120,12 @@ export const MOTIONS = {
       if (k === boxes.length - 1) setLabel(g, x, x.label, Infinity, "ok");
     }
   }),
+  // Layouts: the slots fill in order and the page lands.
+  layouts: (b) => flow(b, {
+    onBox: (g, x, k, s, boxes) => {
+      if (k === boxes.length - 1) setLabel(g, x, x.label, Infinity, "ok");
+    }
+  }),
   // SVG: the text figure travels to shapes and lands as a file.
   svg: (b) => flow(b, {
     onBox: (g, x, k, s, boxes) => {

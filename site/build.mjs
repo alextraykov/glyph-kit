@@ -292,6 +292,7 @@ const GUIDE_FIGS = {
   html: examples.wireframes.find((sp) => sp.kind === "screen"),
   deck: { kind: "flow", data: ["title", "section", "figure, in steps", "statement", "PDF, 16:9"] },
   pdf: { kind: "flow", data: ["cover", "summary", "sections", "figures", "A4 PDF"] },
+  layouts: { kind: "flow", data: ["readout.json", "sentence, lists, figures", "one page", "HTML or PDF"] },
   svg: { kind: "flow", data: ["████ 12.4k", "rectangles, lines, dither", "funnel.svg"] },
   handover: { kind: "qaChecklist", data: [
     { text: "The lint passes", status: "todo" },
@@ -345,7 +346,7 @@ const GUIDE = [
     when: "A process over time: work coming back, people leaving a funnel, a queue backing up, a rollout and its guard, a state machine, a loading sequence.",
     ask: "Show how work comes back from QA as a moving diagram.",
     run: ["node scripts/glyph-kit.mjs live loop.json --to html", "node scripts/glyph-kit.mjs live loop.json --to markdown"],
-    check: ["Six kinds move: loop, funnel, states, queue, rollout, loading.", "The still frame makes the same point; it's what reduced motion, print and docs show.", "One sentence next to it says what the motion shows.", "Motion specs say what reduced motion shows."]
+    check: ["Every type moves on a page or in a deck. Six keep moving: loop, funnel, states, queue, rollout, loading.", "Every other type arrives once, in the order that carries its point, then stays still. The ↺ in its corner plays it again.", "The still frame makes the same point; it's what reduced motion, print and docs show.", "One sentence next to it says what the motion shows.", "Motion specs say what reduced motion shows."]
   },
   {
     id: "deck", title: "Presentations and pitch decks",
@@ -360,6 +361,13 @@ const GUIDE = [
     ask: "Write the motion audit up as a report and export a PDF.",
     run: ["node scripts/glyph-kit.mjs export report.json --to pdf", "node scripts/glyph-kit.mjs export report.json --to html", "node scripts/glyph-kit.mjs export report.json --to md"],
     check: ["A cover, a summary, numbered sections, numbered figures.", "Each takeaway is the conclusion, not the topic.", "PDF uses Chrome, Chromium or Edge already on the machine (or CHROME_PATH). With none, export HTML and print it."]
+  },
+  {
+    id: "layouts", title: "One-page layouts",
+    when: "A whole deliverable on one page: a research readout, a dashboard, a PR summary, a design review, a status update.",
+    ask: "Put this week's research findings on one page with the funnel and the top quotes.",
+    run: ["node scripts/glyph-kit.mjs render readout.json --to markdown", "node scripts/glyph-kit.mjs export readout.json --to pdf", "node scripts/glyph-kit.mjs export week.json --to pdf"],
+    check: ["Each layout has fixed slots: one sentence, short lists and ordinary figure specs.", "Code places everything within 80 cells; figures share a row only when they fit.", "Figures without a source use the layout's.", "A list of layouts exports as one document, a layout to a page."]
   },
   {
     id: "svg", title: "SVG and PNG",
@@ -475,7 +483,7 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="moving">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Motion</p><h2 id="moving">Six kinds that move.</h2></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Motion</p><h2 id="moving">Six keep moving. Every type arrives.</h2></header>
   <div class="gallery">${moving.slice(0, 6).map((mv) => liveFigure(mv)).join("\n")}</div>
 </section>
 
