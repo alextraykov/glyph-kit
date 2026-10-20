@@ -143,7 +143,8 @@ const STUDY_TABLE = (() => {
   const out = [
     rule("┌", "┬", "┐"),
     line([], metrics.map((m) => [seg(" " + m.title)])),
-    line([seg("Figure")], metrics.map(() => [seg(" "), seg("kit".padEnd(B + 1), "win"), seg("HTML/JS".padEnd(B + 1), "lose"), seg("wins")])),
+    [seg("│ " + " ".repeat(FW) + " ├" + Array(metrics.length).fill("─".repeat(GW)).join("┼") + "┤", "gk-f")],
+    line([seg("Type")], metrics.map(() => [seg(" "), seg("kit".padEnd(B + 1), "win"), seg("HTML/JS".padEnd(B + 1), "lose"), seg("wins")])),
     rule("├", "┼", "┤")
   ];
   rows.forEach((r, i) => {
@@ -532,7 +533,7 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="cheap">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Against HTML/JS <span class="new">New</span></p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>The same five figures asked of Claude Code twice: once with the kit, once written as HTML/JS. A funnel, a flow, a settings screen, a deck and a moving diagram.</p></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Against HTML/JS <span class="new">New</span></p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>Claude Code got the same brief twice for each of five deliverables: once with the kit, once as hand-written HTML/JS. Like for like: a still flow against a still SVG flow, a working prototype against a working prototype, a moving diagram against an animated one.</p></header>
   <div class="stats">
     <article class="stat"><p class="label">Faster</p><strong>${times(mv.html.s / mv.kit.s)}</strong><p>A moving diagram took ${secs(mv.kit.s)} against ${secs(mv.html.s)}. The kit was faster at the median for all five.</p></article>
     <article class="stat"><p class="label">Cheaper</p><strong>${times(mv.html.usd / mv.kit.usd)}</strong><p>${usd(mv.kit.usd)} against ${usd(mv.html.usd)} for a moving diagram, and cheaper on every run for four of the five. For a simple flow, HTML cost less.</p></article>
