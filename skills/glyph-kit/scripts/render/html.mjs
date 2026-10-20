@@ -10,6 +10,8 @@ import { PAINT_CSS, paint } from "./paint.mjs";
 import { body, label } from "./text.mjs";
 import { moves, stillText } from "../motion.mjs";
 import { inlineMotion, renderLiveHtml } from "../live/html.mjs";
+import { isLayout } from "../areas/layouts.mjs";
+import { renderLayoutPage } from "./page.mjs";
 
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -301,6 +303,7 @@ ${moving ? `<script>${inlineMotion()}\ndocument.querySelectorAll('[data-motion-s
 /** A whole self-contained page for one spec, or for a list of specs one after another. */
 export function renderHtml(spec, { map, title: pageTitle } = {}) {
   if (!Array.isArray(spec) && spec.motion && moves(spec.kind)) return renderLiveHtml(spec);
+  if (!Array.isArray(spec) && isLayout(spec)) return renderLayoutPage(spec);
   if (Array.isArray(spec)) {
     const content = `<div style="display:grid;gap:56px;justify-items:center;width:100%">${spec
       .map((s) => `<section style="display:grid;gap:16px;justify-items:center;width:100%"><h2 style="margin:0;font-size:16px">${esc(s.title ?? resolve(s).label)}</h2>${fragment(s, { map })}</section>`)

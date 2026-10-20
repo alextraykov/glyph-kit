@@ -26,6 +26,8 @@ import { renderMarkdown, renderText } from "./render/text.mjs";
 import { loadData } from "./data.mjs";
 import { compact } from "./tokens.mjs";
 import { renderLiveHtml } from "./live/html.mjs";
+import { isLayout } from "./areas/layouts.mjs";
+import { renderLayoutPage } from "./render/page.mjs";
 import { LIVE, live, stillText } from "./live/kinds.mjs";
 import { moves } from "./motion.mjs";
 
@@ -90,6 +92,7 @@ try {
     const written = [];
     if (to === "md") written.push(write(`${stem}.md`, kind === "report" ? reportMarkdown(doc) : specs.map((s) => renderMarkdown(s)).join("\n\n")));
     else if (to === "mdx") written.push(write(`${stem}.mdx`, renderMdx(kind === "report" ? doc : specs, { mode: mdxMode, theme: theme ?? doc.theme ?? "paper" })));
+    else if (to === "html" && isLayout(doc)) written.push(write(`${stem}.html`, renderLayoutPage(doc, { theme })));
     else if (to === "html") written.push(write(`${stem}.html`, kind === "report" ? renderReport(doc, { theme }) : kind === "deck" ? renderDeck(doc, { map }) : renderHtml(doc, { map, title })));
     else if (to === "svg" || to === "png") {
       specs.forEach((spec, i) => {
@@ -100,7 +103,7 @@ try {
       });
     } else if (to === "pdf") {
       mkdirSync(dirname(`${stem}.pdf`), { recursive: true });
-      written.push(htmlToPdf(kind === "deck" ? renderDeck(doc, { map }) : renderReport(asReport(), { theme }), `${stem}.pdf`));
+      written.push(htmlToPdf(isLayout(doc) ? renderLayoutPage(doc, { theme }) : kind === "deck" ? renderDeck(doc, { map }) : renderReport(asReport(), { theme }), `${stem}.pdf`));
     } else throw new Error(`--to must be md, mdx, html, svg, png or pdf, not "${to}".`);
     console.log(written.join("\n"));
   } else if (command === "deck" && files.length) {

@@ -1,6 +1,6 @@
 ---
 name: glyph-kit
-description: Draws product-design figures as text with block (░▒▓█) and box-drawing characters - research and survey results, funnels and A/B tests, UX flows and state machines, roadmaps, screen wireframes, design-system docs, handoff and QA checklists, motion specs and moving diagrams. Use for an ASCII or Unicode diagram, text wireframe, sparkline or bar chart in Markdown, a PR, a ticket or a doc; a design review deck; a report or audit as a PDF; or turning a text wireframe into an HTML prototype or components from the project's design system. Draws from a small JSON spec with real, sourced data and exports Markdown, MDX, HTML, SVG, PNG and PDF.
+description: Draws product-design figures and one-page readouts, dashboards and status updates as text with block (░▒▓█) and box-drawing characters - research and survey results, funnels and A/B tests, UX flows and state machines, roadmaps, screen wireframes, design-system docs, handoff and QA checklists, motion specs and moving diagrams. Use for an ASCII or Unicode diagram, text wireframe, sparkline or bar chart in Markdown, a PR, a ticket or a doc; a design review deck; a report or audit as a PDF; or turning a text wireframe into an HTML prototype or components from the project's design system. Draws from a small JSON spec with real, sourced data and exports Markdown, MDX, HTML, SVG, PNG and PDF.
 license: MIT
 metadata:
   version: "0.2.0"
@@ -20,11 +20,12 @@ Every artifact is a **spec** (`{ kind, title, intent, source, data, options, mot
 | Funnels, retention, A/B results, metrics, everyday charts | `reference/areas/metrics.md` |
 | User flows with decisions, state machines, journey maps, sitemaps | `reference/areas/flows.md` |
 | Roadmaps, priorities, ownership, timelines, decisions | `reference/areas/planning.md` |
-| Screens and layouts | `reference/areas/wireframes.md` |
+| Screens: a single screen, an app shell, a card grid, list and detail, a modal | `reference/areas/wireframes.md` |
 | Tokens, scales, contrast, component states, layers | `reference/areas/systems.md` |
 | Redlines, QA checklists, before and after | `reference/areas/handoff.md` |
 | Motion intent, timing, transitions, stagger, easing | `reference/areas/motion.md` |
 | Handoffs, retries, caches, traffic splits, incidents | `reference/areas/process.md` |
+| A whole deliverable on one page: readout or one-pager, dashboard, PR summary, design review, status update | `reference/areas/layouts.md` |
 
 Each guide lists its kinds with when to use them, a real example, the spec that made it, and what to watch for. `node scripts/glyph-kit.mjs kinds` lists them all.
 

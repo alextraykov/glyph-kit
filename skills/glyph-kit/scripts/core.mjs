@@ -125,11 +125,15 @@ export function forecast(rows, { width: preferred = 36, max, legend = "░ = pro
 }
 
 /** A bracketed meter against a cap: [ ████████░░░░ ] 64% of the cap */
-export function meter(value, cap, { width = 24, label = "of the cap" } = {}) {
+export function meter(value, cap, { width: preferred = 24, label = "of the cap", maxWidth = LAYOUT.maxWidth } = {}) {
   const f = cap > 0 ? value / cap : 0;
-  const n = clamp(Math.round(f * width), f > 0 ? 1 : 0, width);
   const over = f > 1 ? " over" : "";
-  return `[ ${"█".repeat(n)}${"░".repeat(width - n)} ] ${Math.round(f * 100)}% ${label}${over}`;
+  const pct = `${Math.round(f * 100)}%`;
+  // The bar gives way first, keeping room for the label's first few cells; then the label is cut.
+  const width = clamp(Math.round(Number(preferred)) || 1, 1, Math.max(1, maxWidth - 4 - 1 - len(pct) - len(over) - 6));
+  const n = clamp(Math.round(f * width), f > 0 ? 1 : 0, width);
+  const room = maxWidth - width - 4 - 1 - len(pct) - len(over) - 1;
+  return `[ ${"█".repeat(n)}${"░".repeat(width - n)} ] ${pct} ${cut(String(label ?? ""), Math.max(1, room))}${over}`;
 }
 
 /** Sparkline from ▁ to █. null or undefined draws a gap. */

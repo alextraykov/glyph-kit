@@ -10,6 +10,7 @@ export const AREA_DOCS = {
   wireframes: "Screens built from a small set of primitives. The same primitive names map to real components in the design-system map, which is what lets a text wireframe become a prototype and then production code without reinterpretation.",
   systems: "Document the design system as data: scales, contrast, component states, layers and tokens. Contrast is computed, not eyeballed.",
   handoff: "Measurements and checklists for handing work to engineering and checking what came back.",
+  layouts: "Whole deliverables on one page: a readout, a dashboard, a PR summary, a design review or a status update. Fill the slots with a sentence, short lists and ordinary specs; code places everything within 80 cells, putting narrow figures side by side and stacking the rest. Figures without their own source use the layout's. Export to HTML or PDF for a finished page in the kit's type. Pick by the ask: a write-up or one-pager is a readout; weekly numbers a dashboard; what a PR changed a prSummary; choosing between options a designReview; where work stands a statusUpdate. When unsure, use a readout.",
   motion: "Write motion down as a decision before anyone animates it: why it moves, what starts it, how long, which curve, and what reduced motion shows instead. The HTML form plays it."
 };
 
@@ -49,6 +50,15 @@ export const KIND_DOCS = {
   decisionLog: { when: "Recording what was decided and why.", traps: "Write the why as evidence, not opinion." },
   screen: { when: "A layout proposal: content, order and controls before visuals.", traps: "One screen per sketch; notes go outside the frame; use only the primitives so the map can translate them." },
   responsive: { when: "The same screen at two widths.", traps: "Show what moves or disappears, not just a narrower copy." },
+  appShell: { when: "An app page with a header, a sidebar and content: admin pages, settings apps, anything with navigation. The default for a screen.", traps: "Sidebar 10 to width − 24 cells (18 by default); regions take the screen primitives." },
+  cardGrid: { when: "Galleries, template pickers, grids of projects.", traps: "Up to 6 cards, 2 or 3 to a row by width; keep each card to a few rows." },
+  listDetail: { when: "Inboxes, master and detail, anything where picking an item shows it.", traps: "Mark the picked item with selected (its index or text)." },
+  modal: { when: "A dialog over a page: confirm, delete, a short form.", traps: "The page shows dimmed behind it; make the page tall enough for the dialog." },
+  readout: { when: "A one-pager on a test or a study: headline, up to 3 summary lines, up to 4 figures of evidence, next steps.", traps: "The headline is the finding in one sentence, not a topic." },
+  dashboard: { when: "Weekly numbers at a glance: 2 to 6 tiles and a note.", traps: "Tiles keep their natural width and share a row when they fit in 80 cells: narrow kinds (meter, sparkline) pack two or three to a row." },
+  prSummary: { when: "What a pull request changed: one line, before and after side by side, checks, risks.", traps: "Before and after use the same kind and scale; each up to 38 cells wide sits side by side." },
+  designReview: { when: "Choosing between 2 or 3 options: the question, the options, a recommendation, open questions.", traps: "Give each option a title; draw them with the same kind. Options up to 38 cells wide sit side by side." },
+  statusUpdate: { when: "Where work stands: the period, progress figures, done, next and blocked lists.", traps: "Each blocked item says why in words." },
   spacingScale: { when: "Documenting spacing tokens.", traps: "State the unit per cell under the chart." },
   typeScale: { when: "Documenting type sizes and line heights.", traps: "Sizes in one unit; bars compare size, not weight." },
   contrast: { when: "Checking colour pairs against WCAG 2 thresholds.", traps: "AA needs 4.5:1 for body text and 3:1 for large text and UI parts." },

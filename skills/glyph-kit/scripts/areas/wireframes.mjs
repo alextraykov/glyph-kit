@@ -149,6 +149,107 @@ export function responsive(screens, { gap = 4, maxWidth = LAYOUT.maxWidth, lang 
   );
 }
 
+// Screen layouts: regions inside one double frame, each filled with the same primitives as a screen.
+
+/** Draw primitive rows into a region `w` cells wide. A divider spans the region. */
+function region(rows = [], w, lang) {
+  if (!Array.isArray(rows)) throw new Error("A region is a list of rows, like a screen's rows.");
+  const capped = capRows(rows);
+  const lines = [];
+  for (const row of capped.rows) {
+    const draw = PRIMITIVES[row?.type];
+    if (!draw) throw new Error(`Unknown wireframe primitive: ${row?.type}`);
+    for (const value of [row.height, row.lines]) {
+      if (value != null && (!Number.isInteger(value) || value < 1 || value > LAYOUT.rowsMax)) throw new Error(`A wireframe block needs between 1 and ${LAYOUT.rowsMax} rows.`);
+    }
+    for (const line of draw(row, w, lang)) lines.push(line === "\u0000divider" ? "─".repeat(w) : cut(line, w));
+  }
+  if (capped.note) lines.push(cut(capped.note, w));
+  return lines;
+}
+
+const frameWidth = (data, fallback, maxWidth) => {
+  const W = Math.min(data.width ?? fallback, maxWidth);
+  if (!Number.isInteger(W) || W < 40) throw new Error("A screen layout needs a width of at least 40 cells.");
+  return W;
+};
+const titleBar = (title, room) => (title ? `═ ${cut(title, Math.max(1, room - 3))} ` : "");
+
+/** Header across the top, a sidebar and the content. data: { title?, width?, header?, sidebar, content, sidebarWidth? } */
+export function appShell(data, { maxWidth = LAYOUT.maxWidth, lang } = {}) {
+  const W = frameWidth(data, 64, maxWidth);
+  const S = data.sidebarWidth ?? 18;
+  if (!Number.isInteger(S) || S < 10 || S > W - 24) throw new Error(`The sidebar can be 10 to ${W - 24} cells wide at a width of ${W}.`);
+  const C = W - S - 5;
+  const b = BOX.double;
+  const header = data.header?.length ? region(data.header, W - 4, lang) : [];
+  const side = region(data.sidebar, S - 2, lang);
+  const main = region(data.content, C, lang);
+  const split = (l, r) => l + b.h.repeat(S) + b.tt + b.h.repeat(W - S - 3) + r;
+  const lines = [];
+  if (header.length) {
+    const t = titleBar(data.title, W - 2);
+    lines.push(b.tl + t + b.h.repeat(W - 2 - len(t)) + b.tr);
+    header.forEach((l) => lines.push(`${b.v} ${padEnd(l, W - 4)} ${b.v}`));
+    lines.push(split(b.lt, b.rt));
+  } else {
+    const t = titleBar(data.title, S);
+    lines.push(b.tl + t + b.h.repeat(S - len(t)) + b.tt + b.h.repeat(W - S - 3) + b.tr);
+  }
+  const h = Math.max(side.length, main.length, 1);
+  for (let i = 0; i < h; i++) lines.push(`${b.v} ${padEnd(side[i] ?? "", S - 2)} ${b.v} ${padEnd(main[i] ?? "", C)} ${b.v}`);
+  lines.push(b.bl + b.h.repeat(S) + b.bt + b.h.repeat(W - S - 3) + b.br);
+  return join(lines);
+}
+
+/** Cards in a grid, two or three to a row, under an optional header. data: { title?, width?, header?, cards: [{ title, rows }], columns? } */
+export function cardGrid(data, { maxWidth = LAYOUT.maxWidth, lang } = {}) {
+  const W = frameWidth(data, 80, maxWidth);
+  const inner = W - 4;
+  if (!Array.isArray(data.cards) || !data.cards.length) throw new Error("A card grid needs at least one card in \"cards\".");
+  const n = data.columns ?? (inner >= 3 * 20 + 4 ? 3 : 2);
+  if (![1, 2, 3].includes(n)) throw new Error("A card grid has 1, 2 or 3 columns.");
+  const cw = Math.floor((inner - 2 * (n - 1)) / n);
+  if (cw < 14) throw new Error(`${n} cards side by side need ${n * 14 + 2 * (n - 1) + 4} cells; make the grid wider or use fewer columns.`);
+  const capped = capRows(data.cards, 6, "cards");
+  const cards = capped.rows.map((card) => {
+    const t = card?.title ? `─ ${cut(card.title, cw - 6)} ` : "";
+    return { top: "┌" + t + "─".repeat(cw - 2 - len(t)) + "┐", rows: region(card?.rows ?? [], cw - 4, lang) };
+  });
+  const b = BOX.double;
+  const body = data.header?.length ? [...region(data.header, inner, lang), "\u0000divider"] : [];
+  for (let r = 0; r < cards.length; r += n) {
+    const group = cards.slice(r, r + n);
+    const h = Math.max(1, ...group.map((c) => c.rows.length));
+    if (r) body.push("");
+    body.push(group.map((c) => c.top).join("  "));
+    for (let i = 0; i < h; i++) body.push(group.map((c) => `│ ${padEnd(c.rows[i] ?? "", cw - 4)} │`).join("  "));
+    body.push(group.map(() => "└" + "─".repeat(cw - 2) + "┘").join("  "));
+  }
+  if (capped.note) body.push("", capped.note);
+  const t = titleBar(data.title, W - 2);
+  const lines = [b.tl + t + b.h.repeat(W - 2 - len(t)) + b.tr];
+  body.forEach((l) => lines.push(l === "\u0000divider" ? b.lt + b.h.repeat(W - 2) + b.rt : `${b.v} ${padEnd(l, inner)} ${b.v}`));
+  lines.push(b.bl + b.h.repeat(W - 2) + b.br);
+  return join(lines);
+}
+
+/** A list on the left, the selected item's detail on the right. data: { title?, width?, header?, list: [text], selected?, detail, listWidth? } */
+export function listDetail(data, options = {}) {
+  if (!Array.isArray(data.list) || !data.list.length) throw new Error("A list and detail screen needs items in \"list\".");
+  const selected = typeof data.selected === "number" ? data.selected : data.list.indexOf(data.selected);
+  const items = data.list.map((text, i) => ({ text: String(text ?? ""), selected: i === selected }));
+  return appShell({ title: data.title, width: data.width ?? 72, header: data.header, sidebar: [{ type: "list", items }], content: data.detail, sidebarWidth: data.listWidth ?? 26 }, options);
+}
+
+/** A dialog over a dimmed page. data: { title?, width?, page: rows, dialog: { title, rows, width? } } */
+export function modal(data, options = {}) {
+  if (!data.dialog || !Array.isArray(data.dialog.rows)) throw new Error("A modal needs a \"dialog\" with a title and rows.");
+  return screen({ title: data.title, width: data.width ?? 56, rows: data.page ?? [], overlay: data.dialog }, options);
+}
+
+const types = (rows) => (Array.isArray(rows) ? rows.map((r) => r?.type).join(", ") : "");
+
 export const kinds = {
   screen: {
     label: "Screen wireframe",
@@ -159,5 +260,29 @@ export const kinds = {
     label: "Responsive pair",
     render: responsive,
     summary: (s) => s.map((x) => `${x.label}: ${x.spec.rows.map((r) => r.type).join(", ")}`).join(". ")
+  },
+  appShell: {
+    label: "App shell",
+    wireframe: true,
+    render: appShell,
+    summary: (d) => `${d.title ?? "Screen"}: ${d.header?.length ? `header (${types(d.header)}), ` : ""}sidebar (${types(d.sidebar)}), content (${types(d.content)}).`
+  },
+  cardGrid: {
+    label: "Card grid",
+    wireframe: true,
+    render: cardGrid,
+    summary: (d) => `${d.title ?? "Screen"}: ${d.cards?.length ?? 0} cards${d.cards?.length ? `: ${d.cards.map((c) => c?.title ?? "untitled").join(", ")}` : ""}.`
+  },
+  listDetail: {
+    label: "List and detail",
+    wireframe: true,
+    render: listDetail,
+    summary: (d) => `${d.title ?? "Screen"}: a list of ${d.list?.length ?? 0} with ${typeof d.selected === "number" ? d.list?.[d.selected] : d.selected ?? "nothing"} selected, and its detail (${types(d.detail)}).`
+  },
+  modal: {
+    label: "Modal over a page",
+    wireframe: true,
+    render: modal,
+    summary: (d) => `${d.title ?? "Screen"}, with a ${d.dialog?.title ?? "dialog"} dialog over it.`
   }
 };

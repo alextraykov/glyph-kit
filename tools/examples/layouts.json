@@ -1,0 +1,201 @@
+[
+  {
+    "kind": "readout",
+    "title": "Empty state test, week 3",
+    "source": "Illustrative: made up for this example",
+    "data": {
+      "headline": "The new empty state lifts first-chart conversion from 4.1% to 5.3%.",
+      "summary": [
+        "The intervals no longer overlap.",
+        "Rollout is at 62% of accounts."
+      ],
+      "evidence": [
+        {
+          "kind": "abResult",
+          "title": "Conversion to first chart",
+          "data": [
+            {
+              "label": "control",
+              "value": 4.1,
+              "low": 3.6,
+              "high": 4.6
+            },
+            {
+              "label": "new",
+              "value": 5.3,
+              "low": 4.8,
+              "high": 5.9
+            }
+          ],
+          "options": {
+            "min": 3,
+            "max": 7
+          }
+        },
+        {
+          "kind": "meter",
+          "title": "Rollout",
+          "data": {
+            "value": 62,
+            "cap": 100
+          },
+          "options": {
+            "width": 20
+          }
+        }
+      ],
+      "next": [
+        "Ship to all accounts on 28 Oct."
+      ]
+    }
+  },
+  {
+    "kind": "dashboard",
+    "title": "Week 42",
+    "source": "Illustrative: made up for this example",
+    "data": {
+      "tiles": [
+        {
+          "kind": "sparkline",
+          "title": "Weekly active",
+          "data": {
+            "label": "active",
+            "values": [
+              820,
+              860,
+              900,
+              880,
+              940,
+              1010
+            ]
+          }
+        },
+        {
+          "kind": "meter",
+          "title": "Seats used",
+          "data": {
+            "value": 84,
+            "cap": 100
+          },
+          "options": {
+            "width": 16
+          }
+        },
+        {
+          "kind": "sparkline",
+          "title": "Open tickets",
+          "data": {
+            "label": "tickets",
+            "values": [
+              61,
+              58,
+              60,
+              52,
+              49,
+              45
+            ]
+          }
+        }
+      ],
+      "note": "Tickets fell after the onboarding fix."
+    }
+  },
+  {
+    "kind": "prSummary",
+    "title": "Shorter signup",
+    "source": "Illustrative: made up for this example",
+    "data": {
+      "change": "Signup drops from five steps to three.",
+      "before": {
+        "kind": "flow",
+        "data": [
+          "Email",
+          "Password",
+          "Name",
+          "Team",
+          "Done"
+        ]
+      },
+      "after": {
+        "kind": "flow",
+        "data": [
+          "Email",
+          "Team",
+          "Done"
+        ]
+      },
+      "risks": [
+        "Team invites now happen after signup."
+      ]
+    }
+  },
+  {
+    "kind": "designReview",
+    "title": "Where filters live",
+    "source": "Illustrative: made up for this example",
+    "data": {
+      "question": "Should filters sit in a sidebar or above the table?",
+      "options": [
+        {
+          "kind": "meter",
+          "title": "Sidebar: tasks done",
+          "data": {
+            "value": 7,
+            "cap": 8
+          },
+          "options": {
+            "width": 12,
+            "label": "of tasks"
+          }
+        },
+        {
+          "kind": "meter",
+          "title": "Above: tasks done",
+          "data": {
+            "value": 5,
+            "cap": 8
+          },
+          "options": {
+            "width": 12,
+            "label": "of tasks"
+          }
+        }
+      ],
+      "recommendation": "Use the sidebar: more people finished every task.",
+      "open": [
+        "Does the sidebar fit at tablet width?"
+      ]
+    }
+  },
+  {
+    "kind": "statusUpdate",
+    "title": "Checkout, sprint 14",
+    "source": "Illustrative: made up for this example",
+    "data": {
+      "period": "13 to 24 October.",
+      "progress": [
+        {
+          "kind": "meter",
+          "title": "Stories done",
+          "data": {
+            "value": 9,
+            "cap": 12
+          },
+          "options": {
+            "width": 20,
+            "label": "of 12"
+          }
+        }
+      ],
+      "done": [
+        "Empty state shipped to 62%."
+      ],
+      "next": [
+        "Full rollout on 28 Oct."
+      ],
+      "blocked": [
+        "Dark mode contrast: waiting on new tokens."
+      ]
+    }
+  }
+]

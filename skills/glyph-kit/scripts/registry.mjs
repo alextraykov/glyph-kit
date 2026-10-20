@@ -9,6 +9,7 @@ import { kinds as research } from "./areas/research.mjs";
 import { kinds as systems } from "./areas/systems.mjs";
 import { kinds as wireframes } from "./areas/wireframes.mjs";
 import { kinds as process } from "./areas/process.mjs";
+import { kinds as layouts } from "./areas/layouts.mjs";
 
 export const AREAS = {
   research: { label: "Research data", kinds: research },
@@ -19,7 +20,8 @@ export const AREAS = {
   systems: { label: "Design system", kinds: systems },
   handoff: { label: "Handoff and QA", kinds: handoff },
   motion: { label: "Motion", kinds: motion },
-  process: { label: "Processes over time", kinds: process }
+  process: { label: "Processes over time", kinds: process },
+  layouts: { label: "Document layouts", kinds: layouts }
 };
 
 /** kind → { area, label, render, summary }. A kind listed in two areas keeps its first area. */

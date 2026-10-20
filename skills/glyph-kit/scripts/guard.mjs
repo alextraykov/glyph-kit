@@ -26,10 +26,12 @@ const name = (spec, fallback) => (spec.title ? `"${spec.title}"` : `This ${fallb
  * Throw a plain-language error when a spec breaks a data rule. `check` is the kind's own
  * check: data → list of problem sentences.
  */
-export function guard(spec, { check, label } = {}) {
+export function guard(spec, { check, label, layout, wireframe } = {}) {
   if (typeof spec.data === "string" && spec.data.startsWith("@"))
     throw new Error(`${name(spec, label)} reads its data from ${spec.data.slice(1)}, which hasn't been loaded. Render it with the command line (scripts/glyph-kit.mjs), which reads the file.`);
-  if (hasNumbers(spec.data) && !String(spec.source ?? "").trim())
+  // A layout's figures are checked one by one when it is drawn, each with its own source or the
+  // layout's. A screen layout's numbers are sizes, not data.
+  if (!layout && !wireframe && hasNumbers(spec.data) && !String(spec.source ?? "").trim())
     throw new Error(`${name(spec, label)} has numbers but no source. Say where they came from in "source", or start it with "Illustrative" if they're made up.`);
   const problems = check ? check(spec.data).filter(Boolean) : [];
   if (problems.length) throw new Error(`${name(spec, label)}: ${problems.join(" ")}`);
