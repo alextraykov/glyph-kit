@@ -540,7 +540,6 @@ const home = page({
     <article class="stat"><p class="label">Ended correct</p><strong>${study.correct.kit} of ${study.correct.runs}</strong><p>Every kit run ended correct. HTML/JS: ${study.correct.html}. Drawn by hand: ${study.correct.byHand}.</p></article>
     <article class="stat"><p class="label">Fewer tokens written</p><strong>${times(study.outputVsHtml.moving)}</strong><p>For a moving diagram; about ${Math.round(study.outputVsHtml.funnel)}× for a funnel or a screen. Fewer on every run. A figure draws in ${stats.us} μs.</p></article>
   </div>
-  <div class="study">${STUDY_TABLE}</div>
   <p class="stats-note">${study.model} in Claude Code · ${study.runs} runs · medians of 3 runs per figure · ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · published prices · more testing is planned, with other models and more figures</p>
 </section>
 
