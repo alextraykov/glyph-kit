@@ -19,7 +19,9 @@ const imp = (p) => import(new URL(`file://${join(kit, p)}`).href);
 const { AREAS, KINDS } = await imp("scripts/registry.mjs");
 const { AREA_DOCS, KIND_DOCS } = await import(new URL(`file://${join(root, "tools/docs.mjs")}`).href);
 const { width: textWidth } = await imp("scripts/text.mjs");
-const { body, label } = await imp("scripts/render/text.mjs");
+const { body, label, renderText, renderMarkdown } = await imp("scripts/render/text.mjs");
+const { renderMdx } = await imp("scripts/render/mdx.mjs");
+const { renderSvg } = await imp("scripts/render/svg.mjs");
 const { paint } = await imp("scripts/render/paint.mjs");
 const { LIVE, live, stillGrid } = await imp("scripts/live/kinds.mjs");
 const { resolve } = await imp("scripts/registry.mjs");
@@ -109,47 +111,64 @@ const mv = study.claudeCode.medians.moving;
 const times = (r) => `${r >= 10 ? Math.round(r) : r.toFixed(1)}×`;
 const secs = (n) => (n >= 90 ? `${(n / 60).toFixed(0)} min` : `${Math.round(n)} s`);
 const thousands = (n) => `${(n / 1000).toFixed(1)}k`;
-// The study's medians, drawn by the kit: each figure, the kit against HTML/JS.
-// Output: the same audit spec in each format, read from the files the site serves.
-const AUDIT = join(root, "site/public/examples/motion-audit");
-const kb = (file) => { const n = statSync(join(AUDIT, file)).size; return n < 1024 ? `${n} B` : `${Math.round(n / 1024)} KB`; };
-const lines = (file, n) => esc(readFileSync(join(AUDIT, file), "utf8").split("\n").slice(0, n).join("\n"));
-const OUTPUTS = [
-  { id: "html", name: "Report page", to: "html", file: "motion-audit.html", view: "frame", what: "A cover, a summary, numbered sections and figures, in Departure Mono with the figures as text.", preview: '<iframe src="/examples/motion-audit/motion-audit.html" title="The motion audit as a report page" loading="lazy"></iframe>' },
-  { id: "pdf", name: "PDF", to: "pdf", file: "motion-audit.pdf", view: "pages", what: "The same report printed to A4 by a browser already on the machine.", preview: [1, 2, 3, 4, 5, 6].map((n) => `<img src="/images/audit-pdf-${n}.webp" alt="Page ${n} of the PDF" width="909" height="1287" loading="lazy">`).join("") },
-  { id: "deck", name: "Deck", run: "node scripts/glyph-kit.mjs deck decks/motion-audit.json > deck.html", file: "../decks/motion-audit.html", view: "frame", what: "The same figures as slides, one point each, stepping line by line. Click into it and use the arrow keys.", preview: '<iframe data-src="/examples/decks/motion-audit.html" title="The motion audit as a deck"></iframe>' },
-  { id: "md", name: "Markdown", to: "md", file: "motion-audit.md", view: "text", what: "For a README, a PR or a ticket. Figures are text blocks, so they diff and paste anywhere.", preview: `<pre class="outputs__text">${lines("motion-audit.md", 40)}</pre>` },
-  { id: "mdx", name: "MDX", to: "mdx", file: "motion-audit.mdx", view: "text", what: "For a docs site in Astro, Next.js or Docusaurus, with front matter from the report.", preview: `<pre class="outputs__text">${lines("motion-audit.mdx", 40)}</pre>` },
-  { id: "svg", name: "SVG", to: "svg", file: "svg/figure-02.svg", view: "image", what: "Each figure as a vector for Keynote, Figma or a post. No font needed: blocks become shapes.", preview: [2, 4, 5].map((n) => `<img src="/examples/motion-audit/svg/figure-0${n}.svg" alt="Figure ${n} of the audit as SVG" loading="lazy">`).join("") }
+// Output: one figure from the motion audit. Its text form comes first, because that is the deliverable
+// most people paste; the other forms of the same spec swap in place.
+const AUDIT_SPEC = json("examples/reports/motion-audit.json").sections.flatMap((x) => x.figures ?? []).find((f) => f.kind === "gantt");
+const FORMATS = [
+  { id: "text", name: "Text", copy: renderText(AUDIT_SPEC), view: (t) => `<pre class="grid-figure">${paint(t)}</pre>` },
+  { id: "md", name: "Markdown", copy: renderMarkdown(AUDIT_SPEC), view: (t) => `<pre class="outputs__text">${esc(t)}</pre>` },
+  { id: "mdx", name: "MDX", copy: renderMdx([AUDIT_SPEC]), view: (t) => `<pre class="outputs__text">${esc(t)}</pre>` },
+  { id: "svg", name: "SVG", copy: renderSvg(AUDIT_SPEC, { theme: "paper" }), view: (t) => `<div class="outputs__svg">${t}</div>` }
 ];
-// Bento: six columns. Each area's cell takes the columns its example figure needs (2 up to 42 cells
-// wide, 3 up to 70, else 4), then cells are packed into full rows, in order where they fit; the last
-// cell of a row that can't be filled stretches to the edge.
-const figureWidth = (spec) => Math.max(...body(spec).split("\n").map((l) => [...l].length));
-const bento = (() => {
-  const queue = Object.entries(AREAS).map(([id, area]) => {
-    const w = figureWidth(examples[id][0]);
-    return { id, area, span: w <= 42 ? 2 : w <= 70 ? 3 : 4 };
+// Areas new in this release, or with a new type, for the home page's New labels.
+const NEW_AREAS = { process: "New area", layouts: "New area", handoff: "New: anatomy", wireframes: "New: screen layouts" };
+// The study's medians as one table: for each figure and each measure, the kit's value and HTML/JS's,
+// each with a bar on the pair's own scale, and how many times better the kit did. Wins are green.
+// Rows arrive in reading order; in each pair both bars grow at the same speed, so the kit's lands
+// first, and the result lands when the longer bar finishes.
+const STUDY_TABLE = (() => {
+  const B = 8, STEP = 25, ROW = 160;
+  const rows = Object.entries(study.claudeCode.medians).filter(([k]) => k !== "note").map(([, r]) => r);
+  const metrics = [
+    { title: "Time", key: "s", fmt: (n) => `${Math.round(n)} s` },
+    { title: "Cost", key: "usd", fmt: usd },
+    { title: "Tokens written", key: "out", fmt: thousands }
+  ];
+  const FW = Math.max(6, ...rows.map((r) => r.label.length));
+  const GW = 1 + B + 1 + B + 1 + 5 + 1; // " kit····· html···· ×···· "
+  const seg = (text, cls = "", d = null) => ({ text, cls, d });
+  const pad = (segs, w) => { const n = segs.reduce((a, s) => a + [...s.text].length, 0); return [...segs, seg(" ".repeat(Math.max(0, w - n)))]; };
+  const line = (first, groups) => [seg("│ "), ...pad(first, FW), seg(" │"), ...groups.flatMap((g) => [...pad(g, GW), seg("│")])];
+  const rule = (l, m, r) => [seg(l + "─".repeat(FW + 2) + m + Array(metrics.length).fill("─".repeat(GW)).join(m) + r, "gk-f")];
+  const out = [
+    rule("┌", "┬", "┐"),
+    line([], metrics.map((m) => [seg(" " + m.title)])),
+    line([seg("Figure")], metrics.map(() => [seg(" "), seg("kit".padEnd(B + 1), "win"), seg("HTML/JS".padEnd(B + 1), "lose"), seg("wins")])),
+    rule("├", "┼", "┤")
+  ];
+  rows.forEach((r, i) => {
+    const t0 = i * ROW;
+    const pairs = metrics.map((m) => {
+      const k = r.kit[m.key], h = r.html[m.key], top = Math.max(k, h);
+      const kn = Math.max(1, Math.round((k / top) * B)), hn = Math.max(1, Math.round((h / top) * B));
+      return { k, h, kn, hn, m, won: k < h, done: t0 + Math.max(kn, hn) * STEP };
+    });
+    out.push(line([seg(r.label, "", t0)], pairs.map((p) => [
+      seg(" "), seg(p.m.fmt(p.k).padEnd(B + 1), "", t0), seg(p.m.fmt(p.h).padEnd(B + 1), "", t0),
+      p.won ? seg(times(p.h / p.k), "win", p.done + 40) : seg("–", "lose", p.done + 40)
+    ])));
+    const bar = (n, cls) => [...Array.from({ length: n }, (_, c) => seg("█", `gk-d ${cls}`, t0 + (c + 1) * STEP)), seg(" ".repeat(B - n + 1))];
+    out.push(line([], pairs.map((p) => [seg(" "), ...bar(p.kn, "win"), ...bar(p.hn, "lose")])));
+    if (i < rows.length - 1) out.push(line([], metrics.map(() => [])));
   });
-  const out = [];
-  while (queue.length) {
-    const row = [queue.shift()];
-    let left = 6 - row[0].span;
-    for (let i = 0; i < queue.length && left > 0; ) {
-      if (queue[i].span <= left) { left -= queue[i].span; row.push(queue.splice(i, 1)[0]); } else i++;
-    }
-    row.at(-1).span += left;
-    out.push(...row);
-  }
-  return out;
+  out.push(rule("└", "┴", "┘"));
+  const html = out.map((l) => l.map((s) => {
+    const body = s.cls ? `<span class="${s.cls}">${esc(s.text)}</span>` : esc(s.text);
+    return s.d == null ? body : `<span class="gk-a" style="--d:${s.d}ms">${body}</span>`;
+  }).join("")).join("\n");
+  const label = `The kit against HTML/JS in Claude Code, medians: ${rows.map((r) => `${r.label}: ${metrics.map((m) => `${m.title.toLowerCase()} ${m.fmt(r.kit[m.key])} against ${m.fmt(r.html[m.key])}`).join(", ")}`).join("; ")}.`;
+  return `<pre class="grid-figure" data-arrive role="img" aria-label="${esc(label)}">${html}</pre>`;
 })();
-const studyTable = {
-  kind: "table",
-  title: "The kit against HTML/JS in Claude Code",
-  source: `Glyph kit cost study, ${study.model} in Claude Code, medians of 3 runs, ${study.measured}`,
-  data: [["Kit / HTML/JS", "Time", "Cost", "Tokens written"], ...Object.entries(study.claudeCode.medians).filter(([k]) => k !== "note").map(([, r]) =>
-    [r.label, `${Math.round(r.kit.s)} s / ${Math.round(r.html.s)} s`, `${usd(r.kit.usd)} / ${usd(r.html.usd)}`, `${thousands(r.kit.out)} / ${thousands(r.html.out)}`])]
-};
 const kindCount = Object.keys(KINDS).length;
 const areaCount = Object.keys(AREAS).length;
 // Size of the release zip, when it has been packed (node scripts/pack.mjs); otherwise left out.
@@ -282,7 +301,7 @@ const install = `<div class="install" id="get" aria-label="Get the kit">
   ${cmd("/plugin marketplace add alextraykov/glyph-kit")}
   ${cmd("/plugin install glyph-kit@traykov")}
   <p class="install__hand"><a class="text-link" href="${REPO}/releases/latest/download/glyph-kit.zip">Download the kit · ${zipSize}</a> <span>Unzip into ~/.claude/skills or ~/.agents/skills.</span></p>
-  <p class="install__hand">Best in <a class="text-link" href="https://departuremono.com">Departure Mono</a>, a free font. Any monospace font with block characters works.</p>
+  <p class="install__hand">Best in <a class="text-link" href="https://departuremono.com">Departure Mono</a>. Shoutout to <a class="text-link" href="https://helenazhang.com">Helena Zhang</a>, who made it.</p>
 </div>`;
 
 const exampleSpec = liveSpecs["signup-funnel"];
@@ -513,15 +532,15 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="cheap">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Against HTML/JS</p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>The same five figures asked of Claude Code twice: once with the kit, once written as HTML/JS. A funnel, a flow, a settings screen, a deck and a moving diagram.</p></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Against HTML/JS <span class="new">New</span></p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>The same five figures asked of Claude Code twice: once with the kit, once written as HTML/JS. A funnel, a flow, a settings screen, a deck and a moving diagram.</p></header>
   <div class="stats">
     <article class="stat"><p class="label">Faster</p><strong>${times(mv.html.s / mv.kit.s)}</strong><p>A moving diagram took ${secs(mv.kit.s)} against ${secs(mv.html.s)}. The kit was faster at the median for all five.</p></article>
     <article class="stat"><p class="label">Cheaper</p><strong>${times(mv.html.usd / mv.kit.usd)}</strong><p>${usd(mv.kit.usd)} against ${usd(mv.html.usd)} for a moving diagram, and cheaper on every run for four of the five. For a simple flow, HTML cost less.</p></article>
     <article class="stat"><p class="label">Ended correct</p><strong>${study.correct.kit} of ${study.correct.runs}</strong><p>Every kit run ended correct. HTML/JS: ${study.correct.html}. Drawn by hand: ${study.correct.byHand}.</p></article>
     <article class="stat"><p class="label">Fewer tokens written</p><strong>${times(study.outputVsHtml.moving)}</strong><p>For a moving diagram; about ${Math.round(study.outputVsHtml.funnel)}× for a funnel or a screen. Fewer on every run. A figure draws in ${stats.us} μs.</p></article>
   </div>
-  <div class="study">${figure(studyTable)}</div>
-  <p class="stats-note">${study.model} in Claude Code, ${study.runs} runs in all, ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}, at ${study.prices}.</p>
+  <div class="study">${STUDY_TABLE}</div>
+  <p class="stats-note">${study.model} in Claude Code · ${study.runs} runs · medians of 3 runs per figure · ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · published prices · more testing is planned, with other models and more figures</p>
 </section>
 
 <section class="section" aria-labelledby="use">
@@ -534,15 +553,18 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="moving">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Motion</p><h2 id="moving">Six keep moving. Every type arrives.</h2></header>
-  <div class="gallery">${moving.slice(0, 6).map((mv) => liveFigure(mv)).join("\n")}</div>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Motion <span class="new">New</span></p><h2 id="moving">Six keep moving. Every type arrives.</h2></header>
+  <div class="switch" data-switch style="--rows:${Math.max(...moving.slice(0, 6).map((mv) => mv.rows))}">
+    <div class="switch__chips" role="tablist" aria-label="Moving diagrams">${moving.slice(0, 6).map((mv, i) => `<button type="button" role="tab" id="mv-${mv.id}" aria-controls="mv-${mv.id}-panel" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ""}>${esc(mv.spec.title)}</button>`).join("")}</div>
+    ${moving.slice(0, 6).map((mv, i) => `<div role="tabpanel" id="mv-${mv.id}-panel" aria-labelledby="mv-${mv.id}"${i ? " hidden" : ""}>${liveFigure(mv)}</div>`).join("\n    ")}
+  </div>
 </section>
 
 <section class="section" aria-labelledby="areas">
   <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Coverage</p><h2 id="areas">${kindCount} types. ${areaCount} areas.</h2><a class="text-link" href="/types/">Every type</a></header>
-  <div class="bento">${bento.map(({ id, area, span }) => {
+  <div class="bento">${Object.entries(AREAS).map(([id, area]) => {
     const n = Object.keys(area.kinds).length;
-    return `<article class="bento__cell" style="--span:${span}"><header class="bento__head"><h3><a href="/types/#${id}">${esc(area.label)}</a></h3><span class="label">${n} ${n === 1 ? "type" : "types"} →</span></header>${figure(examples[id][0])}<p>${Object.values(area.kinds).map((k) => esc(k.label)).join(" · ")}</p></article>`;
+    return `<article class="bento__cell"><header class="bento__head"><h3><a href="/types/#${id}">${esc(area.label)}</a></h3><span class="label">${n} ${n === 1 ? "type" : "types"}</span></header>${NEW_AREAS[id] ? `<span class="new">${esc(NEW_AREAS[id])}</span>` : ""}<div class="bento__peek" aria-hidden="true">${paint(body(examples[id][0]))}</div></article>`;
   }).join("\n")}</div>
 </section>
 
@@ -559,15 +581,18 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="formats">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">07 Output</p><h2 id="formats">One spec, every format.</h2><p>A motion audit of Pave's front end, written once as a spec and exported six ways. Each tab is the real file.</p></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">07 Output</p><h2 id="formats">Copy it as text. Export the rest.</h2><p>Every figure is plain text first, ready to paste into a PR, a ticket, Slack, an email or a model's context as it is. The same spec exports to Markdown, MDX, SVG, HTML, decks and PDF.</p></header>
   <div class="outputs" data-outputs>
-    <div class="outputs__tabs" role="tablist" aria-label="Formats">${OUTPUTS.map((o, i) => `<button type="button" role="tab" id="out-${o.id}" aria-controls="out-${o.id}-panel" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ""}><span>${esc(o.name)}</span><span class="label">${kb(o.file)}</span></button>`).join("")}</div>
-    ${OUTPUTS.map((o, i) => `<div class="outputs__panel" role="tabpanel" id="out-${o.id}-panel" aria-labelledby="out-${o.id}"${i ? " hidden" : ""}>
-      <div class="outputs__view outputs__view--${o.view}">${o.preview}</div>
-      <div class="outputs__meta"><p>${esc(o.what)}</p>${cmd(o.run ?? `node scripts/glyph-kit.mjs export motion-audit.json --to ${o.to}`)}<a class="text-link" href="/examples/${o.file.startsWith("../") ? o.file.slice(3) : `motion-audit/${o.file}`}" target="_blank" rel="noopener">Open ${esc(o.file.split("/").pop())}</a></div>
+    <div class="outputs__bar">
+      <div class="switch__chips" role="tablist" aria-label="Formats">${FORMATS.map((f, i) => `<button type="button" role="tab" id="out-${f.id}" aria-controls="out-${f.id}-panel" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ""}>${esc(f.name)}</button>`).join("")}</div>
+      <span class="label">${esc(AUDIT_SPEC.title)} · from the Pave motion audit</span>
+    </div>
+    ${FORMATS.map((f, i) => `<div class="outputs__panel" role="tabpanel" id="out-${f.id}-panel" aria-labelledby="out-${f.id}"${i ? " hidden" : ""}>
+      <div class="outputs__view">${f.view(f.copy)}</div>
+      <button type="button" class="button outputs__copy" data-copy="${esc(f.copy)}" aria-label="Copy the ${esc(f.name)}" hidden>Copy ${f.id === "text" ? "as text" : esc(f.name)}</button>
     </div>`).join("\n    ")}
   </div>
-  <p class="outputs__also">Also from a spec: <a class="text-link" href="/examples/product/settings">a prototype from a text wireframe</a> · <a class="text-link" href="/examples/live/review-queue">a moving diagram on its own</a></p>
+  <p class="outputs__also">Whole documents too: <a class="text-link" href="/examples/motion-audit/motion-audit.html">the report</a> · <a class="text-link" href="/examples/motion-audit/motion-audit.pdf">as a PDF</a> · <a class="text-link" href="/examples/decks/motion-audit">as a deck</a> · <a class="text-link" href="/examples/product/settings">a prototype from a text wireframe</a> · <a class="text-link" href="/examples/live/review-queue">a moving diagram on its own</a></p>
 </section>
 
 <section class="section support" aria-labelledby="support">

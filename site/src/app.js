@@ -11,16 +11,39 @@ document.querySelectorAll("[data-live]").forEach((pre) => {
   autoplay(pre, make, still);
 });
 
-// Copy buttons are icons: a tick for a moment after copying.
-document.querySelectorAll("[data-copy]").forEach((button) => {
+// Every still figure on the page can be copied as the plain text it is. Hidden arrival layers are
+// left out, so the copy is exactly the figure.
+const figureText = (pre) => {
+  const copy = pre.cloneNode(true);
+  copy.querySelectorAll(".gk-s0, .gk-s1, .gk-s2, [aria-hidden='true']").forEach((el) => el.remove());
+  return copy.textContent;
+};
+document.querySelectorAll("pre.grid-figure:not(.live)").forEach((pre) => {
+  if (pre.closest(".outputs, .builder, .try")) return;
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "figure-copy";
+  b.textContent = "Copy";
+  b.setAttribute("aria-label", "Copy this figure as text");
+  b.dataset.copyFigure = "";
+  b.addEventListener("click", () => { b.dataset.copy = figureText(pre); });
+  (pre.closest(".gk-replay-wrap") ?? pre).after(b);
+  b.parentElement.classList.add("has-figure-copy");
+});
+
+// Copy buttons: icons show a tick for a moment after copying; buttons with words say "Copied".
+document.querySelectorAll("[data-copy], [data-copy-figure]").forEach((button) => {
   button.hidden = false;
   const label = button.getAttribute("aria-label");
+  const words = button.querySelector("svg") ? null : button.textContent;
   button.addEventListener("click", async () => {
+    await Promise.resolve(); // a figure's text is gathered by its own click handler first
     try {
       await navigator.clipboard.writeText(button.dataset.copy);
       button.dataset.done = "";
       button.setAttribute("aria-label", "Copied");
       button.title = "Copied";
+      if (words) button.textContent = "Copied";
     } catch {
       button.title = "Select the text to copy it";
     }
@@ -28,6 +51,7 @@ document.querySelectorAll("[data-copy]").forEach((button) => {
       delete button.dataset.done;
       button.setAttribute("aria-label", label);
       button.title = "Copy";
+      if (words) button.textContent = words;
     }, 1600);
   });
 });
@@ -110,8 +134,9 @@ if (jump?.hasAttribute("data-filter")) {
   mark();
 }
 
-// Output: one tab per format. A frame loads its file the first time its tab is shown.
-document.querySelectorAll("[data-outputs]").forEach((box) => {
+// Tabs: the motion switcher and the output formats. Arrow keys move between tabs; a frame loads its
+// file the first time its tab is shown.
+document.querySelectorAll("[data-switch], [data-outputs]").forEach((box) => {
   const tabs = [...box.querySelectorAll('[role="tab"]')];
   const select = (tab, focus) => {
     tabs.forEach((t) => {
