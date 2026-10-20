@@ -3,6 +3,7 @@
 // source line names the file. Node only (it reads files); no dependencies.
 import { readFileSync } from "node:fs";
 import { basename, dirname, extname, resolve as resolvePath } from "node:path";
+import { LAYOUT_KINDS } from "./areas/layouts.mjs";
 
 /** Parse CSV text into rows: one object per line, keyed by the header. Numbers become numbers.
  *  Handles quoted fields, commas and line breaks inside quotes, and "" as an escaped quote. */
@@ -55,9 +56,14 @@ export function readData(ref, baseDir) {
   throw new Error(`Data files can be .csv or .json; ${basename(path)} is neither.`);
 }
 
-/** Every spec inside a file: one spec, a list, a deck's slides or a report's figures. */
-const specsIn = (doc) =>
+/** Every spec inside a file: one spec, a list, a deck's slides or a report's figures, and the
+ *  figures inside a document layout. */
+const top = (doc) =>
   Array.isArray(doc) ? doc : doc?.sections ? doc.sections.flatMap((s) => s.figures ?? []) : doc?.slides ? doc.slides.filter((s) => s.kind) : doc?.kind ? [doc] : [];
+const isSpec = (v) => v && typeof v === "object" && !Array.isArray(v) && typeof v.kind === "string";
+const inside = (spec) =>
+  LAYOUT_KINDS.has(spec.kind) && spec.data && typeof spec.data === "object" ? Object.values(spec.data).flatMap((v) => [v].flat().filter(isSpec)) : [];
+const specsIn = (doc) => top(doc).flatMap((spec) => [spec, ...inside(spec)]);
 
 /** Load "@file" data in place, for every spec in a document. Returns the document. */
 export function loadData(doc, baseDir) {

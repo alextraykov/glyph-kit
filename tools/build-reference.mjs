@@ -15,6 +15,16 @@ const root = join(here, "../skills/glyph-kit");
 const docsDir = join(here, "../docs");
 mkdirSync(join(root, "reference/areas"), { recursive: true });
 
+// Layout specs nest whole figure specs, so they print two levels deep and keep the rest on one line.
+const brief = (value, depth = 0) => {
+  if (depth >= 2 || value === null || typeof value !== "object") return JSON.stringify(value);
+  const pad = "  ".repeat(depth + 1);
+  const items = Array.isArray(value) ? value.map((v) => brief(v, depth + 1)) : Object.entries(value).map(([k, v]) => `${JSON.stringify(k)}: ${brief(v, depth + 1)}`);
+  const [open, close] = Array.isArray(value) ? ["[", "]"] : ["{", "}"];
+  return `${open}\n${items.map((i) => pad + i).join(",\n")}\n${"  ".repeat(depth)}${close}`;
+};
+const COMPOSED = new Set(["appShell", "cardGrid", "listDetail", "modal"]);
+
 for (const [area, { label: areaLabel, kinds }] of Object.entries(AREAS)) {
   const examples = JSON.parse(readFileSync(join(here, "examples", `${area}.json`), "utf8"));
   const out = [
@@ -32,7 +42,7 @@ for (const [area, { label: areaLabel, kinds }] of Object.entries(AREAS)) {
     if (doc.when) out.push(`**Use it for** ${doc.when.charAt(0).toLowerCase()}${doc.when.slice(1)}`, "");
     if (spec) {
       out.push("```text", body(spec), "```", "", `*${label(spec)}*`, "");
-      out.push("<details><summary>Spec</summary>", "", "```json", JSON.stringify({ kind: spec.kind, data: spec.data, ...(spec.options ? { options: spec.options } : {}) }, null, 2), "```", "", "</details>", "");
+      out.push("<details><summary>Spec</summary>", "", "```json", (def.layout || COMPOSED.has(kind) ? brief : (v) => JSON.stringify(v, null, 2))({ kind: spec.kind, ...(def.layout ? { source: spec.source } : {}), data: spec.data, ...(spec.options ? { options: spec.options } : {}) }), "```", "", "</details>", "");
     }
     if (doc.motion) out.push(`**Motion:** ${doc.motion}`, "");
     if (doc.traps) out.push(`**Watch for:** ${doc.traps}`, "");

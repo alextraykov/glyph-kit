@@ -17,9 +17,14 @@ const segmenter = (granularity, lang) => {
   }
 };
 
+// Printable ASCII, box drawing, blocks and the kit's other one-cell symbols never combine and are
+// never wide, so text made only of them skips segmentation: one cluster and one cell each.
+const simpleRe = /^[\x20-\x7e\u00b7\u00d7\u2013\u2014\u2018\u2019\u201c\u201d\u2026\u2190-\u21ff\u2500-\u25a1\u25b2\u25ba\u25bc\u25c4]*$/;
+
 /** Extended grapheme clusters when Intl.Segmenter exists; code points otherwise. */
 export function graphemes(value) {
   const text = String(value ?? "");
+  if (simpleRe.test(text)) return [...text];
   const seg = segmenter("grapheme");
   return seg ? [...seg.segment(text)].map((part) => part.segment) : [...text];
 }
@@ -49,7 +54,10 @@ export function cellWidth(cluster) {
 }
 
 /** Display width in character cells. */
-export const width = (value) => graphemes(value).reduce((sum, cluster) => sum + cellWidth(cluster), 0);
+export const width = (value) => {
+  const text = String(value ?? "");
+  return simpleRe.test(text) ? text.length : graphemes(text).reduce((sum, cluster) => sum + cellWidth(cluster), 0);
+};
 
 /** One entry per display cell. A wide cluster owns its first cell; the second is an empty continuation. */
 export function cells(value) {

@@ -7,11 +7,15 @@ import { stillGrid } from "../motion/shared.mjs";
 /** The diagram as plain text. Made-up data carries a SAMPLE DATA stamp in the figure itself. */
 export function body(spec, resolved) {
   const def = typeof resolved?.render === "function" ? resolved : resolve(spec);
-  const options = { ...spec.options, ...(spec.lang ? { lang: spec.lang } : {}) };
+  const options = { ...spec.options, ...(spec.lang ? { lang: spec.lang } : {}), ...(def.layout ? { source: spec.source, draw: drawInside } : {}) };
   const moving = spec.motion && def.motion ? def.motion(def.data, options) : null;
   const text = moving ? stillGrid(moving.make, moving.still).toText() : def.render(def.data, options);
   return isSample(spec.source) ? stamp(text) : text;
 }
+
+/** A figure inside a layout: it uses the layout's source unless it has its own, and is stamped
+ *  only for its own made-up data (the layout stamps itself once). */
+export const drawInside = (spec, source) => body(spec, resolve({ ...spec, source: spec.source ?? source }));
 
 /** A sentence describing the figure: the spec's own label, or one built from its data. */
 export function label(spec) {

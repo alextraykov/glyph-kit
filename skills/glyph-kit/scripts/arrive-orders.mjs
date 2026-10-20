@@ -206,6 +206,11 @@ export const ORDERS = {
       return read(r, c, ch);
     };
   },
+  // Screen layouts read like a screen: header, then each region in reading order.
+  appShell: (lines) => ORDERS.screen(lines),
+  cardGrid: (lines) => ORDERS.screen(lines),
+  listDetail: (lines) => ORDERS.screen(lines),
+  modal: (lines) => ORDERS.screen(lines),
   // Desktop first, then mobile row by row against it.
   responsive: (lines) => {
     const split = lines[0].indexOf("Mobile");
