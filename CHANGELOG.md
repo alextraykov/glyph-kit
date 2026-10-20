@@ -2,6 +2,12 @@
 
 Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor version may change the spec format; the change is listed here with what to update.
 
+## Unreleased
+
+**Fixes**
+
+- **Meter.** A value below the cap never draws as full: 64 of 65 used to fill every cell.
+
 ## 0.2.0 — 2026-10-20
 
 **Motion**

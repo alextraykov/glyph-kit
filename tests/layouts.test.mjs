@@ -134,3 +134,11 @@ test("screen layouts close their frames and check their sizes", () => {
   const modal = body({ kind: "modal", data: { page: [{ type: "skeleton", lines: 6 }], dialog: { title: "Sure?", rows: [{ type: "text", text: "Really." }] } } });
   assert.match(modal, /Sure\?/);
 });
+
+test("a meter below its cap never draws as full", async () => {
+  const { meter } = await import("../skills/glyph-kit/scripts/core.mjs");
+  assert.match(meter(64, 65, { width: 16 }), /^\[ █{15}░ \] 98%/);
+  assert.match(meter(65, 65, { width: 16 }), /^\[ █{16} \] 100%/);
+  assert.match(meter(1, 1000, { width: 16 }), /^\[ █░{15} \]/);
+  assert.match(meter(80, 65, { width: 16 }), /^\[ █{16} \] 123% of the cap over/);
+});
