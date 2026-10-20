@@ -28,12 +28,16 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 - **Reports show the figure as text** in Departure Mono, coloured by role, so the page copies as text. The example report goes from 73 KB to 46 KB.
 - **Smaller install.** The skill holds only what an agent needs; the zip goes from 495 KB to 136 KB, and the plugin installs only `skills/glyph-kit`.
 
+**Handoff**
+
+- **Component anatomy.** A new type, `anatomy`, draws a component's container with its parts inside, numbered on their edges, and a legend of each part's name and rule; optional parts have dashed edges. Parts sit in a row (a text field) or a column (a card). It arrives part by part in number order, each part with its legend line.
+
 **Language**
 
 - **Labels in any script.** Widths count display cells, so Chinese, Japanese and Korean take two and graphemes stay whole. The lint flags mixed right-to-left text.
 - **`lang`.** An optional language tag, like `"de"` or `"tr"`: numbers get local separators, uppercase follows the language, and HTML, decks, reports and MDX declare it.
 
-59 types in ten areas. Existing specs need no changes; regenerate standalone pages to get the new player and the font.
+60 types in ten areas. Existing specs need no changes; regenerate standalone pages to get the new player and the font.
 
 ## 0.1.0 — 2026-10-19
 

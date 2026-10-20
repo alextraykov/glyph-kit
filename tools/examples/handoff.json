@@ -47,6 +47,37 @@
     ]
   },
   {
+    "kind": "anatomy",
+    "title": "Text field anatomy",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "direction": "row",
+      "container": {
+        "label": "Container",
+        "spec": "radius 8, border 1, padding 12"
+      },
+      "parts": [
+        {
+          "label": "Icon",
+          "size": 4,
+          "spec": "icon 20",
+          "optional": true
+        },
+        {
+          "label": "Input text",
+          "size": 16,
+          "spec": "body 16, 1 line"
+        },
+        {
+          "label": "Clear",
+          "size": 4,
+          "spec": "icon 20, when filled",
+          "optional": true
+        }
+      ]
+    }
+  },
+  {
     "kind": "compare",
     "title": "Before and after the spacing pass",
     "source": "Sample data, made up for this example",

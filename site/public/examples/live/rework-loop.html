@@ -1491,7 +1491,7 @@ __glyph[9] = (() => {
 // motion review settled on: what the reader must see, in the order that shows it. Orders work in
 // abstract steps; `scaled` maps them onto the 40ms clock within the budget, so a figure arrives
 // within about 600ms and a diagram that grows along its lines within about 1.1s.
-const { ARRIVE_MAX, ARRIVE_STEP, barsFill, readingOrder } = __glyph[10];
+const { ARRIVE_MAX, ARRIVE_STEP, barsFill, cellsOf, readingOrder } = __glyph[10];
 
 const BOX = "─│┌┐└┘├┤┬┴┼━┃┏┓┗┛┣┫┳┻╋═║╔╗╚╝╠╣╦╩╬┄┆";
 const BLOCK = /[█▓▒░■▏▎▍▌▋▊▉▁▂▃▄▅▆▇]/u;
@@ -1745,6 +1745,33 @@ const ORDERS = {
     if (a < 0 || z <= a || c <= a || c >= z) return 0;
     return 1 + Math.abs(c - (a + z) / 2) / 2;
   }),
+  // The container stands, then each part lands in number order on the same step as its legend line,
+  // so number, place and rule are read together; the key lands last.
+  anatomy: (lines) => {
+    const cells = cellsOf(lines);
+    // Every numbered box: its marker on the top edge (┌ 3), its columns, and the rows down to its └.
+    const boxes = [];
+    cells.forEach((row, r) => row.forEach((c, i) => {
+      const m = c.ch === "┌" && row[i + 1]?.ch === " " && /\d/.test(row[i + 2]?.ch ?? "") ? Number(row[i + 2].ch) : 0;
+      if (!m) return;
+      const right = row.find((x) => x.col > c.col && x.ch === "┐")?.col ?? c.col;
+      let bottom = r;
+      while (bottom + 1 < cells.length && !cells[bottom + 1].some((x) => x.col === c.col && x.ch === "└")) bottom++;
+      boxes.push({ m, top: r, bottom: bottom + 1, left: c.col, right });
+    }));
+    const markers = boxes.length;
+    const unit = (m) => 1 + (m - 1) * 2;
+    return scaled(lines, (r, c) => {
+      const legend = lines[r].match(/^(\d+)  /);
+      if (legend) return unit(Number(legend[1]));
+      if (/^┄ /.test(lines[r])) return unit(markers + 1);
+      // The innermost box holding this cell; the container's own edge stands from the start.
+      const own = boxes.filter((b) => r >= b.top && r <= b.bottom && c >= b.left && c <= b.right).sort((a, b) => b.m - a.m)[0];
+      if (!own) return 0;
+      if (own.m === 1) return r === own.top && c === own.left + 2 ? unit(1) : 0;
+      return unit(own.m);
+    });
+  },
   // Progress first, then the items in order; a blocked item flashes as it lands.
   qaChecklist: (lines) => scaled(lines, (r) => (r < 2 ? 0 : 1 + (r - 2) * 2))
 };

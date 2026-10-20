@@ -38,7 +38,7 @@ By hand, copy this folder into a skills directory:
 Node 18 or later, nothing to install.
 
 ```bash
-node scripts/glyph-kit.mjs types                                   # 59 kinds in 10 areas
+node scripts/glyph-kit.mjs types                                   # 60 types in 10 areas
 node scripts/glyph-kit.mjs render examples/product/settings.spec.json --to markdown
 node scripts/glyph-kit.mjs render examples/product/settings.spec.json --to html > settings.html
 node scripts/glyph-kit.mjs deck examples/decks/export-review.json > deck.html   # a 16-slide review

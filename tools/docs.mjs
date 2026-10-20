@@ -68,6 +68,7 @@ export const KIND_DOCS = {
   table: { when: "Tables in places without Markdown: terminals, code comments.", traps: "In Markdown, use a Markdown table." },
   redline: { when: "Spacing and widths for handoff.", traps: "Widths are proportional but labels carry the real numbers." },
   qaChecklist: { when: "Design QA before release.", traps: "Blocked items need a reason in words." },
+  anatomy: { when: "The parts of a component for a spec page or handoff: what each numbered part is, its token or rule, and which parts are optional.", traps: "Name parts as the design system does and put the rule in spec, not the look. Up to 8 parts; parts side by side take a row, stacked parts (a card) take direction column. Sizes are proportions, so real measurements belong in a redline.", motion: "The container stands first with its legend line, then each part lands in number order on the same step as its legend line, so the eye ties the number, its place on the component and its rule together; the dashed-edge key lands last." },
   motionTiming: { when: "Comparing durations and easing, today against proposed.", traps: "Keep the 500ms scale fixed across a report; a + is usually the finding." },
   intentCard: { when: "Deciding a single motion before building it.", traps: "No intent, no animation: if 'why' is empty, cut it. Reduced motion is designed, not 'none'." },
   transitionSpec: { when: "One transition, property by property.", traps: "Animate transform and opacity; anything else needs a measured reason." },
