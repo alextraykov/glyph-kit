@@ -29,14 +29,23 @@ test("guide covers decks, reports and the spec, and names the kinds when it does
 });
 
 test("labels cut to fit are listed on stderr with their limit; stdout is unchanged", () => {
-  const spec = { kind: "branchFlow", data: [{ label: "Start" }, { label: "Link opened within 1 hour", type: "decision", no: { label: "Link expired", to: "Start" } }, { label: "Done" }] };
+  const spec = { kind: "barChart", source: "Illustrative: test", data: [{ label: "Design QA issues found after handoff", value: 4 }, { label: "Copy", value: 2 }] };
   const r = run(["render", "-"], JSON.stringify(spec));
   assert.equal(r.status, 0);
   assert.match(r.stdout, /…/);
-  assert.match(r.stderr, /24 cells: "Link opened within 1 hour\?"/);
-  const short = run(["render", "-"], JSON.stringify({ ...spec, data: [spec.data[0], { ...spec.data[1], label: "Opened within 1 hour" }, spec.data[2]] }));
+  assert.match(r.stderr, /24 cells: "Design QA issues found after handoff"/);
+  const short = run(["render", "-"], JSON.stringify({ ...spec, data: [{ label: "Design QA", value: 4 }, spec.data[1]] }));
   assert.equal(short.stderr, "");
   assert.doesNotMatch(short.stdout, /…/);
+});
+
+test("a long flow label wraps in its box: nothing cut, nothing on stderr", () => {
+  const spec = { kind: "branchFlow", data: [{ label: "Start" }, { label: "Link opened within 1 hour", type: "decision", no: { label: "Link expired", to: "Start" } }, { label: "Done" }] };
+  const r = run(["render", "-"], JSON.stringify(spec));
+  assert.equal(r.status, 0);
+  assert.doesNotMatch(r.stdout, /…/);
+  assert.match(r.stdout, /Link opened within 1/);
+  assert.equal(r.stderr, "");
 });
 
 test("a moving page carries only the areas its kinds come from", async () => {

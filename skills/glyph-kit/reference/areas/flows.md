@@ -86,7 +86,7 @@ Each type shows its figure and the spec that made it; the spec's `kind` field na
 }
 ```
 
-**Watch for:** Every decision's no-branch needs a destination, or it's a dead end nobody designed.
+**Watch for:** Every decision's no-branch needs a destination, or it's a dead end nobody designed: `"to": "Enter email"` loops back, `"to": "end"` ends the flow there. Labels longer than 24 cells wrap onto two lines; write them in full.
 
 ## State machine
 

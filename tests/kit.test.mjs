@@ -93,6 +93,27 @@ test("flows: decisions, unreachable states", () => {
   assert.match(s, /Ends: b\. Unreachable: c\./);
 });
 
+test("flows: long labels wrap inside their boxes instead of being cut", () => {
+  const f = branchFlow([
+    { label: "Enter email" },
+    { label: "Link opened within 1 hour", type: "decision", no: { label: "Show the same message anyway", to: "end" } },
+    { label: "Signed in" }
+  ]);
+  const lines = f.split("\n");
+  assert.ok(!f.includes("…"), "nothing is cut");
+  for (const word of ["Link opened within 1", "hour?", "Show the same message", "anyway", "→ end"]) assert.ok(f.includes(word), word);
+  assert.ok(lines.every((l) => [...l].length <= 80));
+  assert.deepEqual(checkBoxes(f), []);
+  // The branch box ends by the "yes" line at the latest, so the next step's box starts clear.
+  const yes = lines.findIndex((l) => l.includes("│ yes"));
+  assert.match(lines[yes], /^ +│ yes( +└─+┘)?$/);
+  assert.match(lines[yes + 2], /^[┌╔]/);
+  // A single word wider than the box is split over lines, as wrap() does everywhere.
+  const word = branchFlow([{ label: "a".repeat(40) }, { label: "b" }]);
+  assert.ok(word.split("\n").every((l) => [...l].length <= 80));
+  assert.equal((word.match(/a/g) ?? []).length, 40);
+});
+
 test("planning: board rows, grid labels, swimlane return", () => {
   const b = board({ now: ["one"], next: [], later: ["two", "three"] }).split("\n");
   assert.ok(b.every((l) => width(l) === width(b[0])));

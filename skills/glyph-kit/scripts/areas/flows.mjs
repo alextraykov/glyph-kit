@@ -20,9 +20,15 @@ export function branchFlow(steps, { gap = 3, maxText = LAYOUT.labelMax, maxWidth
   const capped = capRows(steps, LAYOUT.rowsMax, "steps");
   steps = capped.rows;
   const pad = LAYOUT.pad;
-  const textOf = (s) => cut(s.type === "decision" ? asked(s.label) : s.label, maxText);
+  // A label longer than maxText wraps onto more lines inside its box; only a single word wider than
+  // the box is cut. Cutting every long label made agents shorten their labels and draw again.
+  const textOf = (s) => (s.type === "decision" ? asked(s.label) : String(s.label ?? ""));
   const longest = Math.min(maxText, Math.max(...steps.map((s) => len(textOf(s)))));
   const W = longest + pad * 2 + 2;
+  const linesOf = (text, max) => wrap(text, max).map((line) => cut(line, max));
+  // A branch box may hang one row below its decision, beside the "yes" line; any taller and the
+  // decision grows to match, so the branch never runs into the next step.
+  const evenUp = (lines, rows) => [...lines, ...Array(Math.max(0, rows - lines.length)).fill("")];
   const spine = Math.floor((W - 1) / 2);
   const grid = [];
   const put = (r, c, str) => {
@@ -53,11 +59,15 @@ export function branchFlow(steps, { gap = 3, maxText = LAYOUT.labelMax, maxWidth
     const last = i === steps.length - 1;
     const decision = s.type === "decision";
     const style = decision ? "dotted" : last || s.type === "end" ? "double" : "solid";
-    const lines = wrap(textOf(s), W - 2 - pad * 2);
-    const height = frame(r, 0, W, lines, style, !last);
+    let lines = linesOf(textOf(s), W - 2 - pad * 2);
+    let side = null;
     if (decision && s.no) {
+      side = [...linesOf(s.no.label, maxText), ...(s.no.to ? linesOf(`→ ${s.no.to}`, maxText) : [])];
+      lines = evenUp(lines, side.length - 1);
+    }
+    const height = frame(r, 0, W, lines, style, !last);
+    if (side) {
       const arrow = `${"─".repeat(gap)} no ${"─".repeat(gap)}►`;
-      const side = [cut(s.no.label, maxText), ...(s.no.to ? [cut(`→ ${s.no.to}`, maxText)] : [])];
       const sw = Math.max(...side.map(len)) + pad * 2 + 2;
       if (W + len(arrow) + sw > maxWidth) throw new Error(`This branch needs ${W + len(arrow) + sw} cells; shorten the decision or branch label to fit ${maxWidth}.`);
       put(r + 1, W - 1, BOX.light.lt + arrow);
