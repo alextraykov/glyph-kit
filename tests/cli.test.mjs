@@ -38,3 +38,13 @@ test("labels cut to fit are listed on stderr with their limit; stdout is unchang
   assert.equal(short.stderr, "");
   assert.doesNotMatch(short.stdout, /…/);
 });
+
+test("a moving page carries only the areas its kinds come from", async () => {
+  const { inlineMotion } = await import("../skills/glyph-kit/scripts/live/html.mjs");
+  const all = inlineMotion();
+  const loop = inlineMotion(["loop"]);
+  assert.ok(loop.length < all.length * 0.6, `${loop.length} of ${all.length}`);
+  assert.doesNotMatch(loop, /Wireframes: a screen built/);
+  assert.match(loop, /"loop": __glyph/);
+  assert.doesNotMatch(loop, /"barChart": __glyph/);
+});

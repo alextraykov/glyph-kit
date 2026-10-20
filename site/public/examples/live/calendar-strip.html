@@ -765,7 +765,405 @@ function stillGrid(make, still) {
 
 return { MOTION_RATE, staggerDelay, cycle, motionProgress, motionCanvas, motionFactory, growBar, countUp, timeCursor, motionMarks, motionCounters, stillGrid };
 })();
+__glyph[5] = (() => {
+const { motionCanvas, motionFactory, motionMarks, motionCounters, motionProgress, staggerDelay, growBar, countUp, timeCursor } = __glyph[6];
+
+function metricMotion(data, options, render, mode) {
+  const canvas = motionCanvas(render(data, options));
+  const marks = motionMarks(canvas, mode === "spark" ? /[▁▂▃▄▅▆▇█]/u : /[█▓▒░▏▎▍▌▋▊▉■]/u);
+  const firstRow = mode === "cohort" || (mode === "heat" && options?.colLabels) ? 1 : 0;
+  const rowCount = Array.isArray(data) && mode !== "calendar" ? Math.min(16, data.length) : 1;
+  marks.forEach((line, row) => { if (row < firstRow || row >= firstRow + rowCount) marks[row] = []; });
+  const counters = motionCounters(canvas, marks, options?.lang);
+  const active = marks.flatMap((line, row) => line.length ? [row] : []);
+  return motionFactory(canvas, (grid, time) => {
+    active.forEach((row, index) => {
+      const progress = motionProgress(time, mode === "heat" ? 0 : staggerDelay(index, active.length), 90);
+      if (mode === "heat") {
+        marks[row].forEach((col) => { const p = motionProgress(time, (row + col) * 0.6, 50); if (p < 1) grid.put(row, col, p > 0.5 ? "░" : "·", "mute"); });
+      } else if (mode === "cohort") {
+        marks[row].forEach((col, cell) => { const p = motionProgress(time, index * 8 + cell * 0.6, 24); grid.put(row, col, p === 0 ? "·" : p < 1 ? "█" : canvas.matrix[row][col]); });
+      } else if (mode === "forecast") {
+        const solid = marks[row].filter((col) => canvas.matrix[row][col] !== "░");
+        const projected = marks[row].filter((col) => canvas.matrix[row][col] === "░");
+        growBar(grid, row, solid, motionProgress(time, index * 5, 50));
+        growBar(grid, row, projected, motionProgress(time, 55 + index * 5, 50));
+      } else growBar(grid, row, marks[row], progress, { head: mode === "spark" || mode === "meter" });
+      if (mode === "calendar" && progress < 1 && marks[row].length) timeCursor(grid, row, marks[row][0], marks[row].at(-1), progress);
+    });
+    counters.forEach((counter) => countUp(grid, counter.row, counter.col, counter.value, motionProgress(time, staggerDelay(active.indexOf(counter.row), active.length), 90), counter.size, counter.format));
+    if ((mode === "bar" || mode === "meter") && time < 48 && Math.floor(time / 12) % 2) canvas.matrix.forEach((row, r) => row.forEach((ch, c) => { if (ch === "+") grid.put(r, c, " "); }));
+    if (mode === "meter" && time < 48 && Math.floor(time / 12) % 2) canvas.lines.forEach((line, row) => { const at = line.lastIndexOf(" over"); if (at >= 0) grid.text(row, at, "     "); });
+  });
+}
+
+const motionBarChart = (data, options, render) => metricMotion(data, options, render, "bar");
+const motionCohort = (data, options, render) => metricMotion(data, options, render, "cohort");
+const motionSparkline = (data, options, render) => metricMotion(data, options, render, "spark");
+const motionMetricPanel = (data, options, render) => metricMotion(data, options, render, "spark");
+const motionMeter = (data, options, render) => metricMotion(data, options, render, "meter");
+const motionForecast = (data, options, render) => metricMotion(data, options, render, "forecast");
+const motionCalendarStrip = (data, options, render) => metricMotion(data, options, render, "calendar");
+const motionHeatmap = (data, options, render) => metricMotion(data, options, render, "heat");
+
+return { motionBarChart, motionCohort, motionSparkline, motionMetricPanel, motionMeter, motionForecast, motionCalendarStrip, motionHeatmap };
+})();
 __glyph[9] = (() => {
+// glyph-kit core: pure functions that turn data into text diagrams.
+// No dependencies, no DOM. Every function returns a string (lines joined with "\n").
+// The command line lives in glyph-kit.mjs; the registry of kinds in registry.mjs.
+
+const { cellWidth, cells: textCells, center, cut, formatNumber, graphemes, isRtl, padEnd, padStart, upper, width, wrap } = __glyph[3];
+const { LAYOUT, capRows, fitColumns, fitLabels } = __glyph[8];
+
+
+
+const SHADES = [" ", "░", "▒", "▓", "█"];
+const EIGHTHS_LEFT = ["", "▏", "▎", "▍", "▌", "▋", "▊", "▉"]; // horizontal, 1/8 to 7/8 of a cell
+const EIGHTHS_LOW = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]; // vertical, for sparklines
+const BOX = {
+  light: { h: "─", v: "│", tl: "┌", tr: "┐", bl: "└", br: "┘", lt: "├", rt: "┤", tt: "┬", bt: "┴", x: "┼" },
+  heavy: { h: "━", v: "┃", tl: "┏", tr: "┓", bl: "┗", br: "┛", lt: "┣", rt: "┫", tt: "┳", bt: "┻", x: "╋" },
+  double: { h: "═", v: "║", tl: "╔", tr: "╗", bl: "╚", br: "╝", lt: "╠", rt: "╣", tt: "╦", bt: "╩", x: "╬" }
+};
+
+// Shared helpers, also used by the area modules.
+const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+const len = width;
+const join = (lines) => lines.map((l) => l.replace(/\s+$/, "")).join("\n");
+/** Place text pieces at fixed columns on one line: place([[0, "a"], [10, "b"]]). */
+const place = (pieces) => {
+  const row = [];
+  for (const [col, text] of pieces) textCells(text).forEach((ch, i) => (row[col + i] = ch));
+  return Array.from(row, (ch) => ch ?? " ").join("").replace(/\s+$/, "");
+};
+
+/**
+ * One horizontal bar with 1/8-cell precision.
+ * A positive value never draws as empty: it gets at least ▏, because an empty bar reads as zero.
+ * A value past max fills the bar and ends with "+".
+ */
+function bar(value, max, { width = 20, empty = " " } = {}) {
+  if (!Number.isFinite(value) || value <= 0 || max <= 0) return empty.repeat(width);
+  if (value > max) return "█".repeat(width) + "+";
+  const units = (value / max) * width;
+  let full = Math.floor(units);
+  let eighth = Math.round((units - full) * 8);
+  if (eighth === 8) {
+    full += 1; // carry into a whole cell instead of dropping the remainder
+    eighth = 0;
+  }
+  if (full === 0 && eighth === 0) eighth = 1;
+  const head = "█".repeat(full) + EIGHTHS_LEFT[eighth];
+  return head + empty.repeat(Math.max(0, width - len(head)));
+}
+
+/** Labelled horizontal bar chart. rows: [{ label, value, text? }] */
+function barChart(rows, { width: preferred = 24, max, lang, format = lang ? (n) => new Intl.NumberFormat(lang).format(n) : String, empty = " ", maxWidth = LAYOUT.maxWidth } = {}) {
+  const top = max ?? Math.max(...rows.map((r) => r.value), 0);
+  const capped = capRows(rows);
+  const labels = fitLabels(capped.rows.map((r) => r.label));
+  const values = capped.rows.map((r) => cut(r.text ?? format(r.value), 16));
+  const labelW = Math.max(0, ...labels.map(len));
+  const valueW = Math.max(0, ...values.map(len));
+  const width = Math.max(4, Math.min(preferred, maxWidth - labelW - valueW - 4 - (max != null ? 1 : 0)));
+  const lines = capped.rows.map((r, i) => `${padEnd(labels[i], labelW)}  ${bar(r.value, top, { width, empty })}  ${values[i]}`);
+  return join(capped.note ? [...lines, capped.note] : lines);
+}
+
+/**
+ * Coarse whole-cell bar for comparisons. ░ keeps the scale visible, so 0% still reads as a bar.
+ */
+function cells(fraction, { width = 10 } = {}) {
+  const f = clamp(Number(fraction) || 0, 0, 1);
+  let n = Math.round(f * width);
+  if (f > 0 && n === 0) n = 1;
+  return "█".repeat(n) + "░".repeat(width - n);
+}
+
+/** Side-by-side comparison table. rows: [{ label, a, b, aText, bText }] with a and b as 0..1. */
+function compare(rows, { headers = ["", "A", "B"], width: preferred = 10, maxWidth = LAYOUT.maxWidth } = {}) {
+  const capped = capRows(rows);
+  const labels = fitLabels(capped.rows.map((r) => r.label));
+  const texts = capped.rows.flatMap((r) => [cut(r.aText ?? "", 12), cut(r.bText ?? "", 12)]);
+  const labelW = Math.max(len(headers[0]), ...labels.map(len));
+  const textW = Math.max(0, ...texts.map(len));
+  const width = Math.max(2, Math.min(preferred, Math.floor((maxWidth - labelW - textW * 2 - 7) / 2)));
+  const cell = (f, t) => `${cells(f, { width })} ${cut(t ?? "", 12)}`;
+  const aCol = capped.rows.map((r) => cell(r.a, r.aText));
+  const colW = Math.max(len(headers[1]), ...aCol.map(len)) + 2;
+  const lines = [
+    `${padEnd(headers[0], labelW)}  ${padEnd(headers[1], colW)}${headers[2]}`,
+    ...capped.rows.map((r, i) => `${padEnd(labels[i], labelW)}  ${padEnd(aCol[i], colW)}${cell(r.b, r.bText)}`)
+  ];
+  return join(capped.note ? [...lines, capped.note] : lines);
+}
+
+/**
+ * Measured values in █, projected values in ░, in the same bar.
+ * rows: [{ label, measured, projected?, text? }]
+ */
+function forecast(rows, { width: preferred = 36, max, legend = "░ = projected at the current pace", maxWidth = LAYOUT.maxWidth } = {}) {
+  const top = (max ?? Math.max(...rows.map((r) => (r.measured ?? 0) + (r.projected ?? 0)))) || 1;
+  if (rows.some((r) => (r.measured ?? 0) < 0 || (r.projected ?? 0) < 0 || (r.measured ?? 0) + (r.projected ?? 0) > top)) throw new Error("Forecast values must fit between zero and the scale maximum.");
+  const capped = capRows(rows);
+  const labels = fitLabels(capped.rows.map((r) => r.label));
+  const texts = capped.rows.map((r) => cut(r.text ?? "", 18));
+  const labelW = Math.max(0, ...labels.map(len));
+  const textW = Math.max(0, ...texts.map(len));
+  const width = Math.max(4, Math.min(preferred, maxWidth - labelW - textW - 3));
+  const lines = capped.rows.map((r, i) => {
+    const m = Math.round(((r.measured ?? 0) / top) * width);
+    const p = Math.round((((r.measured ?? 0) + (r.projected ?? 0)) / top) * width) - m;
+    const body = "█".repeat(m) + "░".repeat(Math.max(0, p));
+    return `${padEnd(labels[i], labelW)} ${padEnd(body, width)}  ${texts[i]}`;
+  });
+  if (capped.note) lines.push(capped.note);
+  return join(rows.some((r) => r.projected) ? [...lines, cut(legend, maxWidth)] : lines);
+}
+
+/** A bracketed meter against a cap: [ ████████░░░░ ] 64% of the cap */
+function meter(value, cap, { width = 24, label = "of the cap" } = {}) {
+  const f = cap > 0 ? value / cap : 0;
+  const n = clamp(Math.round(f * width), f > 0 ? 1 : 0, width);
+  const over = f > 1 ? " over" : "";
+  return `[ ${"█".repeat(n)}${"░".repeat(width - n)} ] ${Math.round(f * 100)}% ${label}${over}`;
+}
+
+/** Sparkline from ▁ to █. null or undefined draws a gap. */
+function sparkline(values, { min, max } = {}) {
+  const nums = values.filter(Number.isFinite);
+  if (!nums.length) return "";
+  const lo = min ?? Math.min(...nums);
+  const hi = max ?? Math.max(...nums);
+  const span = hi - lo || 1;
+  return values
+    .map((v) => (Number.isFinite(v) ? EIGHTHS_LOW[clamp(Math.round(((v - lo) / span) * 7), 0, 7)] : " "))
+    .join("");
+}
+
+/** Density grid. Each value 0..1 picks blank, ░, ▒, ▓ or █. */
+function heatmap(grid, { rowLabels = [], colLabels = "", levels = SHADES, cellWidth = 2, maxWidth = LAYOUT.maxWidth } = {}) {
+  const capped = capRows(grid);
+  const labels = fitLabels(capped.rows.map((_, i) => rowLabels[i] ?? ""));
+  const labelW = Math.max(0, ...labels.map(len));
+  const maxCols = Math.max(1, Math.floor((maxWidth - (labelW ? labelW + 1 : 0)) / cellWidth));
+  const omittedCols = Math.max(0, ...capped.rows.map((row) => row.length - maxCols));
+  const pick = (v) => {
+    if (!Number.isFinite(v) || v <= 0) return levels[0];
+    return levels[clamp(Math.ceil(v * (levels.length - 1)), 1, levels.length - 1)];
+  };
+  const lines = capped.rows.map((row, i) => {
+    const lead = rowLabels.length ? padEnd(labels[i], labelW) + " " : "";
+    return lead + row.slice(0, maxCols).map((v) => pick(v).repeat(cellWidth)).join("");
+  });
+  if (colLabels) lines.unshift(cut((labelW ? " ".repeat(labelW + 1) : "") + colLabels, maxWidth));
+  if (omittedCols) lines.push(`… and ${omittedCols} more columns`);
+  if (capped.note) lines.push(capped.note);
+  return join(lines);
+}
+
+/** One character per day: ■ for a hit, · for a miss, blank for no data. */
+function calendarStrip(days, { hit = "■", miss = "·", gap = "  ", maxWidth = LAYOUT.maxWidth } = {}) {
+  const room = Math.max(1, Math.floor((maxWidth + len(gap)) / (1 + len(gap))));
+  const omitted = Math.max(0, days.length - room);
+  const line = days.slice(0, room).map((d) => (d == null ? " " : d ? hit : miss)).join(gap);
+  return omitted ? `${line}\n… and ${omitted} more days` : line;
+}
+
+/**
+ * Timeline (Gantt) strip. tracks: [{ label, start, end, loop? }] in ms.
+ * A loop runs to the end of the scale and ends with →.
+ */
+function gantt(tracks, { scale, width: preferred = 40, unit = "ms", ticks = 3, maxWidth = LAYOUT.maxWidth } = {}) {
+  const top = (scale ?? Math.max(...tracks.map((t) => t.end))) || 1;
+  const capped = capRows(tracks);
+  const labels = fitLabels(capped.rows.map((t) => t.label));
+  const labelW = Math.max(0, ...labels.map(len));
+  const at = (ms) => clamp(Math.round((ms / top) * width), 0, width);
+  const fmt = (ms) => (unit === "ms" && ms >= 1000 ? `${+(ms / 1000).toFixed(2)}s` : `${ms}${unit}`);
+  const ranges = capped.rows.map((t) => t.loop ? `${fmt(t.start)}, repeats` : `${fmt(t.start)}–${fmt(t.end)}`);
+  const rangeW = Math.max(0, ...ranges.map(len));
+  const width = Math.max(4, Math.min(preferred, maxWidth - labelW - rangeW - 3));
+  const lines = capped.rows.map((t, i) => {
+    const s = at(t.start);
+    const e = t.loop ? width : Math.min(width, Math.max(s + 1, at(t.end)));
+    const strip = "·".repeat(s) + "█".repeat(e - s) + "·".repeat(width - e);
+    return `${padEnd(labels[i], labelW)} ${strip}${t.loop ? "→" : " "} ${ranges[i]}`;
+  });
+  const axis = Array(width + 1).fill(" ");
+  const marks = [];
+  for (let i = 0; i < ticks; i++) {
+    const v = (top * i) / (ticks - 1);
+    marks.push([Math.round((i / (ticks - 1)) * width), fmt(Math.round(v))]);
+  }
+  marks.forEach(([pos, text], i) => {
+    const start = i === marks.length - 1 ? Math.max(0, pos - len(text) + 1) : pos;
+    textCells(text).forEach((ch, k) => (axis[start + k] = ch));
+  });
+  if (capped.note) lines.push(capped.note);
+  return join([...lines, " ".repeat(labelW + 1) + axis.join("")]);
+}
+
+/** Duration ruler: 20 cells of 25ms by default. ▌ marks a half cell, + a value past the scale. */
+function ruler(ms, { scaleMs = 500, cells: n = 20 } = {}) {
+  if (ms == null) return "·".repeat(n);
+  if (ms < 0) throw new Error("A duration must be zero or greater.");
+  const per = scaleMs / n;
+  const full = Math.floor(ms / per);
+  if (full >= n) return "█".repeat(n) + "+";
+  const half = ms - full * per >= per / 2 ? "▌" : "";
+  return ("█".repeat(full) + half).padEnd(n, "·");
+}
+
+// Cubic bezier helpers for the velocity glyph.
+const bez = (p1, p2, t) => 3 * (1 - t) * (1 - t) * t * p1 + 3 * (1 - t) * t * t * p2 + t * t * t;
+const bezDx = (p1, p2, t) => 3 * (1 - t) * (1 - t) * p1 + 6 * (1 - t) * t * (p2 - p1) + 3 * t * t * (1 - p2);
+function solveT([x1, , x2], x) {
+  let t = x;
+  for (let i = 0; i < 8; i++) {
+    const d = bezDx(x1, x2, t);
+    if (Math.abs(d) < 1e-6) break;
+    const next = t - (bez(x1, x2, t) - x) / d;
+    if (next < 0 || next > 1) break;
+    t = next;
+  }
+  if (Math.abs(bez(x1, x2, t) - x) < 1e-5) return t;
+  let lo = 0;
+  let hi = 1;
+  for (let i = 0; i < 40; i++) {
+    t = (lo + hi) / 2;
+    if (bez(x1, x2, t) < x) lo = t;
+    else hi = t;
+  }
+  return t;
+}
+
+const EASINGS = {
+  linear: [0, 0, 1, 1],
+  ease: [0.25, 0.1, 0.25, 1],
+  "ease-in": [0.42, 0, 1, 1],
+  "ease-out": [0, 0, 0.58, 1],
+  "ease-in-out": [0.42, 0, 0.58, 1]
+};
+
+/**
+ * Speed over time for a cubic-bezier: n equal slices of time, bar height = progress in that slice.
+ * Ends with ↺ when the curve overshoots or runs backwards.
+ */
+function velocity(curve, n = 8) {
+  const b = typeof curve === "string" ? EASINGS[curve] : curve;
+  if (!b) return "—";
+  const ys = [];
+  for (let k = 0; k <= n; k++) ys.push(bez(b[1], b[3], solveT(b, k / n)));
+  const d = ys.slice(1).map((y, i) => y - ys[i]);
+  const mx = Math.max(...d.map(Math.abs)) || 1;
+  const over = ys.some((y) => y > 1.001) || d.some((v) => v < -1e-6);
+  return d.map((v) => EIGHTHS_LOW[Math.round((Math.abs(v) / mx) * 7)]).join("") + (over ? "↺" : "");
+}
+
+/** Frame text in a box. Optional title sits in the top border. */
+function box(text, { title, style = "light", padding = 1 } = {}) {
+  const b = BOX[style];
+  const lines = String(text).split("\n");
+  const inner = Math.max(...lines.map(len), title ? len(title) + 2 : 0) + padding * 2;
+  const pad = " ".repeat(padding);
+  const top = title
+    ? b.tl + b.h + ` ${title} ` + b.h.repeat(Math.max(0, inner - len(title) - 3)) + b.tr
+    : b.tl + b.h.repeat(inner) + b.tr;
+  return [top, ...lines.map((l) => b.v + pad + padEnd(l, inner - padding * 2) + pad + b.v), b.bl + b.h.repeat(inner) + b.br].join(
+    "\n"
+  );
+}
+
+/** Boxes in a row joined by arrows: ┌───┐ ──► ┌───┐ */
+function flow(steps, { arrow = " ──► ", style = "light", maxWidth = LAYOUT.maxWidth } = {}) {
+  const capped = capRows(steps, LAYOUT.rowsMax, "steps");
+  const labels = fitLabels(capped.rows);
+  const boxes = labels.map((s) => box(s, { style }).split("\n"));
+  const draw = (group) => {
+    const height = Math.max(...group.map((b) => b.length));
+    const mid = Math.floor(height / 2);
+    return Array.from({ length: height }, (_, row) => {
+      const link = row === mid ? arrow : " ".repeat(len(arrow));
+      return group.map((b) => b[row] ?? " ".repeat(len(b[0]))).join(link);
+    });
+  };
+  const natural = draw(boxes);
+  if (boxes.length <= 4 && natural.every((line) => len(line) <= maxWidth) && !capped.note) return join(natural);
+  const groups = [];
+  let group = [];
+  for (const current of boxes) {
+    const next = [...group, current];
+    if (group.length && (next.length > 4 || draw(next).some((line) => len(line) > maxWidth))) {
+      groups.push(group);
+      group = [current];
+    } else group = next;
+  }
+  if (group.length) groups.push(group);
+  const out = [];
+  groups.forEach((row, i) => {
+    out.push(...draw(row));
+    if (i < groups.length - 1) out.push("│", "▼");
+  });
+  if (capped.note) out.push(capped.note);
+  return join(out);
+}
+
+/** File or concept tree. node: { name, note?, children? } or an array of them. */
+function tree(nodes, { noteColumn, maxWidth = LAYOUT.maxWidth, maxDepth = 3 } = {}) {
+  const rows = [];
+  const descendants = (node) => 1 + (node.children ?? []).reduce((n, child) => n + descendants(child), 0);
+  const walk = (list, prefix, depth) =>
+    list.forEach((n, i) => {
+      const last = i === list.length - 1;
+      rows.push([prefix + (last ? "└── " : "├── ") + cut(n.name, LAYOUT.labelMax), n.note]);
+      if (n.children?.length && depth >= maxDepth) rows.push([prefix + (last ? "    " : "│   ") + `└── … and ${n.children.reduce((sum, child) => sum + descendants(child), 0)} more`, ""]);
+      else if (n.children) walk(n.children, prefix + (last ? "    " : "│   "), depth + 1);
+    });
+  const roots = Array.isArray(nodes) ? nodes : [nodes];
+  roots.forEach((r) => {
+    rows.push([cut(r.name, LAYOUT.labelMax), r.note]);
+    if (r.children) walk(r.children, "", 1);
+  });
+  const capped = capRows(rows);
+  const col = Math.min(noteColumn ?? Math.max(...capped.rows.map(([t]) => len(t))) + 3, Math.floor(maxWidth * 0.65));
+  const out = capped.rows.map(([t, note]) => note ? padEnd(cut(t, col - 1), col) + cut(note, maxWidth - col) : cut(t, maxWidth));
+  if (capped.note) out.push(capped.note);
+  return join(out);
+}
+
+/** Table drawn with box characters. rows: arrays of strings; first row is the header. */
+function table(rows, { style = "light", align = [], maxWidth = LAYOUT.maxWidth } = {}) {
+  const b = BOX[style];
+  const cols = Math.max(...rows.map((r) => r.length));
+  const [headRaw = [], ...bodyRaw] = rows;
+  const capped = capRows(bodyRaw);
+  const logical = [headRaw, ...capped.rows];
+  if (capped.note) logical.push([capped.note]);
+  const w = fitColumns(logical, { maxWidth });
+  const cell = (v, c) => (align[c] === "right" ? padStart(String(v ?? ""), w[c]) : padEnd(String(v ?? ""), w[c]));
+  const rule = (l, m, r) => l + w.map((n) => b.h.repeat(n + 2)).join(m) + r;
+  const lines = (r) => {
+    const wrapped = Array.from({ length: cols }, (_, c) => wrap(String(r[c] ?? ""), w[c]));
+    const h = Math.max(...wrapped.map((parts) => parts.length));
+    return Array.from({ length: h }, (_, i) => b.v + wrapped.map((parts, c) => ` ${cell(parts[i] ?? "", c)} `).join(b.v) + b.v);
+  };
+  const [head, ...body] = logical.map((r) => Array.from({ length: cols }, (_, c) => r[c] ?? ""));
+  return [rule(b.tl, b.tt, b.tr), ...lines(head), rule(b.lt, b.x, b.rt), ...body.flatMap(lines), rule(b.bl, b.bt, b.br)].join("\n");
+}
+
+/** A status key on the density ladder. items: [{ level: 0..4, label }] */
+function statusKey(items, { width = 12 } = {}) {
+  const capped = capRows(items);
+  const labels = fitLabels(capped.rows.map((i) => i.label));
+  const lines = capped.rows.map((i, n) => `${SHADES[Math.round(clamp(i.level, 0, 4))].repeat(width)}  ${labels[n]}`);
+  return join(capped.note ? [...lines, capped.note] : lines);
+}
+
+return { cellWidth: cellWidth, center: center, cut: cut, formatNumber: formatNumber, graphemes: graphemes, isRtl: isRtl, padEnd: padEnd, padStart: padStart, textCells: textCells, upper: upper, width: width, wrap: wrap, SHADES, EIGHTHS_LEFT, EIGHTHS_LOW, BOX, clamp, len, join, place, bar, barChart, cells, compare, forecast, meter, sparkline, heatmap, calendarStrip, gantt, ruler, EASINGS, velocity, box, flow, tree, table, statusKey };
+})();
+__glyph[10] = (() => {
 const { upper, formatNumber } = __glyph[3];
 // Moving diagrams from a spec. Each kind takes { kind, title, intent, source, data } and returns a
 // factory: call it for a fresh diagram, a function (step, frac) → Grid. `still` is the step that
@@ -1393,740 +1791,13 @@ function motionIncident(data) {
 
 return { motionLoop, motionFunnel, motionStates, motionQueue, motionRollout, motionLoading, motionHandoff, motionRetry, motionCache, motionSplit, motionIncident };
 })();
-__glyph[5] = (() => {
-const { motionCanvas, motionFactory, motionProgress, cycle } = __glyph[6];
-const { motionStates } = __glyph[9];
-const { Grid } = __glyph[7];
-
-function flowBoxes(canvas) {
-  const boxes = [];
-  canvas.matrix.forEach((line, row) => line.forEach((char, col) => {
-    if (!["┌", "╔"].includes(char)) return;
-    const right = line.findIndex((ch, i) => i > col && ["┐", "╗"].includes(ch));
-    if (right < 0) return;
-    const bottom = canvas.matrix.findIndex((r, i) => i > row && ["└", "╚"].includes(r[col]) && ["┘", "╝"].includes(r[right]));
-    if (bottom >= 0) boxes.push({ row, col, width: right - col + 1, bottom });
-  }));
-  return boxes;
-}
-
-function packetFlow(data, options, render, branching) {
-  const canvas = motionCanvas(render(data, options));
-  const boxes = flowBoxes(canvas);
-  const spine = branching ? boxes.filter((box) => box.col === 0) : boxes;
-  const branches = branching ? boxes.filter((box) => box.col > 0) : [];
-  const path = [];
-  spine.forEach((box, index) => {
-    path.push({ box });
-    const branch = branches.find((item) => item.row === box.row);
-    if (branch) path.push({ box: branch, failure: true }, { box, failure: true });
-  });
-  const routing = new Grid(1, 1);
-  const legs = path.slice(1).map((next, index) => {
-    const a = path[index].box, b = next.box;
-    const start = a.row === b.row ? [a.row + 1, a.col + a.width] : [a.bottom + 1, a.col + Math.floor(a.width / 2)];
-    const end = a.row === b.row ? [b.row + 1, b.col - 1] : [b.row - 1, b.col + Math.floor(b.width / 2)];
-    return routing.route([start, [end[0], start[1]], end]);
-  });
-  return motionFactory(canvas, (grid, time, step) => {
-    if (!path.length) return;
-    const progress = motionProgress(time, 0, 150);
-    if (progress === 1) { const last = spine.at(-1); grid.put(last.row, last.col + 1, "▓", "ok"); return; }
-    const position = progress * path.length;
-    const index = Math.min(path.length - 1, Math.floor(position));
-    const item = path[index], age = position - index;
-    const role = item.failure ? "fail" : "";
-    if (age < 0.4) grid.flash(item.box.row, item.box.col, item.box.width, 3 * (1 - age / 0.4), role);
-    else if (legs[index]?.length) grid.packet(legs[index], ((age - 0.4) / 0.6) * (legs[index].length - 1), role);
-  });
-}
-const motionFlow = (data, options, render) => packetFlow(data, options, render, false);
-const motionBranchFlow = (data, options, render) => packetFlow(data, options, render, true);
-
-function motionStateMachine(data, options = {}) {
-  const states = [...new Set(data.flatMap((transition) => [transition.from, transition.to]))];
-  let path = options.path;
-  if (!path) {
-    path = [options.initial ?? states[0]];
-    for (let index = 0; index < 16; index++) {
-      const next = data.find((transition) => transition.from === path.at(-1));
-      if (!next || path.includes(next.to)) break;
-      path.push(next.to);
-    }
-  }
-  if (!path.length || path.some((state) => !states.includes(state)) || path.slice(1).some((state, index) => !data.some((t) => t.from === path[index] && t.to === state))) throw new Error("Every step in the played path must follow a listed transition.");
-  return motionStates({ states, transitions: data.map((t) => ({ ...t, label: t.event })), path }, { ...options, settleAtEnd: true });
-}
-
-function motionJourneyMap(data, options, render) {
-  const canvas = motionCanvas(render(data, options));
-  const colWidth = Math.min(options?.colWidth ?? 18, Math.floor((80 - 9) / Math.max(1, data.length)));
-  const thinking = canvas.lines.findIndex((line) => line.startsWith("thinking"));
-  const feeling = canvas.lines.findIndex((line) => line.startsWith("feeling"));
-  return motionFactory(canvas, (grid, time, step) => {
-    const index = Math.min(data.length - 1, Math.floor(motionProgress(time, 0, 140) * data.length));
-    if (index < 0) return;
-    const col = 9 + index * colWidth;
-    grid.put(1, col, "▓", data[index].feeling > 0 ? "ok" : data[index].feeling < 0 ? "fail" : "");
-    if (thinking >= 0 && time < 140) {
-      for (let row = thinking; row < (feeling < 0 ? canvas.rows : feeling); row++) {
-        const text = canvas.matrix[row].slice(col, col + colWidth - 2).join("");
-        grid.scramble(row, col, text, (time % (140 / data.length)), step);
-      }
-    }
-  });
-}
-
-return { motionFlow, motionBranchFlow, motionStateMachine, motionJourneyMap };
-})();
-__glyph[10] = (() => {
-// glyph-kit core: pure functions that turn data into text diagrams.
-// No dependencies, no DOM. Every function returns a string (lines joined with "\n").
-// The command line lives in glyph-kit.mjs; the registry of kinds in registry.mjs.
-
-const { cellWidth, cells: textCells, center, cut, formatNumber, graphemes, isRtl, padEnd, padStart, upper, width, wrap } = __glyph[3];
-const { LAYOUT, capRows, fitColumns, fitLabels } = __glyph[8];
-
-
-
-const SHADES = [" ", "░", "▒", "▓", "█"];
-const EIGHTHS_LEFT = ["", "▏", "▎", "▍", "▌", "▋", "▊", "▉"]; // horizontal, 1/8 to 7/8 of a cell
-const EIGHTHS_LOW = ["▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"]; // vertical, for sparklines
-const BOX = {
-  light: { h: "─", v: "│", tl: "┌", tr: "┐", bl: "└", br: "┘", lt: "├", rt: "┤", tt: "┬", bt: "┴", x: "┼" },
-  heavy: { h: "━", v: "┃", tl: "┏", tr: "┓", bl: "┗", br: "┛", lt: "┣", rt: "┫", tt: "┳", bt: "┻", x: "╋" },
-  double: { h: "═", v: "║", tl: "╔", tr: "╗", bl: "╚", br: "╝", lt: "╠", rt: "╣", tt: "╦", bt: "╩", x: "╬" }
-};
-
-// Shared helpers, also used by the area modules.
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
-const len = width;
-const join = (lines) => lines.map((l) => l.replace(/\s+$/, "")).join("\n");
-/** Place text pieces at fixed columns on one line: place([[0, "a"], [10, "b"]]). */
-const place = (pieces) => {
-  const row = [];
-  for (const [col, text] of pieces) textCells(text).forEach((ch, i) => (row[col + i] = ch));
-  return Array.from(row, (ch) => ch ?? " ").join("").replace(/\s+$/, "");
-};
-
-/**
- * One horizontal bar with 1/8-cell precision.
- * A positive value never draws as empty: it gets at least ▏, because an empty bar reads as zero.
- * A value past max fills the bar and ends with "+".
- */
-function bar(value, max, { width = 20, empty = " " } = {}) {
-  if (!Number.isFinite(value) || value <= 0 || max <= 0) return empty.repeat(width);
-  if (value > max) return "█".repeat(width) + "+";
-  const units = (value / max) * width;
-  let full = Math.floor(units);
-  let eighth = Math.round((units - full) * 8);
-  if (eighth === 8) {
-    full += 1; // carry into a whole cell instead of dropping the remainder
-    eighth = 0;
-  }
-  if (full === 0 && eighth === 0) eighth = 1;
-  const head = "█".repeat(full) + EIGHTHS_LEFT[eighth];
-  return head + empty.repeat(Math.max(0, width - len(head)));
-}
-
-/** Labelled horizontal bar chart. rows: [{ label, value, text? }] */
-function barChart(rows, { width: preferred = 24, max, lang, format = lang ? (n) => new Intl.NumberFormat(lang).format(n) : String, empty = " ", maxWidth = LAYOUT.maxWidth } = {}) {
-  const top = max ?? Math.max(...rows.map((r) => r.value), 0);
-  const capped = capRows(rows);
-  const labels = fitLabels(capped.rows.map((r) => r.label));
-  const values = capped.rows.map((r) => cut(r.text ?? format(r.value), 16));
-  const labelW = Math.max(0, ...labels.map(len));
-  const valueW = Math.max(0, ...values.map(len));
-  const width = Math.max(4, Math.min(preferred, maxWidth - labelW - valueW - 4 - (max != null ? 1 : 0)));
-  const lines = capped.rows.map((r, i) => `${padEnd(labels[i], labelW)}  ${bar(r.value, top, { width, empty })}  ${values[i]}`);
-  return join(capped.note ? [...lines, capped.note] : lines);
-}
-
-/**
- * Coarse whole-cell bar for comparisons. ░ keeps the scale visible, so 0% still reads as a bar.
- */
-function cells(fraction, { width = 10 } = {}) {
-  const f = clamp(Number(fraction) || 0, 0, 1);
-  let n = Math.round(f * width);
-  if (f > 0 && n === 0) n = 1;
-  return "█".repeat(n) + "░".repeat(width - n);
-}
-
-/** Side-by-side comparison table. rows: [{ label, a, b, aText, bText }] with a and b as 0..1. */
-function compare(rows, { headers = ["", "A", "B"], width: preferred = 10, maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows(rows);
-  const labels = fitLabels(capped.rows.map((r) => r.label));
-  const texts = capped.rows.flatMap((r) => [cut(r.aText ?? "", 12), cut(r.bText ?? "", 12)]);
-  const labelW = Math.max(len(headers[0]), ...labels.map(len));
-  const textW = Math.max(0, ...texts.map(len));
-  const width = Math.max(2, Math.min(preferred, Math.floor((maxWidth - labelW - textW * 2 - 7) / 2)));
-  const cell = (f, t) => `${cells(f, { width })} ${cut(t ?? "", 12)}`;
-  const aCol = capped.rows.map((r) => cell(r.a, r.aText));
-  const colW = Math.max(len(headers[1]), ...aCol.map(len)) + 2;
-  const lines = [
-    `${padEnd(headers[0], labelW)}  ${padEnd(headers[1], colW)}${headers[2]}`,
-    ...capped.rows.map((r, i) => `${padEnd(labels[i], labelW)}  ${padEnd(aCol[i], colW)}${cell(r.b, r.bText)}`)
-  ];
-  return join(capped.note ? [...lines, capped.note] : lines);
-}
-
-/**
- * Measured values in █, projected values in ░, in the same bar.
- * rows: [{ label, measured, projected?, text? }]
- */
-function forecast(rows, { width: preferred = 36, max, legend = "░ = projected at the current pace", maxWidth = LAYOUT.maxWidth } = {}) {
-  const top = (max ?? Math.max(...rows.map((r) => (r.measured ?? 0) + (r.projected ?? 0)))) || 1;
-  if (rows.some((r) => (r.measured ?? 0) < 0 || (r.projected ?? 0) < 0 || (r.measured ?? 0) + (r.projected ?? 0) > top)) throw new Error("Forecast values must fit between zero and the scale maximum.");
-  const capped = capRows(rows);
-  const labels = fitLabels(capped.rows.map((r) => r.label));
-  const texts = capped.rows.map((r) => cut(r.text ?? "", 18));
-  const labelW = Math.max(0, ...labels.map(len));
-  const textW = Math.max(0, ...texts.map(len));
-  const width = Math.max(4, Math.min(preferred, maxWidth - labelW - textW - 3));
-  const lines = capped.rows.map((r, i) => {
-    const m = Math.round(((r.measured ?? 0) / top) * width);
-    const p = Math.round((((r.measured ?? 0) + (r.projected ?? 0)) / top) * width) - m;
-    const body = "█".repeat(m) + "░".repeat(Math.max(0, p));
-    return `${padEnd(labels[i], labelW)} ${padEnd(body, width)}  ${texts[i]}`;
-  });
-  if (capped.note) lines.push(capped.note);
-  return join(rows.some((r) => r.projected) ? [...lines, cut(legend, maxWidth)] : lines);
-}
-
-/** A bracketed meter against a cap: [ ████████░░░░ ] 64% of the cap */
-function meter(value, cap, { width = 24, label = "of the cap" } = {}) {
-  const f = cap > 0 ? value / cap : 0;
-  const n = clamp(Math.round(f * width), f > 0 ? 1 : 0, width);
-  const over = f > 1 ? " over" : "";
-  return `[ ${"█".repeat(n)}${"░".repeat(width - n)} ] ${Math.round(f * 100)}% ${label}${over}`;
-}
-
-/** Sparkline from ▁ to █. null or undefined draws a gap. */
-function sparkline(values, { min, max } = {}) {
-  const nums = values.filter(Number.isFinite);
-  if (!nums.length) return "";
-  const lo = min ?? Math.min(...nums);
-  const hi = max ?? Math.max(...nums);
-  const span = hi - lo || 1;
-  return values
-    .map((v) => (Number.isFinite(v) ? EIGHTHS_LOW[clamp(Math.round(((v - lo) / span) * 7), 0, 7)] : " "))
-    .join("");
-}
-
-/** Density grid. Each value 0..1 picks blank, ░, ▒, ▓ or █. */
-function heatmap(grid, { rowLabels = [], colLabels = "", levels = SHADES, cellWidth = 2, maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows(grid);
-  const labels = fitLabels(capped.rows.map((_, i) => rowLabels[i] ?? ""));
-  const labelW = Math.max(0, ...labels.map(len));
-  const maxCols = Math.max(1, Math.floor((maxWidth - (labelW ? labelW + 1 : 0)) / cellWidth));
-  const omittedCols = Math.max(0, ...capped.rows.map((row) => row.length - maxCols));
-  const pick = (v) => {
-    if (!Number.isFinite(v) || v <= 0) return levels[0];
-    return levels[clamp(Math.ceil(v * (levels.length - 1)), 1, levels.length - 1)];
-  };
-  const lines = capped.rows.map((row, i) => {
-    const lead = rowLabels.length ? padEnd(labels[i], labelW) + " " : "";
-    return lead + row.slice(0, maxCols).map((v) => pick(v).repeat(cellWidth)).join("");
-  });
-  if (colLabels) lines.unshift(cut((labelW ? " ".repeat(labelW + 1) : "") + colLabels, maxWidth));
-  if (omittedCols) lines.push(`… and ${omittedCols} more columns`);
-  if (capped.note) lines.push(capped.note);
-  return join(lines);
-}
-
-/** One character per day: ■ for a hit, · for a miss, blank for no data. */
-function calendarStrip(days, { hit = "■", miss = "·", gap = "  ", maxWidth = LAYOUT.maxWidth } = {}) {
-  const room = Math.max(1, Math.floor((maxWidth + len(gap)) / (1 + len(gap))));
-  const omitted = Math.max(0, days.length - room);
-  const line = days.slice(0, room).map((d) => (d == null ? " " : d ? hit : miss)).join(gap);
-  return omitted ? `${line}\n… and ${omitted} more days` : line;
-}
-
-/**
- * Timeline (Gantt) strip. tracks: [{ label, start, end, loop? }] in ms.
- * A loop runs to the end of the scale and ends with →.
- */
-function gantt(tracks, { scale, width: preferred = 40, unit = "ms", ticks = 3, maxWidth = LAYOUT.maxWidth } = {}) {
-  const top = (scale ?? Math.max(...tracks.map((t) => t.end))) || 1;
-  const capped = capRows(tracks);
-  const labels = fitLabels(capped.rows.map((t) => t.label));
-  const labelW = Math.max(0, ...labels.map(len));
-  const at = (ms) => clamp(Math.round((ms / top) * width), 0, width);
-  const fmt = (ms) => (unit === "ms" && ms >= 1000 ? `${+(ms / 1000).toFixed(2)}s` : `${ms}${unit}`);
-  const ranges = capped.rows.map((t) => t.loop ? `${fmt(t.start)}, repeats` : `${fmt(t.start)}–${fmt(t.end)}`);
-  const rangeW = Math.max(0, ...ranges.map(len));
-  const width = Math.max(4, Math.min(preferred, maxWidth - labelW - rangeW - 3));
-  const lines = capped.rows.map((t, i) => {
-    const s = at(t.start);
-    const e = t.loop ? width : Math.min(width, Math.max(s + 1, at(t.end)));
-    const strip = "·".repeat(s) + "█".repeat(e - s) + "·".repeat(width - e);
-    return `${padEnd(labels[i], labelW)} ${strip}${t.loop ? "→" : " "} ${ranges[i]}`;
-  });
-  const axis = Array(width + 1).fill(" ");
-  const marks = [];
-  for (let i = 0; i < ticks; i++) {
-    const v = (top * i) / (ticks - 1);
-    marks.push([Math.round((i / (ticks - 1)) * width), fmt(Math.round(v))]);
-  }
-  marks.forEach(([pos, text], i) => {
-    const start = i === marks.length - 1 ? Math.max(0, pos - len(text) + 1) : pos;
-    textCells(text).forEach((ch, k) => (axis[start + k] = ch));
-  });
-  if (capped.note) lines.push(capped.note);
-  return join([...lines, " ".repeat(labelW + 1) + axis.join("")]);
-}
-
-/** Duration ruler: 20 cells of 25ms by default. ▌ marks a half cell, + a value past the scale. */
-function ruler(ms, { scaleMs = 500, cells: n = 20 } = {}) {
-  if (ms == null) return "·".repeat(n);
-  if (ms < 0) throw new Error("A duration must be zero or greater.");
-  const per = scaleMs / n;
-  const full = Math.floor(ms / per);
-  if (full >= n) return "█".repeat(n) + "+";
-  const half = ms - full * per >= per / 2 ? "▌" : "";
-  return ("█".repeat(full) + half).padEnd(n, "·");
-}
-
-// Cubic bezier helpers for the velocity glyph.
-const bez = (p1, p2, t) => 3 * (1 - t) * (1 - t) * t * p1 + 3 * (1 - t) * t * t * p2 + t * t * t;
-const bezDx = (p1, p2, t) => 3 * (1 - t) * (1 - t) * p1 + 6 * (1 - t) * t * (p2 - p1) + 3 * t * t * (1 - p2);
-function solveT([x1, , x2], x) {
-  let t = x;
-  for (let i = 0; i < 8; i++) {
-    const d = bezDx(x1, x2, t);
-    if (Math.abs(d) < 1e-6) break;
-    const next = t - (bez(x1, x2, t) - x) / d;
-    if (next < 0 || next > 1) break;
-    t = next;
-  }
-  if (Math.abs(bez(x1, x2, t) - x) < 1e-5) return t;
-  let lo = 0;
-  let hi = 1;
-  for (let i = 0; i < 40; i++) {
-    t = (lo + hi) / 2;
-    if (bez(x1, x2, t) < x) lo = t;
-    else hi = t;
-  }
-  return t;
-}
-
-const EASINGS = {
-  linear: [0, 0, 1, 1],
-  ease: [0.25, 0.1, 0.25, 1],
-  "ease-in": [0.42, 0, 1, 1],
-  "ease-out": [0, 0, 0.58, 1],
-  "ease-in-out": [0.42, 0, 0.58, 1]
-};
-
-/**
- * Speed over time for a cubic-bezier: n equal slices of time, bar height = progress in that slice.
- * Ends with ↺ when the curve overshoots or runs backwards.
- */
-function velocity(curve, n = 8) {
-  const b = typeof curve === "string" ? EASINGS[curve] : curve;
-  if (!b) return "—";
-  const ys = [];
-  for (let k = 0; k <= n; k++) ys.push(bez(b[1], b[3], solveT(b, k / n)));
-  const d = ys.slice(1).map((y, i) => y - ys[i]);
-  const mx = Math.max(...d.map(Math.abs)) || 1;
-  const over = ys.some((y) => y > 1.001) || d.some((v) => v < -1e-6);
-  return d.map((v) => EIGHTHS_LOW[Math.round((Math.abs(v) / mx) * 7)]).join("") + (over ? "↺" : "");
-}
-
-/** Frame text in a box. Optional title sits in the top border. */
-function box(text, { title, style = "light", padding = 1 } = {}) {
-  const b = BOX[style];
-  const lines = String(text).split("\n");
-  const inner = Math.max(...lines.map(len), title ? len(title) + 2 : 0) + padding * 2;
-  const pad = " ".repeat(padding);
-  const top = title
-    ? b.tl + b.h + ` ${title} ` + b.h.repeat(Math.max(0, inner - len(title) - 3)) + b.tr
-    : b.tl + b.h.repeat(inner) + b.tr;
-  return [top, ...lines.map((l) => b.v + pad + padEnd(l, inner - padding * 2) + pad + b.v), b.bl + b.h.repeat(inner) + b.br].join(
-    "\n"
-  );
-}
-
-/** Boxes in a row joined by arrows: ┌───┐ ──► ┌───┐ */
-function flow(steps, { arrow = " ──► ", style = "light", maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows(steps, LAYOUT.rowsMax, "steps");
-  const labels = fitLabels(capped.rows);
-  const boxes = labels.map((s) => box(s, { style }).split("\n"));
-  const draw = (group) => {
-    const height = Math.max(...group.map((b) => b.length));
-    const mid = Math.floor(height / 2);
-    return Array.from({ length: height }, (_, row) => {
-      const link = row === mid ? arrow : " ".repeat(len(arrow));
-      return group.map((b) => b[row] ?? " ".repeat(len(b[0]))).join(link);
-    });
-  };
-  const natural = draw(boxes);
-  if (boxes.length <= 4 && natural.every((line) => len(line) <= maxWidth) && !capped.note) return join(natural);
-  const groups = [];
-  let group = [];
-  for (const current of boxes) {
-    const next = [...group, current];
-    if (group.length && (next.length > 4 || draw(next).some((line) => len(line) > maxWidth))) {
-      groups.push(group);
-      group = [current];
-    } else group = next;
-  }
-  if (group.length) groups.push(group);
-  const out = [];
-  groups.forEach((row, i) => {
-    out.push(...draw(row));
-    if (i < groups.length - 1) out.push("│", "▼");
-  });
-  if (capped.note) out.push(capped.note);
-  return join(out);
-}
-
-/** File or concept tree. node: { name, note?, children? } or an array of them. */
-function tree(nodes, { noteColumn, maxWidth = LAYOUT.maxWidth, maxDepth = 3 } = {}) {
-  const rows = [];
-  const descendants = (node) => 1 + (node.children ?? []).reduce((n, child) => n + descendants(child), 0);
-  const walk = (list, prefix, depth) =>
-    list.forEach((n, i) => {
-      const last = i === list.length - 1;
-      rows.push([prefix + (last ? "└── " : "├── ") + cut(n.name, LAYOUT.labelMax), n.note]);
-      if (n.children?.length && depth >= maxDepth) rows.push([prefix + (last ? "    " : "│   ") + `└── … and ${n.children.reduce((sum, child) => sum + descendants(child), 0)} more`, ""]);
-      else if (n.children) walk(n.children, prefix + (last ? "    " : "│   "), depth + 1);
-    });
-  const roots = Array.isArray(nodes) ? nodes : [nodes];
-  roots.forEach((r) => {
-    rows.push([cut(r.name, LAYOUT.labelMax), r.note]);
-    if (r.children) walk(r.children, "", 1);
-  });
-  const capped = capRows(rows);
-  const col = Math.min(noteColumn ?? Math.max(...capped.rows.map(([t]) => len(t))) + 3, Math.floor(maxWidth * 0.65));
-  const out = capped.rows.map(([t, note]) => note ? padEnd(cut(t, col - 1), col) + cut(note, maxWidth - col) : cut(t, maxWidth));
-  if (capped.note) out.push(capped.note);
-  return join(out);
-}
-
-/** Table drawn with box characters. rows: arrays of strings; first row is the header. */
-function table(rows, { style = "light", align = [], maxWidth = LAYOUT.maxWidth } = {}) {
-  const b = BOX[style];
-  const cols = Math.max(...rows.map((r) => r.length));
-  const [headRaw = [], ...bodyRaw] = rows;
-  const capped = capRows(bodyRaw);
-  const logical = [headRaw, ...capped.rows];
-  if (capped.note) logical.push([capped.note]);
-  const w = fitColumns(logical, { maxWidth });
-  const cell = (v, c) => (align[c] === "right" ? padStart(String(v ?? ""), w[c]) : padEnd(String(v ?? ""), w[c]));
-  const rule = (l, m, r) => l + w.map((n) => b.h.repeat(n + 2)).join(m) + r;
-  const lines = (r) => {
-    const wrapped = Array.from({ length: cols }, (_, c) => wrap(String(r[c] ?? ""), w[c]));
-    const h = Math.max(...wrapped.map((parts) => parts.length));
-    return Array.from({ length: h }, (_, i) => b.v + wrapped.map((parts, c) => ` ${cell(parts[i] ?? "", c)} `).join(b.v) + b.v);
-  };
-  const [head, ...body] = logical.map((r) => Array.from({ length: cols }, (_, c) => r[c] ?? ""));
-  return [rule(b.tl, b.tt, b.tr), ...lines(head), rule(b.lt, b.x, b.rt), ...body.flatMap(lines), rule(b.bl, b.bt, b.br)].join("\n");
-}
-
-/** A status key on the density ladder. items: [{ level: 0..4, label }] */
-function statusKey(items, { width = 12 } = {}) {
-  const capped = capRows(items);
-  const labels = fitLabels(capped.rows.map((i) => i.label));
-  const lines = capped.rows.map((i, n) => `${SHADES[Math.round(clamp(i.level, 0, 4))].repeat(width)}  ${labels[n]}`);
-  return join(capped.note ? [...lines, capped.note] : lines);
-}
-
-return { cellWidth: cellWidth, center: center, cut: cut, formatNumber: formatNumber, graphemes: graphemes, isRtl: isRtl, padEnd: padEnd, padStart: padStart, textCells: textCells, upper: upper, width: width, wrap: wrap, SHADES, EIGHTHS_LEFT, EIGHTHS_LOW, BOX, clamp, len, join, place, bar, barChart, cells, compare, forecast, meter, sparkline, heatmap, calendarStrip, gantt, ruler, EASINGS, velocity, box, flow, tree, table, statusKey };
-})();
 __glyph[4] = (() => {
-const { upper } = __glyph[3];
-const { motionFlow, motionBranchFlow, motionStateMachine, motionJourneyMap } = __glyph[5];
-// UX flows: linear and branching flows, state machines, journey maps, sitemaps.
-const { checks } = __glyph[2];
-const { BOX, cut, flow, join, len, padEnd, textCells, tree, wrap } = __glyph[10];
-const { LAYOUT, capRows, fitLabels } = __glyph[8];
-
-/**
- * A top-to-bottom flow with decisions. Each decision can send one branch to the right.
- * steps: [{ label, type?: "step" | "decision" | "end", no?: { label, to? } }]
- * A decision's main path continues down as "yes"; `no` draws a box to the right, level with the
- * question, and `no.to` names where that branch goes next. Steps are solid frames, decisions dotted,
- * the end double. Every box on the spine shares one width, with its text centred (LAYOUT.pad).
- */
-function branchFlow(steps, { gap = 3, maxText = LAYOUT.labelMax, maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows(steps, LAYOUT.rowsMax, "steps");
-  steps = capped.rows;
-  const pad = LAYOUT.pad;
-  const textOf = (s) => cut(s.type === "decision" ? `${s.label}?` : s.label, maxText);
-  const longest = Math.min(maxText, Math.max(...steps.map((s) => len(textOf(s)))));
-  const W = longest + pad * 2 + 2;
-  const spine = Math.floor((W - 1) / 2);
-  const grid = [];
-  const put = (r, c, str) => {
-    while (grid.length <= r) grid.push([]);
-    textCells(str).forEach((ch, i) => {
-      while (grid[r].length < c + i) grid[r].push(" ");
-      grid[r][c + i] = ch;
-    });
-  };
-  const centre = (t, w) => {
-    const left = Math.floor((w - len(t)) / 2);
-    return " ".repeat(left) + t + " ".repeat(w - left - len(t));
-  };
-  const frame = (r, c, w, lines, style, joint) => {
-    const b = style === "double" ? BOX.double : BOX.light;
-    const h = style === "dotted" ? "┄" : b.h;
-    const v = style === "dotted" ? "┆" : b.v;
-    put(r, c, b.tl + h.repeat(w - 2) + b.tr);
-    lines.forEach((t, k) => put(r + 1 + k, c, v + centre(t, w - 2) + v));
-    const bottom = [...(b.bl + h.repeat(w - 2) + b.br)];
-    if (joint) bottom[spine] = BOX.light.tt;
-    put(r + 1 + lines.length, c, bottom.join(""));
-    return lines.length + 2;
-  };
-
-  let r = 0;
-  steps.forEach((s, i) => {
-    const last = i === steps.length - 1;
-    const decision = s.type === "decision";
-    const style = decision ? "dotted" : last || s.type === "end" ? "double" : "solid";
-    const lines = wrap(textOf(s), W - 2 - pad * 2);
-    const height = frame(r, 0, W, lines, style, !last);
-    if (decision && s.no) {
-      const arrow = `${"─".repeat(gap)} no ${"─".repeat(gap)}►`;
-      const side = [cut(s.no.label, maxText), ...(s.no.to ? [cut(`→ ${s.no.to}`, maxText)] : [])];
-      const sw = Math.max(...side.map(len)) + pad * 2 + 2;
-      if (W + len(arrow) + sw > maxWidth) throw new Error(`This branch needs ${W + len(arrow) + sw} cells; shorten the decision or branch label to fit ${maxWidth}.`);
-      put(r + 1, W - 1, BOX.light.lt + arrow);
-      frame(r, W + len(arrow), sw, side, "solid", false);
-    }
-    r += height;
-    if (!last) {
-      put(r, spine, decision ? `${BOX.light.v} yes` : BOX.light.v);
-      put(r + 1, spine, "▼");
-      r += 2;
-    }
-  });
-  if (capped.note) put(r, 0, capped.note);
-  return join(grid.map((row) => row.join("")));
-}
-
-/**
- * A state machine as its transitions, aligned in columns. transitions: [{ from, event, to }]
- * Lists every state first, so nothing unreachable hides.
- */
-function stateMachine(transitions, { initial, maxWidth = LAYOUT.maxWidth } = {}) {
-  const partMax = Math.min(LAYOUT.labelMax, Math.floor((maxWidth - 11) / 3));
-  const clean = transitions.map((t) => ({ ...t, from: cut(t.from, partMax), event: cut(t.event, partMax), to: cut(t.to, partMax) }));
-  const capped = capRows(clean, LAYOUT.rowsMax, "transitions");
-  const states = [...new Set(clean.flatMap((t) => [t.from, t.to]))];
-  const fromW = Math.max(0, ...capped.rows.map((t) => len(t.from)));
-  const evW = Math.max(0, ...capped.rows.map((t) => len(t.event)));
-  const start = cut(initial ?? clean[0]?.from ?? "", partMax);
-  const reachable = new Set([start]);
-  let grew = true;
-  while (grew) {
-    grew = false;
-    for (const t of clean) if (reachable.has(t.from) && !reachable.has(t.to)) reachable.add(t.to), (grew = true);
-  }
-  const lost = states.filter((s) => !reachable.has(s));
-  const dead = states.filter((s) => !clean.some((t) => t.from === s));
-  const stateText = `states  ${states.map((s) => (s === start ? `[${s}]` : s)).join(" · ")}`;
-  const stateLines = len(stateText) <= maxWidth ? [stateText] : wrap(stateText, maxWidth);
-  const endLines = wrap(`[ ] marks the start. Ends: ${dead.join(", ") || "none"}.${lost.length ? ` Unreachable: ${lost.join(", ")}.` : ""}`, maxWidth);
-  return join([
-    ...stateLines,
-    "",
-    ...capped.rows.map((t) => `${padEnd(t.from, fromW)} ──[ ${padEnd(t.event, evW)} ]──► ${t.to}`),
-    ...(capped.note ? [capped.note] : []),
-    "",
-    ...endLines
-  ]);
-}
-
-/**
- * Journey map: stages across, rows for what people do, think and how they feel (-2..2).
- * stages: [{ label, doing, thinking, feeling }]
- */
-function journeyMap(stages, { colWidth: preferred = 18, maxWidth = LAYOUT.maxWidth, lang } = {}) {
-  const labelW = 9;
-  const available = Math.floor((maxWidth - labelW) / Math.max(1, stages.length));
-  if (available < 10) throw new Error(`A journey map fits at most ${Math.floor((maxWidth - labelW) / 10)} stages at ${maxWidth} cells; this one has ${stages.length}.`);
-  const colWidth = Math.min(preferred, available);
-  const labels = fitLabels(stages.map((s) => s.label), colWidth - 1);
-  const cell = (text) => wrap(text ?? "", colWidth - 2);
-  const row = (name, pick) => {
-    const cols = stages.map((s) => cell(pick(s)));
-    const h = Math.max(...cols.map((c) => c.length));
-    return Array.from({ length: h }, (_, i) =>
-      padEnd(i ? "" : name, labelW) + cols.map((c) => padEnd(c[i] ?? "", colWidth)).join("")
-    );
-  };
-  const feel = (v) => ({ 2: "▲▲ great", 1: "▲ good", 0: "· neutral", "-1": "▼ poor", "-2": "▼▼ bad" })[Math.round(v)] ?? "";
-  const rule = " ".repeat(labelW) + stages.map(() => "─".repeat(colWidth - 2) + "  ").join("");
-  return join([
-    padEnd("STAGE", labelW) + stages.map((s, i) => padEnd(upper(labels[i], lang), colWidth)).join(""),
-    rule,
-    ...row("doing", (s) => s.doing),
-    "",
-    ...row("thinking", (s) => s.thinking && `“${s.thinking}”`),
-    "",
-    ...row("feeling", (s) => feel(s.feeling))
-  ]);
-}
-
-const kinds = {
-  flow: { label: "Linear flow", render: (steps, o) => flow(steps, o), summary: (s) => s.join(", then ") },
-  branchFlow: {
-    label: "Flow with decisions",
-    render: branchFlow,
-    summary: (s) => s.map((x) => (x.type === "decision" ? `${x.label}? if not, ${x.no?.label ?? "stop"}` : x.label)).join(", then ")
-  },
-  stateMachine: {
-    label: "State machine",
-    normalize: (data) => Array.isArray(data) ? data : data.transitions.map((transition) => ({ ...transition, event: transition.event ?? transition.label ?? "" })),
-    render: stateMachine,
-    summary: (t) => t.map((x) => `${x.from} goes to ${x.to} on ${x.event}`).join(". ")
-  },
-  journeyMap: { label: "Journey map",
-    check: (d) => [checks.within(d, "feeling", -2, 2, "feeling")], render: journeyMap, summary: (s) => s.map((x) => `${x.label}: ${x.doing}`).join(". ") },
-  tree: {
-    label: "Tree or sitemap",
-    render: tree,
-    summary: (n) => {
-      const names = [];
-      const walk = (x) => (Array.isArray(x) ? x.forEach(walk) : (names.push(x.name), x.children?.forEach(walk)));
-      walk(n);
-      return names.join(", ");
-    }
-  }
-};
-
-kinds.flow.motion = (data, options) => motionFlow(data, options, kinds.flow.render);
-kinds.branchFlow.motion = (data, options) => motionBranchFlow(data, options, kinds.branchFlow.render);
-kinds.stateMachine.motion = (data, options) => motionStateMachine(data, options, kinds.stateMachine.render);
-kinds.journeyMap.motion = (data, options) => motionJourneyMap(data, options, kinds.journeyMap.render);
-
-return { branchFlow, stateMachine, journeyMap, kinds };
-})();
-__glyph[12] = (() => {
-const { motionCanvas, motionFactory, motionProgress } = __glyph[6];
-
-function motionQaChecklist(data, options, render) {
-  const canvas = motionCanvas(render(data, options));
-  return motionFactory(canvas, (grid, time) => {
-    data.slice(0, 16).forEach((item, row) => {
-      const progress = motionProgress(time, row * 8, 6);
-      if (item.status === "done" && progress < 1) grid.text(row, 0, "  to do      ", "mute");
-      if (item.status === "blocked" && time >= row * 8 && time < row * 8 + 12 && Math.floor(time / 2) % 2) grid.text(row, 0, "x blocked    ", "fail");
-      if (item.status === "done" && progress === 1) grid.put(row, 0, "█", "ok");
-    });
-  });
-}
-
-return { motionQaChecklist };
-})();
-__glyph[11] = (() => {
-const { motionQaChecklist } = __glyph[12];
-// Handoff and design QA: spacing redlines, checklists, before and after.
-const { checks } = __glyph[2];
-const { cells, center, compare, cut, join, len, padEnd } = __glyph[10];
-const { LAYOUT, capRows } = __glyph[8];
-
-/**
- * Spacing callouts across a row: │◄ 16 ►│◄─── content 320 ───►│◄ 16 ►│
- * segments: [{ label, size }] — each segment's width is proportional to size, never narrower than its label.
- */
-function redline(segments, { width = 48, maxWidth = LAYOUT.maxWidth } = {}) {
-  if (segments.length * 6 + 1 > maxWidth) throw new Error(`A spacing redline fits at most ${Math.floor((maxWidth - 1) / 6)} segments at ${maxWidth} cells; this one has ${segments.length}.`);
-  const total = segments.reduce((a, s) => a + s.size, 0) || 1;
-  const room = Math.min(width, maxWidth - segments.length - 1);
-  const parts = segments.map((s) => {
-    const share = Math.max(5, Math.round((s.size / total) * room));
-    const label = cut(s.label, LAYOUT.labelMax);
-    const w = Math.max(len(label) + 4, share);
-    return `◄${center(` ${label} `, w - 2, "─")}►`;
-  });
-  const result = `│${parts.join("│")}│`;
-  if (len(result) > maxWidth) throw new Error(`These spacing labels need more than ${maxWidth} cells; use fewer segments or shorter labels.`);
-  return result;
-}
-
-const STATUS = { done: "█ done       ", progress: "▒ in progress", todo: "  to do      ", blocked: "x blocked    " };
-
-/** A QA checklist on the status ladder, with a summary. items: [{ text, status, note? }] */
-function qaChecklist(items) {
-  const capped = capRows(items, LAYOUT.rowsMax, "items");
-  const done = items.filter((i) => i.status === "done").length;
-  const rows = capped.rows.map((i) => cut(`${STATUS[i.status] ?? STATUS.todo}  ${i.text}${i.note ? ` (${i.note})` : ""}`, LAYOUT.maxWidth));
-  return join([`${done} of ${items.length} done  [ ${cells(done / (items.length || 1), { width: Math.min(items.length, 32) })} ]`, "", ...rows, ...(capped.note ? [capped.note] : [])]);
-}
-
-const kinds = {
-  redline: { label: "Spacing redline", render: redline, summary: (s) => s.map((x) => x.label).join(", then ") },
-  qaChecklist: {
-    label: "QA checklist",
-    render: qaChecklist,
-    summary: (i) => `${i.filter((x) => x.status === "done").length} of ${i.length} done.`
-  },
-  compare: {
-    label: "Before and after",
-    check: (d) => [checks.within(d, "a", 0, 1, "before share"), checks.within(d, "b", 0, 1, "after share")],
-    render: compare,
-    summary: (rows) => rows.map((r) => `${r.label}: ${r.aText} then ${r.bText}`).join(". ")
-  }
-};
-
-kinds.qaChecklist.motion = (data, options) => motionQaChecklist(data, options, kinds.qaChecklist.render);
-
-return { redline, qaChecklist, kinds };
-})();
-__glyph[14] = (() => {
-const { motionCanvas, motionFactory, motionMarks, motionCounters, motionProgress, staggerDelay, growBar, countUp, timeCursor } = __glyph[6];
-
-function metricMotion(data, options, render, mode) {
-  const canvas = motionCanvas(render(data, options));
-  const marks = motionMarks(canvas, mode === "spark" ? /[▁▂▃▄▅▆▇█]/u : /[█▓▒░▏▎▍▌▋▊▉■]/u);
-  const firstRow = mode === "cohort" || (mode === "heat" && options?.colLabels) ? 1 : 0;
-  const rowCount = Array.isArray(data) && mode !== "calendar" ? Math.min(16, data.length) : 1;
-  marks.forEach((line, row) => { if (row < firstRow || row >= firstRow + rowCount) marks[row] = []; });
-  const counters = motionCounters(canvas, marks, options?.lang);
-  const active = marks.flatMap((line, row) => line.length ? [row] : []);
-  return motionFactory(canvas, (grid, time) => {
-    active.forEach((row, index) => {
-      const progress = motionProgress(time, mode === "heat" ? 0 : staggerDelay(index, active.length), 90);
-      if (mode === "heat") {
-        marks[row].forEach((col) => { const p = motionProgress(time, (row + col) * 0.6, 50); if (p < 1) grid.put(row, col, p > 0.5 ? "░" : "·", "mute"); });
-      } else if (mode === "cohort") {
-        marks[row].forEach((col, cell) => { const p = motionProgress(time, index * 8 + cell * 0.6, 24); grid.put(row, col, p === 0 ? "·" : p < 1 ? "█" : canvas.matrix[row][col]); });
-      } else if (mode === "forecast") {
-        const solid = marks[row].filter((col) => canvas.matrix[row][col] !== "░");
-        const projected = marks[row].filter((col) => canvas.matrix[row][col] === "░");
-        growBar(grid, row, solid, motionProgress(time, index * 5, 50));
-        growBar(grid, row, projected, motionProgress(time, 55 + index * 5, 50));
-      } else growBar(grid, row, marks[row], progress, { head: mode === "spark" || mode === "meter" });
-      if (mode === "calendar" && progress < 1 && marks[row].length) timeCursor(grid, row, marks[row][0], marks[row].at(-1), progress);
-    });
-    counters.forEach((counter) => countUp(grid, counter.row, counter.col, counter.value, motionProgress(time, staggerDelay(active.indexOf(counter.row), active.length), 90), counter.size, counter.format));
-    if ((mode === "bar" || mode === "meter") && time < 48 && Math.floor(time / 12) % 2) canvas.matrix.forEach((row, r) => row.forEach((ch, c) => { if (ch === "+") grid.put(r, c, " "); }));
-    if (mode === "meter" && time < 48 && Math.floor(time / 12) % 2) canvas.lines.forEach((line, row) => { const at = line.lastIndexOf(" over"); if (at >= 0) grid.text(row, at, "     "); });
-  });
-}
-
-const motionBarChart = (data, options, render) => metricMotion(data, options, render, "bar");
-const motionCohort = (data, options, render) => metricMotion(data, options, render, "cohort");
-const motionSparkline = (data, options, render) => metricMotion(data, options, render, "spark");
-const motionMetricPanel = (data, options, render) => metricMotion(data, options, render, "spark");
-const motionMeter = (data, options, render) => metricMotion(data, options, render, "meter");
-const motionForecast = (data, options, render) => metricMotion(data, options, render, "forecast");
-const motionCalendarStrip = (data, options, render) => metricMotion(data, options, render, "calendar");
-const motionHeatmap = (data, options, render) => metricMotion(data, options, render, "heat");
-
-return { motionBarChart, motionCohort, motionSparkline, motionMetricPanel, motionMeter, motionForecast, motionCalendarStrip, motionHeatmap };
-})();
-__glyph[13] = (() => {
-const { motionBarChart, motionCohort, motionSparkline, motionMetricPanel, motionMeter, motionForecast, motionCalendarStrip, motionHeatmap } = __glyph[14];
+const { motionBarChart, motionCohort, motionSparkline, motionMetricPanel, motionMeter, motionForecast, motionCalendarStrip, motionHeatmap } = __glyph[5];
 // Experiments and metrics: funnels, cohorts, test results, metric panels, plus the core charts.
 const { checks } = __glyph[2];
-const { bar, barChart, calendarStrip, clamp, compare, cut, forecast, heatmap, join, len, meter, padEnd, padStart, place, sparkline } = __glyph[10];
+const { bar, barChart, calendarStrip, clamp, compare, cut, forecast, heatmap, join, len, meter, padEnd, padStart, place, sparkline } = __glyph[9];
 const { LAYOUT, capRows, fitLabels } = __glyph[8];
-const { motionFunnel } = __glyph[9];
+const { motionFunnel } = __glyph[10];
 
 const fmt = (n, lang) => lang ? new Intl.NumberFormat(lang).format(n) : (Number.isInteger(n) ? n.toLocaleString("en") : String(n));
 const pct = (n) => `${Math.round(n * 100)}%`;
@@ -2286,1064 +1957,13 @@ kinds.heatmap.motion = (data, options) => motionHeatmap(data, options, kinds.hea
 
 return { funnel, cohort, abResult, metricPanel, kinds };
 })();
-__glyph[16] = (() => {
-const { motionCanvas, motionFactory, motionMarks, motionProgress, growBar, timeCursor } = __glyph[6];
-
-function trackMotion(data, options, render, mode) {
-  const canvas = motionCanvas(render(data, options));
-  const marks = motionMarks(canvas, /[█▌·]/u);
-  if (mode === "timing") marks.forEach((line, row) => {
-    const start = canvas.matrix[row].indexOf("▕"), end = canvas.matrix[row].indexOf("▏");
-    marks[row] = start >= 0 && end > start ? line.filter((col) => col > start && col < end) : [];
-  });
-  const rows = marks.flatMap((line, row) => line.length ? [row] : []);
-  const durations = Array.isArray(data) ? data.map((item) => item.ms ?? item.end ?? 1) : [];
-  const longest = Math.max(1, ...durations);
-  return motionFactory(canvas, (grid, time) => {
-    rows.forEach((row, index) => {
-      const progress = mode === "timing" ? motionProgress(time, 0, 120 * (durations[index] ?? longest) / longest) : motionProgress(time, mode === "film" ? index * 8 : 0, mode === "film" ? 8 : 120);
-      const columns = marks[row];
-      columns.forEach((col) => { if (col > columns[0] + (columns.at(-1) - columns[0]) * progress) grid.put(row, col, "·", "mute"); });
-      if (progress > 0 && progress < 1) timeCursor(grid, row, columns[0], columns.at(-1), progress);
-    });
-  });
-}
-const motionMotionTiming = (data, options, render) => trackMotion(data, options, render, "timing");
-const motionTransitionSpec = (data, options, render) => trackMotion(data, options, render, "tracks");
-const motionStagger = (data, options, render) => trackMotion(data, options, render, "stagger");
-const motionFilmstrip = (data, options, render) => trackMotion(data, options, render, "film");
-
-return { motionMotionTiming, motionTransitionSpec, motionStagger, motionFilmstrip };
-})();
-__glyph[15] = (() => {
-const { motionMotionTiming, motionTransitionSpec, motionStagger, motionFilmstrip } = __glyph[16];
-// Motion: intent, timing, transitions, choreography, frames and easing tokens.
-const { checks } = __glyph[2];
-const { BOX, EASINGS, clamp, cut, gantt, join, len, padEnd, padStart, ruler, velocity } = __glyph[10];
-const { LAYOUT, capRows, fitLabels } = __glyph[8];
-
-const bez = (p1, p2, t) => 3 * (1 - t) * (1 - t) * t * p1 + 3 * (1 - t) * t * t * p2 + t * t * t;
-/** Progress (0..1, may overshoot) of a cubic-bezier at time x (0..1). */
-function progressAt(curve, x) {
-  const [x1, y1, x2, y2] = typeof curve === "string" ? EASINGS[curve] : curve;
-  let lo = 0;
-  let hi = 1;
-  let t = x;
-  for (let i = 0; i < 40; i++) {
-    t = (lo + hi) / 2;
-    if (bez(x1, x2, t) < x) lo = t;
-    else hi = t;
-  }
-  return bez(y1, y2, t);
-}
-
-const curveText = (c) => (typeof c === "string" ? c : `cubic-bezier(${c.join(", ")})`);
-
-/** Duration ruler and speed glyph per row. rows: [{ label, ms, easing, easingName? }] */
-function motionTiming(rows, { maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows(rows);
-  const labels = fitLabels(capped.rows.map((r) => r.label));
-  const labelW = Math.max(0, ...labels.map(len));
-  const names = capped.rows.map((r) => cut(r.easingName ?? curveText(r.easing), 18));
-  const nameW = Math.max(0, ...names.map(len));
-  const rulerWidth = Math.max(8, Math.min(20, maxWidth - labelW - nameW - 22));
-  return join([
-    ...capped.rows.map(
-      (r, i) => `${padEnd(labels[i], labelW)} ▕${ruler(r.ms, { cells: rulerWidth })}▏ ${padStart(String(r.ms), 4)}ms  ${padEnd(names[i], nameW)}  ${velocity(r.easing)}`
-    ),
-    ...(capped.note ? [capped.note] : []),
-    `${" ".repeat(labelW)} ${cut("0·········250········500ms", maxWidth - labelW - 1)}`
-  ]);
-}
-
-/**
- * Motion intent: why it moves, what starts it, what changes, and what reduced motion shows instead.
- * { name, purpose, trigger, from, to, ms, easing, easingName?, reduced }
- */
-function intentCard(m, { width = 56 } = {}) {
-  const b = BOX.light;
-  const inner = width - 4;
-  const field = (k, v) => `${padEnd(k, 10)}${v}`;
-  const rows = [
-    field("why", m.purpose),
-    field("when", m.trigger),
-    field("change", `${m.from} → ${m.to}`),
-    field("timing", `▕${ruler(m.ms)}▏ ${m.ms}ms`),
-    field("easing", `${velocity(m.easing)}  ${m.easingName ?? curveText(m.easing)}`),
-    field("reduced", m.reduced)
-  ].flatMap((r) => {
-    const out = [];
-    let rest = r;
-    while (len(rest) > inner) {
-      const cut = rest.lastIndexOf(" ", inner);
-      out.push(rest.slice(0, cut > 10 ? cut : inner));
-      rest = " ".repeat(10) + rest.slice(cut > 10 ? cut + 1 : inner);
-    }
-    return [...out, rest];
-  });
-  const title = ` ${cut(m.name, width - 6)} `;
-  return [
-    b.tl + b.h + title + b.h.repeat(Math.max(0, width - 3 - len(title))) + b.tr,
-    ...rows.map((r) => `${b.v} ${padEnd(r, inner)} ${b.v}`),
-    b.bl + b.h.repeat(width - 2) + b.br
-  ].join("\n");
-}
-
-/** One transition, property by property. tracks: [{ property, from, to, start, end }] in ms. */
-function transitionSpec(tracks, { width = 30, maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows(tracks);
-  tracks = capped.rows;
-  const scale = Math.max(...tracks.map((t) => t.end));
-  const chart = gantt(
-    tracks.map((t) => ({ label: t.property, start: t.start, end: t.end })),
-    { scale, width }
-  ).split("\n");
-  const rowW = Math.max(...chart.slice(0, -1).map(len));
-  return join([
-    ...tracks.map((t, i) => {
-      const room = Math.floor((maxWidth - rowW - 6) / 2);
-      if (room < 1) throw new Error("Use shorter transition labels to leave room for the values.");
-      return `${padEnd(chart[i], rowW)}   ${cut(String(t.from), room)} → ${cut(String(t.to), room)}`;
-    }),
-    ...(capped.note ? [capped.note] : []),
-    chart.at(-1)
-  ]);
-}
-
-/**
- * A staggered entrance. { count, duration, delay, curve? } — with `curve`, delays follow it
- * (bunched at the start for an ease-out), otherwise they are evenly spaced.
- */
-function stagger({ count, duration, delay, curve, label = "item" }, { width = 40 } = {}) {
-  if (!Number.isInteger(count) || count < 1 || count > LAYOUT.rowsMax) throw new Error(`A stagger supports between 1 and ${LAYOUT.rowsMax} items.`);
-  const span = delay * (count - 1);
-  const starts = Array.from({ length: count }, (_, i) =>
-    Math.round(curve && count > 1 ? progressAt(curve, i / (count - 1)) * span : i * delay)
-  );
-  const tracks = starts.map((s, i) => ({ label: `${label} ${i + 1}`, start: s, end: s + duration }));
-  return join([
-    gantt(tracks, { scale: Math.max(...tracks.map((t) => t.end)), width }),
-    "",
-    `${count} × ${duration}ms, ${curve ? `delays follow ${curveText(curve)}` : `${delay}ms apart`}. Done at ${Math.max(...tracks.map((t) => t.end))}ms.`
-  ]);
-}
-
-/** Where an element is on each frame. { frames, easing, width? } Equal time between rows. */
-function filmstrip({ frames = 8, easing = "ease-out", ms }, { width = 32 } = {}) {
-  if (!Number.isInteger(frames) || frames < 1 || frames > LAYOUT.rowsMax) throw new Error(`A filmstrip supports between 1 and ${LAYOUT.rowsMax} frames.`);
-  const rows = Array.from({ length: frames + 1 }, (_, i) => {
-    const p = progressAt(easing, i / frames);
-    const at = clamp(Math.round(p * (width - 1)), 0, width + 2);
-    const track = Array(width).fill("·");
-    if (at < width) track[at] = "█";
-    const time = ms ? `${Math.round((ms * i) / frames)}ms` : `f${i}`;
-    return `${padStart(time, 6)}  ${track.join("")}${at >= width ? "█ overshoot" : ""}`;
-  });
-  return join([...rows, `${" ".repeat(8)}start${" ".repeat(Math.max(1, width - 8))}end`]);
-}
-
-/** Easing tokens with their speed glyph. tokens: [{ name, curve, use }] */
-function easingTable(tokens) {
-  const capped = capRows(tokens);
-  const names = fitLabels(capped.rows.map((t) => t.name));
-  const curves = capped.rows.map((t) => cut(curveText(t.curve), 32));
-  const nameW = Math.max(0, ...names.map(len));
-  const curveW = Math.max(0, ...curves.map(len));
-  const useW = Math.max(4, LAYOUT.maxWidth - nameW - curveW - 14);
-  const lines = capped.rows.map((t, i) => `${padEnd(names[i], nameW)}  ${velocity(t.curve)}  ${padEnd(curves[i], curveW)}  ${cut(t.use ?? "", useW)}`);
-  return join(capped.note ? [...lines, capped.note] : lines);
-}
-
-const kinds = {
-  motionTiming: { label: "Motion timing",
-    check: (d) => [checks.notNegative(d, "ms", "duration")], render: motionTiming, summary: (r) => r.map((x) => `${x.label}: ${x.ms}ms`).join(". ") },
-  intentCard: {
-    label: "Motion intent",
-    render: intentCard,
-    summary: (m) => `${m.purpose}. ${m.trigger}. ${m.ms}ms. Reduced motion: ${m.reduced}`
-  },
-  transitionSpec: {
-    label: "Transition spec",
-    check: (d) => [checks.notNegative(d, "start"), checks.ordered(d, ["start", "end"], "it should end after it starts")],
-    render: transitionSpec,
-    summary: (t) => t.map((x) => `${x.property} ${x.from} to ${x.to}, ${x.start} to ${x.end}ms`).join(". ")
-  },
-  stagger: { label: "Stagger", render: stagger, summary: (s) => `${s.count} items, ${s.duration}ms each.` },
-  filmstrip: { label: "Frame strip", render: filmstrip, summary: (f) => `Position on each of ${f.frames} frames with ${curveText(f.easing ?? "ease-out")}.` },
-  easingTable: { label: "Easing tokens", render: easingTable, summary: (t) => t.map((x) => x.name).join(", ") }
-};
-
-kinds.motionTiming.motion = (data, options) => motionMotionTiming(data, options, kinds.motionTiming.render);
-kinds.transitionSpec.motion = (data, options) => motionTransitionSpec(data, options, kinds.transitionSpec.render);
-kinds.stagger.motion = (data, options) => motionStagger(data, options, kinds.stagger.render);
-kinds.filmstrip.motion = (data, options) => motionFilmstrip(data, options, kinds.filmstrip.render);
-
-return { progressAt, motionTiming, intentCard, transitionSpec, stagger, filmstrip, easingTable, kinds };
-})();
-__glyph[18] = (() => {
-const { motionCanvas, motionFactory, motionMarks, motionProgress, MOTION_RATE, timeCursor } = __glyph[6];
-const { Grid } = __glyph[7];
-
-function motionGantt(data, options, render) {
-  const canvas = motionCanvas(render(data, options));
-  const marks = motionMarks(canvas, /[█·]/u);
-  return motionFactory(canvas, (grid, time) => marks.forEach((line, row) => {
-    if (!line.length) return;
-    const progress = motionProgress(time, 0, 130);
-    const cursor = line[0] + (line.at(-1) - line[0]) * progress;
-    line.forEach((col) => { if (col > cursor) grid.put(row, col, "·", "mute"); });
-    if (progress < 1) timeCursor(grid, row, line[0], line.at(-1), progress);
-  }));
-}
-
-function motionBoard(data, options, render) {
-  const names = Object.keys(data);
-  const initial = structuredClone(data);
-  const middle = structuredClone(data);
-  const final = structuredClone(data);
-  const source = names.includes("later") ? "later" : names.at(-1);
-  const next = names.includes("next") ? "next" : names[1];
-  const target = names.includes("now") ? "now" : names[0];
-  const card = initial[source]?.[0];
-  if (card != null && source !== target && next) {
-    middle[source].shift(); middle[next].push(card);
-    final[source].shift(); final[target].push(card);
-  }
-  const canvases = [initial, middle, final].map((state) => motionCanvas(render(state, options)));
-  const rows = Math.max(...canvases.map((canvas) => canvas.rows));
-  const cols = Math.max(...canvases.map((canvas) => canvas.cols));
-  const centers = names.map((_, i) => Math.floor((i + 0.5) * cols / names.length));
-  return { still: 180, make: () => (step, frac = 0) => {
-    const time = Grid.settled ? 180 : ((step * MOTION_RATE) % 300) + frac * MOTION_RATE;
-    const phase = time < 60 ? 0 : time < 120 ? 1 : 2;
-    const grid = new Grid(rows, cols);
-    canvases[phase].lines.forEach((line, row) => grid.text(row, 0, line));
-    if (card != null && time < 120) {
-      const from = centers[names.indexOf(phase ? next : source)];
-      const to = centers[names.indexOf(phase ? target : next)];
-      const progress = Grid.settled ? 1 : ((time % 60) / 60);
-      const travel = progress < 0.5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
-      grid.glide(rows - 1, from + (to - from) * travel, "▓");
-      grid.glide(rows - 1, from + (to - from) * Math.max(0, travel - 0.03), "░");
-    }
-    return grid;
-  } };
-}
-
-function motionSwimlane(data, options, render) {
-  const canvas = motionCanvas(render(data, options));
-  const routes = canvas.matrix.flatMap((line, row) => {
-    const start = line.findIndex((ch) => ch === "─" && row > 1);
-    const end = line.findLastIndex((ch) => ["─", "►", "◄"].includes(ch));
-    if (start < 0 || end <= start) return [];
-    const backwards = line.includes("◄");
-    return [{ row, start: backwards ? end : start, end: backwards ? start : end, backwards }];
-  });
-  return motionFactory(canvas, (grid, time) => {
-    if (!routes.length) return;
-    const position = motionProgress(time, 0, 150) * routes.length;
-    const route = routes[Math.min(routes.length - 1, Math.floor(position))];
-    const fraction = position >= routes.length ? 1 : position % 1;
-    grid.glide(route.row, route.start + (route.end - route.start) * fraction, "▓", route.backwards ? "fail" : "ok");
-  });
-}
-
-return { motionGantt, motionBoard, motionSwimlane };
-})();
-__glyph[17] = (() => {
-const { upper } = __glyph[3];
-const { motionGantt, motionBoard, motionSwimlane } = __glyph[18];
-// Planning: boards, impact and effort, ownership, timelines, decisions, status.
-const { checks } = __glyph[2];
-const { BOX, clamp, cut, gantt, join, len, padEnd, place, statusKey, table, wrap } = __glyph[10];
-const { LAYOUT, capRows } = __glyph[8];
-
-/** Now / next / later (or any columns). columns: { now: [...], next: [...], later: [...] } */
-function board(columns, { colWidth: preferred = 22, maxWidth = LAYOUT.maxWidth, lang } = {}) {
-  const b = BOX.light;
-  const names = Object.keys(columns);
-  const available = Math.floor((maxWidth - 1) / Math.max(1, names.length)) + 1;
-  if (available < 10) throw new Error(`A board fits at most ${Math.floor((maxWidth - 1) / 9)} columns at ${maxWidth} cells; this one has ${names.length}.`);
-  const colWidth = Math.min(preferred, available);
-  const inner = colWidth - 4;
-  const cols = names.map((n) => {
-    const capped = capRows(columns[n], LAYOUT.rowsMax, "cards");
-    const items = capped.rows.flatMap((item) => wrap(`· ${item}`, inner).flatMap((line, i) => i ? wrap(line, inner - 2).map((part) => `  ${part}`) : [line]));
-    return capped.note ? [...items, cut(capped.note, inner)] : items;
-  });
-  const h = Math.max(...cols.map((c) => c.length));
-  const top = b.tl + names.map((n) => {
-    const label = ` ${cut(upper(n, lang), colWidth - 5)} `;
-    return b.h + label + b.h.repeat(Math.max(0, colWidth - 3 - len(label)));
-  }).join(b.tt) + b.tr;
-  const body = Array.from({ length: h }, (_, i) => b.v + cols.map((c) => ` ${padEnd(c[i] ?? "", colWidth - 3)}`).join(b.v) + b.v);
-  const bot = b.bl + names.map(() => b.h.repeat(colWidth - 2)).join(b.bt) + b.br;
-  return [top, ...body, bot].join("\n");
-}
-
-/**
- * Impact against effort. items: [{ label, impact: 0..1, effort: 0..1 }]
- * Items are numbered on the grid and listed below, so labels never collide.
- */
-function impactEffort(items, { width = 40, height = 12 } = {}) {
-  const capped = capRows(items, LAYOUT.rowsMax, "items");
-  items = capped.rows.map((item) => ({ ...item, label: cut(item.label, LAYOUT.labelMax) }));
-  const half = Math.floor(width / 2);
-  const mid = Math.floor(height / 2);
-  const grid = Array.from({ length: height }, (_, r) =>
-    Array.from({ length: width + 1 }, (_, c) => (c === half ? "│" : r === mid ? "─" : " "))
-  );
-  grid[mid][half] = "┼";
-  const tag = (s, r, c) => [...s].forEach((ch, i) => (grid[r][c + i] = ch));
-  tag("quick wins", 0, 1);
-  tag("big bets", 0, half + 2);
-  tag("fill-ins", height - 1, 1);
-  tag("money pits", height - 1, half + 2);
-  items.forEach((it, i) => {
-    const r = clamp(Math.round((1 - it.impact) * (height - 1)), 1, height - 2);
-    const c = clamp(Math.round(it.effort * width), 1, width - 4);
-    tag(`[${i + 1}]`, r === mid ? r - 1 : r, c === half ? c + 1 : c);
-  });
-  const lines = grid.map((row, r) => (r === 0 ? "high │" : r === height - 1 ? " low │" : "     │") + row.join(""));
-  return join([
-    "impact",
-    ...lines,
-    "     └" + "─".repeat(width + 1),
-    place([[6, "low"], [6 + width - 10, "high effort"]]),
-    "",
-    ...items.map((it, i) => `[${i + 1}] ${it.label}`),
-    ...(capped.note ? [capped.note] : [])
-  ]);
-}
-
-/**
- * Who does what, in order. lanes: ["Designer", "Engineer"]
- * rows: [[{ lane, text }, …]] items in one row are joined with ──►;
- * or { back: { from, to, text } } for a return to an earlier lane.
- */
-function swimlane(lanes, rows, { colWidth: preferred = 18, maxWidth = LAYOUT.maxWidth, lang } = {}) {
-  const available = Math.floor(maxWidth / Math.max(1, lanes.length));
-  if (available < 10) throw new Error(`A swimlane fits at most ${Math.floor(maxWidth / 10)} lanes at ${maxWidth} cells; this one has ${lanes.length}.`);
-  const colWidth = Math.min(preferred, available);
-  const col = (lane) => lane * colWidth;
-  const laneLabels = lanes.map((lane) => cut(lane, colWidth - 2));
-  const out = [
-    place(laneLabels.map((l, i) => [col(i), upper(l, lang)])),
-    place(laneLabels.map((l, i) => [col(i), "─".repeat(Math.min(colWidth - 2, Math.max(len(l), 8)))]))
-  ];
-  const capped = capRows(rows);
-  for (const row of capped.rows) {
-    if (row.back) {
-      const { from, to, text } = row.back;
-      const label = cut(text, colWidth - 3);
-      const start = col(to) + len(label) + 1;
-      out.push(place([[col(to), `${label} ◄${"─".repeat(Math.max(1, col(from) - start - 1))}┘`]]));
-      continue;
-    }
-    const items = [...row].sort((a, b) => a.lane - b.lane);
-    const pieces = [];
-    items.forEach((it, i) => {
-      const label = cut(it.text, Math.min(LAYOUT.labelMax, i === items.length - 1 ? maxWidth - col(it.lane) : colWidth - 3));
-      pieces.push([col(it.lane), label]);
-      const next = items[i + 1];
-      if (next) {
-        const s = col(it.lane) + len(label) + 1;
-        pieces.push([s, "─".repeat(Math.max(1, col(next.lane) - s - 2)) + "►"]);
-      }
-    });
-    out.push(place(pieces));
-  }
-  if (capped.note) out.push(capped.note);
-  return join(out);
-}
-
-/** A decision log as a table. rows: [{ date, decision, why, owner }] */
-function decisionLog(rows) {
-  return table([["Date", "Decision", "Why", "Owner"], ...rows.map((r) => [r.date, r.decision, r.why, r.owner])]);
-}
-
-const kinds = {
-  board: {
-    label: "Now, next, later",
-    render: board,
-    summary: (c) => Object.entries(c).map(([k, v]) => `${k}: ${v.join(", ")}`).join(". ")
-  },
-  impactEffort: {
-    label: "Impact and effort",
-    check: (d) => [checks.within(d, "impact", 0, 1), checks.within(d, "effort", 0, 1)],
-    render: impactEffort,
-    summary: (items) => items.map((i) => `${i.label}: impact ${i.impact}, effort ${i.effort}`).join(". ")
-  },
-  swimlane: {
-    label: "Swimlane",
-    render: (d, o) => swimlane(d.lanes, d.rows, o),
-    summary: (d) => `Lanes: ${d.lanes.join(", ")}.`
-  },
-  gantt: { label: "Timeline",
-    check: (d) => [checks.notNegative(d, "start"), checks.ordered(d, ["start", "end"], "it should end after it starts")], render: gantt, summary: (t) => t.map((x) => `${x.label} ${x.start} to ${x.end}`).join(". ") },
-  statusKey: { label: "Status key",
-    check: (d) => [checks.within(d, "level", 0, 4, "level")], render: statusKey, summary: (i) => i.map((x) => x.label).join(", ") },
-  decisionLog: { label: "Decision log",
-    check: (d) => [checks.inTimeOrder(d, "date")], render: decisionLog, summary: (r) => r.map((x) => `${x.date}: ${x.decision}`).join(". ") }
-};
-
-kinds.gantt.motion = (data, options) => motionGantt(data, options, kinds.gantt.render);
-kinds.board.motion = (data, options) => motionBoard(data, options, kinds.board.render);
-kinds.swimlane.motion = (data, options) => motionSwimlane(data, options, kinds.swimlane.render);
-
-return { board, impactEffort, swimlane, decisionLog, kinds };
-})();
-__glyph[20] = (() => {
-const { motionCanvas, motionFactory, motionMarks, motionCounters, motionProgress, growBar, countUp, timeCursor } = __glyph[6];
-const { Grid } = __glyph[7];
-
-function motionLikert(data, options, render) {
-  const canvas = motionCanvas(render(data, options));
-  const marks = motionMarks(canvas, /[█▒░]/u);
-  const counters = motionCounters(canvas, marks, options?.lang);
-  return motionFactory(canvas, (grid, time) => {
-    marks.forEach((line, row) => {
-      const middle = canvas.matrix[row].indexOf("│");
-      const progress = motionProgress(time, row * 4, 100);
-      growBar(grid, row, line.filter((col) => col < middle), progress, { reverse: true });
-      growBar(grid, row, line.filter((col) => col > middle), progress);
-    });
-    counters.forEach((c) => countUp(grid, c.row, c.col, c.value, motionProgress(time, c.row * 4, 100), c.size, c.format));
-  });
-}
-
-function motionTaskStats(data, options, render) {
-  const canvas = motionCanvas(render(data, options));
-  const marks = motionMarks(canvas, /[─█├┤│]/u);
-  const counters = motionCounters(canvas, marks, options?.lang);
-  return motionFactory(canvas, (grid, time) => {
-    marks.forEach((line, row) => growBar(grid, row, line, motionProgress(time, row * 5, 100)));
-    counters.forEach((c) => countUp(grid, c.row, c.col, c.value, motionProgress(time, c.row * 5, 100), c.size, c.format));
-  });
-}
-
-function motionEmotionCurve(data, options, render) {
-  const canvas = motionCanvas(render(data, options));
-  const marks = motionMarks(canvas, /[█▓▒░]/u);
-  const points = marks.flatMap((line, row) => line.map((col) => [row, col])).sort((a, b) => a[1] - b[1]);
-  const route = points.length > 1 ? new Grid(1, 1).route(points) : points;
-  return motionFactory(canvas, (grid, time) => {
-    const progress = motionProgress(time, 0, 120);
-    marks.forEach((line, row) => {
-      line.forEach((col) => { if (col > progress * canvas.cols) grid.put(row, col, "·", "mute"); });
-    });
-    if (progress < 1 && route.length) grid.packet(route, progress * (route.length - 1));
-  });
-}
-
-return { motionLikert, motionTaskStats, motionEmotionCurve };
-})();
-__glyph[19] = (() => {
-const { motionLikert, motionTaskStats, motionEmotionCurve } = __glyph[20];
-// Research data: survey answers, themes across participants, quotes, task results, journeys.
-const { checks } = __glyph[2];
-const { BOX, clamp, cut, join, len, padEnd, padStart, place, wrap } = __glyph[10];
-const { LAYOUT, capRows, fitLabels } = __glyph[8];
-
-const pct = (n) => `${Math.round(n * 100)}%`;
-
-/**
- * Likert answers as diverging bars around a centre line.
- * rows: [{ label, counts: [strongly disagree, disagree, neutral, agree, strongly agree] }]
- * █ strong, ▒ somewhat, ░ neutral (split across the centre).
- */
-function likert(rows, { half: preferred = 20, left = "disagree", right = "agree", maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows(rows);
-  const labels = fitLabels(capped.rows.map((r) => r.label));
-  const labelW = Math.max(0, ...labels.map(len));
-  const half = Math.max(4, Math.min(preferred, Math.floor((maxWidth - labelW - len(right) - 8) / 2)));
-  const line = (r, i) => {
-    const total = r.counts.reduce((a, b) => a + b, 0) || 1;
-    const [sd, d, n, a, sa] = r.counts.map((c) => (c / total) * half * 2);
-    const cells = (v) => Math.round(v);
-    const neg = "█".repeat(cells(sd)) + "▒".repeat(cells(d)) + "░".repeat(cells(n / 2));
-    const pos = "░".repeat(cells(n / 2)) + "▒".repeat(cells(a)) + "█".repeat(cells(sa));
-    const agree = (r.counts[3] + r.counts[4]) / total;
-    return `${padEnd(labels[i], labelW)}  ${padStart([...neg].slice(-half).join(""), half)}│${padEnd([...pos].slice(0, half).join(""), half)}  ${pct(agree)} ${right}`;
-  };
-  const head = `${" ".repeat(labelW + 2)}${padStart(left, half)}│${right}`;
-  return join([head, ...capped.rows.map(line), ...(capped.note ? [capped.note] : []), "", "█ strongly   ▒ somewhat   ░ neutral"]);
-}
-
-/**
- * Which participant raised which theme. themes: [{ label, by: ["P1", "P3"] }]
- * Sorted by how many people raised it. ■ raised, · not raised.
- */
-function themeMatrix(themes, { participants, maxWidth = LAYOUT.maxWidth } = {}) {
-  const allPeople = participants ?? [...new Set(themes.flatMap((t) => t.by))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-  const capped = capRows([...themes].sort((a, b) => b.by.length - a.by.length));
-  const labels = fitLabels(capped.rows.map((t) => t.label));
-  const labelW = Math.max(0, ...labels.map(len));
-  const peopleMax = Math.max(1, Math.floor((maxWidth - labelW - 5) / 3));
-  const people = allPeople.slice(0, peopleMax).map((person) => cut(person, 8));
-  const originalPeople = allPeople.slice(0, peopleMax);
-  const colW = Math.max(2, ...people.map(len)) + 1;
-  while (people.length > 1 && labelW + 4 + people.length * colW > maxWidth) {
-    people.pop();
-    originalPeople.pop();
-  }
-  const sorted = capped.rows;
-  const head = " ".repeat(labelW + 2) + people.map((p) => padEnd(p, colW)).join("") + "  n";
-  const rows = sorted.map(
-    (t, i) => `${padEnd(labels[i], labelW)}  ${originalPeople.map((p) => padEnd(t.by.includes(p) ? "■" : "·", colW)).join("")}  ${t.by.length}`
-  );
-  const notes = [allPeople.length > originalPeople.length ? `… and ${allPeople.length - originalPeople.length} more participants` : "", capped.note].filter(Boolean);
-  return join([head, ...rows, ...notes]);
-}
-
-/** Notes or mentions per cluster, one ■ each out of a total. groups: [{ label, count }] */
-function affinity(groups, { total, maxWidth = LAYOUT.maxWidth } = {}) {
-  const top = total ?? Math.max(...groups.map((g) => g.count));
-  if (groups.some((g) => g.count > top)) throw new Error("A group count cannot exceed the total.");
-  const capped = capRows([...groups].sort((a, b) => b.count - a.count));
-  const labels = fitLabels(capped.rows.map((g) => g.label));
-  const labelW = Math.max(0, ...labels.map(len));
-  const suffixW = len(`${top} of ${top}`);
-  const barW = Math.max(1, Math.min(top, maxWidth - labelW - suffixW - 4));
-  const lines = capped.rows.map((g, i) => {
-    const filled = top > 0 ? Math.round((g.count / top) * barW) : 0;
-    return `${padEnd(labels[i], labelW)}  ${"■".repeat(filled)}${"·".repeat(Math.max(0, barW - filled))}  ${g.count} of ${top}`;
-  });
-  return join(capped.note ? [...lines, capped.note] : lines);
-}
-
-/** A quote as evidence: the words, who said it, and where to find it. */
-function quoteCard({ quote, who, source, theme }, { width = 44 } = {}) {
-  const b = BOX.light;
-  const inner = width - 4;
-  const body = wrap(`“${quote}”`, inner);
-  const credit = wrap([who, source].filter(Boolean).join(" · "), inner);
-  const title = theme ? ` ${cut(theme, width - 5)} ` : "";
-  const top = b.tl + b.h + title + b.h.repeat(Math.max(0, width - 3 - len(title))) + b.tr;
-  const row = (t) => `${b.v} ${padEnd(t, inner)} ${b.v}`;
-  return [top, ...body.map(row), row(""), ...credit.map(row), b.bl + b.h.repeat(width - 2) + b.br].join("\n");
-}
-
-/**
- * Task results: time as a text box plot, plus how many finished.
- * rows: [{ label, min, q1, median, q3, max, done, of }] in seconds.
- */
-function taskStats(rows, { scale, width: preferred = 30, unit = "s", maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows(rows);
-  rows = capped.rows;
-  const top = scale ?? Math.max(...rows.map((r) => r.max));
-  const labels = fitLabels(rows.map((r) => r.label));
-  const labelW = Math.max(0, ...labels.map(len));
-  const suffixW = Math.max(0, ...rows.map((r) => len(`median ${r.median}${unit} · ${r.done}/${r.of} done`)));
-  const width = Math.max(4, Math.min(preferred, maxWidth - labelW - suffixW - 5));
-  const at = (v) => clamp(Math.round((v / top) * width), 0, width);
-  const plot = (r) => {
-    const cells = Array(width + 1).fill(" ");
-    for (let i = at(r.min); i <= at(r.max); i++) cells[i] = "─";
-    for (let i = at(r.q1); i <= at(r.q3); i++) cells[i] = "█";
-    cells[at(r.min)] = "├";
-    cells[at(r.max)] = "┤";
-    cells[at(r.median)] = "│";
-    return cells.join("");
-  };
-  const lines = rows.map(
-    (r, i) => `${padEnd(labels[i], labelW)}  ${plot(r)}  median ${r.median}${unit} · ${r.done}/${r.of} done`
-  );
-  const axis = place([
-    [labelW + 2, `0${unit}`],
-    [labelW + 2 + Math.round(width / 2) - 1, `${Math.round(top / 2)}${unit}`],
-    [labelW + 2 + width - len(`${top}${unit}`) + 1, `${top}${unit}`]
-  ]);
-  return join([...lines, ...(capped.note ? [capped.note] : []), axis, "", "├─ fastest   █ middle half   │ median   ─┤ slowest"]);
-}
-
-/** How people felt across a journey, from -2 to +2. stages: [{ label, score }] */
-function emotionCurve(stages, { colWidth: preferred = 12, maxWidth = LAYOUT.maxWidth } = {}) {
-  const available = Math.floor((maxWidth - 3) / Math.max(1, stages.length));
-  if (available < 4) throw new Error(`A journey feeling chart fits at most ${Math.floor((maxWidth - 3) / 4)} stages at ${maxWidth} cells; this one has ${stages.length}.`);
-  const colWidth = Math.min(preferred, available);
-  const levels = [2, 1, 0, -1, -2];
-  const names = { 2: "+2", 1: "+1", 0: " 0", "-1": "-1", "-2": "-2" };
-  const lines = levels.map((lv) => {
-    const row = stages
-      .map((s) => {
-        const mark = Math.round(clamp(s.score, -2, 2)) === lv ? "█" : lv === 0 ? "·" : " ";
-        const fill = lv === 0 ? "·" : " ";
-        return fill.repeat(Math.floor(colWidth / 2)) + mark + fill.repeat(colWidth - Math.floor(colWidth / 2) - 1);
-      })
-      .join("");
-    return `${names[lv]} ${row}`;
-  });
-  const labels = "   " + stages.map((s) => padEnd(cut(s.label, colWidth - 1), colWidth)).join("");
-  return join([...lines, labels]);
-}
-
-const kinds = {
-  likert: {
-    label: "Likert answers",
-    check: (d) => d.map((r) => (r.counts?.some((c) => c < 0) ? `${r.label} has a negative count.` : "")),
-    render: likert,
-    summary: (rows) => rows.map((r) => `${r.label}: ${r.counts.join(", ")} from strongly disagree to strongly agree`).join(". ")
-  },
-  themeMatrix: {
-    label: "Themes by participant",
-    render: themeMatrix,
-    summary: (themes) => themes.map((t) => `${t.label}: ${t.by.length} participants`).join(". ")
-  },
-  affinity: { label: "Affinity counts",
-    check: (d) => [checks.notNegative(d, "count")], render: affinity, summary: (g) => g.map((x) => `${x.label}: ${x.count}`).join(". ") },
-  quoteCard: { label: "Quote card", render: quoteCard, summary: (q) => `${q.who} said: ${q.quote}` },
-  taskStats: {
-    label: "Task results",
-    check: (d) => [checks.ordered(d, ["min", "q1", "median", "q3", "max"], "times should run from shortest to longest"), ...d.map((r) => (r.done > r.of ? `${r.label}: ${r.done} finished out of ${r.of}.` : ""))],
-    render: taskStats,
-    summary: (rows) => rows.map((r) => `${r.label}: median ${r.median} seconds, ${r.done} of ${r.of} finished`).join(". ")
-  },
-  emotionCurve: {
-    label: "Journey feeling",
-    check: (d) => [checks.within(d, "score", -2, 2, "score")],
-    render: emotionCurve,
-    summary: (s) => s.map((x) => `${x.label} ${x.score > 0 ? "+" : ""}${x.score}`).join(", ")
-  }
-};
-
-kinds.likert.motion = (data, options) => motionLikert(data, options, kinds.likert.render);
-kinds.taskStats.motion = (data, options) => motionTaskStats(data, options, kinds.taskStats.render);
-kinds.emotionCurve.motion = (data, options) => motionEmotionCurve(data, options, kinds.emotionCurve.render);
-
-return { likert, themeMatrix, affinity, quoteCard, taskStats, emotionCurve, kinds };
-})();
-__glyph[21] = (() => {
-// Design system docs: scales, contrast, component states, layers, token tables.
-const { checks } = __glyph[2];
-const { bar, clamp, cut, join, len, padEnd, padStart, place, table } = __glyph[10];
-const { LAYOUT, capRows, fitLabels } = __glyph[8];
-
-/** Spacing tokens drawn to scale, one cell per `unit` pixels. tokens: [{ name, value }] */
-function spacingScale(tokens, { unit = 4, maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows(tokens);
-  const labels = fitLabels(capped.rows.map((t) => t.name));
-  const nameW = Math.max(0, ...labels.map(len));
-  const natural = Math.max(...capped.rows.map((t) => Math.round(t.value / unit)));
-  const suffixW = Math.max(0, ...capped.rows.map((t) => len(`${t.value}px`)));
-  const maxCells = Math.max(1, Math.min(natural, maxWidth - nameW - suffixW - 4));
-  return join([
-    ...capped.rows.map((t, i) => `${padEnd(labels[i], nameW)}  ${padEnd("█".repeat(Math.max(1, Math.min(maxCells, Math.round(t.value / unit)))), maxCells)}  ${t.value}px`),
-    ...(capped.note ? [capped.note] : []),
-    "",
-    `One █ is ${unit}px.`
-  ]);
-}
-
-/** Type sizes as bars proportional to size, with line height. steps: [{ name, size, lineHeight }] */
-function typeScale(steps, { width: preferred = 28, maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows(steps);
-  steps = capped.rows;
-  const labels = fitLabels(steps.map((s) => s.name));
-  const nameW = Math.max(0, ...labels.map(len));
-  const top = Math.max(...steps.map((s) => s.size));
-  const suffixW = Math.max(0, ...steps.map((s) => len(`${s.size}/${s.lineHeight ?? Math.round(s.size * 1.4)}`)));
-  const width = Math.max(4, Math.min(preferred, maxWidth - nameW - suffixW - 4));
-  const lines = steps.map((s, i) => `${padEnd(labels[i], nameW)}  ${bar(s.size, top, { width })}  ${s.size}/${s.lineHeight ?? Math.round(s.size * 1.4)}`);
-  return join(capped.note ? [...lines, capped.note] : lines);
-}
-
-const channel = (c) => {
-  const v = c / 255;
-  return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-};
-const luminance = (hex) => {
-  const h = hex.replace("#", "");
-  const full = h.length === 3 ? [...h].map((c) => c + c).join("") : h;
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16));
-  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-};
-/** WCAG contrast ratio between two hex colours. */
-function contrastRatio(fg, bg) {
-  const [a, b] = [luminance(fg), luminance(bg)].sort((x, y) => y - x);
-  return (a + 0.05) / (b + 0.05);
-}
-
-/**
- * Contrast of colour pairs against WCAG 2 thresholds. pairs: [{ label, fg, bg }]
- * The scale runs to 21:1; the thresholds 3, 4.5 and 7 are marked above it.
- */
-function contrast(pairs, { width: preferred = 42, maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows(pairs);
-  pairs = capped.rows;
-  const labels = fitLabels(pairs.map((p) => p.label));
-  const labelW = Math.max(0, ...labels.map(len));
-  const suffixWidth = Math.max(0, ...pairs.map((p) => {
-    const ratio = contrastRatio(p.fg, p.bg);
-    const grade = ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : ratio >= 3 ? "AA large text only" : "fails";
-    return len(`  ${padStart(ratio.toFixed(1), 4)}:1  ${grade}`);
-  }));
-  const width = Math.max(8, Math.min(preferred, maxWidth - labelW - 2 - suffixWidth));
-  const at = (r) => Math.round((r / 21) * width);
-  const marks = place([[labelW + 2 + at(3), "3"], [labelW + 2 + at(4.5), "4.5"], [labelW + 2 + at(7), "7"], [labelW + 2 + width - 3, "21:1"]]);
-  const rows = pairs.map((p, i) => {
-    const ratio = contrastRatio(p.fg, p.bg);
-    const grade = ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : ratio >= 3 ? "AA large text only" : "fails";
-    const cells = [...bar(ratio, 21, { width, empty: "·" })];
-    for (const t of [3, 4.5, 7]) if (cells[at(t)] === "·") cells[at(t)] = "┊";
-    return `${padEnd(labels[i], labelW)}  ${cells.join("")}  ${padStart(ratio.toFixed(1), 4)}:1  ${grade}`;
-  });
-  return join([marks, ...rows, ...(capped.note ? [capped.note] : [])]);
-}
-
-/**
- * Which component states are designed, built or missing.
- * { variants: [...], states: [...], cells: { variant: { state: "done" | "progress" | "missing" | "na" } } }
- */
-function stateMatrix({ variants, states, cells }, { maxWidth = LAYOUT.maxWidth } = {}) {
-  const glyph = { done: "██", progress: "▒▒", missing: "░░", na: "  " };
-  const capped = capRows(variants, LAYOUT.rowsMax, "variants");
-  const variantLabels = fitLabels(capped.rows);
-  const vW = Math.max(0, ...variantLabels.map(len));
-  const available = Math.floor((maxWidth - vW - 2) / Math.max(1, states.length));
-  if (available < 4) throw new Error(`A component state table fits at most ${Math.floor((maxWidth - vW - 2) / 4)} states at ${maxWidth} cells; this one has ${states.length}.`);
-  const colW = Math.min(Math.max(...states.map(len)) + 2, available);
-  const stateLabels = states.map((state) => cut(state, colW - 1));
-  const head = " ".repeat(vW + 2) + stateLabels.map((s) => padEnd(s, colW)).join("");
-  const rows = capped.rows.map((v, i) => `${padEnd(variantLabels[i], vW)}  ${states.map((s) => padEnd(glyph[cells[v]?.[s] ?? "missing"], colW)).join("")}`);
-  return join([head, ...rows, ...(capped.note ? [capped.note] : []), "", "█ done   ▒ in progress   ░ missing   blank: doesn't apply"]);
-}
-
-/** Layers from front to back, wider as they go back. levels: [{ name, z }] (any order) */
-function layerStack(levels, { width: preferred = 12, step = 4, maxWidth = LAYOUT.maxWidth } = {}) {
-  const capped = capRows([...levels].sort((a, b) => b.z - a.z));
-  const sorted = capped.rows;
-  const labels = fitLabels(sorted.map((l) => l.name));
-  const nameW = Math.max(0, ...labels.map(len));
-  const fills = ["█", "▓", "▒", "░"];
-  const fixed = nameW + 6 + Math.max(4, ...sorted.map((l) => len(String(l.z))));
-  const stepSize = sorted.length > 1 ? Math.max(0, Math.min(step, Math.floor((maxWidth - fixed - 4) / (sorted.length - 1)))) : 0;
-  const width = Math.max(4, Math.min(preferred, maxWidth - fixed - stepSize * Math.max(0, sorted.length - 1)));
-  const total = width + stepSize * (sorted.length - 1);
-  const lines = sorted.map((l, i) => {
-      const w = width + stepSize * i;
-      const last = i === sorted.length - 1;
-      const fill = last ? "─" : fills[Math.min(i, fills.length - 1)];
-      const pad = Math.floor((total - w) / 2);
-      return `${padEnd(labels[i], nameW)}  z ${padEnd(String(l.z), 4)}  ${" ".repeat(pad)}${fill.repeat(w)}`;
-    });
-  return join(capped.note ? [...lines, capped.note] : lines);
-}
-
-/** Design tokens as a table. tokens: [{ name, value, use }] */
-function tokenTable(tokens) {
-  return table([["Token", "Value", "Use"], ...tokens.map((t) => [t.name, t.value, t.use ?? ""])]);
-}
-
-const kinds = {
-  spacingScale: { label: "Spacing scale",
-    check: (d) => [checks.notNegative(d, "value")], render: spacingScale, summary: (t) => t.map((x) => `${x.name} ${x.value}px`).join(", ") },
-  typeScale: { label: "Type scale", render: typeScale, summary: (s) => s.map((x) => `${x.name} ${x.size}px`).join(", ") },
-  contrast: {
-    label: "Contrast check",
-    render: contrast,
-    summary: (p) => p.map((x) => `${x.label}: ${contrastRatio(x.fg, x.bg).toFixed(1)} to 1`).join(". ")
-  },
-  stateMatrix: {
-    label: "Component states",
-    render: stateMatrix,
-    summary: (d) => `${d.variants.length} variants by ${d.states.length} states.`
-  },
-  layerStack: { label: "Layer stack", render: layerStack, summary: (l) => l.map((x) => `${x.name} at ${x.z}`).join(", ") },
-  tokenTable: { label: "Token table", render: tokenTable, summary: (t) => t.map((x) => `${x.name}: ${x.value}`).join(", ") },
-  table: { label: "Table", render: table, summary: (r) => `Table with ${r.length - 1} rows: ${r[0].join(", ")}.` }
-};
-
-return { spacingScale, typeScale, contrastRatio, contrast, stateMatrix, layerStack, tokenTable, kinds };
-})();
-__glyph[22] = (() => {
-const { upper } = __glyph[3];
-// Wireframes: a screen built from a layout spec, using a small primitive vocabulary.
-// The same primitive names map to real components in design-system.map.json (see reference/spec.md).
-const { BOX, center, cut, join, len, padEnd, padStart, textCells, wrap } = __glyph[10];
-const { LAYOUT, capRows } = __glyph[8];
-
-/**
- * The primitives. Each returns the lines it occupies inside a frame of `w` characters.
- * Every row may carry `note: "1"`; the marker [1] is drawn outside the frame.
- */
-const PRIMITIVES = {
-  heading: (r, w, lang) => [cut(upper(r.text, lang), w)],
-  text: (r, w) => wrap(r.text, w),
-  muted: (r, w) => wrap(r.text, w).map((l) => l), // shown in the text form as plain text; the HTML form greys it
-  input: (r, w) => {
-    const label = r.label ? padEnd(r.label, r.labelWidth ?? Math.min(14, len(r.label) + 2)) : "";
-    const room = Math.max(4, w - len(label) - 2);
-    const value = cut(r.value ?? r.placeholder ?? "", room);
-    return [`${label}[${value + "_".repeat(Math.max(0, room - len(value)))}]`];
-  },
-  search: (r, w) => {
-    const hint = r.hint ?? "";
-    return [`> ${padEnd(r.placeholder ?? "Search", w - 2 - len(hint))}${hint}`];
-  },
-  buttons: (r, w) => {
-    const parts = r.items.map((b) => (b.primary ? `[[ ${b.label} ]]` : b.disabled ? `[ ${b.label} ]░` : `[ ${b.label} ]`));
-    const text = parts.join("  ");
-    return [r.align === "right" ? padStart(text, w) : text];
-  },
-  checkbox: (r) => [`[${r.checked ? "x" : " "}] ${r.label}`],
-  radio: (r) => [r.options.map((o) => `(${o === r.selected ? "x" : " "}) ${o}`).join("   ")],
-  toggle: (r, w) => {
-    const sw = r.on ? "[ ■] on " : "[■ ] off";
-    return [`${padEnd(r.label, w - len(sw))}${sw}`];
-  },
-  select: (r, w) => {
-    const label = r.label ? `${r.label}  ` : "";
-    return [`${label}[ ${padEnd(r.value, Math.max(6, w - len(label) - 5))} ▼]`];
-  },
-  tabs: (r) => {
-    const cells = r.items.map((t) => ` ${t} `);
-    const top = cells.join("│");
-    const under = cells.map((c, i) => (r.items[i] === r.selected ? "━".repeat(len(c)) : " ".repeat(len(c)))).join(" ");
-    return [top, under];
-  },
-  list: (r, w) => {
-    const items = r.items.map((it) => (typeof it === "string" ? { text: it } : it));
-    const scroll = r.scroll ?? items.length > 4;
-    const room = w - (scroll ? 2 : 0);
-    const lines = items.map((it) => {
-      const mark = it.selected ? "█" : it.disabled ? "░" : " ";
-      const meta = it.meta ?? "";
-      return `${mark} ${padEnd(cut(it.text, room - 2 - len(meta)), room - 2 - len(meta))}${meta}`;
-    });
-    if (!scroll) return lines;
-    return lines.map((l, i) => `${l} ${i === 0 ? "▲" : i === lines.length - 1 ? "▼" : i === 1 ? "■" : "▒"}`);
-  },
-  table: (r, w) => {
-    const cols = r.columns.length;
-    const cw = Math.floor((w - (cols - 1)) / cols);
-    const fmt = (cells) => cells.map((c) => padEnd(cut(String(c), cw), cw)).join(" ");
-    return [fmt(r.columns), "─".repeat(w), ...r.rows.map(fmt)];
-  },
-  image: (r, w) => {
-    const h = r.height ?? 3;
-    const label = cut(`[ ${r.label ?? "image"} ]`, w);
-    return Array.from({ length: h }, (_, i) => (i === Math.floor(h / 2) ? center(label, w, "░") : "░".repeat(w)));
-  },
-  skeleton: (r, w) => Array.from({ length: r.lines ?? 3 }, (_, i) => "░".repeat(Math.max(4, Math.round(w * [0.9, 0.7, 0.8, 0.5][i % 4])))),
-  empty: (r, w) => {
-    const lines = ["", ...wrap(r.text, w - 4).map((l) => center(l, w))];
-    if (r.action) lines.push("", center(`[[ ${r.action} ]]`, w));
-    return [...lines, ""];
-  },
-  space: () => [""],
-  divider: () => ["\u0000divider"]
-};
-
-/**
- * A screen in a double-line frame. spec: { title, width?, rows: [{ type, …, note? }], overlay? }
- * overlay: { title, rows } draws a dialog over a ░ dimmer.
- * Notes: rows with `note` get a marker outside the frame; spec.notes: { "1": "text" } are listed below.
- */
-function screen(spec, { width, maxWidth = LAYOUT.maxWidth, lang } = {}) {
-  const W = Math.min(spec.width ?? width ?? 46, maxWidth);
-  if (W < 12) throw new Error("A screen needs at least 12 cells to keep its frame and content readable.");
-  const inner = W - 4;
-  const b = BOX.double;
-  const marks = [];
-  const body = [];
-  const capped = capRows(spec.rows);
-  for (const row of capped.rows) {
-    for (const value of [row.height, row.lines]) {
-      if (value != null && (!Number.isInteger(value) || value < 1 || value > LAYOUT.rowsMax)) throw new Error(`A wireframe block needs between 1 and ${LAYOUT.rowsMax} rows.`);
-    }
-    const draw = PRIMITIVES[row.type];
-    if (!draw) throw new Error(`Unknown wireframe primitive: ${row.type}`);
-    draw(row, inner, lang).forEach((line, i) => {
-      body.push(line);
-      marks.push(i === 0 && row.note ? `[${row.note}]` : "");
-    });
-  }
-  if (capped.note) {
-    body.push(cut(capped.note, inner));
-    marks.push("");
-  }
-  const title = spec.title ? `${b.h} ${cut(spec.title, W - 6)} ` : "";
-  let lines = [b.tl + title + b.h.repeat(Math.max(0, W - 2 - len(title))) + b.tr];
-  body.forEach((line) => {
-    if (line === "\u0000divider") lines.push(b.lt + b.h.repeat(W - 2) + b.rt);
-    else lines.push(`${b.v} ${padEnd(cut(line, inner), inner)} ${b.v}`);
-  });
-  lines.push(b.bl + b.h.repeat(W - 2) + b.br);
-  if (spec.overlay) lines = overlay(lines, spec.overlay, W, lang);
-  const withMarks = lines.map((l, i) => {
-    if (!marks[i - 1]) return l;
-    if (maxWidth - W < 4) throw new Error("Leave at least four cells beside the screen for note markers.");
-    return `${l} ${cut(marks[i - 1], maxWidth - W - 1)}`;
-  });
-  const notes = Object.entries(spec.notes ?? {}).flatMap(([k, v]) => wrap(`[${k}] ${v}`, maxWidth));
-  return join(notes.length ? [...withMarks, "", ...notes] : withMarks);
-}
-
-function overlay(lines, dialog, W, lang) {
-  const dw = Math.min(W - 8, dialog.width ?? 30);
-  const box = screen({ title: dialog.title, width: dw, rows: dialog.rows }, { lang }).split("\n").map((l) => l.replace(/═/g, "─").replace(/║/g, "│").replace(/[╔╗╚╝]/g, (c) => ({ "╔": "┌", "╗": "┐", "╚": "└", "╝": "┘" })[c]).replace(/[╠╣]/g, (c) => (c === "╠" ? "├" : "┤")));
-  const top = Math.max(1, Math.floor((lines.length - box.length) / 2));
-  if (box.length > lines.length - 2) throw new Error("The dialog needs a taller screen to keep all of its content visible.");
-  const left = Math.floor((W - dw) / 2);
-  return lines.map((line, i) => {
-    if (i === 0 || i === lines.length - 1) return line;
-    const chars = textCells(line);
-    for (let c = 1; c < W - 1; c++) chars[c] = "░";
-    const bi = i - top;
-    if (bi >= 0 && bi < box.length) textCells(box[bi]).forEach((ch, k) => (chars[left + k] = ch));
-    return chars.join("");
-  });
-}
-
-/** Two screens side by side, labelled, e.g. desktop and mobile. screens: [{ label, spec }] */
-function responsive(screens, { gap = 4, maxWidth = LAYOUT.maxWidth, lang } = {}) {
-  const drawn = screens.map((s) => [s.label, ...screen(s.spec, { lang }).split("\n")]);
-  const widths = drawn.map((d) => Math.max(...d.map(len)));
-  const total = widths.reduce((a, b) => a + b, 0) + gap * Math.max(0, screens.length - 1);
-  if (total > maxWidth) throw new Error(`${screens.length} screens need ${total} cells side by side; ${maxWidth} fit. Make the screens narrower or show them separately.`);
-  const h = Math.max(...drawn.map((d) => d.length));
-  return join(
-    Array.from({ length: h }, (_, i) => drawn.map((d, k) => padEnd(d[i] ?? "", widths[k])).join(" ".repeat(gap)))
-  );
-}
-
-const kinds = {
-  screen: {
-    label: "Screen wireframe",
-    render: screen,
-    summary: (s) => `${s.title ?? "Screen"}: ${s.rows.map((r) => r.type).join(", ")}${s.overlay ? `, with a ${s.overlay.title} dialog over it` : ""}.`
-  },
-  responsive: {
-    label: "Responsive pair",
-    render: responsive,
-    summary: (s) => s.map((x) => `${x.label}: ${x.spec.rows.map((r) => r.type).join(", ")}`).join(". ")
-  }
-};
-
-return { PRIMITIVES, screen, responsive, kinds };
-})();
-__glyph[23] = (() => {
-const { checks } = __glyph[2];
-const { stillGrid } = __glyph[6];
-const { motionLoop, motionFunnel, motionStates, motionQueue, motionRollout, motionLoading } = __glyph[9];
-const { motionHandoff, motionRetry, motionCache, motionSplit, motionIncident } = __glyph[9];
-// Each kind: label, how to make it, a summary for screen readers, and its own data checks.
-const has = (list, name, what) => (list.includes(name) ? "" : `"${name}" isn't one of the ${what}.`);
-const legacy = {
-  loop: {
-    label: "Rework loop",
-    motion: motionLoop,
-    summary: (d) => `Work moves through ${d.stages.join(", ")}${d.back ? `; about ${Math.round(d.back.share * 100)}% is sent back from ${d.back.from} to ${d.back.to}` : ""}.`,
-    check: (d) => !d.back ? [] : [
-      has(d.stages, d.back.from, "stages"),
-      has(d.stages, d.back.to, "stages"),
-      d.stages.indexOf(d.back.to) >= d.stages.indexOf(d.back.from) ? `Work can only be sent back to an earlier stage than ${d.back.from}.` : "",
-      d.back.share < 0 || d.back.share > 1 ? `The share sent back is ${d.back.share}; write 30% as 0.3.` : ""
-    ]
-  },
-  funnel: {
-    label: "Moving funnel",
-    motion: motionFunnel,
-    summary: (d, { lang } = {}) => `Funnel: ${d.steps.map((s) => `${s.label} ${s.value.toLocaleString(lang ?? "en-US")}`).join(", ")}.`,
-    check: (d) => [checks.notNegative(d.steps, "value", "count"), checks.neverGrows(d.steps, "value")]
-  },
-  states: {
-    label: "State machine",
-    motion: motionStates,
-    summary: (d) => `States ${d.states.join(", ")}; the token plays the path ${d.path.join(" → ")}.`,
-    check: (d) => [
-      ...d.transitions.flatMap((t) => [has(d.states, t.from, "states"), has(d.states, t.to, "states")]),
-      ...d.path.slice(1).map((n, i) => (d.transitions.some((t) => t.from === d.path[i] && t.to === n) ? "" : `The path goes from ${d.path[i]} to ${n}, but there's no transition for that.`))
-    ]
-  },
-  queue: {
-    label: "Work queue",
-    motion: motionQueue,
-    summary: (d) => `Columns ${d.columns.map((c) => `${c.label}${c.limit ? ` (limit ${c.limit})` : ""}`).join(", ")}. Work piles up before the slowest column.`,
-    check: (d) => [checks.within(d.columns, "limit", 1, 99, "limit"), checks.notNegative(d.columns, "pace", "time per card")]
-  },
-  rollout: {
-    label: "Staged rollout",
-    motion: motionRollout,
-    summary: (d) => `Rollout to ${d.stages.join("%, ")}%, guarded by ${d.metric ?? "a metric"} at ${d.limit ?? 2}%${d.breachAt ? `; it trips at ${d.breachAt}% and rolls back` : ""}.`,
-    check: (d) => [
-      d.stages.some((p, i) => p < 0 || p > 100 || (i && p <= d.stages[i - 1])) ? "Rollout stages should climb from above 0 to at most 100%." : "",
-      d.breachAt !== undefined && !d.stages.includes(d.breachAt) ? `The guard trips at ${d.breachAt}%, which isn't one of the stages.` : ""
-    ]
-  },
-  loading: {
-    label: "Loading sequence",
-    motion: motionLoading,
-    summary: (d) => `In ${d.duration ?? 1800}ms: ${d.phases.map((p) => `${p.show} at ${p.at}ms`).join(", ")}.`,
-    check: (d) => [
-      checks.inTimeOrder(d.phases, "at", "phase"),
-      d.phases.some((p) => p.at > (d.duration ?? 1800)) ? `A phase starts after the ${d.duration ?? 1800}ms the sequence lasts.` : "",
-      ...d.phases.map((p) => has(["tap", "skeleton", "text", "image"], p.show, "things a loading sequence can show (tap, skeleton, text, image)"))
-    ]
-  }
-};
-
-
-const kinds = Object.fromEntries(Object.entries(legacy).filter(([kind]) => kind !== "funnel").map(([kind, def]) => [kind, { ...def, render: (data, options) => { const { make, still } = def.motion(data, options); return stillGrid(make, still).toText(); } }]));
-
-const processKind = (label, motion, check, summary) => ({ label, motion, check, summary, render: (data, options) => { const { make, still } = motion(data, options); return stillGrid(make, still).toText(); } });
-const nonnegative = (value) => Number.isFinite(value) && value >= 0;
-
-kinds.handoff = processKind("Handoff between teams", motionHandoff, (data) => [
-  new Set(data.lanes).size !== data.lanes.length ? "Each lane needs a different name." : "",
-  ...data.steps.map((step) => !data.lanes.includes(step.lane) ? `The lane ${step.lane} is not listed.` : !nonnegative(step.wait ?? 0) ? "Waiting time must be zero or greater." : "")
-], (data) => `Work follows ${data.steps.map((step) => `${step.label} in ${step.lane}`).join(", then ")}.`);
-
-kinds.retry = processKind("Retry with backoff", motionRetry, (data) => [
-  !Number.isInteger(data.succeedOn) || data.succeedOn < 1 || data.succeedOn > data.attempts ? "The successful attempt must be between 1 and the attempt count." : "",
-  !Number.isFinite(data.base) || data.base <= 0 ? "The first backoff must be greater than zero." : "",
-  !Number.isFinite(data.factor) || data.factor < 1 ? "The backoff factor must be at least one." : ""
-], (data) => `Up to ${data.attempts} attempts, starting at ${data.base}${data.unit ?? "ms"} with a factor of ${data.factor}; attempt ${data.succeedOn} succeeds.`);
-
-kinds.cache = processKind("Cache hit or miss", motionCache, (data) => [
-  !Number.isFinite(data.hitRate) || data.hitRate < 0 || data.hitRate > 1 ? "The hit rate must be between zero and one." : "",
-  data.ttl != null && !nonnegative(data.ttl) ? "Cache lifetime must be zero or greater." : "",
-  typeof data.origin !== "string" ? "Name the origin that handles a cache miss." : ""
-], (data) => `${Math.round(data.hitRate * 100)}% of requests hit the cache; misses go to ${data.origin}.`);
-
-kinds.split = processKind("Traffic split", motionSplit, (data) => [
-  Math.abs(data.variants.reduce((sum, item) => sum + item.share, 0) - 1) > 1e-9 ? "Variant shares must add up to one." : "",
-  ...data.variants.map((item) => !nonnegative(item.share) || item.share > 1 || (item.converts != null && (!nonnegative(item.converts) || item.converts > 1)) ? "Shares and conversion rates must be between zero and one." : "")
-], (data) => `Traffic goes to ${data.variants.map((item) => `${item.label} (${Math.round(item.share * 100)}%)`).join(", ")}.`);
-
-kinds.incident = processKind("Incident timeline", motionIncident, (data) => [
-  data.events.some((event, i) => !nonnegative(event.at) || (i && event.at < data.events[i - 1].at)) ? "Incident times must run forward from zero." : "",
-  data.events.filter((event) => event.kind === "resolve").length !== 1 ? "An incident needs exactly one resolution." : "",
-  data.events.some((event) => !["detect", "page", "mitigate", "resolve"].includes(event.kind)) ? "Use detect, page, mitigate or resolve for each event." : ""
-], (data) => data.events.map((event) => `${event.at} minutes: ${event.label} (${event.kind})`).join(". "));
-
-
-return { kinds };
-})();
 __glyph[1] = (() => {
 // Every kind the kit can draw, grouped by area. A spec names one of these kinds.
 const { guard } = __glyph[2];
-const { kinds: flows } = __glyph[4];
-const { kinds: handoff } = __glyph[11];
-const { kinds: metrics } = __glyph[13];
-const { kinds: motion } = __glyph[15];
-const { kinds: planning } = __glyph[17];
-const { kinds: research } = __glyph[19];
-const { kinds: systems } = __glyph[21];
-const { kinds: wireframes } = __glyph[22];
-const { kinds: process } = __glyph[23];
+const { kinds: metrics } = __glyph[4];
 
 const AREAS = {
-  research: { label: "Research data", kinds: research },
   metrics: { label: "Experiments and metrics", kinds: metrics },
-  flows: { label: "UX flows", kinds: flows },
-  planning: { label: "Planning", kinds: planning },
-  wireframes: { label: "Wireframes", kinds: wireframes },
-  systems: { label: "Design system", kinds: systems },
-  handoff: { label: "Handoff and QA", kinds: handoff },
-  motion: { label: "Motion", kinds: motion },
-  process: { label: "Processes over time", kinds: process }
 };
 
 /** kind → { area, label, render, summary }. A kind listed in two areas keeps its first area. */
@@ -3389,7 +2009,7 @@ function stillText(spec, def) {
 
 return { stillGrid: __glyph[6].stillGrid, moves, animate, stillText };
 })();
-__glyph[25] = (() => {
+__glyph[12] = (() => {
 // Compatibility for callers using the original moving registry.
 const { KINDS } = __glyph[1];
 const { animate } = __glyph[0];
@@ -3402,12 +2022,12 @@ function live(spec) {
 
 return { stillGrid: __glyph[0].stillGrid, stillText: __glyph[0].stillText, LIVE, live };
 })();
-__glyph[24] = (() => {
+__glyph[11] = (() => {
 // Play a moving diagram into a <pre>. The caller owns the clock: call advance(ms) on every frame or
 // tick while it should move, and still() when motion stops (reduced motion, paused, off screen).
 // Time is accumulated, not read from a wall clock, so pausing and resuming carries on smoothly.
 const { STEP_MS } = __glyph[7];
-const { stillGrid } = __glyph[25];
+const { stillGrid } = __glyph[12];
 
 function player(pre, make, still, { prefix = "gl-" } = {}) {
   let frame = null;
@@ -3487,8 +2107,8 @@ function autoplay(pre, make, still) {
 return { player, autoplay };
 })();
 const { animate, stillGrid, stillText } = __glyph[0];
-const { autoplay, player } = __glyph[24];
-const MOTION = { "likert": __glyph[1].KINDS["likert"].motion, "taskStats": __glyph[1].KINDS["taskStats"].motion, "emotionCurve": __glyph[1].KINDS["emotionCurve"].motion, "barChart": __glyph[1].KINDS["barChart"].motion, "forecast": __glyph[1].KINDS["forecast"].motion, "meter": __glyph[1].KINDS["meter"].motion, "sparkline": __glyph[1].KINDS["sparkline"].motion, "heatmap": __glyph[1].KINDS["heatmap"].motion, "calendarStrip": __glyph[1].KINDS["calendarStrip"].motion, "funnel": __glyph[1].KINDS["funnel"].motion, "cohort": __glyph[1].KINDS["cohort"].motion, "metricPanel": __glyph[1].KINDS["metricPanel"].motion, "flow": __glyph[1].KINDS["flow"].motion, "branchFlow": __glyph[1].KINDS["branchFlow"].motion, "stateMachine": __glyph[1].KINDS["stateMachine"].motion, "journeyMap": __glyph[1].KINDS["journeyMap"].motion, "board": __glyph[1].KINDS["board"].motion, "swimlane": __glyph[1].KINDS["swimlane"].motion, "gantt": __glyph[1].KINDS["gantt"].motion, "qaChecklist": __glyph[1].KINDS["qaChecklist"].motion, "motionTiming": __glyph[1].KINDS["motionTiming"].motion, "transitionSpec": __glyph[1].KINDS["transitionSpec"].motion, "stagger": __glyph[1].KINDS["stagger"].motion, "filmstrip": __glyph[1].KINDS["filmstrip"].motion, "loop": __glyph[1].KINDS["loop"].motion, "states": __glyph[1].KINDS["states"].motion, "queue": __glyph[1].KINDS["queue"].motion, "rollout": __glyph[1].KINDS["rollout"].motion, "loading": __glyph[1].KINDS["loading"].motion, "handoff": __glyph[1].KINDS["handoff"].motion, "retry": __glyph[1].KINDS["retry"].motion, "cache": __glyph[1].KINDS["cache"].motion, "split": __glyph[1].KINDS["split"].motion, "incident": __glyph[1].KINDS["incident"].motion };
+const { autoplay, player } = __glyph[11];
+const MOTION = { "barChart": __glyph[1].KINDS["barChart"].motion, "forecast": __glyph[1].KINDS["forecast"].motion, "meter": __glyph[1].KINDS["meter"].motion, "sparkline": __glyph[1].KINDS["sparkline"].motion, "heatmap": __glyph[1].KINDS["heatmap"].motion, "calendarStrip": __glyph[1].KINDS["calendarStrip"].motion, "funnel": __glyph[1].KINDS["funnel"].motion, "cohort": __glyph[1].KINDS["cohort"].motion, "metricPanel": __glyph[1].KINDS["metricPanel"].motion };
 const spec = {"kind":"calendarStrip","title":"Days the limit was hit","source":"Sample data, made up for this example","data":[false,false,false,false,false,true,true,true,false,false,false,false,true,true,false],"options":{"gap":" "},"motion":true};
 const { make, still } = animate(spec);
 const pre = document.querySelector("pre");

@@ -316,7 +316,7 @@ ${html}
 <div class="gk-bar" aria-hidden="true"><span class="gk-ticks"></span><span class="gk-count"></span></div>
 <pre class="gk-notes-panel" hidden aria-label="Presenter notes"></pre>
 <p class="gk-hint" aria-hidden="true">→ next · ← back · N notes · F full screen</p>
-<script>${PLAY_JS}${moving ? inlineMotion() : ""}\n(${runtime.toString()})(${moving ? "{ animate, autoplay }" : "null"});</script>
+<script>${PLAY_JS}${moving ? inlineMotion(d.slides.filter((s) => s.motion && moves(s.kind)).map((s) => s.kind)) : ""}\n(${runtime.toString()})(${moving ? "{ animate, autoplay }" : "null"});</script>
 </body>
 </html>
 `;
