@@ -7,6 +7,8 @@ import { resolve } from "../registry.mjs";
 import { SPACING } from "./themes.mjs";
 import { isSample } from "../guard.mjs";
 import { PAINT_CSS, paint } from "./paint.mjs";
+import { ARRIVE_CSS, ARRIVE_JS, arriveLines } from "./arrive.mjs";
+import { staggerStarts } from "../areas/motion.mjs";
 import { body, label } from "./text.mjs";
 import { moves, stillText } from "../motion.mjs";
 import { inlineMotion, renderLiveHtml } from "../live/html.mjs";
@@ -152,17 +154,11 @@ function motionDemo(spec) {
     return { css: `.gk-stage .gk-actor{${to}}.gk-stage.is-from .gk-actor{${from};transition:none}.gk-stage:not(.is-from) .gk-actor{transition:${tr}}`, html: `<div class="gk-actor gk-actor--card"></div>` };
   }
   if (spec.kind === "stagger") {
-    const items = Array.from({ length: d.count }, (_, i) => `<div class="gk-actor gk-actor--small" style="--i:${i}"></div>`).join("");
+    // The same start times the figure draws, so the cards and the bars agree.
+    const items = staggerStarts(d).map((at) => `<div class="gk-actor gk-actor--small" style="--at:${at}ms"></div>`).join("");
     return {
-      css: `.gk-stage.is-from .gk-actor{opacity:0;transform:translateY(14px);transition:none}.gk-stage:not(.is-from) .gk-actor{transition:opacity ${d.duration}ms ${curveCss(d.curve)} calc(var(--i)*${d.delay}ms),transform ${d.duration}ms ${curveCss(d.curve)} calc(var(--i)*${d.delay}ms)}`,
+      css: `.gk-stage.is-from .gk-actor{opacity:0;transform:translateY(14px);transition:none}.gk-stage:not(.is-from) .gk-actor{transition:opacity ${d.duration}ms ${curveCss(d.curve)} var(--at),transform ${d.duration}ms ${curveCss(d.curve)} var(--at)}`,
       html: `<div class="gk-actors">${items}</div>`
-    };
-  }
-  if (spec.kind === "filmstrip" || spec.kind === "intentCard") {
-    const ms = d.ms ?? 400;
-    return {
-      css: `.gk-stage .gk-track{position:relative;height:40px;border-bottom:1px dashed var(--gk-line)}.gk-stage .gk-track .gk-actor{position:absolute;top:4px;left:calc(100% - 32px);width:32px;height:32px}.gk-stage.is-from .gk-track .gk-actor{left:0;transition:none}.gk-stage:not(.is-from) .gk-track .gk-actor{transition:left ${ms}ms ${curveCss(d.easing)}}`,
-      html: `<div class="gk-track"><div class="gk-actor"></div></div>`
     };
   }
   return null;
@@ -197,8 +193,8 @@ pre.gk-figure{margin:0;padding:32px 36px;background:var(--gk-surface);border:1px
 .gk-row--toggle{justify-content:space-between}
 .gk-row--field{display:grid;grid-template-columns:minmax(96px,34%) 1fr}
 .gk-row--field label{color:var(--gk-muted)}
-.gk-input,.gk-select select{width:100%;height:38px;padding:0 12px;border:1px solid var(--gk-line);border-radius:calc(var(--gk-radius) * .7);background:var(--gk-surface);color:var(--gk-ink);font:inherit;transition:border-color var(--gk-duration-base) var(--gk-easing-base)}
-.gk-input:hover,.gk-select select:hover{border-color:color-mix(in srgb,var(--gk-ink) 35%,var(--gk-line))}
+.gk-input,.gk-select select{width:100%;height:38px;padding:0 12px;border:1px solid var(--gk-line);border-radius:calc(var(--gk-radius) * .7);background:var(--gk-surface);color:var(--gk-ink);font:inherit;transition:border-color min(var(--gk-duration-base),150ms) ease}
+@media (hover:hover) and (pointer:fine){.gk-input:hover,.gk-select select:hover{border-color:color-mix(in srgb,var(--gk-ink) 35%,var(--gk-line))}}
 .gk-select{position:relative;display:block}
 .gk-select select{appearance:none;-webkit-appearance:none;padding-right:40px;cursor:pointer}
 .gk-select::after{content:"";position:absolute;right:16px;top:50%;width:7px;height:7px;border-right:1.5px solid var(--gk-muted);border-bottom:1.5px solid var(--gk-muted);transform:translateY(-70%) rotate(45deg);pointer-events:none}
@@ -208,9 +204,10 @@ pre.gk-figure{margin:0;padding:32px 36px;background:var(--gk-surface);border:1px
 .gk-check,.gk-radio{width:18px;height:18px;margin:0;accent-color:var(--gk-accent)}
 .gk-radios{display:flex;flex-wrap:wrap;gap:8px 20px;margin:0;padding:0;border:0}.gk-radios label{display:inline-flex;align-items:center;gap:8px}
 .gk-actions{display:flex;flex-wrap:wrap;gap:10px}.gk-actions--end{justify-content:flex-end}
-.gk-btn{height:38px;padding:0 16px;border:1px solid var(--gk-line);border-radius:calc(var(--gk-radius) * .7);background:var(--gk-surface);color:var(--gk-ink);font:500 14px/1 var(--gk-font);cursor:pointer;transition:background var(--gk-duration-base) var(--gk-easing-base),opacity var(--gk-duration-base) var(--gk-easing-base)}
-.gk-btn:hover{background:var(--gk-panel)}
-.gk-btn--primary{background:var(--gk-accent);border-color:var(--gk-accent);color:var(--gk-on-accent)}.gk-btn--primary:hover{background:color-mix(in srgb,var(--gk-accent) 86%,var(--gk-surface))}
+.gk-btn{height:38px;padding:0 16px;border:1px solid var(--gk-line);border-radius:calc(var(--gk-radius) * .7);background:var(--gk-surface);color:var(--gk-ink);font:500 14px/1 var(--gk-font);cursor:pointer;transition:background min(var(--gk-duration-base),150ms) ease,opacity var(--gk-duration-base) var(--gk-easing-base),transform 150ms cubic-bezier(.25,.46,.45,.94)}
+.gk-btn:active:not(:disabled){transform:scale(.97)}
+@media (hover:hover) and (pointer:fine){.gk-btn:hover{background:var(--gk-panel)}}
+.gk-btn--primary{background:var(--gk-accent);border-color:var(--gk-accent);color:var(--gk-on-accent)}@media (hover:hover) and (pointer:fine){.gk-btn--primary:hover{background:color-mix(in srgb,var(--gk-accent) 86%,var(--gk-surface))}}
 .gk-btn--danger{background:var(--gk-danger);border-color:var(--gk-danger);color:#fff}
 .gk-btn:disabled{opacity:.4;cursor:not-allowed}
 .gk-search{position:relative;display:flex;align-items:center}.gk-search .gk-input{padding-left:36px;padding-right:72px}
@@ -248,7 +245,10 @@ pre.gk-figure{margin:0;padding:32px 36px;background:var(--gk-surface);border:1px
 .gk-actor{width:120px;height:72px;border-radius:calc(var(--gk-radius) * .7);background:var(--gk-accent)}
 .gk-actor--small{width:56px;height:56px}.gk-actors{display:flex;gap:10px}
 .gk-figure-wrap{display:grid;justify-items:center;gap:20px}
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition-duration:0s!important;animation-duration:0s!important}.gk-play{display:none}}
+/* Reduced motion: nothing moves, colour and opacity still fade so state changes stay readable. */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0s!important}.gk-switch::after,.gk-stage *{transition:none!important}.gk-btn{transition:background min(var(--gk-duration-base),150ms) ease,opacity var(--gk-duration-base) var(--gk-easing-base)}.gk-btn:active:not(:disabled){transform:none}.gk-play{display:none}}
+.gk-figure{--gk-arrive-ink:var(--gk-data);--gk-arrive-paper:var(--gk-surface)}
+${ARRIVE_CSS}
 `;
 
 let stages = 0;
@@ -262,17 +262,19 @@ export function fragment(spec, { map, notes = true } = {}) {
   if (spec.kind === "responsive")
     return sample + `<div class="gk-pair">${spec.data.map((s) => `<figure><figcaption>${esc(s.label)}</figcaption>${screenHtml(s.spec, map, { notes: false })}</figure>`).join("")}</div>`;
   if (spec.motion && moves(spec.kind)) return `<pre lang="${esc(spec.lang ?? "en")}" class="gk-figure" data-moving role="img" aria-label="${esc(label(spec))}">${esc(stillText(spec))}</pre><template data-motion-spec>${esc(JSON.stringify(spec))}</template>`;
-  const figure = `<pre lang="${esc(spec.lang ?? "en")}" class="gk-figure" role="img" aria-label="${esc(label(spec))}">${paint(body(spec))}</pre>`;
+  const text = body(spec);
+  const arrived = arriveLines(spec, text);
+  const figure = `<pre lang="${esc(spec.lang ?? "en")}" class="gk-figure"${arrived ? " data-arrive" : ""} role="img" aria-label="${esc(label(spec))}">${arrived ? arrived.join("\n") : paint(text)}</pre>`;
   const demo = motionDemo(spec);
   if (!demo) return figure;
   // Every demo rule starts with .gk-stage; scope it to this stage so several demos can share a page.
   const id = `gk-stage-${++stages}`;
-  return `<div class="gk-figure-wrap">${figure}<div class="gk-stage" id="${id}" data-gk-stage><style>${demo.css.replaceAll(".gk-stage", `#${id}.gk-stage`)}</style>${demo.html}<p>Under reduced motion this shows the end state only.</p><button type="button" class="gk-btn gk-play" data-gk-play>Play again</button></div></div>`;
+  return `<div class="gk-figure-wrap">${figure}<div class="gk-stage" id="${id}" data-gk-stage><style>${demo.css.replaceAll(".gk-stage", `#${id}.gk-stage`)}</style>${demo.html}<p>${demo.note ? `${demo.note} ` : ""}Under reduced motion this shows the end state only.</p><button type="button" class="gk-btn gk-play" data-gk-play>Play again</button></div></div>`;
 }
 
 // Behaviour for prototypes: tabs select, dialogs close and reopen, "until change" buttons wake up, motion plays.
 const PLAY_JS = `
-document.querySelectorAll("[data-gk-stage]").forEach((s)=>{const b=s.querySelector("[data-gk-play]");const play=()=>{s.classList.add("is-from");void s.offsetWidth;requestAnimationFrame(()=>requestAnimationFrame(()=>s.classList.remove("is-from")))};b&&b.addEventListener("click",play);if(!matchMedia("(prefers-reduced-motion: reduce)").matches)play()});
+document.querySelectorAll("[data-gk-stage]").forEach((s)=>{const b=s.querySelector("[data-gk-play]");const fig=s.parentElement.querySelector("[data-arrive]");const play=()=>{s.classList.add("is-from");void s.offsetWidth;if(fig){fig.classList.remove("is-arriving","is-waiting");void fig.offsetWidth}requestAnimationFrame(()=>requestAnimationFrame(()=>{s.classList.remove("is-from");fig&&fig.classList.add("is-arriving")}))};b&&b.addEventListener("click",play);if(matchMedia("(prefers-reduced-motion: reduce)").matches||!("IntersectionObserver" in window))return;s.classList.add("is-from");const io=new IntersectionObserver((es)=>{if(!es[0].isIntersecting)return;io.disconnect();play()},{threshold:.5});io.observe(s)});
 document.querySelectorAll(".gk-tabs").forEach((t)=>t.addEventListener("click",(e)=>{const b=e.target.closest("[role=tab]");if(!b)return;t.querySelectorAll("[role=tab]").forEach((x)=>x.setAttribute("aria-selected",String(x===b)))}));
 document.querySelectorAll("[data-screen]").forEach((screen)=>{const wake=()=>screen.querySelectorAll("[data-until-change]").forEach((b)=>b.disabled=false);screen.addEventListener("input",wake);screen.addEventListener("change",wake);const d=screen.querySelector("[data-dialog]");if(!d)return;d.querySelectorAll("[data-close]").forEach((b)=>b.addEventListener("click",()=>{d.hidden=true;screen.querySelector("[data-reopen]")?.removeAttribute("hidden")}));addEventListener("keydown",(e)=>{if(e.key==="Escape")d.hidden=true});screen.querySelector(".gk-list")?.addEventListener("click",()=>{d.hidden=false})});
 `;
@@ -284,7 +286,7 @@ const page = ({ title, intent, source, content, text, map, moving = false, lang 
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 ${map?.stylesheet ? `<link rel="stylesheet" href="${esc(map.stylesheet)}">` : ""}
-<style>${FONT_CSS}${tokensCss(map)}${BASE_CSS}</style>
+<style>${FONT_CSS()}${tokensCss(map)}${BASE_CSS}</style>
 </head>
 <body>
 <header class="gk-top"><span class="gk-chip">Prototype</span><h1>${esc(title)}</h1>${intent ? `<p>${esc(intent)}</p>` : ""}</header>
@@ -292,7 +294,7 @@ ${map?.stylesheet ? `<link rel="stylesheet" href="${esc(map.stylesheet)}">` : ""
 <footer class="gk-foot"><span>${source ? `Source: ${esc(source)}` : "Made with Glyph kit"}</span>${
   text ? `<details><summary>The same spec as text</summary><pre class="gk-figure">${esc(text)}</pre></details>` : ""
 }</footer>
-<script>${PLAY_JS}</script>
+<script>${PLAY_JS}${ARRIVE_JS}</script>
 ${moving ? `<script>${inlineMotion()}\ndocument.querySelectorAll('[data-motion-spec]').forEach(t => { const spec = JSON.parse(t.content.textContent); const {make,still} = animate(spec); autoplay(t.previousElementSibling,make,still); });</script>` : ""}
 </body>
 </html>

@@ -2,6 +2,7 @@
 import { checks } from "../guard.mjs";
 import { bar, clamp, cut, join, len, padEnd, padStart, place, table } from "../core.mjs";
 import { LAYOUT, capRows, fitLabels } from "../layout.mjs";
+import { readingOrder } from "../arrive.mjs";
 
 /** Spacing tokens drawn to scale, one cell per `unit` pixels. tokens: [{ name, value }] */
 export function spacingScale(tokens, { unit = 4, maxWidth = LAYOUT.maxWidth } = {}) {
@@ -134,6 +135,6 @@ export const kinds = {
     summary: (d) => `${d.variants.length} variants by ${d.states.length} states.`
   },
   layerStack: { label: "Layer stack", render: layerStack, summary: (l) => l.map((x) => `${x.name} at ${x.z}`).join(", ") },
-  tokenTable: { label: "Token table", render: tokenTable, summary: (t) => t.map((x) => `${x.name}: ${x.value}`).join(", ") },
-  table: { label: "Table", render: table, summary: (r) => `Table with ${r.length - 1} rows: ${r[0].join(", ")}.` }
+  tokenTable: { label: "Token table", render: tokenTable, arrive: readingOrder, summary: (t) => t.map((x) => `${x.name}: ${x.value}`).join(", ") },
+  table: { label: "Table", render: table, arrive: readingOrder, summary: (r) => `Table with ${r.length - 1} rows: ${r[0].join(", ")}.` }
 };

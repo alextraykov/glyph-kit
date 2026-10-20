@@ -32,6 +32,10 @@ const DIVIDER_LEFT = "├╠┣╟╞";
 const FILL = "░▒▓█·";
 
 /** Width of a box that fits `text` with the standard padding. */
+/** Rows that carry marks (sparklines, speed curves, bars) never touch: a blank row goes between
+ *  them, so each row reads on its own. Every figure with stacked mark rows uses this. */
+export const stack = (rows) => rows.flatMap((row, i) => (i ? ["", row] : [row]));
+
 export const fit = (text, pad = LAYOUT.pad) => width(text) + pad * 2 + 2;
 
 /** Cut a set of labels to the shared limit, always marking removed text. */

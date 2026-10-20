@@ -20,7 +20,8 @@ test("language reaches number formatting, summaries and moving stills", () => {
 test("Turkish uppercase reaches layouts and motion", () => {
   const board = { kind: "board", lang: "tr", data: { ilk: ["bir"], sonra: ["iki"] } };
   assert.match(body(board), /İLK/);
-  assert.match(stillText(board), /İLK/);
+  const loop = { kind: "loop", lang: "tr", source: "Sample data", data: { stages: ["ilk", "sonra"] } };
+  assert.match(stillText(loop), /İLK/);
   assert.match(body({ kind: "screen", lang: "tr", data: { rows: [{ type: "heading", text: "isim" }] } }), /İSİM/);
 });
 test("HTML exporters and MDX declare language", () => {

@@ -1,7 +1,6 @@
 import { checks } from "../guard.mjs";
 import { stillGrid } from "../motion/shared.mjs";
 import { motionLoop, motionFunnel, motionStates, motionQueue, motionRollout, motionLoading } from "../motion/process.mjs";
-import { motionHandoff, motionRetry, motionCache, motionSplit, motionIncident } from "../motion/process.mjs";
 // Each kind: label, how to make it, a summary for screen readers, and its own data checks.
 const has = (list, name, what) => (list.includes(name) ? "" : `"${name}" isn't one of the ${what}.`);
 const legacy = {
@@ -60,35 +59,3 @@ const legacy = {
 
 
 export const kinds = Object.fromEntries(Object.entries(legacy).filter(([kind]) => kind !== "funnel").map(([kind, def]) => [kind, { ...def, render: (data, options) => { const { make, still } = def.motion(data, options); return stillGrid(make, still).toText(); } }]));
-
-const processKind = (label, motion, check, summary) => ({ label, motion, check, summary, render: (data, options) => { const { make, still } = motion(data, options); return stillGrid(make, still).toText(); } });
-const nonnegative = (value) => Number.isFinite(value) && value >= 0;
-
-kinds.handoff = processKind("Handoff between teams", motionHandoff, (data) => [
-  new Set(data.lanes).size !== data.lanes.length ? "Each lane needs a different name." : "",
-  ...data.steps.map((step) => !data.lanes.includes(step.lane) ? `The lane ${step.lane} is not listed.` : !nonnegative(step.wait ?? 0) ? "Waiting time must be zero or greater." : "")
-], (data) => `Work follows ${data.steps.map((step) => `${step.label} in ${step.lane}`).join(", then ")}.`);
-
-kinds.retry = processKind("Retry with backoff", motionRetry, (data) => [
-  !Number.isInteger(data.succeedOn) || data.succeedOn < 1 || data.succeedOn > data.attempts ? "The successful attempt must be between 1 and the attempt count." : "",
-  !Number.isFinite(data.base) || data.base <= 0 ? "The first backoff must be greater than zero." : "",
-  !Number.isFinite(data.factor) || data.factor < 1 ? "The backoff factor must be at least one." : ""
-], (data) => `Up to ${data.attempts} attempts, starting at ${data.base}${data.unit ?? "ms"} with a factor of ${data.factor}; attempt ${data.succeedOn} succeeds.`);
-
-kinds.cache = processKind("Cache hit or miss", motionCache, (data) => [
-  !Number.isFinite(data.hitRate) || data.hitRate < 0 || data.hitRate > 1 ? "The hit rate must be between zero and one." : "",
-  data.ttl != null && !nonnegative(data.ttl) ? "Cache lifetime must be zero or greater." : "",
-  typeof data.origin !== "string" ? "Name the origin that handles a cache miss." : ""
-], (data) => `${Math.round(data.hitRate * 100)}% of requests hit the cache; misses go to ${data.origin}.`);
-
-kinds.split = processKind("Traffic split", motionSplit, (data) => [
-  Math.abs(data.variants.reduce((sum, item) => sum + item.share, 0) - 1) > 1e-9 ? "Variant shares must add up to one." : "",
-  ...data.variants.map((item) => !nonnegative(item.share) || item.share > 1 || (item.converts != null && (!nonnegative(item.converts) || item.converts > 1)) ? "Shares and conversion rates must be between zero and one." : "")
-], (data) => `Traffic goes to ${data.variants.map((item) => `${item.label} (${Math.round(item.share * 100)}%)`).join(", ")}.`);
-
-kinds.incident = processKind("Incident timeline", motionIncident, (data) => [
-  data.events.some((event, i) => !nonnegative(event.at) || (i && event.at < data.events[i - 1].at)) ? "Incident times must run forward from zero." : "",
-  data.events.filter((event) => event.kind === "resolve").length !== 1 ? "An incident needs exactly one resolution." : "",
-  data.events.some((event) => !["detect", "page", "mitigate", "resolve"].includes(event.kind)) ? "Use detect, page, mitigate or resolve for each event." : ""
-], (data) => data.events.map((event) => `${event.at} minutes: ${event.label} (${event.kind})`).join(". "));
-

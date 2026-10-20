@@ -36,8 +36,6 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
 
 </details>
 
-**Motion:** A packet walks between boxes and each arrival flashes.
-
 **Watch for:** Four or five boxes per row at most.
 
 ## Flow with decisions
@@ -113,8 +111,6 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
 
 </details>
 
-**Motion:** A packet follows the spine, visits a failure branch and returns.
-
 **Watch for:** Every decision's no-branch needs a destination, or it's a dead end nobody designed.
 
 ## State machine
@@ -124,16 +120,18 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
 **Use it for** anything with loading, saving, error or retry states.
 
 ```text
-states  [idle] · saving · saved · failed
 
-idle   ──[ submit ]──► saving
-saving ──[ ok     ]──► saved
-saving ──[ error  ]──► failed
-failed ──[ retry  ]──► saving
+                            ┌─────────────── error ───────────────┐
+                            │                                     ▼
+┏━━━━━━━━━┓  submit  ┌─────────┐    ok    ╔═════════╗          ┌─────────┐
+┃  idle   ┃─────────►│ saving  │─────────►║  saved  ║          │ failed  │
+┗━━━━━━━━━┛          └─────────┘          ╚═════════╝          └─────────┘
+                            ▲                                     │
+                            └─────────────── retry ───────────────┘
 
-[ ] marks the start. Ends: saved.
+The heavy box is the start. Ends: saved.
 
-                             SAMPLE DATA
+                                                               SAMPLE DATA
 ```
 
 *Saving a report. idle goes to saving on submit. saving goes to saved on ok. saving goes to failed on error. failed goes to saving on retry*
@@ -170,8 +168,6 @@ failed ──[ retry  ]──► saving
 
 </details>
 
-**Motion:** A token plays the chosen path and rests at its last state.
-
 **Watch for:** Read the footer: it lists ends and unreachable states.
 
 ## Journey map
@@ -181,19 +177,19 @@ failed ──[ retry  ]──► saving
 **Use it for** stages of an experience with what people do, think and feel.
 
 ```text
-STAGE    DISCOVER          IMPORT            FIRST CHART
-         ────────────────  ────────────────  ────────────────
-doing    Finds the tool    Uploads a CSV     Picks a template
-         through a         with 4,000 rows   and edits labels
-         colleague
+STAGE       DISCOVER          IMPORT            FIRST CHART
+            ────────────────  ────────────────  ────────────────
+doing       Finds the tool    Uploads a CSV     Picks a template
+            through a         with 4,000 rows   and edits labels
+            colleague
 
-thinking “Will this        “Why did my       “Oh, that was
-         replace my        dates break?”     quick”
-         sheet?”
+thinking    “Will this        “Why did my       “Oh, that was
+            replace my        dates break?”     quick”
+            sheet?”
 
-feeling  ▲ good            ▼▼ bad            ▲▲ great
+feeling     ▲ good            ▼▼ bad            ▲▲ great
 
-                                                  SAMPLE DATA
+                                                     SAMPLE DATA
 ```
 
 *First week. Discover: Finds the tool through a colleague. Import: Uploads a CSV with 4,000 rows. First chart: Picks a template and edits labels*
@@ -227,8 +223,6 @@ feeling  ▲ good            ▼▼ bad            ▲▲ great
 ```
 
 </details>
-
-**Motion:** A cursor visits each stage and reveals its thinking and feeling.
 
 **Watch for:** Thoughts are quotes or close paraphrases from research, not invented.
 

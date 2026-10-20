@@ -8,7 +8,7 @@ import { animate, moves } from "../skills/glyph-kit/scripts/motion.mjs";
 import { renderHtml } from "../skills/glyph-kit/scripts/render/html.mjs";
 import { renderDeck } from "../skills/glyph-kit/scripts/render/deck.mjs";
 import { body } from "../skills/glyph-kit/scripts/render/text.mjs";
-import { autoplay } from "../skills/glyph-kit/scripts/live/play.mjs";
+import { autoplay, player } from "../skills/glyph-kit/scripts/live/play.mjs";
 import { LIVE, live, stillText } from "../skills/glyph-kit/scripts/live/kinds.mjs";
 import * as pace from "../tools/pace.mjs";
 
@@ -138,26 +138,63 @@ test("autoplay releases observers and clocks and settles for print and reduced m
   }
 });
 
-test("new process kinds reject impossible inputs in plain words", () => {
-  const invalid = [
-    ["handoff", { lanes: ["Design"], steps: [{ lane: "Missing", label: "Build", wait: 0 }] }],
-    ["retry", { attempts: 3, base: 100, factor: 2, succeedOn: 4 }],
-    ["cache", { hitRate: 1.2, origin: "Origin" }],
-    ["split", { variants: [{ label: "A", share: 0.4 }] }],
-    ["incident", { events: [{ at: 0, label: "Seen", kind: "detect" }] }]
-  ];
-  for (const [kind, data] of invalid) assert.throws(() => animate({ kind, data, source: "Sample data" }), (error) => error.constructor === Error && !/undefined|NaN|Cannot read/.test(error.message));
+
+test("abResult: readings draw the last one, say what the earlier ones showed, and move through them", () => {
+  const spec = examples.find((s) => s.kind === "abResult");
+  const text = stillText(spec);
+  assert.match(text, /^day 14 of 14 · 5,900 people$/m);
+  assert.match(text, /The intervals don't overlap\. They overlapped until day 10\./);
+  assert.equal(text, body(spec), "the moving still and the plain figure match");
+  // An early gap that closes again is the mistake the motion is for.
+  const flipped = structuredClone(spec);
+  flipped.data.readings.reverse().forEach((r, i) => (r.day = i + 1));
+  assert.match(body(flipped), /The intervals overlap: no clear difference yet\. On day 1 they looked apart\./);
+  // Plain words when something is missing or doesn't line up.
+  const plain = { kind: "abResult", source: "Illustrative.", motion: true, data: spec.data.readings[0].variants };
+  assert.throws(() => live(plain), /moves only when it has readings over time/);
+  const mismatch = structuredClone(spec);
+  mismatch.data.readings[0].variants[0].label = "old control";
+  assert.throws(() => body(mismatch), /different variants from the last one/);
+  // Only numbers scramble: the bars and the verdict never show scramble marks.
+  const frame = live(spec).make();
+  for (let s = 0; s < 60; s++) {
+    const lines = frame(s, 0).toText().split("\n");
+    assert.match(lines.at(-1), /^The intervals /);
+    for (const line of lines.slice(2, 4)) assert.match(line, /^(control|new empty state)\s+[├─█┤ ]+\S/);
+  }
 });
 
-test("moving board settles after the move and state machine settles at the path end", () => {
-  const board = examples.find((spec) => spec.kind === "board");
-  const expected = structuredClone(board);
-  const card = expected.data.later.shift();
-  expected.data.now.push(card);
-  expected.motion = false;
-  assert.equal(stillText(board), body(expected));
-  const machine = examples.find((spec) => spec.kind === "stateMachine");
-  const path = [machine.data[0].from, machine.data[0].to];
-  const still = stillText({ ...machine, options: { ...machine.options, path } });
-  assert.equal(still.split("\n")[0], path.at(-1));
+test("autoplay: one moving diagram per view, drawn only on the step", () => {
+  const keys = ["document", "matchMedia", "requestAnimationFrame", "cancelAnimationFrame", "IntersectionObserver", "addEventListener", "removeEventListener"];
+  const saved = new Map(keys.map((key) => [key, Object.getOwnPropertyDescriptor(globalThis, key)]));
+  const frames = new Map(), observers = [];
+  let serial = 0;
+  try {
+    Object.assign(globalThis, {
+      document: { hidden: false, addEventListener() {}, removeEventListener() {} },
+      matchMedia: () => ({ matches: false, addEventListener() {}, removeEventListener() {} }),
+      requestAnimationFrame: (fn) => { frames.set(++serial, fn); return serial; },
+      cancelAnimationFrame: (id) => frames.delete(id),
+      IntersectionObserver: class { constructor(fn) { this.callback = fn; observers.push(this); } observe() {} disconnect() {} },
+      addEventListener() {}, removeEventListener() {}
+    });
+    const spec = examples.find((s) => s.kind === "loop");
+    const { make, still } = live(spec);
+    const a = { innerHTML: "" }, b = { innerHTML: "" };
+    const stopA = autoplay(a, make, still), stopB = autoplay(b, make, still);
+    assert.equal(frames.size, 1, "only one plays at a time");
+    observers[0].callback([{ isIntersecting: true, intersectionRatio: 0.3 }]);
+    observers[1].callback([{ isIntersecting: true, intersectionRatio: 0.9 }]);
+    assert.equal(frames.size, 1, "the one most in view plays");
+    stopA(); stopB();
+    // Within one 120ms step the page is written at most once.
+    const pre = { writes: 0, set innerHTML(v) { this.writes++; }, get innerHTML() { return ""; } };
+    const p = player(pre, make, still);
+    p.still();
+    const before = pre.writes;
+    for (let i = 0; i < 7; i++) p.advance(120 / 8);
+    assert.ok(pre.writes - before <= 1, `wrote ${pre.writes - before} times in one step`);
+  } finally {
+    for (const key of keys) { const desc = saved.get(key); if (desc) Object.defineProperty(globalThis, key, desc); else delete globalThis[key]; }
+  }
 });

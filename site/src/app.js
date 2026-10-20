@@ -8,16 +8,7 @@ document.querySelectorAll("[data-live]").forEach((pre) => {
   const spec = specs[pre.dataset.live];
   if (!spec) return;
   const { make, still } = animate(spec);
-  let stop = autoplay(pre, make, still);
-  const button = pre.closest("figure")?.querySelector("[data-live-toggle]");
-  if (button) {
-    button.hidden = false;
-    button.addEventListener("click", () => {
-      if (stop) { stop(); stop = null; } else stop = autoplay(pre, make, still);
-      button.textContent = stop ? "Still" : "Play";
-      button.setAttribute("aria-pressed", String(Boolean(stop)));
-    });
-  }
+  autoplay(pre, make, still);
 });
 
 // Copy buttons are icons: a tick for a moment after copying.
@@ -80,3 +71,21 @@ document.addEventListener("click", (event) => {
   else if (/github\.com\/alextraykov\/glyph-kit/.test(el.href)) track("GitHub", { from: el.closest("nav") ? "top bar" : "page" });
 });
 document.querySelector("[data-try]")?.addEventListener("submit", () => track("Build figure"));
+
+// The Kinds page's area menu stays under the top bar and marks the area in view.
+const jump = document.querySelector(".jump");
+if (jump) {
+  const top = document.querySelector(".top");
+  const setTop = () => document.documentElement.style.setProperty("--top-h", `${top?.offsetHeight ?? 0}px`);
+  setTop();
+  addEventListener("resize", setTop);
+  const links = [...jump.querySelectorAll("a[href^='#']")];
+  const sections = links.map((a) => document.getElementById(a.getAttribute("href").slice(1))).filter(Boolean);
+  const mark = () => {
+    const line = (top?.offsetHeight ?? 0) + jump.offsetHeight + 24;
+    const current = sections.filter((s) => s.getBoundingClientRect().top <= line).at(-1);
+    links.forEach((a) => a.setAttribute("aria-current", String(current && a.getAttribute("href") === `#${current.id}`)));
+  };
+  addEventListener("scroll", mark, { passive: true });
+  mark();
+}

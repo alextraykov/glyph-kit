@@ -83,8 +83,7 @@ export function cells(fraction, { width = 10 } = {}) {
   return "█".repeat(n) + "░".repeat(width - n);
 }
 
-/** Side-by-side comparison table. rows: [{ label, a, b, aText, bText }] with a and b as 0..1. */
-export function compare(rows, { headers = ["", "A", "B"], width: preferred = 10, maxWidth = LAYOUT.maxWidth } = {}) {
+function compareLayout(rows, { headers = ["", "A", "B"], width: preferred = 10, maxWidth = LAYOUT.maxWidth } = {}) {
   const capped = capRows(rows);
   const labels = fitLabels(capped.rows.map((r) => r.label));
   const texts = capped.rows.flatMap((r) => [cut(r.aText ?? "", 12), cut(r.bText ?? "", 12)]);
@@ -94,6 +93,18 @@ export function compare(rows, { headers = ["", "A", "B"], width: preferred = 10,
   const cell = (f, t) => `${cells(f, { width })} ${cut(t ?? "", 12)}`;
   const aCol = capped.rows.map((r) => cell(r.a, r.aText));
   const colW = Math.max(len(headers[1]), ...aCol.map(len)) + 2;
+  return { headers, capped, labels, labelW, cell, aCol, colW };
+}
+
+/** Where the after column starts, in cells. A deck prints it one step after the before column. */
+export function compareColumns(rows, options) {
+  const { labelW, colW } = compareLayout(rows, options);
+  return { cuts: [labelW + 2 + colW], step: 600 };
+}
+
+/** Side-by-side comparison table. rows: [{ label, a, b, aText, bText }] with a and b as 0..1. */
+export function compare(rows, options) {
+  const { headers, capped, labels, labelW, cell, aCol, colW } = compareLayout(rows, options);
   const lines = [
     `${padEnd(headers[0], labelW)}  ${padEnd(headers[1], colW)}${headers[2]}`,
     ...capped.rows.map((r, i) => `${padEnd(labels[i], labelW)}  ${padEnd(aCol[i], colW)}${cell(r.b, r.bText)}`)
@@ -177,7 +188,7 @@ export function calendarStrip(days, { hit = "■", miss = "·", gap = "  ", maxW
  * Timeline (Gantt) strip. tracks: [{ label, start, end, loop? }] in ms.
  * A loop runs to the end of the scale and ends with →.
  */
-export function gantt(tracks, { scale, width: preferred = 40, unit = "ms", ticks = 3, maxWidth = LAYOUT.maxWidth } = {}) {
+export function gantt(tracks, { scale, width: preferred = 40, unit = "ms", ticks = 3, maxWidth = LAYOUT.maxWidth, airy = true } = {}) {
   const top = (scale ?? Math.max(...tracks.map((t) => t.end))) || 1;
   const capped = capRows(tracks);
   const labels = fitLabels(capped.rows.map((t) => t.label));
@@ -204,7 +215,8 @@ export function gantt(tracks, { scale, width: preferred = 40, unit = "ms", ticks
     textCells(text).forEach((ch, k) => (axis[start + k] = ch));
   });
   if (capped.note) lines.push(capped.note);
-  return join([...lines, " ".repeat(labelW + 1) + axis.join("")]);
+  // Stacked bars never touch (see stack() in layout.mjs); callers that add columns stack themselves.
+  return join([...(airy ? lines.flatMap((l, i) => (i ? ["", l] : [l])) : lines), " ".repeat(labelW + 1) + axis.join("")]);
 }
 
 /** Duration ruler: 20 cells of 25ms by default. ▌ marks a half cell, + a value past the scale. */

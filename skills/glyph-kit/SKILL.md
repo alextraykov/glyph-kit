@@ -24,7 +24,7 @@ Every artifact is a **spec** (`{ kind, title, intent, source, data, options, mot
 | Tokens, scales, contrast, component states, layers | `reference/areas/systems.md` |
 | Redlines, QA checklists, before and after | `reference/areas/handoff.md` |
 | Motion intent, timing, transitions, stagger, easing | `reference/areas/motion.md` |
-| Handoffs, retries, caches, traffic splits, incidents | `reference/areas/process.md` |
+| Processes that move: rework loops, queues, rollouts, loading, state machines | `reference/areas/process.md` |
 
 Each guide lists its kinds with when to use them, a real example, the spec that made it, and what to watch for. `node scripts/glyph-kit.mjs kinds` lists them all.
 
@@ -53,7 +53,7 @@ For layout-only figures that no kind covers (a one-off diagram), draw by hand wi
 
 ## Moving diagrams
 
-Keep the kind the content calls for and add `"motion": true` when its registry entry moves. A chart remains a chart; a roadmap remains a board. `node scripts/glyph-kit.mjs live spec.json --to html` writes a moving page; `--to markdown` gives its still. Read `reference/live.md` for the generated list and `reference/areas/process.md` for processes. The still must make the same point, including reduced motion, print and no-JavaScript output.
+When the point is a process over time (work flowing and coming back, people leaving a funnel, a queue backing up, a rollout and its guard, a state machine, a loading sequence), use a moving diagram: `node scripts/glyph-kit.mjs live spec.json --to html` writes one page that plays, with a still for reduced motion; `--to markdown` gives the still for docs and tickets. Every type moves in HTML and decks. Six processes keep moving: `loop`, `funnel`, `states`, `queue`, `rollout`, `loading`, and a test result (`abResult`) does too when its data has readings over time. Every other type arrives once, in the order that carries its point, then stays still. Read `reference/live.md` and `reference/areas/process.md` for their data. Say what the motion shows in the sentence next to it; the still must make the same point.
 
 ## Going up in fidelity
 

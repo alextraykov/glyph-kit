@@ -9,6 +9,7 @@ import { kinds as research } from "./areas/research.mjs";
 import { kinds as systems } from "./areas/systems.mjs";
 import { kinds as wireframes } from "./areas/wireframes.mjs";
 import { kinds as process } from "./areas/process.mjs";
+import { ORDERS } from "./arrive-orders.mjs";
 
 export const AREAS = {
   research: { label: "Research data", kinds: research },
@@ -25,7 +26,8 @@ export const AREAS = {
 /** kind → { area, label, render, summary }. A kind listed in two areas keeps its first area. */
 export const KINDS = {};
 for (const [area, { kinds }] of Object.entries(AREAS)) {
-  for (const [kind, def] of Object.entries(kinds)) KINDS[kind] ??= { area, ...def };
+  // Every type arrives in an order; a renderer's own order wins over the shared one.
+  for (const [kind, def] of Object.entries(kinds)) KINDS[kind] ??= { area, ...(ORDERS[kind] ? { arrive: ORDERS[kind] } : {}), ...def };
 }
 
 /** Check a spec and return its kind definition, or throw a plain-language error. */

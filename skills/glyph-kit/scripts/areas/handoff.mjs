@@ -1,8 +1,8 @@
-import { motionQaChecklist } from "../motion/handoff.mjs";
 // Handoff and design QA: spacing redlines, checklists, before and after.
 import { checks } from "../guard.mjs";
-import { cells, center, compare, cut, join, len, padEnd } from "../core.mjs";
+import { cells, center, compare, compareColumns, cut, join, len, padEnd } from "../core.mjs";
 import { LAYOUT, capRows } from "../layout.mjs";
+import { byColumns } from "../arrive.mjs";
 
 /**
  * Spacing callouts across a row: │◄ 16 ►│◄─── content 320 ───►│◄ 16 ►│
@@ -44,8 +44,8 @@ export const kinds = {
     label: "Before and after",
     check: (d) => [checks.within(d, "a", 0, 1, "before share"), checks.within(d, "b", 0, 1, "after share")],
     render: compare,
+    arrive: (lines, data, options) => byColumns(compareColumns(data, options)),
     summary: (rows) => rows.map((r) => `${r.label}: ${r.aText} then ${r.bText}`).join(". ")
   }
 };
 
-kinds.qaChecklist.motion = (data, options) => motionQaChecklist(data, options, kinds.qaChecklist.render);

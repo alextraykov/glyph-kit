@@ -84,7 +84,7 @@ import { renderMarkdown } from "./scripts/render/text.mjs";
 | Design system | spacing scale, type scale, contrast check, component states, layer stack, token table, table |
 | Handoff and QA | spacing redline, QA checklist, before and after |
 | Motion | intent card, transition spec, stagger, frame strip, motion timing, easing tokens |
-| Processes | handoff, retry, cache, split, incident, loop, queue, rollout, loading, states |
+| Processes | loop, queue, rollout, loading, states |
 
 ## Checks
 

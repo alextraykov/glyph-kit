@@ -1,9 +1,9 @@
 import { upper } from "../text.mjs";
-import { motionGantt, motionBoard, motionSwimlane } from "../motion/planning.mjs";
 // Planning: boards, impact and effort, ownership, timelines, decisions, status.
 import { checks } from "../guard.mjs";
 import { BOX, clamp, cut, gantt, join, len, padEnd, place, statusKey, table, wrap } from "../core.mjs";
 import { LAYOUT, capRows } from "../layout.mjs";
+import { readingOrder } from "../arrive.mjs";
 
 /** Now / next / later (or any columns). columns: { now: [...], next: [...], later: [...] } */
 export function board(columns, { colWidth: preferred = 22, maxWidth = LAYOUT.maxWidth, lang } = {}) {
@@ -131,9 +131,6 @@ export const kinds = {
   statusKey: { label: "Status key",
     check: (d) => [checks.within(d, "level", 0, 4, "level")], render: statusKey, summary: (i) => i.map((x) => x.label).join(", ") },
   decisionLog: { label: "Decision log",
-    check: (d) => [checks.inTimeOrder(d, "date")], render: decisionLog, summary: (r) => r.map((x) => `${x.date}: ${x.decision}`).join(". ") }
+    check: (d) => [checks.inTimeOrder(d, "date")], render: decisionLog, arrive: readingOrder, summary: (r) => r.map((x) => `${x.date}: ${x.decision}`).join(". ") }
 };
 
-kinds.gantt.motion = (data, options) => motionGantt(data, options, kinds.gantt.render);
-kinds.board.motion = (data, options) => motionBoard(data, options, kinds.board.render);
-kinds.swimlane.motion = (data, options) => motionSwimlane(data, options, kinds.swimlane.render);

@@ -24,6 +24,7 @@ const { paint } = await imp("scripts/render/paint.mjs");
 const { LIVE, live, stillGrid } = await imp("scripts/live/kinds.mjs");
 const { resolve } = await imp("scripts/registry.mjs");
 const { classify } = await imp("scripts/render/paint.mjs");
+const { ARRIVE_CSS, ARRIVE_JS, arriveLines } = await imp("scripts/render/arrive.mjs");
 const core = await import(new URL(`file://${join(root, "site/src/showcase-core.mjs")}`).href);
 
 const read = (p) => readFileSync(join(kit, p), "utf8");
@@ -46,8 +47,6 @@ const DRAW_URL = process.env.GLYPH_KIT_DRAW_URL ?? "https://traykov.cc/api/glyph
 const TURNSTILE_SITE_KEY = process.env.GLYPH_KIT_TURNSTILE_SITE_KEY ?? "0x4AAAAAAFbX6pR3QiTNlZ6I";
 // Suggestions: three asks, each checked to build the figure its thumbnail shows (traykov.cc/labs/glyph-kit).
 const SUGGESTIONS = [
-  { short: "Bar chart that grows", kind: "Bar chart", key: "moving:barChart", from: { live: "bar-chart" }, ask: "Draw an animated bar chart: Design QA 42, Handoff 17, Research 3. These are sample numbers." },
-  { short: "Retry with backoff", kind: "Retry", key: "moving:retry", from: { live: "retry" }, ask: "Draw a moving retry with exponential backoff: 4 attempts, base 100 ms, factor 2, succeed on attempt 4. Sample data." },
   { short: "Signup funnel", kind: "Moving funnel", key: "moving:funnel", from: { live: "signup-funnel" },
     ask: "Show signup to paid for the last 30 days as people, not percentages, moving: 12,400 visited, 6,100 signed up, 2,300 activated, 610 paid. These are sample numbers." },
   { short: "Export flow", kind: "Flow with failures", key: "branchFlow", from: { area: "flows" },
@@ -81,6 +80,16 @@ const moving = Object.entries(liveSpecs).map(([id, spec]) => {
   const lines = grid.toText().split("\n");
   return { id, spec, summary, html: grid.toHtml(), cols: Math.max(...lines.map(textWidth)), rows: lines.length };
 });
+// The looping types also play on the every-kind page, from their own examples. They join the specs the
+// page's player reads, but not the gallery of moving diagrams.
+const loopIds = {};
+const loopSpecs = {};
+for (const [area, list] of Object.entries(examples)) for (const s of list) {
+  if (!KINDS[s.kind].motion || loopIds[s.kind]) continue;
+  try { live({ ...s, motion: true }); } catch { continue; } // a test result without readings arrives instead
+  loopIds[s.kind] = `kind-${s.kind}`;
+  loopSpecs[`kind-${s.kind}`] = { ...s, motion: true };
+}
 const m = JSON.parse(readFileSync(join(root, "docs/measurements.json"), "utf8")).rows;
 const med = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
 const stats = {
@@ -94,17 +103,22 @@ const stats = {
   tokensHigh: Math.max(...m.map((r) => r.imageTokens))
 };
 const kindCount = Object.keys(KINDS).length;
-const movingCount = Object.values(KINDS).filter(def => def.motion).length;
 const areaCount = Object.keys(AREAS).length;
 // Size of the release zip, when it has been packed (node scripts/pack.mjs); otherwise left out.
 let zipSize = "about 0.5 MB";
 try {
   zipSize = `${Math.round(statSync(join(root, "dist/glyph-kit.zip")).size / 1024)} KB`;
 } catch {}
-const figure = (spec) => `<pre class="grid-figure" role="img" aria-label="${esc(label(spec))}">${paint(body(spec))}</pre>`;
+// Figures arrive the way the kit's HTML does: once, in the order that carries their point. Figures the
+// guide animates itself stay plain.
+const figure = (spec, { arrive = true } = {}) => {
+  const text = body(spec);
+  const arrived = arrive ? arriveLines(spec, text) : null;
+  return `<pre class="grid-figure"${arrived ? " data-arrive" : ""} role="img" aria-label="${esc(label(spec))}">${arrived ? arrived.join("\n") : paint(text)}</pre>`;
+};
 const stage = (cols, rows, pre) => `<div class="stage" style="--cols:${cols};--rows:${rows}">${pre}</div>`;
 const liveFigure = (mv, depth) => `<figure class="demo"${depth ? ` data-depth="${depth}"` : ""}>
-  <div class="demo__bar"><span class="label">${esc(mv.spec.title)}</span><span class="label">Sample data</span><button type="button" class="motion-toggle" data-live-toggle hidden aria-pressed="true">Still</button></div>
+  <div class="demo__bar"><span class="label">${esc(mv.spec.title)}</span><span class="label">Sample data</span></div>
   ${stage(mv.cols, mv.rows, `<pre class="grid-figure live" role="img" aria-label="${esc(mv.summary)}" data-live="${mv.id}">${mv.html}</pre>`)}
   <figcaption>${esc(mv.spec.intent)}</figcaption>
 </figure>`;
@@ -186,6 +200,7 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
   }
 </script>
 <link rel="stylesheet" href="/style.css">
+<style>${ARRIVE_CSS}.grid-figure{--gk-arrive-ink:var(--ink);--gk-arrive-paper:var(--paper)}</style>
 ${current === "home" && TURNSTILE_SITE_KEY ? '<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>' : ""}
 </head>
 <body>
@@ -197,9 +212,10 @@ ${current === "home" && TURNSTILE_SITE_KEY ? '<script src="https://challenges.cl
 ${content}
 </main>
 <footer><div class="shell"><span>Glyph kit ${plugin.version} · MIT · made by <a href="https://traykov.cc">Alexander Traykov</a></span><span><a href="https://traykov.cc/notes/four-characters/">Four characters</a>, the story behind it</span></div></footer>
-<script type="application/json" id="live-specs">${JSON.stringify(liveSpecs).replace(/</g, "\\u003c")}</script>
+<script type="application/json" id="live-specs">${JSON.stringify({ ...liveSpecs, ...loopSpecs }).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="try-example">${JSON.stringify({ spec: exampleSpec, mode: "moving" }).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="showcase">${JSON.stringify(showcaseData).replace(/</g, "\\u003c")}</script>
+<script>${ARRIVE_JS}</script>
 <script type="module" src="/app.js"></script>
 ${current === "guide" ? '<script type="module" src="/guide-motion.js"></script>' : ""}
 <!-- Visits, through Vercel Web Analytics (switch it on for this project in Vercel). No cookies. -->
@@ -239,7 +255,6 @@ const builder = `<section class="builder" id="try" aria-label="Builder" data-lay
       <div class="tabs" role="tablist" aria-label="Preview, data or history"><button type="button" role="tab" aria-selected="true" data-tab="preview">Preview</button><button type="button" role="tab" aria-selected="false" data-tab="data">Data</button><button type="button" role="tab" aria-selected="false" data-tab="history">History</button></div>
       <span class="label builder__title" data-try-title>Example · ${esc(exampleSpec.title)}</span>
       <span class="builder__hint" data-try-hint hidden>Scroll sideways to see all of it.</span>
-      <button type="button" class="motion-toggle" data-try-motion hidden aria-pressed="false">Play</button>
       <details class="export" data-try-export><summary>Export</summary><div class="export__menu" data-try-export-menu></div></details>
       <span class="label" data-try-stamp>Sample data</span>
     </div>
@@ -270,7 +285,7 @@ const USE_FORMATS = [["Markdown", "markdown"], ["MDX", "mdx"], ["HTML", "html"],
 // Every section's figure is drawn by the kit itself, from a spec, the way a user's would be.
 const SAMPLE = "Illustrative: sample numbers for this guide";
 const GUIDE_FIGS = {
-  start: { kind: "flow", data: ["ask in words", "agent writes the spec", "code draws it", "any format"] },
+  start: { kind: "flow", data: ["ask in words", "agent writes spec", "code draws", "any format"] },
   glyphs: { kind: "table", data: [["Glyph", "Means, in every figure"], ["███", "measured or done"], ["", ""], ["▓▓▓", "current"], ["", ""], ["░░░", "projected, or the empty part of a scale"], ["", ""], ["···", "an empty cell"]] },
   markdown: { kind: "barChart", source: SAMPLE, data: [{ label: "task 1", value: 92, text: "92%" }, { label: "task 2", value: 71, text: "71%" }, { label: "task 3", value: 38, text: "38%" }], options: { width: 24 } },
   mdx: { kind: "flow", data: ["funnel.json", "<Glyph spec={funnel} />", "SVG at build time"] },
@@ -294,7 +309,7 @@ const GUIDE_FIGS = {
   ] }
 };
 // A kit figure that acts out its section (site/src/guide-motion.js); without scripts it stays as drawn.
-const moved = (key) => `<div class="guide-figure">${figure(GUIDE_FIGS[key]).replace('<pre class="grid-figure"', `<pre class="grid-figure" data-guide-motion="${key}"`)}</div>`;
+const moved = (key) => `<div class="guide-figure">${figure(GUIDE_FIGS[key], { arrive: false }).replace('<pre class="grid-figure"', `<pre class="grid-figure" data-guide-motion="${key}"`)}</div>`;
 // Animations: the same diagram twice, its still beside it moving, to show the still makes the same point.
 const stillAndMoving = (mv) => `<div class="pair">
   <figure class="pair__item"><figcaption class="label">Still · reduced motion, print, docs</figcaption><pre class="grid-figure" role="img" aria-label="${esc(mv.summary)}">${mv.html}</pre></figure>
@@ -330,7 +345,7 @@ const GUIDE = [
     when: "A process over time: work coming back, people leaving a funnel, a queue backing up, a rollout and its guard, a state machine, a loading sequence.",
     ask: "Show how work comes back from QA as a moving diagram.",
     run: ["node scripts/glyph-kit.mjs live loop.json --to html", "node scripts/glyph-kit.mjs live loop.json --to markdown"],
-    check: [`${movingCount} kinds move, including charts, flows, plans and processes.`, "The still frame makes the same point; it's what reduced motion, print and docs show.", "One sentence next to it says what the motion shows.", "Motion specs say what reduced motion shows."]
+    check: ["Six kinds move: loop, funnel, states, queue, rollout, loading.", "The still frame makes the same point; it's what reduced motion, print and docs show.", "One sentence next to it says what the motion shows.", "Motion specs say what reduced motion shows."]
   },
   {
     id: "deck", title: "Presentations and pitch decks",
@@ -460,7 +475,7 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="moving">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Motion</p><h2 id="moving">${movingCount} kinds that move.</h2></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Motion</p><h2 id="moving">Six kinds that move.</h2></header>
   <div class="gallery">${moving.slice(0, 6).map((mv) => liveFigure(mv)).join("\n")}</div>
 </section>
 
@@ -513,16 +528,16 @@ const kinds = page({
   path: "/kinds/",
   current: "kinds",
   title: "Every kind · Glyph kit",
-  description: `All ${kindCount} kinds of figure and ${Object.keys(LIVE).length} moving diagrams in Glyph kit, with what each is for.`,
+  description: `All ${kindCount} kinds of figure in Glyph kit, each with its motion and what it is for.`,
   content: `
-<header class="heading"><p class="kicker">Every kind</p><h2>${kindCount} figures, ${Object.keys(LIVE).length} that move.</h2><p>Each is drawn here by the kit itself, from its example data. All of it is sample data, and it says so on the figure.</p></header>
+<header class="heading"><p class="kicker">Every kind</p><h2>${kindCount} figures. Every one moves.</h2><p>Each is drawn here by the kit itself, from its example data. All of it is sample data, and it says so on the figure.</p></header>
 <nav class="jump" aria-label="Areas">${Object.entries(AREAS).map(([id, a]) => `<a href="#${id}">${esc(a.label)}</a>`).join("")}<a href="#moving">Moving diagrams</a></nav>
 ${Object.entries(AREAS).map(([id, area]) => {
   const seen = new Set();
   const specs = examples[id].filter((s) => (seen.has(s.kind) ? false : seen.add(s.kind)));
   return `<section class="section" id="${id}" aria-labelledby="${id}-title">
   <header class="heading"><h2 id="${id}-title">${esc(area.label)}</h2><p>${esc(AREA_DOCS[id])}</p></header>
-  <div class="areas">${specs.map((s) => `<article class="kind"><h3>${esc(KINDS[s.kind].label)}</h3>${KINDS[s.kind].motion ? '<span class="label">Moves</span>' : ""}<p class="kind__when">${esc(KIND_DOCS[s.kind]?.when ?? "")}</p>${figure(s)}${KIND_DOCS[s.kind]?.traps ? `<p class="kind__watch">Watch for: ${esc(KIND_DOCS[s.kind].traps)}</p>` : ""}</article>`).join("\n")}</div>
+  <div class="areas">${specs.map((s) => `<article class="kind"><h3>${esc(KINDS[s.kind].label)}</h3>${loopIds[s.kind] ? '<span class="label">Loops</span>' : ""}<p class="kind__when">${esc(KIND_DOCS[s.kind]?.when ?? "")}</p>${loopIds[s.kind] ? figure(s, { arrive: false }).replace('<pre class="grid-figure"', `<pre class="grid-figure" data-live="${loopIds[s.kind]}"`) : figure(s)}${KIND_DOCS[s.kind]?.traps ? `<p class="kind__watch">Watch for: ${esc(KIND_DOCS[s.kind].traps)}</p>` : ""}</article>`).join("\n")}</div>
 </section>`;
 }).join("\n")}
 <section class="section" id="moving" aria-labelledby="moving-title">

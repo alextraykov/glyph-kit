@@ -19,7 +19,7 @@ test("new chart timing uses the shared clock and curved delays", () => {
   assert.ok(staggerDelay(1, 4) > staggerDelay(2, 4) - staggerDelay(1, 4));
 });
 test("standalone exports reuse Departure Mono and offer a stop control", () => {
-  const spec = JSON.parse(readFileSync(new URL("../skills/glyph-kit/examples/live/bar-chart.json", import.meta.url)));
+  const spec = JSON.parse(readFileSync(new URL("../skills/glyph-kit/examples/live/rework-loop.json", import.meta.url)));
   const html = renderLiveHtml(spec);
   assert.match(html, /font-family:"Departure Mono"/);
   assert.match(html, /data:font\/woff2;base64,/);

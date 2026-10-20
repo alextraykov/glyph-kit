@@ -23,8 +23,8 @@ Every artifact the kit makes is described by one JSON object:
 | `intent` | no | Why this artifact exists, in one sentence. Goes into Markdown, HTML and decks; not into the bare text figure. |
 | `source` | when there are numbers | Where the data came from, printed under the figure in every form. A spec whose data holds numbers is refused without one. Starting it with "Illustrative" or "Sample" stamps SAMPLE DATA on the figure. With `"@file"` data and no source, the source names the file. |
 | `label` | no | The sentence screen readers get. Generated from the data when absent. |
-| `options` | no | Layout settings: widths, scales, column labels; `path` lists the states to visit for a moving `stateMachine`. |
-| `motion` | no | `true` requests motion when the kind supports it; otherwise the kind stays still. |
+| `options` | no | Layout settings: widths, scales, column labels. |
+| `motion` | no | For a `funnel`: `true` plays it as people moving through the steps. The other moving kinds always move; every other kind stays still. |
 | `lang` | no | A BCP 47 language tag, such as `de` or `tr`, for numbers, casing and export language. |
 
 Each kind also checks its own data and refuses what can't be true, in plain words: a funnel that grows, a value outside its range, a test result outside its interval, a timeline that ends before it starts, dates out of order, a moving state machine whose path skips a transition.
@@ -61,13 +61,15 @@ A deck file is `{ "title", "subtitle"?, "byline"?, "theme"?: "paper" | "ink", "s
 
 | Field | What it does |
 |---|---|
-| `command` | Types in as a terminal command before the figure prints. Use it to show where a chart came from. |
+| `command` | Shown whole as a command line above the figure. Use it to show where a chart came from. |
 | `steps` | Camera stops. Each zooms to a range of figure lines (0-based, from the text output), dims the rest, and shows `say` under the figure. |
 | `flag` | A pattern; matching lines flash twice after printing. For failure paths and problem rows. |
 | `notes` | Presenter notes, shown with N. |
 | `kicker` | The small label above the slide title. Defaults to the latest section title. |
 
-Render with `node scripts/glyph-kit.mjs deck deck.json > deck.html`. In the deck: → or space steps forward, ← back, N notes, F full screen; the address keeps the slide and step (`#7.2`). Under reduced motion nothing types or prints and the camera cuts. Printing gives one page per slide in its final state. `examples/decks/export-review.json` is a full sixteen-slide example.
+Render with `node scripts/glyph-kit.mjs deck deck.json > deck.html`. In the deck: → or space steps forward, ← back, N notes, F full screen; the address keeps the slide and step (`#7.2`). Under reduced motion nothing prints and the camera cuts. Printing gives one page per slide in its final state. `examples/decks/export-review.json` is a full sixteen-slide example.
+
+Types with an arrival order come in by that order instead of line by line, once, after the title: tables, decision logs and quote cards in reading order with the frame first; `emotionCurve` and `journeyMap` one stage at a time; `compare` with its after column one step after the before column. HTML pages play the same arrival when a figure scrolls into view.
 
 To find line numbers for `steps`, render the spec with `--to text` and count from 0.
 

@@ -116,8 +116,9 @@ test("gantt: rows share one width and loops are marked", () => {
     { scale: 1000, width: 20 }
   ).split("\n");
   assert.match(out[0], /^fade  █████···············  0ms–240ms$/);
-  assert.match(out[1], /→ 0ms, repeats$/);
-  assert.match(out[2], /0ms.*500ms.*1s$/);
+  assert.equal(out[1], ""); // stacked bars get a blank row between them
+  assert.match(out[2], /→ 0ms, repeats$/);
+  assert.match(out[3], /0ms.*500ms.*1s$/);
 });
 
 test("ruler: the audit's own example", () => {

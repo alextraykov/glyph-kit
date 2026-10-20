@@ -1,9 +1,10 @@
+import { Grid } from "../live/grid.mjs";
 import { upper } from "../text.mjs";
-import { motionFlow, motionBranchFlow, motionStateMachine, motionJourneyMap } from "../motion/flows.mjs";
 // UX flows: linear and branching flows, state machines, journey maps, sitemaps.
 import { checks } from "../guard.mjs";
 import { BOX, cut, flow, join, len, padEnd, textCells, tree, wrap } from "../core.mjs";
-import { LAYOUT, capRows, fitLabels } from "../layout.mjs";
+import { LAYOUT, capRows, fitLabels, stack } from "../layout.mjs";
+import { byColumns } from "../arrive.mjs";
 
 /**
  * A top-to-bottom flow with decisions. Each decision can send one branch to the right.
@@ -74,6 +75,56 @@ export function branchFlow(steps, { gap = 3, maxText = LAYOUT.labelMax, maxWidth
  * A state machine as its transitions, aligned in columns. transitions: [{ from, event, to }]
  * Lists every state first, so nothing unreachable hides.
  */
+/** The state machine as a diagram: states in a row, the next state straight along it, every other
+ *  transition on its own lane (forward above, back below), events written on their lines. Ends are
+ *  double boxes. Returns null when it won't fit, and the list form is drawn instead. */
+function stateDiagram(clean, states, start, dead, maxWidth) {
+  const names = [start, ...states.filter((s) => s !== start)];
+  const W = Math.max(11, ...names.map((n) => len(n) + 4));
+  const longest = Math.max(0, ...clean.map((t) => len(t.event)));
+  const GAP = Math.max(8, longest + 4);
+  const xs = names.map((_, i) => i * (W + GAP));
+  const cols = xs.at(-1) + W;
+  if (cols > maxWidth) return null;
+  const idx = (n) => names.indexOf(n);
+  const mid = (i) => xs[i] + Math.floor(W / 2);
+  const shape = clean.map((t) => ({ ...t, a: idx(t.from), b: idx(t.to) }));
+  const ups = shape.filter((e) => e.b > e.a + 1 || (e.b === e.a + 1 && shape.some((o) => o !== e && o.a === e.a && o.b === e.b))).length;
+  const downs = shape.filter((e) => e.b <= e.a).length;
+  const T = ups * 2 + 2; // the box row's middle line
+  let up = 0, down = 0;
+  const g = new Grid(T + 3 + downs * 2 + 1, cols);
+  const seen = new Set();
+  shape.forEach((e) => {
+    const key = `${e.a}>${e.b}`;
+    if (e.b === e.a + 1 && !seen.has(key)) {
+      seen.add(key);
+      g.line([[T, xs[e.a] + W], [T, xs[e.b] - 1]]);
+      g.label(T - 1, xs[e.a] + W, xs[e.b] - 1, cut(e.event, GAP - 2));
+      return;
+    }
+    const forward = e.b > e.a;
+    const ca = mid(e.a) + (forward ? 2 : -2), cb = mid(e.b) - (forward ? 2 : -2);
+    const y = forward ? T - 3 - up++ * 2 : T + 3 + down++ * 2;
+    const edge = forward ? T - 2 : T + 2;
+    g.line([[edge, ca], [y, ca], [y, cb], [edge, cb]]);
+    g.label(y, Math.min(ca, cb), Math.max(ca, cb), cut(` ${e.event} `, Math.abs(cb - ca) + 1));
+  });
+  // The start is a heavy box, ends are double boxes, every other state a light one.
+  const frame = (i, [h, v, tl, tr, bl, br]) => {
+    const inner = W - 2, left = Math.floor((inner - len(names[i])) / 2);
+    g.text(T - 1, xs[i], `${tl}${h.repeat(inner)}${tr}`);
+    g.text(T, xs[i], `${v}${" ".repeat(left)}${names[i]}${" ".repeat(inner - left - len(names[i]))}${v}`);
+    g.text(T + 1, xs[i], `${bl}${h.repeat(inner)}${br}`);
+  };
+  names.forEach((n, i) => {
+    if (n === start) frame(i, [..."━┃┏┓┗┛"]);
+    else if (dead.includes(n)) frame(i, [..."═║╔╗╚╝"]);
+    else g.box(T - 1, xs[i], W, n);
+  });
+  return g.toText().split("\n");
+}
+
 export function stateMachine(transitions, { initial, maxWidth = LAYOUT.maxWidth } = {}) {
   const partMax = Math.min(LAYOUT.labelMax, Math.floor((maxWidth - 11) / 3));
   const clean = transitions.map((t) => ({ ...t, from: cut(t.from, partMax), event: cut(t.event, partMax), to: cut(t.to, partMax) }));
@@ -90,6 +141,11 @@ export function stateMachine(transitions, { initial, maxWidth = LAYOUT.maxWidth 
   }
   const lost = states.filter((s) => !reachable.has(s));
   const dead = states.filter((s) => !clean.some((t) => t.from === s));
+  if (!capped.note && states.length <= 6) {
+    let diagram = null;
+    try { diagram = stateDiagram(clean, states, start, dead, maxWidth); } catch { diagram = null; }
+    if (diagram) return join([...diagram, "", ...wrap(`The heavy box is the start. Ends: ${dead.join(", ") || "none"}.${lost.length ? ` Unreachable: ${lost.join(", ")}.` : ""}`, maxWidth)]);
+  }
   const stateText = `states  ${states.map((s) => (s === start ? `[${s}]` : s)).join(" · ")}`;
   const stateLines = len(stateText) <= maxWidth ? [stateText] : wrap(stateText, maxWidth);
   const endLines = wrap(`[ ] marks the start. Ends: ${dead.join(", ") || "none"}.${lost.length ? ` Unreachable: ${lost.join(", ")}.` : ""}`, maxWidth);
@@ -107,11 +163,24 @@ export function stateMachine(transitions, { initial, maxWidth = LAYOUT.maxWidth 
  * Journey map: stages across, rows for what people do, think and how they feel (-2..2).
  * stages: [{ label, doing, thinking, feeling }]
  */
-export function journeyMap(stages, { colWidth: preferred = 18, maxWidth = LAYOUT.maxWidth, lang } = {}) {
-  const labelW = 9;
-  const available = Math.floor((maxWidth - labelW) / Math.max(1, stages.length));
-  if (available < 10) throw new Error(`A journey map fits at most ${Math.floor((maxWidth - labelW) / 10)} stages at ${maxWidth} cells; this one has ${stages.length}.`);
-  const colWidth = Math.min(preferred, available);
+const journeyLabelW = 12; // "thinking" plus room before the first stage
+
+function journeyWidth(stages, { colWidth: preferred = 18, maxWidth = LAYOUT.maxWidth } = {}) {
+  const available = Math.floor((maxWidth - journeyLabelW) / Math.max(1, stages.length));
+  if (available < 10) throw new Error(`A journey map fits at most ${Math.floor((maxWidth - journeyLabelW) / 10)} stages at ${maxWidth} cells; this one has ${stages.length}.`);
+  return Math.min(preferred, available);
+}
+
+/** Where each stage's column starts, in cells. A deck prints the stages in order, 360ms apart. */
+export const journeyColumns = (stages, options) => {
+  const colWidth = journeyWidth(stages, options);
+  return { cuts: stages.map((_, i) => journeyLabelW + i * colWidth), step: 360 };
+};
+
+export function journeyMap(stages, options = {}) {
+  const { lang } = options;
+  const labelW = journeyLabelW;
+  const colWidth = journeyWidth(stages, options);
   const labels = fitLabels(stages.map((s) => s.label), colWidth - 1);
   const cell = (text) => wrap(text ?? "", colWidth - 2);
   const row = (name, pick) => {
@@ -148,7 +217,7 @@ export const kinds = {
     summary: (t) => t.map((x) => `${x.from} goes to ${x.to} on ${x.event}`).join(". ")
   },
   journeyMap: { label: "Journey map",
-    check: (d) => [checks.within(d, "feeling", -2, 2, "feeling")], render: journeyMap, summary: (s) => s.map((x) => `${x.label}: ${x.doing}`).join(". ") },
+    check: (d) => [checks.within(d, "feeling", -2, 2, "feeling")], render: journeyMap, arrive: (lines, data, options) => byColumns(journeyColumns(data, options)), summary: (s) => s.map((x) => `${x.label}: ${x.doing}`).join(". ") },
   tree: {
     label: "Tree or sitemap",
     render: tree,
@@ -161,7 +230,3 @@ export const kinds = {
   }
 };
 
-kinds.flow.motion = (data, options) => motionFlow(data, options, kinds.flow.render);
-kinds.branchFlow.motion = (data, options) => motionBranchFlow(data, options, kinds.branchFlow.render);
-kinds.stateMachine.motion = (data, options) => motionStateMachine(data, options, kinds.stateMachine.render);
-kinds.journeyMap.motion = (data, options) => motionJourneyMap(data, options, kinds.journeyMap.render);

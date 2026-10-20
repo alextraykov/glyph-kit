@@ -11,11 +11,15 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
 **Use it for** comparing durations and easing, today against proposed.
 
 ```text
-today    ▕████████············▏  200ms  ease    ▅█▇▅▄▃▂▁
-proposed ▕██████··············▏  150ms  reveal  █▆▅▄▃▂▁▁
-         0·········250········500ms
+          duration                         easing   speed
 
-                                             SAMPLE DATA
+today     ▕████████············▏   200ms   ease     ▅█▇▅▄▃▂▁
+
+proposed  ▕██████··············▏   150ms   reveal   █▆▅▄▃▂▁▁
+
+           0·········250········500ms
+
+                                                 SAMPLE DATA
 ```
 
 *Toast, today and proposed. today: 200ms. proposed: 150ms*
@@ -48,8 +52,6 @@ proposed ▕██████··············▏  150ms  reveal  �
 ```
 
 </details>
-
-**Motion:** Rulers fill at speeds proportional to their durations.
 
 **Watch for:** Keep the 500ms scale fixed across a report; a + is usually the finding.
 
@@ -112,7 +114,9 @@ proposed ▕██████··············▏  150ms  reveal  �
 
 ```text
 opacity   ███████████████████████·······  0ms–150ms     0 → 1
+
 transform ██████████████████████████████  0ms–200ms     y 8px → y 0
+
 shadow    ···············███████████████  100ms–200ms   none → md
           0ms            100ms      200ms
 
@@ -154,8 +158,6 @@ shadow    ···············█████████████�
 
 </details>
 
-**Motion:** Property tracks fill along a time cursor.
-
 **Watch for:** Animate transform and opacity; anything else needs a measured reason.
 
 ## Stagger
@@ -166,9 +168,13 @@ shadow    ···············█████████████�
 
 ```text
 card 1 ██████████████████······················  0ms–200ms
+
 card 2 ········██████████████████··············  91ms–291ms
+
 card 3 ···············██████████████████·······  164ms–364ms
+
 card 4 ····················██████████████████··  218ms–418ms
+
 card 5 ······················██████████████████  240ms–440ms
        0ms                 220ms           440ms
 
@@ -195,8 +201,6 @@ card 5 ······················█████████�
 ```
 
 </details>
-
-**Motion:** A time cursor crosses each item's start delay.
 
 **Watch for:** Cap the total: past about 400ms the last item feels late.
 
@@ -238,8 +242,6 @@ card 5 ······················█████████�
 
 </details>
 
-**Motion:** Frames play down the rows in time.
-
 **Watch for:** Rows are equal slices of time, so bunched marks mean slow movement.
 
 ## Easing tokens
@@ -249,11 +251,15 @@ card 5 ······················█████████�
 **Use it for** documenting easing tokens.
 
 ```text
-ease-standard  ▆█▄▃▂▂▁▁  cubic-bezier(0.2, 0, 0, 1)      most UI
-ease-reveal    █▆▅▄▃▂▁▁  cubic-bezier(0.33, 1, 0.68, 1)  entrances
-ease-exit      ▂▄▅▆▆▇▇█  cubic-bezier(0.4, 0, 1, 1)      leaving the screen
+token           speed      curve                            use for
 
-                                                                SAMPLE DATA
+ease-standard   ▆█▄▃▂▂▁▁   cubic-bezier(0.2, 0, 0, 1)       most UI
+
+ease-reveal     █▆▅▄▃▂▁▁   cubic-bezier(0.33, 1, 0.68, 1)   entrances
+
+ease-exit       ▂▄▅▆▆▇▇█   cubic-bezier(0.4, 0, 1, 1)       leaving the screen
+
+                                                                   SAMPLE DATA
 ```
 
 *Easing tokens. ease-standard, ease-reveal, ease-exit*

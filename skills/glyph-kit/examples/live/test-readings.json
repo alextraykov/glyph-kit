@@ -1,0 +1,6 @@
+{ "kind": "abResult", "title": "New empty state, day by day", "intent": "Show why the test ran its full two weeks before anyone called it.", "source": "Illustrative.", "data": { "days": 14, "readings": [
+  { "day": 3, "people": 1180, "variants": [{ "label": "control", "value": 4.3, "low": 3.2, "high": 5.4 }, { "label": "new empty state", "value": 4.9, "low": 3.8, "high": 6.1 }] },
+  { "day": 7, "people": 2760, "variants": [{ "label": "control", "value": 4.2, "low": 3.5, "high": 4.9 }, { "label": "new empty state", "value": 5.2, "low": 4.5, "high": 6.0 }] },
+  { "day": 10, "people": 4100, "variants": [{ "label": "control", "value": 4.1, "low": 3.5, "high": 4.7 }, { "label": "new empty state", "value": 5.2, "low": 4.6, "high": 5.8 }] },
+  { "day": 14, "people": 5900, "variants": [{ "label": "control", "value": 4.1, "low": 3.6, "high": 4.6 }, { "label": "new empty state", "value": 5.3, "low": 4.8, "high": 5.9 }] }
+] }, "options": { "min": 3, "max": 7 } }

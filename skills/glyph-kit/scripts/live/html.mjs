@@ -56,7 +56,7 @@ export function renderLiveHtml(spec, { theme = "paper" } = {}) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(spec.title)}</title>
-<style>${FONT_CSS}
+<style>${FONT_CSS()}
 :root{color-scheme:${theme === "paper" ? "light" : "dark"}}
 body{margin:0;min-height:100vh;display:grid;place-items:center;background:${p.bg};color:${p.ink};font:16px/1.6 system-ui,sans-serif}
 figure{margin:0;padding:48px 40px;display:grid;gap:20px;max-width:100%}

@@ -1,8 +1,8 @@
-import { motionLikert, motionTaskStats, motionEmotionCurve } from "../motion/research.mjs";
 // Research data: survey answers, themes across participants, quotes, task results, journeys.
 import { checks } from "../guard.mjs";
 import { BOX, clamp, cut, join, len, padEnd, padStart, place, wrap } from "../core.mjs";
 import { LAYOUT, capRows, fitLabels } from "../layout.mjs";
+import { byColumns, readingOrder } from "../arrive.mjs";
 
 const pct = (n) => `${Math.round(n * 100)}%`;
 
@@ -117,10 +117,20 @@ export function taskStats(rows, { scale, width: preferred = 30, unit = "s", maxW
 }
 
 /** How people felt across a journey, from -2 to +2. stages: [{ label, score }] */
-export function emotionCurve(stages, { colWidth: preferred = 12, maxWidth = LAYOUT.maxWidth } = {}) {
+function emotionWidth(stages, { colWidth: preferred = 12, maxWidth = LAYOUT.maxWidth } = {}) {
   const available = Math.floor((maxWidth - 3) / Math.max(1, stages.length));
   if (available < 4) throw new Error(`A journey feeling chart fits at most ${Math.floor((maxWidth - 3) / 4)} stages at ${maxWidth} cells; this one has ${stages.length}.`);
-  const colWidth = Math.min(preferred, available);
+  return Math.min(preferred, available);
+}
+
+/** Where each stage's column starts, in cells. A deck prints the stages in order, 240ms apart. */
+export const emotionColumns = (stages, options) => {
+  const colWidth = emotionWidth(stages, options);
+  return { cuts: stages.map((_, i) => 3 + i * colWidth), step: 240 };
+};
+
+export function emotionCurve(stages, options) {
+  const colWidth = emotionWidth(stages, options);
   const levels = [2, 1, 0, -1, -2];
   const names = { 2: "+2", 1: "+1", 0: " 0", "-1": "-1", "-2": "-2" };
   const lines = levels.map((lv) => {
@@ -151,7 +161,7 @@ export const kinds = {
   },
   affinity: { label: "Affinity counts",
     check: (d) => [checks.notNegative(d, "count")], render: affinity, summary: (g) => g.map((x) => `${x.label}: ${x.count}`).join(". ") },
-  quoteCard: { label: "Quote card", render: quoteCard, summary: (q) => `${q.who} said: ${q.quote}` },
+  quoteCard: { label: "Quote card", render: quoteCard, arrive: readingOrder, summary: (q) => `${q.who} said: ${q.quote}` },
   taskStats: {
     label: "Task results",
     check: (d) => [checks.ordered(d, ["min", "q1", "median", "q3", "max"], "times should run from shortest to longest"), ...d.map((r) => (r.done > r.of ? `${r.label}: ${r.done} finished out of ${r.of}.` : ""))],
@@ -162,10 +172,8 @@ export const kinds = {
     label: "Journey feeling",
     check: (d) => [checks.within(d, "score", -2, 2, "score")],
     render: emotionCurve,
+    arrive: (lines, data, options) => byColumns(emotionColumns(data, options)),
     summary: (s) => s.map((x) => `${x.label} ${x.score > 0 ? "+" : ""}${x.score}`).join(", ")
   }
 };
 
-kinds.likert.motion = (data, options) => motionLikert(data, options, kinds.likert.render);
-kinds.taskStats.motion = (data, options) => motionTaskStats(data, options, kinds.taskStats.render);
-kinds.emotionCurve.motion = (data, options) => motionEmotionCurve(data, options, kinds.emotionCurve.render);

@@ -83,11 +83,6 @@ function flow(b, { dwell = () => BEAT, travel = 3, finale = 3 * BEAT, hold = 2 *
   return { make: () => frame, still: cycle - 1 };
 }
 const setLabel = (g, x, s, age = Infinity, cls = "") => scramble(g, 1, x.c0 + 1, centred(s, x.c1 - x.c0 - 1), age, cls);
-const pressLabel = (g, x, s) => {
-  // The dither press passing over the label, left to right: ▓ then ▒ then ░, over three steps.
-  const w = x.c1 - x.c0 - 1, head = Math.floor((s / 3) * (w + 3));
-  for (let i = 0; i < w; i++) { const d = head - i; if (d >= 0 && d < 3) g.put(1, x.c0 + 1 + i, ["░", "▒", "▓"][d]); }
-};
 
 export const MOTIONS = {
   // Start: ask → spec → draws → any format; the last box cycles the formats.
@@ -100,13 +95,12 @@ export const MOTIONS = {
       setLabel(g, x, formats[i], Number.isFinite(s) ? s - i * 3 : Infinity, i ? "ok" : "");
     }
   }),
-  // MDX: the spec becomes a component, and at build time the press turns it into a drawing.
+  // MDX: the spec becomes a component; at build time it arrives as a drawing and lights.
   mdx: (b) => flow(b, {
     finale: 3 * BEAT,
     onBox: (g, x, k, s, boxes) => {
       if (k !== boxes.length - 1) return;
-      if (s < 3) pressLabel(g, x, s);
-      else setLabel(g, x, x.label, Infinity, "ok");
+      setLabel(g, x, x.label, Infinity, "ok"); // arrived: built, so it lights
     }
   }),
   // Decks: a presenter's click, a box a beat; the figure slide steps 1/3, 2/3, 3/3.
@@ -123,14 +117,12 @@ export const MOTIONS = {
     hidden: true,
     finale: 3 * BEAT,
     onBox: (g, x, k, s, boxes) => {
-      if (Number.isFinite(s)) setLabel(g, x, x.label, s);
-      if (k === boxes.length - 1) setLabel(g, x, x.label, s, "ok");
+      if (k === boxes.length - 1) setLabel(g, x, x.label, Infinity, "ok");
     }
   }),
-  // SVG: the text figure leaves as blocks and lands as a file of shapes.
+  // SVG: the text figure travels to shapes and lands as a file.
   svg: (b) => flow(b, {
     onBox: (g, x, k, s, boxes) => {
-      if (k === 1 && Number.isFinite(s)) pressLabel(g, x, Math.min(3, s));
       if (k === boxes.length - 1) setLabel(g, x, x.label, Infinity, "ok");
     }
   }),

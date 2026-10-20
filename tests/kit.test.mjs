@@ -17,6 +17,11 @@ import { KIND_DOCS } from "../tools/docs.mjs";
 import { lintBlock } from "../skills/glyph-kit/scripts/lint.mjs";
 import { AREAS, KINDS, resolve } from "../skills/glyph-kit/scripts/registry.mjs";
 import { renderDeck } from "../skills/glyph-kit/scripts/render/deck.mjs";
+import { arriveLines } from "../skills/glyph-kit/scripts/render/arrive.mjs";
+import { staggerStarts } from "../skills/glyph-kit/scripts/areas/motion.mjs";
+import { compareColumns } from "../skills/glyph-kit/scripts/core.mjs";
+import { emotionColumns } from "../skills/glyph-kit/scripts/areas/research.mjs";
+import { journeyColumns } from "../skills/glyph-kit/scripts/areas/flows.mjs";
 import { renderHtml } from "../skills/glyph-kit/scripts/render/html.mjs";
 import { body, label, renderMarkdown } from "../skills/glyph-kit/scripts/render/text.mjs";
 
@@ -28,7 +33,8 @@ const examples = Object.fromEntries(
 const width = (s) => [...s].length;
 
 test("every kind has docs and an example in its area", () => {
-  assert.ok(Object.values(KINDS).filter((kind) => kind.motion).length >= 20);
+  // The processes move, and a test result given readings over time. Charts and plans stay still.
+  assert.deepEqual(Object.keys(KINDS).filter((kind) => KINDS[kind].motion).sort(), ["abResult", "funnel", "loading", "loop", "queue", "rollout", "states"]);
   for (const [area, { kinds }] of Object.entries(AREAS)) {
     for (const kind of Object.keys(kinds)) {
       assert.ok(KIND_DOCS[kind]?.when && KIND_DOCS[kind]?.traps, `${kind} needs docs`);
@@ -178,6 +184,79 @@ test("deck: one slide per spec, and markdown keeps the description", () => {
   assert.match(renderMarkdown(examples.research[0]), /```text[\s\S]*```\n\n\*How people rated/);
 });
 
+test("motion types play their own timing in the figure, at real speed", () => {
+  const delaysOf = (spec) => arriveLines(spec, body(spec)).map((l) => [...l.matchAll(/--d:([\d.]+)ms/g)].map((m) => Number(m[1])));
+  const timing = examples.motion.find((s) => s.kind === "motionTiming");
+  const rows = delaysOf(timing).filter((d) => d.length);
+  const fills = rows.map((d) => Math.max(...d.filter((x) => x < Math.max(...d))));
+  assert.ok(Math.abs(Math.max(...rows[0]) - 200) < 1 && Math.abs(Math.max(...rows[1]) - 150) < 1, "each row lands at its own duration");
+  assert.ok(fills.every((f) => f <= 200), "rulers fill within their durations");
+  const strip = examples.motion.find((s) => s.kind === "filmstrip");
+  const times = body(strip).split("\n").map((l) => Number(l.match(/^\s*(\d+)ms/)?.[1])).filter((n) => n > 0);
+  assert.deepEqual([...new Set(delaysOf(strip).flat())].sort((a, b) => a - b), times, "frames appear at their timestamps");
+  const st = examples.motion.find((s) => s.kind === "stagger");
+  const firsts = delaysOf(st).filter((d) => d.length).map((d) => Math.min(...d));
+  assert.deepEqual(firsts.slice(0, st.data.count).map(Math.round), staggerStarts(st.data).filter((x) => x > 0).length === st.data.count ? staggerStarts(st.data) : firsts.slice(0, st.data.count).map(Math.round));
+  const page = renderHtml(examples.motion);
+  assert.doesNotMatch(page, /gk-track/, "no box crossing a track");
+  assert.match(page, /b\.setAttribute\("aria-label","Play again"\);b\.textContent="↺"/, "every arriving figure gets a replay");
+  assert.match(page, /\.gk-replay::before\{content:"";position:absolute;inset:-10px\}/, "the replay has a 44px target");
+  for (const at of staggerStarts(st.data)) assert.match(page, new RegExp(`--at:${at}ms`), "the stagger cards use the figure's start times");
+});
+
+test("arrival: types with an order arrive in HTML and decks, and end on the exact still", () => {
+  // Every type moves: it either keeps moving (the processes) or arrives in its own order.
+  for (const kind of Object.keys(KINDS)) assert.ok(KINDS[kind].arrive || KINDS[kind].motion, `${kind} has no motion`);
+  const strip = (html) => html.replace(/<[^>]+>/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+  // Screens become working prototypes in HTML and decks; they arrive where they are drawn as text.
+  const specs = Object.values(examples).flat().filter((s) => KINDS[s.kind].arrive && s.kind !== "screen" && s.kind !== "responsive");
+  for (const spec of specs) {
+    const text = body(spec);
+    // HTML: the figure is marked to arrive, every delay sits on the 40ms step, and the text is unchanged.
+    const page = renderHtml(spec);
+    const pre = page.match(/<pre [^>]*class="gk-figure" data-arrive[^>]*>([\s\S]*?)<\/pre>/);
+    assert.ok(pre, `${spec.kind} arrives in HTML`);
+    const noLayers = (h) => h.replace(/<span class="gk-s[012]" aria-hidden="true"[^>]*>(?:<span[^>]*>[^<]*<\/span>|[^<])*<\/span>/g, "");
+    assert.equal(strip(noLayers(pre[1])), text, `${spec.kind}: arriving keeps the text`);
+    const delays = [...pre[1].matchAll(/--d:(\d+)ms/g)].map((m) => Number(m[1]));
+    // Motion types play at their real timing; everything else steps on the 40ms clock.
+    if (!KINDS[spec.kind].arrive(text.split("\n"), resolve(spec).data, spec.options ?? {}).exact) assert.ok(delays.length > 0 && delays.every((d) => d % 40 === 0), `${spec.kind} steps on 40ms`);
+    if (["decisionLog", "quoteCard", "table", "tokenTable"].includes(spec.kind)) assert.ok(Math.max(...delays) <= 600, `${spec.kind} settles within 600ms`);
+    assert.match(page, /data-arrive/);
+    assert.match(page, /IntersectionObserver/);
+    // Deck: the same spans, started after the title.
+    const deck = renderDeck([spec]);
+    const fig = deck.match(/<pre [^>]*gk-fig--arrive[^>]*>([\s\S]*?)<\/pre>/);
+    assert.ok(fig, `${spec.kind} arrives in a deck`);
+    assert.equal(fig[1].split(/<span class="gk-ln" data-l="\d+">/).slice(1).map((l) => strip(noLayers(l))).join("\n"), text.split("\n").map((l) => l || " ").join("\n"));
+  }
+  // Column types: the cuts sit on the drawn columns.
+  for (const spec of specs.filter((s) => ["compare", "emotionCurve", "journeyMap"].includes(s.kind))) {
+    const def = resolve(spec);
+    const lines = def.render(def.data, spec.options ?? {}).split("\n").map((l) => [...l]);
+    const columns = { compare: compareColumns, emotionCurve: emotionColumns, journeyMap: journeyColumns }[spec.kind](def.data, spec.options ?? {});
+    for (const cut of columns.cuts) assert.ok(lines.some((l) => l[cut] && l[cut] !== " " && l[cut - 1] === " "), `${spec.kind}: a column starts at ${cut}`);
+  }
+  // Reading order: frame first, then rows top to bottom.
+  const log = examples.planning.find((s) => s.kind === "decisionLog");
+  const order = KINDS.decisionLog.arrive(body(log).split("\n"), log.data, {});
+  assert.equal(order(0, 0, "┌"), 0);
+  assert.ok(order(1, 2, "D") < order(3, 2, "O") && order(3, 2, "O") < order(4, 2, "O"));
+  // Types without an order print as before (the processes keep their own motion).
+  assert.doesNotMatch(renderHtml(examples.metrics.find((s) => s.kind === "funnel")), /class="gk-figure" data-arrive/);
+  assert.doesNotMatch(renderDeck(examples.metrics.filter((s) => s.kind === "funnel")), /class="gk-fig gk-fig--arrive"/);
+  // Bars: one speed, so the longest finishes last; block cells step through ░ and ▒; values land as their bar stops.
+  const bars = examples.metrics.find((s) => s.kind === "barChart");
+  const fill = KINDS.barChart.arrive(body(bars).split("\n"), bars.data, {});
+  const ends = body(bars).split("\n").slice(0, 2).map((l) => [...l].findLastIndex((ch) => /[█▏▎▍▌▋▊▉]/.test(ch)));
+  assert.ok(fill(0, ends[0]) > fill(1, ends[1]), "the longest bar finishes last");
+  assert.equal(fill(0, 11), fill(1, 11), "bars fill at the same speed");
+  assert.ok(fill(0, ends[0] + 3) > fill(0, ends[0]), "the value lands after its bar");
+  const html = renderHtml(bars);
+  assert.match(html, /<span class="gk-s"><span class="gk-s1" aria-hidden="true" style="--d:\d+ms">/);
+  assert.match(html, /\.gk-s1,\.gk-s2\{position:absolute;left:0;top:0;visibility:hidden/);
+});
+
 test("lint: catches a broken frame and an unmeasured glyph", () => {
   const broken = "┌────┐\n│ ab │\n│ abc │\n└────┘";
   assert.ok(lintBlock(broken).some((p) => /right edge missing/.test(p.message)));
@@ -185,4 +264,17 @@ test("lint: catches a broken frame and an unmeasured glyph", () => {
   assert.equal(lintBlock("┌────┐\n│ ab │\n└────┘").length, 0);
   assert.ok(lintBlock("┌──┐\n│ab│\n└──┘").some((p) => /touches its box/.test(p.message)));
   assert.ok(Object.keys(KINDS).length >= 45);
+});
+
+test("motion audit: deck and prototype motion follow the animations.dev findings", () => {
+  const deck = renderDeck(JSON.parse(readFileSync(join(root, "examples/decks/export-review.json"), "utf8")));
+  assert.doesNotMatch(deck, /is-typing|\.gk-cmd\{animation|--n", n\)/, "titles and commands no longer type");
+  assert.match(deck, /\.gk-world\{[^}]*transition:transform 450ms cubic-bezier\(\.32,\.72,0,1\)/);
+  assert.match(deck, /\.gk-ln\{[^}]*transition:opacity 450ms cubic-bezier\(\.32,\.72,0,1\)/);
+  const page = renderHtml(examples.motion);
+  assert.doesNotMatch(page, /transition:left/, "demo boxes move with transform");
+  assert.match(page, /\.gk-btn:active:not\(:disabled\)\{transform:scale\(\.97\)\}/);
+  assert.doesNotMatch(page.replace(/@media \(hover:hover\) and \(pointer:fine\)\{[^{}]*\{[^}]*\}\}/g, ""), /\.gk-btn:hover|\.gk-input:hover/, "hover only where hover exists");
+  assert.doesNotMatch(page, /transition-duration:0s!important/, "reduced motion keeps colour fades");
+  assert.match(page, /IntersectionObserver\(\(es\)=>\{if\(!es\[0\]\.isIntersecting\)return;io\.disconnect\(\);play\(\)\}/, "demos play on view");
 });

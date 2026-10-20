@@ -65,7 +65,7 @@ Then ask for what you need, the way you'd ask a colleague: "chart these usabilit
 | Design system | Spacing scale, type scale, contrast check, component states, layer stack, token table, table |
 | Handoff and QA | Spacing redline, QA checklist, before and after |
 | Motion | Motion timing, motion intent, transition spec, stagger, frame strip, easing tokens |
-| Processes | Handoffs, retries, cache hit or miss, traffic splits, incidents, loops, queues, rollouts, loading, states |
+| Processes | Rework loops, queues, rollouts, loading sequences, state machines |
 | Moving diagrams | Rework loop, funnel, state machine, work queue, staged rollout, loading sequence |
 
 See every one at **[traykov.cc/glyph-kit](https://traykov.cc/glyph-kit)**.

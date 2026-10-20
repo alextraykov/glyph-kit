@@ -56,8 +56,6 @@ Copy       ▎                         <1
 
 </details>
 
-**Motion:** Bars grow in order while values count up; an overflow marker flashes.
-
 **Watch for:** Sort first; one scale per document; value as text on every row.
 
 ## Comparison
@@ -166,8 +164,6 @@ Oct ██████████████████░░░░░░░�
 
 </details>
 
-**Motion:** Measured values fill first, then the projection extends them.
-
 **Watch for:** Say how the projection was made in the legend line.
 
 ## Meter
@@ -200,8 +196,6 @@ Oct ██████████████████░░░░░░░�
 ```
 
 </details>
-
-**Motion:** The meter fills with a blinking lead and marks overflow.
 
 **Watch for:** Over 100%, the bar stays full and the word over says the rest.
 
@@ -245,8 +239,6 @@ requests  ▁▁▁▂▃▃▃▅▆▅▇█  3 → 21
 ```
 
 </details>
-
-**Motion:** The line draws from left to right with a leading marker.
 
 **Watch for:** Print the first and last values; a sparkline has no axis.
 
@@ -314,8 +306,6 @@ wk 3     ░░▓▓▓▓▒▒░░
 
 </details>
 
-**Motion:** A diagonal sweep develops cells to their final levels.
-
 **Watch for:** Five levels is the limit people can tell apart.
 
 ## Calendar strip
@@ -361,8 +351,6 @@ wk 3     ░░▓▓▓▓▒▒░░
 ```
 
 </details>
-
-**Motion:** Days fill from left to right.
 
 **Watch for:** Put date labels over the exact columns they name.
 
@@ -473,8 +461,6 @@ Mar 98   ██  ▒▒
 
 </details>
 
-**Motion:** Rows appear in turn and their retention develops from left to right.
-
 **Watch for:** Newer cohorts have fewer periods; blank is not zero.
 
 ## Test result
@@ -523,6 +509,8 @@ The intervals don't overlap.
 
 </details>
 
+**Motion:** Only with readings over time: give `data` as `{ days, readings: [{ day, people, variants }] }`. The intervals narrow reading by reading, numbers change in place and the verdict switches when the intervals part. The still is the last reading, with a line saying how long they overlapped.
+
 **Watch for:** Overlapping intervals mean no clear difference yet; don't round that into a win.
 
 ## Metric panel
@@ -532,11 +520,15 @@ The intervals don't overlap.
 **Use it for** a few metrics at a glance with their trend and change.
 
 ```text
-weekly active        ▁▂▄▃▅█   1010  ▲ 23%
-time to first chart  █▇▃▁    6 min  ▼ 30%
-support tickets      ▃▁▄█       45  ▲ 13%
+metric                trend      now   change
 
-                              SAMPLE DATA
+weekly active         ▁▂▄▃▅█    1010   ▲ 23%
+
+time to first chart   █▇▃▁     6 min   ▼ 30%
+
+support tickets       ▃▁▄█        45   ▲ 13%
+
+                                  SAMPLE DATA
 ```
 
 *Weekly health. weekly active: 1010. time to first chart: 6.4 min. support tickets: 45*
@@ -582,7 +574,5 @@ support tickets      ▃▁▄█       45  ▲ 13%
 ```
 
 </details>
-
-**Motion:** Trends draw in a stagger while their values count up.
 
 **Watch for:** Up isn't always good: time and tickets should go down. Say which way is better.

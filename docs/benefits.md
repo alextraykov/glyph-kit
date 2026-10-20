@@ -9,7 +9,7 @@ What the kit is good for, measured on its own 48 example specs, and what it isn'
 | Fast to compute | Median **4.0 μs** to generate a figure in Node; the slowest kind took 27.5 μs. Nothing runs on a GPU and nothing is drawn to pixels. |
 | Small | Median **354 bytes** as text. The same figure as a PNG screenshot (2× density, cropped to the figure) has a median of **22.8 KB**, about 65× larger. As a self-contained HTML page: median 6.2 KB, most of it the shared stylesheet. |
 | Image tokens | Those PNGs cost **76–918 image tokens** each (median 297) by Anthropic's formula, ⌈width ÷ 28⌉ × ⌈height ÷ 28⌉, whatever the figure says. |
-| Text tokens | **Not measured yet**: counting needs an API key (`ANTHROPIC_API_KEY`), which this run didn't have. A rough estimate (`scripts/tokens.mjs`: one token per block or box character, one per run of spaces, one per four other characters) puts these figures at a median of about **114** tokens, and **84** in compact form. That's a guess, not a claim: block characters are rare and three bytes each, so a dense figure can cost more as text than as an image. |
+| Text tokens | **Not measured yet**: counting needs an API key (`ANTHROPIC_API_KEY`), which this run didn't have. A rough estimate (`scripts/tokens.mjs`: one token per block or box character, one per run of spaces, one per four other characters) puts these figures at a median of about **123** tokens, and **87** in compact form. That's a guess, not a claim: block characters are rare and three bytes each, so a dense figure can cost more as text than as an image. |
 
 Selected rows:
 

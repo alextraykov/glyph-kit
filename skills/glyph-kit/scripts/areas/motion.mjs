@@ -1,8 +1,8 @@
-import { motionMotionTiming, motionTransitionSpec, motionStagger, motionFilmstrip } from "../motion/motion.mjs";
 // Motion: intent, timing, transitions, choreography, frames and easing tokens.
 import { checks } from "../guard.mjs";
 import { BOX, EASINGS, clamp, cut, gantt, join, len, padEnd, padStart, ruler, velocity } from "../core.mjs";
-import { LAYOUT, capRows, fitLabels } from "../layout.mjs";
+import { LAYOUT, capRows, fitLabels, stack } from "../layout.mjs";
+import { framesAtTime, readingOrder, rulerFill, speedOverTime, timeline } from "../arrive.mjs";
 
 const bez = (p1, p2, t) => 3 * (1 - t) * (1 - t) * t * p1 + 3 * (1 - t) * t * t * p2 + t * t * t;
 /** Progress (0..1, may overshoot) of a cubic-bezier at time x (0..1). */
@@ -28,13 +28,18 @@ export function motionTiming(rows, { maxWidth = LAYOUT.maxWidth } = {}) {
   const labelW = Math.max(0, ...labels.map(len));
   const names = capped.rows.map((r) => cut(r.easingName ?? curveText(r.easing), 18));
   const nameW = Math.max(0, ...names.map(len));
-  const rulerWidth = Math.max(8, Math.min(20, maxWidth - labelW - nameW - 22));
+  const rulerWidth = Math.max(8, Math.min(20, maxWidth - labelW - nameW - 26));
+  // A blank row between tracks, so each ruler and speed curve reads on its own.
+  const tracks = capped.rows.map(
+    (r, i) => `${padEnd(labels[i], labelW)}  ▕${ruler(r.ms, { cells: rulerWidth })}▏  ${padStart(String(r.ms), 4)}ms   ${padEnd(names[i], nameW)}   ${velocity(r.easing)}`
+  );
   return join([
-    ...capped.rows.map(
-      (r, i) => `${padEnd(labels[i], labelW)} ▕${ruler(r.ms, { cells: rulerWidth })}▏ ${padStart(String(r.ms), 4)}ms  ${padEnd(names[i], nameW)}  ${velocity(r.easing)}`
-    ),
+    `${" ".repeat(labelW + 2)}${padEnd("duration", rulerWidth + 2)}  ${" ".repeat(6)}   ${padEnd("easing", nameW)}   speed`,
+    "",
+    ...stack(tracks),
     ...(capped.note ? [capped.note] : []),
-    `${" ".repeat(labelW)} ${cut("0·········250········500ms", maxWidth - labelW - 1)}`
+    "",
+    `${" ".repeat(labelW + 2)} ${cut("0·········250········500ms", maxWidth - labelW - 3)}`
   ]);
 }
 
@@ -78,15 +83,15 @@ export function transitionSpec(tracks, { width = 30, maxWidth = LAYOUT.maxWidth 
   const scale = Math.max(...tracks.map((t) => t.end));
   const chart = gantt(
     tracks.map((t) => ({ label: t.property, start: t.start, end: t.end })),
-    { scale, width }
+    { scale, width, airy: false }
   ).split("\n");
   const rowW = Math.max(...chart.slice(0, -1).map(len));
   return join([
-    ...tracks.map((t, i) => {
+    ...stack(tracks.map((t, i) => {
       const room = Math.floor((maxWidth - rowW - 6) / 2);
       if (room < 1) throw new Error("Use shorter transition labels to leave room for the values.");
       return `${padEnd(chart[i], rowW)}   ${cut(String(t.from), room)} → ${cut(String(t.to), room)}`;
-    }),
+    })),
     ...(capped.note ? [capped.note] : []),
     chart.at(-1)
   ]);
@@ -96,12 +101,13 @@ export function transitionSpec(tracks, { width = 30, maxWidth = LAYOUT.maxWidth 
  * A staggered entrance. { count, duration, delay, curve? } — with `curve`, delays follow it
  * (bunched at the start for an ease-out), otherwise they are evenly spaced.
  */
+/** When each item starts, in ms: evenly spaced, or along `curve` when one is given. */
+export const staggerStarts = ({ count, delay, curve }) =>
+  Array.from({ length: count }, (_, i) => Math.round(curve && count > 1 ? progressAt(curve, i / (count - 1)) * delay * (count - 1) : i * delay));
+
 export function stagger({ count, duration, delay, curve, label = "item" }, { width = 40 } = {}) {
   if (!Number.isInteger(count) || count < 1 || count > LAYOUT.rowsMax) throw new Error(`A stagger supports between 1 and ${LAYOUT.rowsMax} items.`);
-  const span = delay * (count - 1);
-  const starts = Array.from({ length: count }, (_, i) =>
-    Math.round(curve && count > 1 ? progressAt(curve, i / (count - 1)) * span : i * delay)
-  );
+  const starts = staggerStarts({ count, delay, curve });
   const tracks = starts.map((s, i) => ({ label: `${label} ${i + 1}`, start: s, end: s + duration }));
   return join([
     gantt(tracks, { scale: Math.max(...tracks.map((t) => t.end)), width }),
@@ -131,31 +137,33 @@ export function easingTable(tokens) {
   const curves = capped.rows.map((t) => cut(curveText(t.curve), 32));
   const nameW = Math.max(0, ...names.map(len));
   const curveW = Math.max(0, ...curves.map(len));
-  const useW = Math.max(4, LAYOUT.maxWidth - nameW - curveW - 14);
-  const lines = capped.rows.map((t, i) => `${padEnd(names[i], nameW)}  ${velocity(t.curve)}  ${padEnd(curves[i], curveW)}  ${cut(t.use ?? "", useW)}`);
-  return join(capped.note ? [...lines, capped.note] : lines);
+  const speedW = len(velocity(capped.rows[0]?.curve));
+  const useW = Math.max(4, LAYOUT.maxWidth - nameW - speedW - curveW - 9);
+  // A header names the speed curve, and a blank row sits between tokens so the curves don't touch.
+  const head = `${padEnd("token", nameW)}   ${padEnd("speed", speedW)}   ${padEnd("curve", curveW)}   use for`;
+  const lines = capped.rows.map((t, i) => `${padEnd(names[i], nameW)}   ${velocity(t.curve)}   ${padEnd(curves[i], curveW)}   ${cut(t.use ?? "", useW)}`);
+  return join([head, "", ...stack(lines), ...(capped.note ? [capped.note] : [])]);
 }
 
 export const kinds = {
   motionTiming: { label: "Motion timing",
-    check: (d) => [checks.notNegative(d, "ms", "duration")], render: motionTiming, summary: (r) => r.map((x) => `${x.label}: ${x.ms}ms`).join(". ") },
+    check: (d) => [checks.notNegative(d, "ms", "duration")], render: motionTiming, arrive: (lines) => rulerFill(lines), summary: (r) => r.map((x) => `${x.label}: ${x.ms}ms`).join(". ") },
   intentCard: {
     label: "Motion intent",
     render: intentCard,
+    // The card reads in order; then its timing ruler fills over the real duration.
+    arrive: (lines) => { const read = readingOrder(lines); return rulerFill(lines, { base: (r, col, ch) => read(r, col, ch) }); },
     summary: (m) => `${m.purpose}. ${m.trigger}. ${m.ms}ms. Reduced motion: ${m.reduced}`
   },
   transitionSpec: {
     label: "Transition spec",
     check: (d) => [checks.notNegative(d, "start"), checks.ordered(d, ["start", "end"], "it should end after it starts")],
     render: transitionSpec,
+    arrive: timeline,
     summary: (t) => t.map((x) => `${x.property} ${x.from} to ${x.to}, ${x.start} to ${x.end}ms`).join(". ")
   },
-  stagger: { label: "Stagger", render: stagger, summary: (s) => `${s.count} items, ${s.duration}ms each.` },
-  filmstrip: { label: "Frame strip", render: filmstrip, summary: (f) => `Position on each of ${f.frames} frames with ${curveText(f.easing ?? "ease-out")}.` },
-  easingTable: { label: "Easing tokens", render: easingTable, summary: (t) => t.map((x) => x.name).join(", ") }
+  stagger: { label: "Stagger", render: stagger, arrive: timeline, summary: (s) => `${s.count} items, ${s.duration}ms each.` },
+  filmstrip: { label: "Frame strip", render: filmstrip, arrive: framesAtTime, summary: (f) => `Position on each of ${f.frames} frames with ${curveText(f.easing ?? "ease-out")}.` },
+  easingTable: { label: "Easing tokens", render: easingTable, arrive: (lines) => speedOverTime(lines), summary: (t) => t.map((x) => x.name).join(", ") }
 };
 
-kinds.motionTiming.motion = (data, options) => motionMotionTiming(data, options, kinds.motionTiming.render);
-kinds.transitionSpec.motion = (data, options) => motionTransitionSpec(data, options, kinds.transitionSpec.render);
-kinds.stagger.motion = (data, options) => motionStagger(data, options, kinds.stagger.render);
-kinds.filmstrip.motion = (data, options) => motionFilmstrip(data, options, kinds.filmstrip.render);

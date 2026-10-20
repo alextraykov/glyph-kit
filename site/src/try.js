@@ -13,7 +13,7 @@
 import { body, label } from "./kit/render/text.mjs";
 import { classify } from "./kit/render/paint.mjs";
 import { LIVE } from "./kit/live/kinds.mjs";
-import { animate as animateSpec, moves, stillGrid } from "./kit/motion.mjs";
+import { animate as animateSpec, stillGrid } from "./kit/motion.mjs";
 import { KINDS } from "./kit/registry.mjs";
 import { autoplay } from "./kit/live/play.mjs";
 import { cellsFromGrid, cellsFromText, fillFrame, planBuild, shimmerFrame, skeleton, toHtml } from "./showcase-core.mjs";
@@ -710,14 +710,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
 
   // ── Export ───────────────────────────────────────────────────────────────────────────────────
   const canExport = () => Boolean(shown) && stage.dataset.state === "figure" && !busy;
-  const motionToggle = document.querySelector("[data-try-motion]");
   const syncExport = () => {
-    if (motionToggle) {
-      motionToggle.hidden = !shown || !moves(shown.result.spec.kind);
-      motionToggle.disabled = busy;
-      motionToggle.textContent = shown?.result.mode === "moving" ? "Still" : "Play";
-      motionToggle.setAttribute("aria-pressed", String(shown?.result.mode === "moving"));
-    }
     if (!exportEl) return;
     const ok = canExport();
     exportEl.toggleAttribute("data-disabled", !ok);
@@ -792,18 +785,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
       return false;
     });
   };
-  motionToggle?.addEventListener("click", () => {
-    if (!shown || busy || !moves(shown.result.spec.kind)) return;
-    const motion = shown.result.mode !== "moving";
-    const result = { ...shown.result, spec: { ...shown.result.spec, motion }, mode: motion ? "moving" : "still" };
-    show(result, shown.heading, { build: false });
-    if (!thread.versions.length) startThread(result, null, "Started from this figure.");
-    else {
-      thread.versions[thread.current] = { ...thread.versions[thread.current], ...result };
-      writeThread(thread);
-    }
-    setEditing(result);
-  });
+;
   const restore = () => {
     if (shown) return show(shown.result, shown.heading, { build: false });
     // Nothing built yet: put the example back so the preview isn't left as a skeleton.

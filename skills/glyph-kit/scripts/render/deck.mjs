@@ -6,14 +6,16 @@
 //   { type: "title", title, subtitle?, byline? }   { type: "section", kicker?, title }
 //   { type: "statement", kicker?, text }
 // present: {
-//   command?: "glyph-kit render usage.json",  // types in as a terminal command before the figure prints
+//   command?: "glyph-kit render usage.json",  // shown as a command line above the figure
 //   steps?: [{ lines: [from, to], say: "…" }], // camera stops: zoom to those lines (0-based), caption below
 //   flag?: "x |fails",                         // lines matching this pattern flash twice after printing
 //   notes?: "…",                               // presenter notes (press N)
 //   kicker?: "…"                               // the small label above the title
 // }
+// A type with an arrival order (scripts/arrive.mjs) comes in by that order instead of line by line,
+// starting just after the slide opens.
 // Keys: → / space / click step forward, ← back, Home / End, N notes, F full screen. The address keeps
-// the slide and step (#3.2). Reduced motion: nothing types or prints, the camera cuts. Printing gives
+// the slide and step (#3.2). Reduced motion: nothing prints, the camera cuts. Printing gives
 // one page per slide in its final state.
 import { FONT_CSS } from "./font.mjs";
 import { resolve } from "../registry.mjs";
@@ -21,6 +23,7 @@ import { BASE_CSS, PLAY_JS, esc, fragment, tokensCss } from "./html.mjs";
 import { PAINT_CSS, paintLine } from "./paint.mjs";
 import { PALETTES, SPACING } from "./themes.mjs";
 import { body, label } from "./text.mjs";
+import { ARRIVE_CSS, arriveLines } from "./arrive.mjs";
 import { moves, stillText } from "../motion.mjs";
 import { inlineMotion } from "../live/html.mjs";
 
@@ -36,9 +39,9 @@ body{color:var(--gk-deck-ink)}
 .gk-slide h2{margin:6px 0 0;font:600 60px/1.05 var(--gk-font);letter-spacing:-.025em;max-width:24ch}
 .gk-lead{margin:14px 0 0;max-width:60ch;color:var(--gk-deck-muted);font:400 26px/1.4 var(--gk-font)}
 .gk-view{position:relative;overflow:hidden;min-height:0}
-.gk-world{position:absolute;left:0;top:0;transform-origin:0 0;transition:transform 700ms cubic-bezier(.2,0,0,1)}
+.gk-world{position:absolute;left:0;top:0;transform-origin:0 0;transition:transform 450ms cubic-bezier(.32,.72,0,1)}
 .gk-fig{margin:0;font:20px/${SPACING.figureLine} var(--gk-mono);font-variant-ligatures:none;letter-spacing:0;color:var(--gk-deck-ink)}
-.gk-ln{display:block;width:max-content;min-height:${SPACING.figureLine}em;white-space:pre;transition:opacity 400ms ease}
+.gk-ln{display:block;width:max-content;min-height:${SPACING.figureLine}em;white-space:pre;transition:opacity 450ms cubic-bezier(.32,.72,0,1)}
 .gk-cmd{display:block;width:max-content;margin-bottom:.6em;color:var(--gk-deck-muted);white-space:pre}
 .gk-cmd b{color:var(--gk-deck-ink);font-weight:400}
 .gk-dim .gk-ln:not(.is-focus),.gk-dim .gk-cmd{opacity:.2}
@@ -65,9 +68,13 @@ body{color:var(--gk-deck-ink)}
 .gk-hint{position:fixed;right:16px;top:12px;margin:0;color:var(--gk-deck-muted);font:12px var(--gk-mono)}
 @keyframes gk-type{from{clip-path:inset(0 100% 0 0)}to{clip-path:inset(0 0 0 0)}}
 @keyframes gk-flash{0%,49%{background:var(--gk-deck-flag);color:var(--gk-deck-bg)}50%,100%{background:transparent}}
-.is-printing .gk-ln,.is-printing .gk-cmd,.is-typing{animation:gk-type var(--d,160ms) steps(var(--n,18),end) both;animation-delay:var(--at,0ms)}
+.is-printing .gk-ln{animation:gk-type var(--d,160ms) steps(var(--n,18),end) both;animation-delay:var(--at,0ms)}
 .is-printing .gk-ln.is-flag{animation:gk-type 160ms steps(18,end) both var(--at,0ms),gk-flash 260ms steps(1) calc(var(--at,0ms) + 220ms) 2}
-@media (prefers-reduced-motion:reduce){.gk-world{transition:none}.is-printing .gk-ln,.is-printing .gk-cmd,.is-typing,.is-printing .gk-ln.is-flag{animation:none!important;clip-path:none}}
+@keyframes gk-wait{from,to{visibility:hidden}}
+.gk-fig{--gk-arrive-ink:var(--gk-deck-data);--gk-arrive-paper:var(--gk-deck-bg)}
+.gk-fig--arrive.is-printing .gk-ln,.gk-fig--arrive.is-printing .gk-ln.is-flag{animation:none}
+${ARRIVE_CSS}
+@media (prefers-reduced-motion:reduce){.gk-world{transition:none}.is-printing .gk-ln,.is-printing .gk-ln.is-flag{animation:none!important;clip-path:none}}
 @media print{
   @page{size:1600px 900px;margin:0}
   html,body{overflow:visible;height:auto}
@@ -92,16 +99,20 @@ export const THEMES = Object.fromEntries(
   ])
 );
 
-const lines = (text) => text.split("\n").map((l, i) => `<span class="gk-ln" data-l="${i}">${paintLine(l) || " "}</span>`).join("");
+// A type with an arrival order comes in by its own order; any other prints line by line.
+const lines = (text, arrived) =>
+  text.split("\n").map((l, i) => `<span class="gk-ln" data-l="${i}">${(arrived ? arrived[i] : paintLine(l)) || " "}</span>`).join("");
 
 function figureSlide(spec, i, total, map, kicker) {
   const def = resolve(spec);
   const p = spec.present ?? {};
   const screen = spec.kind === "screen" || spec.kind === "responsive";
   const moving = spec.motion && moves(spec.kind);
+  const text = moving ? stillText(spec) : body(spec);
+  const arrived = !screen && !moving ? arriveLines(spec, text) : null;
   const fig = screen
     ? `<div class="gk-proto">${fragment(spec, { map })}</div>`
-    : `<pre lang="${esc(spec.lang ?? "en")}" class="gk-fig" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(moving ? stillText(spec) : body(spec))}</pre>`;
+    : `<pre lang="${esc(spec.lang ?? "en")}" class="gk-fig${arrived ? " gk-fig--arrive" : ""}" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(text, arrived)}</pre>`;
   return `<section class="gk-slide" data-steps="${esc(JSON.stringify(p.steps ?? []))}" data-flag="${esc(p.flag ?? "")}" aria-roledescription="slide" aria-label="${i + 1} of ${total}">
 <header><p class="gk-kicker">${esc(kicker || def.label)}</p><h2 class="gk-title">${esc(spec.title ?? def.label)}</h2>${spec.intent ? `<p class="gk-lead">${esc(spec.intent)}</p>` : ""}</header>
 <div class="gk-view"><div class="gk-world">${fig}</div></div>
@@ -169,38 +180,26 @@ function runtime(motionApi) {
     world.style.transform = `translate(${(vw - w * k) / 2 - x * k}px, ${target ? (vh - h * k) / 2 - y * k : 0}px) scale(${k})`;
   };
 
-  // Type the title, type the command, print the figure line by line, flash flagged lines.
+  // Print the figure line by line (or in its arrival order), then flash flagged lines.
   const play = (s) => {
     if (reduce) return;
     if (s.querySelector(".gk-motion-src")) return;
-    const title = s.querySelector(".gk-title");
-    if (title) {
-      const n = title.textContent.length;
-      title.style.setProperty("--n", n);
-      title.style.setProperty("--d", `${Math.min(n * 22, 420)}ms`);
-      title.classList.remove("is-typing");
-      void title.offsetWidth;
-      title.classList.add("is-typing");
-    }
+    // The title and any command are there at once; the figure carries the arrival.
     const fig = s.querySelector(".gk-fig");
     if (!fig) return;
     const flag = s.dataset.flag ? new RegExp(s.dataset.flag) : null;
-    let at = 320;
-    const cmd = fig.querySelector(".gk-cmd");
-    if (cmd) {
-      const n = cmd.textContent.length;
-      cmd.style.setProperty("--n", n);
-      cmd.style.setProperty("--d", `${n * 34}ms`);
-      cmd.style.setProperty("--at", `${at}ms`);
-      at += n * 34 + 280;
-    }
-    fig.querySelectorAll(".gk-ln").forEach((l, i) => {
+    const at = 120;
+    const arriving = fig.classList.contains("gk-fig--arrive");
+    fig.style.setProperty("--base", `${at}ms`);
+    fig.classList.remove("is-arriving");
+    if (!arriving) fig.querySelectorAll(".gk-ln").forEach((l, i) => {
       l.style.setProperty("--at", `${at + i * 42}ms`);
       l.classList.toggle("is-flag", Boolean(flag && flag.test(l.textContent)));
     });
     fig.classList.remove("is-printing");
     void fig.offsetWidth;
     fig.classList.add("is-printing");
+    if (arriving) fig.classList.add("is-arriving");
   };
 
   const decode = (t) => t.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&amp;/g, "&");
@@ -307,7 +306,7 @@ export function renderDeck(deck, { title: titleOverride, map } = {}) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(d.title)}</title>
 ${map?.stylesheet ? `<link rel="stylesheet" href="${esc(map.stylesheet)}">` : ""}
-<style>${FONT_CSS}${tokensCss(map)}:root{${Object.entries(theme).map(([k, v]) => `--gk-${k}:${v}`).join(";")}}${BASE_CSS}${DECK_CSS}${PAINT_CSS("--gk-deck-")}</style>
+<style>${FONT_CSS()}${tokensCss(map)}:root{${Object.entries(theme).map(([k, v]) => `--gk-${k}:${v}`).join(";")}}${BASE_CSS}${DECK_CSS}${PAINT_CSS("--gk-deck-")}</style>
 </head>
 <body>
 <main class="gk-deck"><div class="gk-stagebox">

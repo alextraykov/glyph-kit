@@ -162,7 +162,8 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .kind h3 { font-size: var(--px-22); }
 .kind__when { color: var(--text-soft); font-size: .92rem; }
 .kind__watch { color: var(--text-caption); font-size: .85rem; }
-.jump { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); padding-block: var(--space-4); border-block: var(--hairline) solid var(--ink); font-size: .9rem; }
+.jump { position: sticky; top: var(--top-h, 57px); z-index: 1; display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); padding-block: var(--space-3); border-block: var(--hairline) solid var(--ink); background: var(--paper); font-size: .9rem; }
+.jump a[aria-current="true"] { text-decoration: underline; text-underline-offset: 4px; }
 .jump a { text-decoration: none; }
 .jump a:hover { text-decoration: underline; }
 
@@ -430,7 +431,6 @@ td.is-number .data__input { text-align: right; font-variant-numeric: tabular-num
 footer { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); }
 
 /* Playback uses the same quiet, square control as the kit toolbar. */
-.motion-toggle { min-height: var(--tap); padding: 0 var(--space-3); border: var(--hairline) solid var(--line); border-radius: 0; background: transparent; color: var(--ink); font: 400 var(--px-11)/1 var(--pixel); cursor: pointer; }
-.motion-toggle:hover { border-color: var(--ink); }
-.motion-toggle[hidden] { display: none; }
-@media print { .motion-toggle { display: none; } }
+/* Areas land below the sticky menu; on phones the menu is one row that scrolls sideways. */
+.jump ~ .section { scroll-margin-top: calc(var(--top-h, 57px) + 72px); }
+@media (max-width: 640px) { .jump { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; white-space: nowrap; } }
