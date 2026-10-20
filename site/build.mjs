@@ -165,7 +165,7 @@ const figure = (spec, { arrive = true } = {}) => {
   return `<pre class="grid-figure"${arrived ? " data-arrive" : ""} role="img" aria-label="${esc(label(spec))}">${arrived ? arrived.join("\n") : paint(text)}</pre>`;
 };
 const stage = (cols, rows, pre) => `<div class="stage" style="--cols:${cols};--rows:${rows}">${pre}</div>`;
-const liveFigure = (mv, depth) => `<figure class="demo"${depth ? ` data-depth="${depth}"` : ""}>
+const liveFigure = (mv) => `<figure class="demo">
   <div class="demo__bar"><span class="label">${esc(mv.spec.title)}</span><span class="label">Sample data</span></div>
   ${stage(mv.cols, mv.rows, `<pre class="grid-figure live" role="img" aria-label="${esc(mv.summary)}" data-live="${mv.id}">${mv.html}</pre>`)}
   <figcaption>${esc(mv.spec.intent)}</figcaption>
@@ -494,7 +494,7 @@ const home = page({
   description: "A skill for Claude Code and Codex. Lightweight docs and diagrams that people and AI can both read.",
   content: `
 <section class="hero" aria-labelledby="title">
-  <div class="hero__inner" data-depth="0.5" data-lag>
+  <div class="hero__inner">
     <p class="kicker">Free · MIT · ${kindCount} types · v${plugin.version}</p>
     <h1 id="title">Glyph kit.</h1>
     <div class="hero__body">

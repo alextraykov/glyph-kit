@@ -1,20 +1,29 @@
-// Stepped parallax: layers drift at their own rate as the page scrolls, in 4 px steps (steps inside,
-// never a glide), the same way the rest of the site moves. Elements opt in with data-depth: 0 stays
-// with the page, higher drifts more. Behind the hero, a dither field drifts slower than everything and
-// darkens one shade at a time (░ → ▒ → ▓) as you scroll, like the press.
+// Stepped parallax on section headings only: the kicker and the two-beat h2 settle down into place in
+// 4 px steps (steps inside, never a glide) as the heading comes up from the bottom of the screen, then stay
+// put. Only those two lines move, by a transform, so nothing else on the page shifts, no layout moves
+// and no gap opens between sections. Behind the hero, a dither field darkens one shade at a time
+// (░ → ▒ → ▓) as you scroll, like the press; it does not drift.
 // Off for reduced motion; without scripts nothing moves and everything sits where the layout puts it.
 const STEP = 4; // px
-const MAX = 64; // px, under the 72 px between sections, so no layer reaches the next one
+const MAX = 16; // px, well inside the 72 px between sections
+const SETTLE = 0.75; // headings are in place once their middle passes three quarters down the screen
 const RAMP = " ░▒▓";
 const reduce = matchMedia("(prefers-reduced-motion: reduce)");
 // Phones and touch screens scroll with momentum; stepped layers fight it, so nothing moves there.
 const touch = matchMedia("(max-width: 900px), (pointer: coarse)");
 
-// data-lag: starts in place and trails the scroll (the hero name); otherwise drift around the middle.
-// data-settle: starts higher and settles into place as it reaches the middle of the screen, so it never
-// moves toward the content under it. Only headings and the hero move: never a cell inside a grid, so
-// the grid's dividers stay lined up.
-const layers = [...document.querySelectorAll("[data-depth]")].map((el) => ({ el, depth: Number(el.dataset.depth) || 0, lag: el.hasAttribute("data-lag"), settle: el.hasAttribute("data-settle"), y: 0 }));
+// A heading opts in with data-depth and data-settle; it is measured as a whole (and never moves itself),
+// but only its kicker and h2 are shifted, so links and notes in the heading stay where they are.
+const layers = [...document.querySelectorAll("[data-depth][data-settle]")].map((el) => ({
+  el,
+  depth: Number(el.dataset.depth) || 0,
+  text: [...el.querySelectorAll(":scope > .kicker, :scope > h2")],
+  y: 0,
+}));
+const place = (layer, y) => {
+  layer.y = y;
+  for (const t of layer.text) t.style.transform = y ? `translate3d(0, ${y}px, 0)` : "";
+};
 const hero = document.querySelector(".hero");
 
 // The dither field: a grid of cells whose shade follows a fixed pattern plus the scroll.
@@ -24,7 +33,7 @@ if (hero) {
   pre.className = "hero__field";
   pre.setAttribute("aria-hidden", "true");
   hero.prepend(pre);
-  field = { pre, level: -1, cols: 0, rows: 0, y: 0 };
+  field = { pre, level: -1, cols: 0, rows: 0 };
 }
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
 const drawField = (level) => {
@@ -48,25 +57,18 @@ const sizeField = () => {
   field.level = -1;
 };
 
-const quantise = (v) => Math.round(Math.max(-MAX, Math.min(MAX, v)) / STEP) * STEP;
 let queued = false;
 const update = () => {
   queued = false;
   const vh = innerHeight;
   for (const layer of layers) {
     const rect = layer.el.getBoundingClientRect();
-    if (rect.bottom < -MAX || rect.top > vh + MAX) continue;
-    // Where it would sit without this transform, relative to the middle of the screen.
-    const centre = rect.top - layer.y + rect.height / 2;
-    const y = layer.lag
-      ? Math.round(Math.min(scrollY * layer.depth, vh / 2) / STEP) * STEP
-      : layer.settle
-        ? quantise(Math.min(0, -(centre - vh / 2) * layer.depth))
-        : quantise(-(centre - vh / 2) * layer.depth);
-    if (y !== layer.y) {
-      layer.y = y;
-      layer.el.style.transform = `translate3d(0, ${y}px, 0)`;
-    }
+    if (rect.bottom < 0 || rect.top > vh + MAX) continue;
+    // Below the settle line the text sits up to MAX higher, in the space above the section, and comes down
+    // into place; it never moves toward the content under it.
+    const below = rect.top + rect.height / 2 - vh * SETTLE;
+    const y = -Math.round(Math.max(0, Math.min(MAX, below * layer.depth)) / STEP) * STEP || 0;
+    if (y !== layer.y) place(layer, y);
   }
   if (field) {
     const progress = Math.max(0, Math.min(1, scrollY / Math.max(1, hero.offsetHeight + 300)));
@@ -74,11 +76,6 @@ const update = () => {
     if (level !== field.level) {
       field.level = level;
       drawField(level);
-    }
-    const y = Math.round((scrollY * 0.62) / STEP) * STEP;
-    if (y !== field.y) {
-      field.y = y;
-      field.pre.style.transform = `translate3d(0, ${y}px, 0)`;
     }
   }
 };
@@ -92,17 +89,12 @@ const queue = () => {
 const still = () => reduce.matches || touch.matches;
 const start = () => {
   if (still()) {
-    layers.forEach((layer) => {
-      layer.y = 0;
-      layer.el.style.transform = "";
-    });
+    layers.forEach((layer) => place(layer, 0));
     if (field) {
       // Reduced motion hides the field; on touch screens it stays, drawn once and not moving.
       field.pre.hidden = reduce.matches;
       if (!reduce.matches) {
         sizeField();
-        field.y = 0;
-        field.pre.style.transform = "";
         drawField(0);
       }
     }
