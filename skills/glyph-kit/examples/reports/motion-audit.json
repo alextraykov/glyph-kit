@@ -152,7 +152,7 @@
                 0.15,
                 1
               ],
-              "use": "overshoots, then settles"
+              "use": "overshoots, settles"
             }
           ]
         }
@@ -200,7 +200,7 @@
       "title": "Handing off the hero",
       "takeaway": "The marketing hero drifted all the time; the product grid mostly holds still.",
       "text": [
-        "Both versions were recorded for 60 seconds at the same size, and every line position was logged on every frame."
+        "Both versions were recorded for 60 seconds at the same size, and every line position was logged on every frame. In the product, the vertical lines moved in 17 separate pushes."
       ],
       "figures": [
         {
@@ -214,7 +214,7 @@
               "a": 1,
               "aText": "100%",
               "b": 0.23,
-              "bText": "23%, in 17 pushes"
+              "bText": "23%"
             },
             {
               "label": "row lines moving",

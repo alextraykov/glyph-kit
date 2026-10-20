@@ -105,6 +105,51 @@ const stats = {
 // The cost study: the kit against text drawn by hand and HTML/JS, in Claude Code and through the API.
 const study = JSON.parse(readFileSync(join(root, "docs/cost-study.json"), "utf8"));
 const usd = (n) => `$${n.toFixed(2)}`;
+const mv = study.claudeCode.medians.moving;
+const times = (r) => `${r >= 10 ? Math.round(r) : r.toFixed(1)}×`;
+const secs = (n) => (n >= 90 ? `${(n / 60).toFixed(0)} min` : `${Math.round(n)} s`);
+const thousands = (n) => `${(n / 1000).toFixed(1)}k`;
+// The study's medians, drawn by the kit: each figure, the kit against HTML/JS.
+// Output: the same audit spec in each format, read from the files the site serves.
+const AUDIT = join(root, "site/public/examples/motion-audit");
+const kb = (file) => { const n = statSync(join(AUDIT, file)).size; return n < 1024 ? `${n} B` : `${Math.round(n / 1024)} KB`; };
+const lines = (file, n) => esc(readFileSync(join(AUDIT, file), "utf8").split("\n").slice(0, n).join("\n"));
+const OUTPUTS = [
+  { id: "html", name: "Report page", to: "html", file: "motion-audit.html", view: "frame", what: "A cover, a summary, numbered sections and figures, in Departure Mono with the figures as text.", preview: '<iframe src="/examples/motion-audit/motion-audit.html" title="The motion audit as a report page" loading="lazy"></iframe>' },
+  { id: "pdf", name: "PDF", to: "pdf", file: "motion-audit.pdf", view: "pages", what: "The same report printed to A4 by a browser already on the machine.", preview: [1, 2, 3, 4, 5, 6].map((n) => `<img src="/images/audit-pdf-${n}.webp" alt="Page ${n} of the PDF" width="909" height="1287" loading="lazy">`).join("") },
+  { id: "deck", name: "Deck", run: "node scripts/glyph-kit.mjs deck decks/motion-audit.json > deck.html", file: "../decks/motion-audit.html", view: "frame", what: "The same figures as slides, one point each, stepping line by line. Click into it and use the arrow keys.", preview: '<iframe data-src="/examples/decks/motion-audit.html" title="The motion audit as a deck"></iframe>' },
+  { id: "md", name: "Markdown", to: "md", file: "motion-audit.md", view: "text", what: "For a README, a PR or a ticket. Figures are text blocks, so they diff and paste anywhere.", preview: `<pre class="outputs__text">${lines("motion-audit.md", 40)}</pre>` },
+  { id: "mdx", name: "MDX", to: "mdx", file: "motion-audit.mdx", view: "text", what: "For a docs site in Astro, Next.js or Docusaurus, with front matter from the report.", preview: `<pre class="outputs__text">${lines("motion-audit.mdx", 40)}</pre>` },
+  { id: "svg", name: "SVG", to: "svg", file: "svg/figure-02.svg", view: "image", what: "Each figure as a vector for Keynote, Figma or a post. No font needed: blocks become shapes.", preview: [2, 4, 5].map((n) => `<img src="/examples/motion-audit/svg/figure-0${n}.svg" alt="Figure ${n} of the audit as SVG" loading="lazy">`).join("") }
+];
+// Bento: six columns. Each area's cell takes the columns its example figure needs (2 up to 42 cells
+// wide, 3 up to 70, else 4), then cells are packed into full rows, in order where they fit; the last
+// cell of a row that can't be filled stretches to the edge.
+const figureWidth = (spec) => Math.max(...body(spec).split("\n").map((l) => [...l].length));
+const bento = (() => {
+  const queue = Object.entries(AREAS).map(([id, area]) => {
+    const w = figureWidth(examples[id][0]);
+    return { id, area, span: w <= 42 ? 2 : w <= 70 ? 3 : 4 };
+  });
+  const out = [];
+  while (queue.length) {
+    const row = [queue.shift()];
+    let left = 6 - row[0].span;
+    for (let i = 0; i < queue.length && left > 0; ) {
+      if (queue[i].span <= left) { left -= queue[i].span; row.push(queue.splice(i, 1)[0]); } else i++;
+    }
+    row.at(-1).span += left;
+    out.push(...row);
+  }
+  return out;
+})();
+const studyTable = {
+  kind: "table",
+  title: "The kit against HTML/JS in Claude Code",
+  source: `Glyph kit cost study, ${study.model} in Claude Code, medians of 3 runs, ${study.measured}`,
+  data: [["Kit / HTML/JS", "Time", "Cost", "Tokens written"], ...Object.entries(study.claudeCode.medians).filter(([k]) => k !== "note").map(([, r]) =>
+    [r.label, `${Math.round(r.kit.s)} s / ${Math.round(r.html.s)} s`, `${usd(r.kit.usd)} / ${usd(r.html.usd)}`, `${thousands(r.kit.out)} / ${thousands(r.html.out)}`])]
+};
 const kindCount = Object.keys(KINDS).length;
 const areaCount = Object.keys(AREAS).length;
 // Size of the release zip, when it has been packed (node scripts/pack.mjs); otherwise left out.
@@ -468,14 +513,15 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="cheap">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Cost</p><h2 id="cheap">Less to make. Less to send.</h2></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Against HTML/JS</p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>The same five figures asked of Claude Code twice: once with the kit, once written as HTML/JS. A funnel, a flow, a settings screen, a deck and a moving diagram.</p></header>
   <div class="stats">
-    <article class="stat"><p class="label">Fewer tokens written</p><strong>${Math.round(study.outputVsHtml.moving)}×</strong><p>For a moving diagram, against HTML/JS; about ${Math.round(study.outputVsHtml.funnel)}× for a funnel or a screen. Fewer on every run.</p></article>
-    <article class="stat"><p class="label">A moving diagram in Claude Code</p><strong>${usd(study.claudeCode.moving.kit)}</strong><p>Against ${usd(study.claudeCode.moving.html)} as HTML/JS. Cheaper on every run for a funnel, a screen, a deck and a moving diagram; for a simple flow, HTML cost less.</p></article>
-    <article class="stat"><p class="label">Ended correct</p><strong>${study.correct.kit} of ${study.correct.runs}</strong><p>Drawn by hand: ${study.correct.byHand}. HTML/JS: ${study.correct.html}.</p></article>
-    <article class="stat"><p class="label">To draw a figure</p><strong>${stats.us} μs</strong><p>Median, no browser.</p></article>
+    <article class="stat"><p class="label">Faster</p><strong>${times(mv.html.s / mv.kit.s)}</strong><p>A moving diagram took ${secs(mv.kit.s)} against ${secs(mv.html.s)}. The kit was faster at the median for all five.</p></article>
+    <article class="stat"><p class="label">Cheaper</p><strong>${times(mv.html.usd / mv.kit.usd)}</strong><p>${usd(mv.kit.usd)} against ${usd(mv.html.usd)} for a moving diagram, and cheaper on every run for four of the five. For a simple flow, HTML cost less.</p></article>
+    <article class="stat"><p class="label">Ended correct</p><strong>${study.correct.kit} of ${study.correct.runs}</strong><p>Every kit run ended correct. HTML/JS: ${study.correct.html}. Drawn by hand: ${study.correct.byHand}.</p></article>
+    <article class="stat"><p class="label">Fewer tokens written</p><strong>${times(study.outputVsHtml.moving)}</strong><p>For a moving diagram; about ${Math.round(study.outputVsHtml.funnel)}× for a funnel or a screen. Fewer on every run. A figure draws in ${stats.us} μs.</p></article>
   </div>
-  <p class="stats-note">${study.model}, ${study.runs} runs, ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}, at ${study.prices}.</p>
+  <div class="study">${figure(studyTable)}</div>
+  <p class="stats-note">${study.model} in Claude Code, ${study.runs} runs in all, ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}, at ${study.prices}.</p>
 </section>
 
 <section class="section" aria-labelledby="use">
@@ -494,7 +540,10 @@ const home = page({
 
 <section class="section" aria-labelledby="areas">
   <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Coverage</p><h2 id="areas">${kindCount} types. ${areaCount} areas.</h2><a class="text-link" href="/types/">Every type</a></header>
-  <div class="areas">${Object.entries(AREAS).map(([id, area], i) => `<article class="area"><h3>${esc(area.label)}</h3>${figure(examples[id][0])}<p>${Object.values(area.kinds).map((k) => esc(k.label)).join(" · ")}</p></article>`).join("\n")}</div>
+  <div class="bento">${bento.map(({ id, area, span }) => {
+    const n = Object.keys(area.kinds).length;
+    return `<article class="bento__cell" style="--span:${span}"><header class="bento__head"><h3><a href="/types/#${id}">${esc(area.label)}</a></h3><span class="label">${n} ${n === 1 ? "type" : "types"} →</span></header>${figure(examples[id][0])}<p>${Object.values(area.kinds).map((k) => esc(k.label)).join(" · ")}</p></article>`;
+  }).join("\n")}</div>
 </section>
 
 <section class="section" aria-labelledby="guard">
@@ -510,14 +559,15 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="formats">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">07 Output</p><h2 id="formats">One file, every format.</h2><p>A motion audit of Pave's front end.</p></header>
-  <div class="pages">${[1, 2, 3, 4].map((n) => `<img src="/images/report-page-${n}.webp" alt="${n === 1 ? "Report cover: the title, a summary of four findings and the contents." : `Report page ${n}: numbered sections with takeaways and figures.`}" width="909" height="1286" loading="lazy" decoding="async">`).join("")}</div>
-  <div class="links">
-    <a class="text-link" href="/examples/motion-audit/motion-audit.pdf">The report as a PDF</a>
-    <a class="text-link" href="/examples/decks/motion-audit">The same audit as a deck</a>
-    <a class="text-link" href="/examples/product/settings">A prototype from a text wireframe</a>
-    <a class="text-link" href="/examples/live/review-queue">A moving diagram on its own</a>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">07 Output</p><h2 id="formats">One spec, every format.</h2><p>A motion audit of Pave's front end, written once as a spec and exported six ways. Each tab is the real file.</p></header>
+  <div class="outputs" data-outputs>
+    <div class="outputs__tabs" role="tablist" aria-label="Formats">${OUTPUTS.map((o, i) => `<button type="button" role="tab" id="out-${o.id}" aria-controls="out-${o.id}-panel" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ""}><span>${esc(o.name)}</span><span class="label">${kb(o.file)}</span></button>`).join("")}</div>
+    ${OUTPUTS.map((o, i) => `<div class="outputs__panel" role="tabpanel" id="out-${o.id}-panel" aria-labelledby="out-${o.id}"${i ? " hidden" : ""}>
+      <div class="outputs__view outputs__view--${o.view}">${o.preview}</div>
+      <div class="outputs__meta"><p>${esc(o.what)}</p>${cmd(o.run ?? `node scripts/glyph-kit.mjs export motion-audit.json --to ${o.to}`)}<a class="text-link" href="/examples/${o.file.startsWith("../") ? o.file.slice(3) : `motion-audit/${o.file}`}" target="_blank" rel="noopener">Open ${esc(o.file.split("/").pop())}</a></div>
+    </div>`).join("\n    ")}
   </div>
+  <p class="outputs__also">Also from a spec: <a class="text-link" href="/examples/product/settings">a prototype from a text wireframe</a> · <a class="text-link" href="/examples/live/review-queue">a moving diagram on its own</a></p>
 </section>
 
 <section class="section support" aria-labelledby="support">
@@ -544,16 +594,16 @@ const kinds = page({
   description: `All ${kindCount} types of figure in Glyph kit, each with its motion and what it is for.`,
   content: `
 <header class="heading"><p class="kicker">Every type</p><h2>${kindCount} figures. Every one moves.</h2><p>Each is drawn here by the kit itself, from its example data. All of it is sample data, and it says so on the figure.</p></header>
-<nav class="jump" aria-label="Areas">${Object.entries(AREAS).map(([id, a]) => `<a href="#${id}">${esc(a.label)}</a>`).join("")}<a href="#moving">Moving diagrams</a></nav>
+<nav class="jump" aria-label="Show an area" data-filter><a href="#all">All ${kindCount}</a>${Object.entries(AREAS).map(([id, a]) => `<a href="#${id}">${esc(a.label)} <span class="jump__n">${Object.keys(a.kinds).length}</span></a>`).join("")}<a href="#moving">Moving diagrams</a></nav>
 ${Object.entries(AREAS).map(([id, area]) => {
   const seen = new Set();
   const specs = examples[id].filter((s) => (seen.has(s.kind) ? false : seen.add(s.kind)));
-  return `<section class="section" id="${id}" aria-labelledby="${id}-title">
+  return `<section class="section" id="${id}" data-area aria-labelledby="${id}-title">
   <header class="heading"><h2 id="${id}-title">${esc(area.label)}</h2><p>${esc(AREA_DOCS[id])}</p></header>
   <div class="areas">${specs.map((s) => `<article class="kind"><h3>${esc(KINDS[s.kind].label)}</h3>${loopIds[s.kind] ? '<span class="label">Loops</span>' : ""}<p class="kind__when">${esc(KIND_DOCS[s.kind]?.when ?? "")}</p>${loopIds[s.kind] ? figure(s, { arrive: false }).replace('<pre class="grid-figure"', `<pre class="grid-figure" data-live="${loopIds[s.kind]}"`) : figure(s)}${KIND_DOCS[s.kind]?.traps ? `<p class="kind__watch">Watch for: ${esc(KIND_DOCS[s.kind].traps)}</p>` : ""}</article>`).join("\n")}</div>
 </section>`;
 }).join("\n")}
-<section class="section" id="moving" aria-labelledby="moving-title">
+<section class="section" id="moving" data-area aria-labelledby="moving-title">
   <header class="heading"><h2 id="moving-title">Moving diagrams</h2><p>A process over time. Each plays on screen and keeps a still that makes the same point, for reduced motion, print and docs.</p></header>
   <div class="gallery">${moving.map((mv) => liveFigure(mv)).join("\n")}</div>
 </section>`

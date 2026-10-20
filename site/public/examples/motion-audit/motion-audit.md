@@ -20,9 +20,14 @@ Each place where something moves was scored on four things: duration, easing, th
 **Figure 1. Every stylesheet read, not sampled**
 
 ```text
-┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐     ┌──────────┐
-│ 350 stylesheets │ ──► │ 8 auditor shards │ ──► │ 750 motion sites │ ──► │ 47 fixes │
-└─────────────────┘     └──────────────────┘     └──────────────────┘     └──────────┘
+┌─────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│ 350 stylesheets │ ──► │ 8 auditor shards │ ──► │ 750 motion sites │
+└─────────────────┘     └──────────────────┘     └──────────────────┘
+│
+▼
+┌──────────┐
+│ 47 fixes │
+└──────────┘
 ```
 
 *Every stylesheet read, not sampled. 350 stylesheets, then 8 auditor shards, then 750 motion sites, then 47 fixes*
@@ -61,9 +66,13 @@ The duration ruler is 20 cells of 25 ms on a fixed 500 ms scale, so every findin
 **Figure 3. Toast enter: today and proposed**
 
 ```text
-today    ▕████████············▏  200ms  ease         ▅█▇▅▄▃▂▁
-proposed ▕██████··············▏  150ms  reveal-ease  █▆▅▄▃▂▁▁
-         0·········250········500ms
+          duration                         easing        speed
+
+today     ▕████████············▏   200ms   ease          ▅█▇▅▄▃▂▁
+
+proposed  ▕██████··············▏   150ms   reveal-ease   █▆▅▄▃▂▁▁
+
+           0·········250········500ms
 ```
 
 *Toast enter: today and proposed. today: 200ms. proposed: 150ms*
@@ -75,12 +84,19 @@ Source: Pave motion audit, Quickbase, 2026. Figures as published in the write-up
 Speed over time for each easing in the audit.
 
 ```text
-linear      ████████  linear                            progress only
-ease        ▅█▇▅▄▃▂▁  ease                              the browser default
-ease-out    █▇▇▆▅▄▃▂  ease-out
-decelerate  █▅▄▃▂▂▂▁  cubic-bezier(0, 0, 0.2, 1)        most UI
-reveal      █▆▅▄▃▂▁▁  cubic-bezier(0.33, 1, 0.68, 1)    entrances
-spring      ██▅▁▁▁▁▁↺  cubic-bezier(0.44, 1.3, 0.15, 1)  overshoots, then settles
+token        speed      curve                              use for
+
+linear       ████████   linear                             progress only
+
+ease         ▅█▇▅▄▃▂▁   ease                               the browser default
+
+ease-out     █▇▇▆▅▄▃▂   ease-out
+
+decelerate   █▅▄▃▂▂▂▁   cubic-bezier(0, 0, 0.2, 1)         most UI
+
+reveal       █▆▅▄▃▂▁▁   cubic-bezier(0.33, 1, 0.68, 1)     entrances
+
+spring       ██▅▁▁▁▁▁↺   cubic-bezier(0.44, 1.3, 0.15, 1)   overshoots, settles
 ```
 
 *Eight characters per curve. linear, ease, ease-out, decelerate, reveal, spring*
@@ -95,8 +111,11 @@ Source: Pave motion audit, Quickbase, 2026. Figures as published in the write-up
 
 ```text
 .toast slide-in ██████████······························  0ms–240ms
+
 .dot pulse      ████████████████████████████████████████→ 0ms, repeats
+
 .icon pop       ·····██████████·························  120ms–370ms
+
 .toast fade     ········██████··························  200ms–360ms
                 0ms                 500ms              1s
 ```
@@ -109,7 +128,7 @@ Source: Pave motion audit, Quickbase, 2026. Figures as published in the write-up
 
 **The marketing hero drifted all the time; the product grid mostly holds still.**
 
-Both versions were recorded for 60 seconds at the same size, and every line position was logged on every frame.
+Both versions were recorded for 60 seconds at the same size, and every line position was logged on every frame. In the product, the vertical lines moved in 17 separate pushes.
 
 **Figure 6. The hero cut against the product**
 
@@ -117,13 +136,13 @@ The marketing hero drifted all the time; the product grid mostly holds still.
 
 ```text
 MEASURE                HERO CUT          PRODUCT
-vertical lines moving  ██████████ 100%   ██░░░░░░░░ 23%, in 17 pushes
+vertical lines moving  ██████████ 100%   ██░░░░░░░░ 23%
 row lines moving       ░░░░░░░░░░ 0%     █░░░░░░░░░ 11%
 a drawing's build      ███░░░░░░░ 2.7 s  ████████░░ 7.7 s
 a drawing's exit       █░░░░░░░░░ 0.8 s  █████░░░░░ 4.6 s
 ```
 
-*The hero cut against the product. vertical lines moving: 100% against 23%, in 17 pushes. row lines moving: 0% against 11%. a drawing's build: 2.7 s against 7.7 s. a drawing's exit: 0.8 s against 4.6 s*
+*The hero cut against the product. vertical lines moving: 100% against 23%. row lines moving: 0% against 11%. a drawing's build: 2.7 s against 7.7 s. a drawing's exit: 0.8 s against 4.6 s*
 
 Source: Hero animation handoff, 60-second recordings of both versions, every line position logged per frame.
 

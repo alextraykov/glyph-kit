@@ -72,9 +72,29 @@ document.addEventListener("click", (event) => {
 });
 document.querySelector("[data-try]")?.addEventListener("submit", () => track("Build figure"));
 
-// The Types page's area menu stays under the top bar and marks the area in view.
+// The area menu stays under the top bar. On the Types page it shows one area at a time (or all);
+// on How to use it marks the section in view.
 const jump = document.querySelector(".jump");
-if (jump) {
+if (jump?.hasAttribute("data-filter")) {
+  const top = document.querySelector(".top");
+  const setTop = () => document.documentElement.style.setProperty("--top-h", `${top?.offsetHeight ?? 0}px`);
+  setTop();
+  addEventListener("resize", setTop);
+  const areas = [...document.querySelectorAll("[data-area]")];
+  const show = () => {
+    const id = location.hash.slice(1);
+    const pick = areas.some((s) => s.id === id) ? id : "all";
+    areas.forEach((s) => (s.hidden = pick !== "all" && s.id !== pick));
+    jump.querySelectorAll("a").forEach((a) => a.setAttribute("aria-current", String(a.getAttribute("href") === `#${pick}`)));
+    return pick;
+  };
+  addEventListener("hashchange", () => {
+    show();
+    // Back to the top of the list, under the menu, whichever area was picked.
+    scrollTo({ top: jump.offsetTop - (top?.offsetHeight ?? 0) - 1 });
+  });
+  show();
+} else if (jump) {
   const top = document.querySelector(".top");
   const setTop = () => document.documentElement.style.setProperty("--top-h", `${top?.offsetHeight ?? 0}px`);
   setTop();
@@ -89,3 +109,26 @@ if (jump) {
   addEventListener("scroll", mark, { passive: true });
   mark();
 }
+
+// Output: one tab per format. A frame loads its file the first time its tab is shown.
+document.querySelectorAll("[data-outputs]").forEach((box) => {
+  const tabs = [...box.querySelectorAll('[role="tab"]')];
+  const select = (tab, focus) => {
+    tabs.forEach((t) => {
+      const on = t === tab;
+      t.setAttribute("aria-selected", String(on));
+      t.tabIndex = on ? 0 : -1;
+      const panel = document.getElementById(t.getAttribute("aria-controls"));
+      panel.hidden = !on;
+      if (on) panel.querySelectorAll("iframe[data-src]").forEach((f) => { f.src = f.dataset.src; f.removeAttribute("data-src"); });
+    });
+    if (focus) tab.focus();
+  };
+  tabs.forEach((t, i) => {
+    t.addEventListener("click", () => select(t));
+    t.addEventListener("keydown", (e) => {
+      const step = { ArrowDown: 1, ArrowRight: 1, ArrowUp: -1, ArrowLeft: -1 }[e.key];
+      if (step) { e.preventDefault(); select(tabs[(i + step + tabs.length) % tabs.length], true); }
+    });
+  });
+});

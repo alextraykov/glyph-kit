@@ -3,6 +3,7 @@ title: "Pave motion audit"
 description: "Every place in the front end where something moves, read and scored against one motion language."
 author: "Alexander Traykov"
 date: "2026"
+lang: "en"
 ---
 
 
@@ -150,7 +151,7 @@ The duration ruler is 20 cells of 25 ms on a fixed 500 ms scale, so every findin
         0.15,
         1
       ],
-      "use": "overshoots, then settles"
+      "use": "overshoots, settles"
     }
   ],
   "title": "Eight characters per curve",
@@ -199,7 +200,7 @@ The duration ruler is 20 cells of 25 ms on a fixed 500 ms scale, so every findin
 
 **The marketing hero drifted all the time; the product grid mostly holds still.**
 
-Both versions were recorded for 60 seconds at the same size, and every line position was logged on every frame.
+Both versions were recorded for 60 seconds at the same size, and every line position was logged on every frame. In the product, the vertical lines moved in 17 separate pushes.
 
 <Glyph theme="paper" spec={{
   "kind": "compare",
@@ -209,7 +210,7 @@ Both versions were recorded for 60 seconds at the same size, and every line posi
       "a": 1,
       "aText": "100%",
       "b": 0.23,
-      "bText": "23%, in 17 pushes"
+      "bText": "23%"
     },
     {
       "label": "row lines moving",

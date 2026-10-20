@@ -4,7 +4,101 @@
   "runs": 195,
   "prices": "published prices",
   "kit": "0.2.0 before the skill optimisation (9979bd3)",
-  "outputVsHtml": { "funnel": 5.2, "settings": 5.44, "deck": 3.5, "moving": 13.34, "flow": 1.7, "fewerEveryRun": true },
-  "claudeCode": { "moving": { "kit": 0.1566, "html": 0.563 }, "kitCheaperEveryRun": ["funnel", "settings", "deck", "moving"], "htmlCheaperEveryRun": ["flow"] },
-  "correct": { "runs": 65, "kit": 65, "byHand": 61, "html": 64 }
+  "outputVsHtml": {
+    "funnel": 5.2,
+    "settings": 5.44,
+    "deck": 3.5,
+    "moving": 13.34,
+    "flow": 1.7,
+    "fewerEveryRun": true
+  },
+  "claudeCode": {
+    "moving": {
+      "kit": 0.1566,
+      "html": 0.563
+    },
+    "kitCheaperEveryRun": [
+      "funnel",
+      "settings",
+      "deck",
+      "moving"
+    ],
+    "htmlCheaperEveryRun": [
+      "flow"
+    ],
+    "medians": {
+      "note": "Medians of 3 runs each in Claude Code 2.1.238: time in seconds, cost in US dollars, tokens written",
+      "funnel": {
+        "label": "Funnel",
+        "kit": {
+          "s": 29.7,
+          "usd": 0.1239,
+          "out": 1781
+        },
+        "html": {
+          "s": 88.1,
+          "usd": 0.3317,
+          "out": 9261
+        }
+      },
+      "flow": {
+        "label": "Flow",
+        "kit": {
+          "s": 36.7,
+          "usd": 0.1997,
+          "out": 3393
+        },
+        "html": {
+          "s": 47.8,
+          "usd": 0.1361,
+          "out": 5758
+        }
+      },
+      "settings": {
+        "label": "Settings screen",
+        "kit": {
+          "s": 18.4,
+          "usd": 0.1129,
+          "out": 1735
+        },
+        "html": {
+          "s": 63.8,
+          "usd": 0.1986,
+          "out": 9443
+        }
+      },
+      "deck": {
+        "label": "Deck",
+        "kit": {
+          "s": 83.7,
+          "usd": 0.2877,
+          "out": 5202
+        },
+        "html": {
+          "s": 145.7,
+          "usd": 0.4644,
+          "out": 18233
+        }
+      },
+      "moving": {
+        "label": "Moving diagram",
+        "kit": {
+          "s": 26.3,
+          "usd": 0.1566,
+          "out": 2093
+        },
+        "html": {
+          "s": 238.8,
+          "usd": 0.563,
+          "out": 27919
+        }
+      }
+    }
+  },
+  "correct": {
+    "runs": 65,
+    "kit": 65,
+    "byHand": 61,
+    "html": 64
+  }
 }
