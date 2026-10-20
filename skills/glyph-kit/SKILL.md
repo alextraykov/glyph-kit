@@ -10,82 +10,79 @@ metadata:
 
 # Glyph kit
 
-Every artifact is a **spec** (`{ kind, title, intent, source, data, options, motion, lang }`) rendered by a generator with no dependencies. Text is the first fidelity; the same spec becomes an HTML prototype, a deck, and through the project's design-system map, production code.
+You write a **spec**, a small JSON object; a script with no dependencies draws it. The kit lays out every figure, so its output always lines up: never draw a figure by hand when a kind covers it.
 
-## Pick the area, read only its guide
-
-| The task is about | Read |
-|---|---|
-| Interviews, surveys, usability tests, quotes, journeys | `reference/areas/research.md` |
-| Funnels, retention, A/B results, metrics, everyday charts | `reference/areas/metrics.md` |
-| User flows with decisions, state machines, journey maps, sitemaps | `reference/areas/flows.md` |
-| Roadmaps, priorities, ownership, timelines, decisions | `reference/areas/planning.md` |
-| Screens: a single screen, an app shell, a card grid, list and detail, a modal | `reference/areas/wireframes.md` |
-| Tokens, scales, contrast, component states, layers | `reference/areas/systems.md` |
-| Redlines, QA checklists, before and after | `reference/areas/handoff.md` |
-| Motion intent, timing, transitions, stagger, easing | `reference/areas/motion.md` |
-| Processes that move: rework loops, queues, rollouts, loading, state machines | `reference/areas/process.md` |
-| A whole deliverable on one page: readout or one-pager, dashboard, PR summary, design review, status update | `reference/areas/layouts.md` |
-
-Each guide lists its kinds with when to use them, a real example, the spec that made it, and what to watch for. `node scripts/glyph-kit.mjs kinds` lists them all.
+Work in the user's folder, not this skill's, so specs and outputs land there. `<skill>` below is this skill's folder; file paths in this guide are relative to it.
 
 ## Make one
 
-1. Pick the kind from the area guide. Don't invent a new visual vocabulary per document.
-2. Write the spec as JSON, next to the document that uses it. Put real data in `data`, say where it came from in `source`, and say why the artifact exists in `intent`. When the data is in a file, point at it (`"data": "@results.csv"`) instead of copying numbers. **Never invent data.** If numbers are missing, ask for them. Only if the user wants a sketch anyway, start `source` with "Illustrative": the figure is then stamped SAMPLE DATA in every format. A spec with numbers and no source is refused.
-3. Render:
+1. **Pick the kind** from this table.
 
-   ```bash
-   node scripts/glyph-kit.mjs render spec.json --to markdown          # for docs, PRs, tickets
-   node scripts/glyph-kit.mjs render spec.json --to html --map design-system.map.json
-   node scripts/glyph-kit.mjs deck a.json b.json --title "Review"      # one HTML deck
+   | The task is about | Kinds |
+   |---|---|
+   | Interviews, surveys, usability tests, quotes | `likert` `themeMatrix` `affinity` `quoteCard` `taskStats` `emotionCurve` |
+   | Funnels, retention, A/B results, metrics, charts | `funnel` `cohort` `abResult` `metricPanel` `barChart` `compare` `forecast` `meter` `sparkline` `heatmap` `calendarStrip` |
+   | Flows with decisions, state machines, journeys, sitemaps | `flow` `branchFlow` `stateMachine` `journeyMap` `tree` |
+   | Roadmaps, priorities, ownership, timelines, decisions | `board` `impactEffort` `swimlane` `gantt` `statusKey` `decisionLog` |
+   | Screens: one screen, an app shell, a card grid, list and detail, a modal | `screen` `responsive` `appShell` `cardGrid` `listDetail` `modal` |
+   | Tokens, scales, contrast, component states, layers | `spacingScale` `typeScale` `contrast` `stateMatrix` `layerStack` `tokenTable` `table` |
+   | Redlines, QA checklists, before and after | `redline` `qaChecklist` `compare` |
+   | Motion intent, timing, transitions, stagger, easing | `motionTiming` `intentCard` `transitionSpec` `stagger` `filmstrip` `easingTable` |
+   | Work moving over time: rework loops, state machines, queues, rollouts, loading | `loop` `states` `queue` `rollout` `loading` |
+   | A whole deliverable on one page: readout, dashboard, PR summary, design review, status update | `readout` `dashboard` `prSummary` `designReview` `statusUpdate` |
+
+   Unsure between two? Read the area's guide, `reference/areas/<area>.md` (research, metrics, flows, planning, wireframes, systems, handoff, motion, process, layouts): it shows each kind drawn.
+2. **Get its data shape**: `node <skill>/scripts/glyph-kit.mjs guide <kind>` prints the kind's example spec and what to watch for. Copy that shape; don't read the scripts.
+3. **Write the spec** as JSON next to the document that uses it:
+
+   ```json
+   {
+     "kind": "funnel",
+     "title": "Signup to paid, last 30 days",
+     "intent": "Find the step where most people leave.",
+     "source": "Product analytics export, 2026-10-15",
+     "data": [{ "label": "Visited pricing", "value": 12400 }, { "label": "Paid", "value": 610 }]
+   }
    ```
 
-   Or import `scripts/render/*.mjs` in a build step or an MDX component and render at build time.
-   For a presentation, write a deck file (title, sections, specs with `present` steps) and run `node scripts/glyph-kit.mjs deck deck.json > deck.html`. See "Presenting: decks" in `reference/spec.md` and `examples/decks/export-review.json`.
-4. Put the conclusion in the sentence around the figure. The figure supports it; it doesn't replace it.
-5. Run the checks below.
+   Data comes from the user or their files (`"data": "@results.csv"` reads a file next to the spec), never from you. If numbers are missing, ask. Only if the user wants a sketch anyway, start `source` with "Illustrative": every format then carries a SAMPLE DATA stamp. A spec with numbers and no `source` is refused.
+4. **Render, fix, render again** in one command:
 
-For layout-only figures that no kind covers (a one-off diagram), draw by hand with the glyphs in `reference/characters.md` and run `scripts/lint.mjs` on the file.
+   ```bash
+   node <skill>/scripts/glyph-kit.mjs render spec.json --to markdown > figure.md
+   ```
 
-## Export
+   The kit refuses a spec it can't draw truthfully and says why in a sentence. Labels over the limit (usually 24 cells) are cut with "…", and the kit lists each one on stderr with its limit. Shorten those labels and render again: a figure with "…" loses words.
+5. **Put the conclusion in the sentence around the figure.** The figure supports it.
 
-`node scripts/glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--theme paper|ink|phosphor|gilt]` writes any form from a spec, a list, a deck or a report. When the output has to read like a finished document (a research readout, an audit, a design review), write a report file: a cover, a summary, numbered sections with a takeaway each, and figures. PDF and PNG use a Chromium browser already on the machine; the rest need nothing. Read `reference/export.md` before exporting.
+Kit output needs no further checking: frames close and widths fit by construction. Run `node <skill>/scripts/lint.mjs <file.md>` only on figures drawn by hand.
 
-## Moving diagrams
+## Other outputs
 
-When the point is a process over time (work flowing and coming back, people leaving a funnel, a queue backing up, a rollout and its guard, a state machine, a loading sequence), use a moving diagram: `node scripts/glyph-kit.mjs live spec.json --to html` writes one page that plays, with a still for reduced motion; `--to markdown` gives the still for docs and tickets. Every type moves in HTML and decks. Six processes keep moving: `loop`, `funnel`, `states`, `queue`, `rollout`, `loading`, and a test result (`abResult`) does too when its data has readings over time. Every other type arrives once, in the order that carries its point, then stays still. Read `reference/live.md` and `reference/areas/process.md` for their data. Say what the motion shows in the sentence next to it; the still must make the same point.
+Every command is `node <skill>/scripts/glyph-kit.mjs <command>`.
 
-## Going up in fidelity
+| Output | Command | Read first |
+|---|---|---|
+| Text, Markdown | `render spec.json [--to text\|markdown]` | nothing |
+| HTML page; a `screen` becomes a working prototype | `render spec.json --to html [--map design-system.map.json]` | `reference/fidelity.md` for prototypes and code |
+| Deck | `deck deck.json > deck.html` | `guide deck` |
+| Report (cover, summary, sections) | `export report.json --to html\|pdf` | `guide report` |
+| MDX, SVG, PNG, PDF of anything | `export <file> --to md\|mdx\|html\|svg\|png\|pdf` | `reference/export.md` |
+| Moving diagram: a process over time | `live spec.json --to html` (or `--to markdown` for its still) | `reference/live.md` |
+| Several layouts as one document | `export layouts.json --to html\|pdf`, a layout to a page | `reference/areas/layouts.md` |
 
-Read `reference/fidelity.md` before building a prototype or code from a spec, and `reference/spec.md` for the spec fields and the design-system map. The short version for production: use only components and tokens the map names, ask when the map has no entry, turn wireframe notes into behaviour, and implement the motion card's reduced-motion still.
+HTML outputs are self-contained (font, styles and, for moving pages, the player inlined): 40–200 KB. Don't read them back to check them; render the same spec `--to text` instead. PDF and PNG use a Chromium browser already on the machine; everything else needs nothing.
+
+When another agent or a later turn needs the figure, pass the spec (a few hundred bytes), not the drawing. If a drawing must go into a model's context, add `--compact` (plain ASCII, same layout).
 
 ## Rules
 
-0. **Ask, don't invent; pass specs, not drawings.** Data comes from the user or their files, never from you. Between steps, and when another agent or a later turn needs the figure, pass the spec (a few hundred bytes of JSON), not the drawing. Render only when a person will look at it. If a drawing must go into a model's context, use `--compact` (plain ASCII, same layout).
-1. **Every glyph has a referent**: a number, a state or a structure. Decoration goes.
-2. **One meaning per glyph per document.** `█` measured or done, `░` projected, empty scale or missing, `·` empty cell. Legends say so when it isn't obvious.
-3. **Numbers come from data** and are printed as text next to the glyphs.
-4. **A positive value never draws as empty**, and the empty part of a scale stays visible.
-5. **Show the source** under every figure with numbers.
-6. **No costume.** No green-on-black, glyph rain or scrambled headlines unless the product is a terminal.
-7. **Use any script for labels; keep drawing symbols measured.** Width counts cells, not string length: CJK takes two cells and graphemes stay whole. Set `lang` for casing and numbers. Read `reference/characters.md` for font and RTL limits.
-8. **Follow the layout rules** (`reference/layout.md`) for anything drawn by hand: two cells of padding inside a box, text centred in a box that shares a column's width, four cells between boxes, and `▓` only for what is current, measured or done. Structure is lines.
+1. **Every glyph has a referent**: a number, a state or a structure. No decoration, no green-on-black or glyph rain unless the product is a terminal.
+2. **One meaning per glyph per document.** `█` measured or done, `░` projected or the empty part of a scale, `·` an empty cell.
+3. **Numbers are printed as text** next to the glyphs, and every figure with numbers shows its source.
+4. **Labels may use any script.** Width is counted in cells: CJK takes two. Set `lang` for casing and number format. Font and right-to-left limits: `reference/characters.md`.
+5. **Every type moves in HTML and decks.** The processes and a test result with readings over time keep moving; every other type arrives once, in the order that carries its point, then stays still. Each keeps a still that makes the same point; it is what reduced motion, print and Markdown show. Say what the motion shows in the sentence next to it.
+6. **Drawing by hand** (only when no kind fits): use the glyphs in `reference/characters.md`, follow `reference/layout.md` (two cells of padding inside a box, four between boxes, at most 80 columns), then lint.
+7. **Going up in fidelity** (prototype, production code): use only the components and tokens the design-system map names, and ask when it has no entry. `reference/spec.md` describes the spec fields and the map.
 
-## Checks before handing over
-
-- [ ] `node scripts/lint.mjs <file.md>` passes: frames close, glyphs occupy their expected cell widths, no text touches its box. Read its token warnings.
-- [ ] Every figure with numbers has a real `source`, or says it is illustrative and carries the SAMPLE DATA stamp.
-- [ ] Every figure has a description: the Markdown and HTML renderers add one; plain text needs a sentence next to it.
-- [ ] Values appear as text, not only as lengths.
-- [ ] The font renders each glyph at its expected cell width (width check in `reference/characters.md`). If figures look misaligned where the user reads them, suggest Departure Mono (free, departuremono.com); never require a font.
-- [ ] Nothing wider than about 80 columns unless it scrolls in its own box.
-- [ ] Motion specs say what reduced motion shows.
-
-## Files
-
-- `reference/areas/*.md`: one guide per area (generated by `scripts/build-reference.mjs` from `scripts/docs.mjs` and `examples/`).
-- `reference/layout.md`, `reference/spec.md`, `reference/export.md`, `reference/live.md`, `reference/fidelity.md`, `reference/characters.md`.
-- `scripts/glyph-kit.mjs`: the command line. `scripts/core.mjs` and `scripts/areas/*.mjs`: the generators. `scripts/render/`: text, HTML, deck.
-- `scripts/lint.mjs`.
-- `templates/design-system.map.example.json`, `examples/` (moving diagrams, decks, a report, and `examples/product/` taken from spec to code). Each area guide carries the spec behind every figure it shows.
+If figures look misaligned where the user reads them, the font is drawing a glyph at the wrong width: suggest Departure Mono (free, departuremono.com), never require it.

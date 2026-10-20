@@ -5,6 +5,7 @@
 //                         (the file may hold one spec or a list of them)
 //   node glyph-kit.mjs deck <deck.json | a.json b.json …> [--title "Name"] [--map …]   (HTML to stdout)
 //   node glyph-kit.mjs kinds                                                  (lists every kind by area)
+//   node glyph-kit.mjs guide <kind | deck | report | spec>                    (one kind's example spec and notes)
 //   node glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme name]   (a moving diagram)
 //
 //   node glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme name] [--map map.json]
@@ -13,23 +14,13 @@
 // A spec is { "kind", "title"?, "intent"?, "source"?, "data", "options"? }. See reference/spec.md.
 // "data" can be "@file.csv" or "@file.json", read from next to the spec. Numbers need a "source".
 // --compact swaps shades and box characters for plain ASCII (for figures going into model context).
+// Labels cut to fit are listed on stderr, with the cells they had, so they can be shortened.
+// Each command loads only the modules it needs, so a call starts quickly.
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, dirname, extname, join } from "node:path";
-import { htmlToPdf, svgToPng } from "./render/export.mjs";
-import { renderMdx } from "./render/mdx.mjs";
-import { renderReport, reportMarkdown } from "./render/report.mjs";
-import { renderSvg } from "./render/svg.mjs";
-import { AREAS } from "./registry.mjs";
-import { renderDeck } from "./render/deck.mjs";
-import { renderHtml } from "./render/html.mjs";
-import { renderMarkdown, renderText } from "./render/text.mjs";
+import { fileURLToPath } from "node:url";
 import { loadData } from "./data.mjs";
-import { compact } from "./tokens.mjs";
-import { renderLiveHtml } from "./live/html.mjs";
-import { isLayout } from "./areas/layouts.mjs";
-import { renderLayoutPages } from "./render/page.mjs";
-import { LIVE, live, stillText } from "./live/kinds.mjs";
-import { moves } from "./motion.mjs";
+import { cutLog } from "./text.mjs";
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -59,12 +50,40 @@ try {
   const [command, ...files] = args;
 
   if (command === "kinds") {
+    const { AREAS } = await import("./registry.mjs");
+    const { moves } = await import("./motion.mjs");
     for (const [area, { label, kinds }] of Object.entries(AREAS)) {
       console.log(`${label} (${area})`);
       for (const [kind, def] of Object.entries(kinds)) console.log(`  ${kind.padEnd(16)} ${def.label}${moves(kind) ? " (moves)" : ""}`);
     }
+  } else if (command === "guide" && files.length === 1) {
+    // One kind's section of its area guide, without the drawing: what it's for, its spec, what to watch.
+    const ref = join(dirname(fileURLToPath(import.meta.url)), "../reference");
+    const section = (file, heading) => {
+      const lines = readFileSync(join(ref, file), "utf8").split("\n");
+      const start = lines.findIndex((l) => l === heading);
+      const end = lines.findIndex((l, i) => i > start && /^## /.test(l));
+      return lines.slice(start, end < 0 ? undefined : end).join("\n").trim();
+    };
+    const topics = { spec: ["spec.md", "## A spec"], deck: ["spec.md", "## Presenting: decks"], report: ["export.md", "## Reports"] };
+    const name = files[0];
+    if (topics[name]) console.log(section(...topics[name]));
+    else {
+      const { KINDS } = await import("./registry.mjs");
+      const def = KINDS[name];
+      if (!def) throw new Error(`Unknown kind "${name}". Known kinds: ${Object.keys(KINDS).join(", ")}; or guide deck, report, spec.`);
+      const lines = readFileSync(join(ref, "areas", `${def.area}.md`), "utf8").split("\n");
+      const at = lines.indexOf(`\`kind: "${name}"\``);
+      const start = lines.slice(0, at).findLastIndex((l) => /^## /.test(l));
+      const end = lines.findIndex((l, i) => i > at && /^## /.test(l));
+      const text = lines.slice(start, end < 0 ? undefined : end).join("\n");
+      console.log(text.replace(/```text\n[\s\S]*?```\n\n(\*[^\n]*\*\n\n)?/, "").replace(/<\/?details>(<summary>Spec<\/summary>)?\n\n/g, "").trim());
+    }
   } else if (command === "live" && files.length === 1) {
     // Moving diagrams: an HTML page that plays, or the still frame as text for docs and tickets.
+    const { compact } = await import("./tokens.mjs");
+    const { renderLiveHtml } = await import("./live/html.mjs");
+    const { live, stillText } = await import("./live/kinds.mjs");
     const spec = read(files[0]);
     const text = () => (compactText ? compact(stillText(spec)) : stillText(spec));
     const outs = {
@@ -76,16 +95,27 @@ try {
     if (!render) throw new Error(`--to must be html, text or markdown, not "${to}".`);
     process.stdout.write(render() + "\n");
   } else if (command === "render" && files.length === 1) {
+    const { renderMarkdown, renderText } = await import("./render/text.mjs");
+    const { renderHtml } = to === "html" ? await import("./render/html.mjs") : {};
     const spec = read(files[0]);
     const each = (fn) => (s) => (Array.isArray(s) ? s.map(fn).join("\n\n") : fn(s));
     const out = { text: each((s) => renderText(s, { compact: compactText })), markdown: each((s) => renderMarkdown(s, { compact: compactText })), html: (s) => renderHtml(s, { map, title }) }[to];
     if (!out) throw new Error(`--to must be text, markdown or html, not "${to}".`);
     process.stdout.write(out(spec) + (to === "html" ? "" : "\n"));
   } else if (command === "export" && files.length === 1) {
+    const { renderMarkdown } = await import("./render/text.mjs");
+    const { renderReport, reportMarkdown } = await import("./render/report.mjs");
+    const { renderMdx } = to === "mdx" ? await import("./render/mdx.mjs") : {};
+    const { renderSvg } = to === "svg" || to === "png" ? await import("./render/svg.mjs") : {};
+    const { htmlToPdf, svgToPng } = to === "pdf" || to === "png" ? await import("./render/export.mjs") : {};
+    const { renderDeck } = to === "html" || to === "pdf" ? await import("./render/deck.mjs") : {};
+    const { renderHtml } = to === "html" ? await import("./render/html.mjs") : {};
+    const { isLayout } = await import("./areas/layouts.mjs");
     const doc = read(files[0]);
     const kind = doc.sections ? "report" : doc.slides ? "deck" : "figures";
     // One layout, or a list of layouts: one document in the kit's type, a layout to a page.
     const layouts = [doc].flat().length > 0 && [doc].flat().every(isLayout);
+    const { renderLayoutPages } = layouts && (to === "html" || to === "pdf") ? await import("./render/page.mjs") : {};
     const specs = kind === "report" ? doc.sections.flatMap((s) => s.figures ?? []) : kind === "deck" ? doc.slides.filter((s) => s.kind) : [doc].flat();
     const stem = out ? out.replace(extname(out), "") : join(dirname(files[0]), basename(files[0], extname(files[0])));
     const write = (path, content) => (mkdirSync(dirname(path), { recursive: true }), writeFileSync(path, content), path);
@@ -110,13 +140,16 @@ try {
     console.log(written.join("\n"));
   } else if (command === "deck" && files.length) {
     // One deck file ({ title, slides }), or any number of spec files whose specs become slides.
+    const { renderDeck } = await import("./render/deck.mjs");
     const loaded = files.map(read);
     const deck = loaded.length === 1 && !Array.isArray(loaded[0]) && loaded[0].slides ? loaded[0] : loaded.flat();
     process.stdout.write(renderDeck(deck, { title, map }));
   } else {
-    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme paper|ink|phosphor|gilt]\n  glyph-kit.mjs kinds");
+    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme paper|ink|phosphor|gilt]\n  glyph-kit.mjs kinds\n  glyph-kit.mjs guide <kind | deck | report | spec>");
     process.exit(1);
   }
+  if (cutLog.size)
+    console.error(`Cut to fit, shown with "…" in the figure. Shorten these to the cells given:\n${[...cutLog].map(([text, cells]) => `  ${cells} cells: ${JSON.stringify(text)}`).join("\n")}`);
 } catch (error) {
   console.error(error.message);
   process.exit(1);

@@ -2,7 +2,9 @@
 
 Agree on paths, states and journeys before anyone designs a screen. Text flows are quick to change in review and easy for an agent to turn into routes and state.
 
-Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
+Kinds: `flow`, `branchFlow`, `stateMachine`, `journeyMap`, `tree`.
+
+Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
 
 ## Linear flow
 
@@ -18,23 +20,13 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
                                            SAMPLE DATA
 ```
 
-*Request to preview. request, then plan, then build, then preview*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "flow",
-  "data": [
-    "request",
-    "plan",
-    "build",
-    "preview"
-  ]
+  "title": "Request to preview",
+  "data": ["request", "plan", "build", "preview"]
 }
 ```
-
-</details>
 
 **Watch for:** Four or five boxes per row at most.
 
@@ -72,44 +64,27 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
                                         SAMPLE DATA
 ```
 
-*Export, with its failure paths. open export, then has data? if not, empty state, then choose format, then file ready? if not, show error, then download*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "branchFlow",
+  "title": "Export, with its failure paths",
   "data": [
-    {
-      "label": "open export"
-    },
+    { "label": "open export" },
     {
       "label": "has data",
       "type": "decision",
-      "no": {
-        "label": "empty state",
-        "to": "import data"
-      }
+      "no": { "label": "empty state", "to": "import data" }
     },
-    {
-      "label": "choose format"
-    },
+    { "label": "choose format" },
     {
       "label": "file ready",
       "type": "decision",
-      "no": {
-        "label": "show error",
-        "to": "choose format"
-      }
+      "no": { "label": "show error", "to": "choose format" }
     },
-    {
-      "label": "download"
-    }
+    { "label": "download" }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Every decision's no-branch needs a destination, or it's a dead end nobody designed.
 
@@ -134,39 +109,18 @@ The heavy box is the start. Ends: saved.
                                                                SAMPLE DATA
 ```
 
-*Saving a report. idle goes to saving on submit. saving goes to saved on ok. saving goes to failed on error. failed goes to saving on retry*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "stateMachine",
+  "title": "Saving a report",
   "data": [
-    {
-      "from": "idle",
-      "event": "submit",
-      "to": "saving"
-    },
-    {
-      "from": "saving",
-      "event": "ok",
-      "to": "saved"
-    },
-    {
-      "from": "saving",
-      "event": "error",
-      "to": "failed"
-    },
-    {
-      "from": "failed",
-      "event": "retry",
-      "to": "saving"
-    }
+    { "from": "idle", "event": "submit", "to": "saving" },
+    { "from": "saving", "event": "ok", "to": "saved" },
+    { "from": "saving", "event": "error", "to": "failed" },
+    { "from": "failed", "event": "retry", "to": "saving" }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Read the footer: it lists ends and unreachable states.
 
@@ -192,13 +146,10 @@ feeling     ▲ good            ▼▼ bad            ▲▲ great
                                                      SAMPLE DATA
 ```
 
-*First week. Discover: Finds the tool through a colleague. Import: Uploads a CSV with 4,000 rows. First chart: Picks a template and edits labels*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "journeyMap",
+  "title": "First week",
   "data": [
     {
       "label": "Discover",
@@ -222,8 +173,6 @@ feeling     ▲ good            ▼▼ bad            ▲▲ great
 }
 ```
 
-</details>
-
 **Watch for:** Thoughts are quotes or close paraphrases from research, not invented.
 
 ## Tree or sitemap
@@ -245,46 +194,25 @@ Settings
       SAMPLE DATA
 ```
 
-*Settings sitemap. Settings, Profile, Notifications, Email, Digest, Billing, Plan, Invoices*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "tree",
+  "title": "Settings sitemap",
   "data": {
     "name": "Settings",
     "children": [
-      {
-        "name": "Profile"
-      },
+      { "name": "Profile" },
       {
         "name": "Notifications",
-        "children": [
-          {
-            "name": "Email"
-          },
-          {
-            "name": "Digest"
-          }
-        ]
+        "children": [{ "name": "Email" }, { "name": "Digest" }]
       },
       {
         "name": "Billing",
-        "children": [
-          {
-            "name": "Plan"
-          },
-          {
-            "name": "Invoices"
-          }
-        ]
+        "children": [{ "name": "Plan" }, { "name": "Invoices" }]
       }
     ]
   }
 }
 ```
-
-</details>
 
 **Watch for:** Past three levels deep it stops being readable; collapse the rest.

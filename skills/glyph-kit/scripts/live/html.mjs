@@ -9,8 +9,10 @@ import { KINDS } from "../registry.mjs";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 // Scope each module while concatenating it, preserving imported aliases and re-exports.
-// The same browser bundle is used by standalone pages and moving deck slides.
-export function inlineMotion() {
+// The same browser bundle is used by standalone pages and moving deck slides. Given the kinds a page
+// plays, it carries only their areas' modules; without, every area.
+export function inlineMotion(only) {
+  const areas = only ? new Set(only.map((kind) => KINDS[kind]?.area).filter(Boolean)) : null;
   const modules = new Map();
   const chunks = [];
   const fields = (text, separator) => text.split(",").map((part) => part.trim()).filter(Boolean).map((part) => {
@@ -22,6 +24,9 @@ export function inlineMotion() {
     const id = modules.size;
     modules.set(url.href, id);
     let source = readFileSync(url, "utf8");
+    // The registry imports every area; a page that plays a few kinds keeps only theirs.
+    if (areas && url.pathname.endsWith("/scripts/registry.mjs"))
+      source = source.replace(/^import \{ kinds as (\w+) \} from "\.\/areas\/\w+\.mjs";\n/gm, (line, area) => (areas.has(area) ? line : "")).replace(/^  (\w+): \{ label: .*\n/gm, (line, area) => (areas.has(area) ? line : ""));
     const exports = [];
     source = source.replace(/^import\s*\{([^}]+)\}\s*from\s*["']([^"']+)["'];/gm, (_, names, path) => `const { ${fields(names, ": ")} } = __glyph[${add(new URL(path, url))}];`);
     source = source.replace(/^export\s*\{([^}]+)\}\s*from\s*["']([^"']+)["'];/gm, (_, names, path) => {
@@ -43,7 +48,7 @@ export function inlineMotion() {
   const motion = add(new URL("../motion.mjs", import.meta.url));
   const play = add(new URL("play.mjs", import.meta.url));
   const registry = add(new URL("../registry.mjs", import.meta.url));
-  const table = Object.keys(KINDS).filter((kind) => KINDS[kind].motion).map((kind) => `${JSON.stringify(kind)}: __glyph[${registry}].KINDS[${JSON.stringify(kind)}].motion`).join(", ");
+  const table = Object.keys(KINDS).filter((kind) => KINDS[kind].motion && (!areas || areas.has(KINDS[kind].area))).map((kind) => `${JSON.stringify(kind)}: __glyph[${registry}].KINDS[${JSON.stringify(kind)}].motion`).join(", ");
   return `const __glyph = {};\n${chunks.join("\n")}\nconst { animate, stillGrid, stillText } = __glyph[${motion}];\nconst { autoplay, player } = __glyph[${play}];\nconst MOTION = { ${table} };`;
 }
 
@@ -78,7 +83,7 @@ ${isSample(spec.source) ? `<p class="stamp">Sample data: made up to show the ide
 ${spec.source ? `<p>Source: ${esc(spec.source)}</p>` : ""}
 </figure>
 <script type="module">
-${inlineMotion()}
+${inlineMotion([spec.kind])}
 const spec = ${JSON.stringify(spec).replace(/</g, "\\u003c")};
 const { make, still } = animate(spec);
 const pre = document.querySelector("pre");

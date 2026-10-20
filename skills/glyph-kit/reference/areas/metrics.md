@@ -2,7 +2,9 @@
 
 Funnels, cohorts, test results and the everyday charts. Numbers are always printed next to the bars, so a reader or a model reads them instead of estimating lengths.
 
-Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
+Kinds: `barChart`, `compare`, `forecast`, `meter`, `sparkline`, `heatmap`, `calendarStrip`, `funnel`, `cohort`, `abResult`, `metricPanel`.
+
+Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
 
 ## Bar chart
 
@@ -19,42 +21,19 @@ Copy       ▎                         <1
                             SAMPLE DATA
 ```
 
-*Design QA issues by area. Design QA: 42. Handoff: 17. Research: 3. Copy: <1*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "barChart",
+  "title": "Design QA issues by area",
   "data": [
-    {
-      "label": "Design QA",
-      "value": 42,
-      "text": "42"
-    },
-    {
-      "label": "Handoff",
-      "value": 17,
-      "text": "17"
-    },
-    {
-      "label": "Research",
-      "value": 3,
-      "text": "3"
-    },
-    {
-      "label": "Copy",
-      "value": 0.4,
-      "text": "<1"
-    }
+    { "label": "Design QA", "value": 42, "text": "42" },
+    { "label": "Handoff", "value": 17, "text": "17" },
+    { "label": "Research", "value": 3, "text": "3" },
+    { "label": "Copy", "value": 0.4, "text": "<1" }
   ],
-  "options": {
-    "width": 24
-  }
+  "options": { "width": 24 }
 }
 ```
-
-</details>
 
 **Watch for:** Sort first; one scale per document; value as text on every row.
 
@@ -72,13 +51,10 @@ build time    ███░░░░░░░ 2.7 s  ████████░�
                                      SAMPLE DATA
 ```
 
-*Hero animation, before and after. lines moving: 100% against 23%. build time: 2.7 s against 7.7 s*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "compare",
+  "title": "Hero animation, before and after",
   "data": [
     {
       "label": "lines moving",
@@ -95,17 +71,9 @@ build time    ███░░░░░░░ 2.7 s  ████████░�
       "bText": "7.7 s"
     }
   ],
-  "options": {
-    "headers": [
-      "MEASURE",
-      "BEFORE",
-      "AFTER"
-    ]
-  }
+  "options": { "headers": ["MEASURE", "BEFORE", "AFTER"] }
 }
 ```
-
-</details>
 
 **Watch for:** Every row needs its own unit in the text; ten cells is enough.
 
@@ -125,29 +93,14 @@ Oct ██████████████████░░░░░░░�
                                               SAMPLE DATA
 ```
 
-*Usage against July. Jul: 1.0×. Aug: 2.3×. Sep: 4.1×. Oct: on pace for ~5× (part projected)*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "forecast",
+  "title": "Usage against July",
   "data": [
-    {
-      "label": "Jul",
-      "measured": 1,
-      "text": "1.0×"
-    },
-    {
-      "label": "Aug",
-      "measured": 2.3,
-      "text": "2.3×"
-    },
-    {
-      "label": "Sep",
-      "measured": 4.1,
-      "text": "4.1×"
-    },
+    { "label": "Jul", "measured": 1, "text": "1.0×" },
+    { "label": "Aug", "measured": 2.3, "text": "2.3×" },
+    { "label": "Sep", "measured": 4.1, "text": "4.1×" },
     {
       "label": "Oct",
       "measured": 2.5,
@@ -155,14 +108,9 @@ Oct ██████████████████░░░░░░░�
       "text": "on pace for ~5×"
     }
   ],
-  "options": {
-    "width": 36,
-    "max": 5
-  }
+  "options": { "width": 36, "max": 5 }
 }
 ```
-
-</details>
 
 **Watch for:** Say how the projection was made in the legend line.
 
@@ -178,24 +126,14 @@ Oct ██████████████████░░░░░░░�
                                       SAMPLE DATA
 ```
 
-*Seats used. 84 of 100*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "meter",
-  "data": {
-    "value": 84,
-    "cap": 100
-  },
-  "options": {
-    "width": 30
-  }
+  "title": "Seats used",
+  "data": { "value": 84, "cap": 100 },
+  "options": { "width": 30 }
 }
 ```
-
-</details>
 
 **Watch for:** Over 100%, the bar stays full and the word over says the rest.
 
@@ -211,34 +149,16 @@ requests  ▁▁▁▂▃▃▃▅▆▅▇█  3 → 21
                    SAMPLE DATA
 ```
 
-*Requests a day. requests from 3 to 21*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "sparkline",
+  "title": "Requests a day",
   "data": {
     "label": "requests",
-    "values": [
-      3,
-      4,
-      4,
-      6,
-      9,
-      7,
-      8,
-      12,
-      15,
-      14,
-      18,
-      21
-    ]
+    "values": [3, 4, 4, 6, 9, 7, 8, 12, 15, 14, 18, 21]
   }
 }
 ```
-
-</details>
 
 **Watch for:** Print the first and last values; a sparkline has no axis.
 
@@ -257,54 +177,21 @@ wk 3     ░░▓▓▓▓▒▒░░
         SAMPLE DATA
 ```
 
-*Activity by weekday. Density grid from blank (none) to full block (most).*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "heatmap",
+  "title": "Activity by weekday",
   "data": [
-    [
-      0,
-      0.2,
-      0.4,
-      0.9,
-      1,
-      0.6,
-      0
-    ],
-    [
-      0.1,
-      0.3,
-      0.5,
-      1,
-      0.8,
-      0.4,
-      0
-    ],
-    [
-      0,
-      0,
-      0.2,
-      0.6,
-      0.7,
-      0.3,
-      0.1
-    ]
+    [0, 0.2, 0.4, 0.9, 1, 0.6, 0],
+    [0.1, 0.3, 0.5, 1, 0.8, 0.4, 0],
+    [0, 0, 0.2, 0.6, 0.7, 0.3, 0.1]
   ],
   "options": {
-    "rowLabels": [
-      "wk 1",
-      "wk 2",
-      "wk 3"
-    ],
+    "rowLabels": ["wk 1", "wk 2", "wk 3"],
     "colLabels": "M T W T F S S "
   }
 }
 ```
-
-</details>
 
 **Watch for:** Five levels is the limit people can tell apart.
 
@@ -320,13 +207,10 @@ wk 3     ░░▓▓▓▓▒▒░░
                   SAMPLE DATA
 ```
 
-*Days the limit was hit. 5 of 15 days hit*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "calendarStrip",
+  "title": "Days the limit was hit",
   "data": [
     false,
     false,
@@ -344,13 +228,9 @@ wk 3     ░░▓▓▓▓▒▒░░
     true,
     false
   ],
-  "options": {
-    "gap": " "
-  }
+  "options": { "gap": " " }
 }
 ```
-
-</details>
 
 **Watch for:** Put date labels over the exact columns they name.
 
@@ -369,35 +249,18 @@ paid       █▌                                 610    5%  ▼ 27% kept
                                                         SAMPLE DATA
 ```
 
-*Signup to paid, last 30 days. visited: 12,400, signed up: 6,100, activated: 2,300, paid: 610*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "funnel",
+  "title": "Signup to paid, last 30 days",
   "data": [
-    {
-      "label": "visited",
-      "value": 12400
-    },
-    {
-      "label": "signed up",
-      "value": 6100
-    },
-    {
-      "label": "activated",
-      "value": 2300
-    },
-    {
-      "label": "paid",
-      "value": 610
-    }
+    { "label": "visited", "value": 12400 },
+    { "label": "signed up", "value": 6100 },
+    { "label": "activated", "value": 2300 },
+    { "label": "paid", "value": 610 }
   ]
 }
 ```
-
-</details>
 
 **Motion:** People fall through the steps and departures drift out to the side.
 
@@ -420,46 +283,17 @@ Mar 98   ██  ▒▒
                            SAMPLE DATA
 ```
 
-*Monthly retention. Jan: 100%, 62%, 48%, 41%. Feb: 100%, 70%, 55%. Mar: 100%, 58%*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "cohort",
+  "title": "Monthly retention",
   "data": [
-    {
-      "label": "Jan",
-      "size": 120,
-      "values": [
-        1,
-        0.62,
-        0.48,
-        0.41
-      ]
-    },
-    {
-      "label": "Feb",
-      "size": 140,
-      "values": [
-        1,
-        0.7,
-        0.55
-      ]
-    },
-    {
-      "label": "Mar",
-      "size": 98,
-      "values": [
-        1,
-        0.58
-      ]
-    }
+    { "label": "Jan", "size": 120, "values": [1, 0.62, 0.48, 0.41] },
+    { "label": "Feb", "size": 140, "values": [1, 0.7, 0.55] },
+    { "label": "Mar", "size": 98, "values": [1, 0.58] }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Newer cohorts have fewer periods; blank is not zero.
 
@@ -479,20 +313,12 @@ The intervals don't overlap.
                                                              SAMPLE DATA
 ```
 
-*New empty state, conversion to first chart. control: 4.1 (3.6 to 4.6). new empty state: 5.3 (4.8 to 5.9)*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "abResult",
+  "title": "New empty state, conversion to first chart",
   "data": [
-    {
-      "label": "control",
-      "value": 4.1,
-      "low": 3.6,
-      "high": 4.6
-    },
+    { "label": "control", "value": 4.1, "low": 3.6, "high": 4.6 },
     {
       "label": "new empty state",
       "value": 5.3,
@@ -500,14 +326,9 @@ The intervals don't overlap.
       "high": 5.9
     }
   ],
-  "options": {
-    "min": 3,
-    "max": 7
-  }
+  "options": { "min": 3, "max": 7 }
 }
 ```
-
-</details>
 
 **Motion:** Only with readings over time: give `data` as `{ days, readings: [{ day, people, variants }] }`. The intervals narrow reading by reading, numbers change in place and the verdict switches when the intervals part. The still is the last reading, with a line saying how long they overlapped.
 
@@ -531,48 +352,23 @@ support tickets       ▃▁▄█        45   ▲ 13%
                                   SAMPLE DATA
 ```
 
-*Weekly health. weekly active: 1010. time to first chart: 6.4 min. support tickets: 45*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "metricPanel",
+  "title": "Weekly health",
   "data": [
     {
       "label": "weekly active",
-      "values": [
-        820,
-        860,
-        900,
-        880,
-        940,
-        1010
-      ]
+      "values": [820, 860, 900, 880, 940, 1010]
     },
     {
       "label": "time to first chart",
-      "values": [
-        9.2,
-        8.8,
-        7.1,
-        6.4
-      ],
+      "values": [9.2, 8.8, 7.1, 6.4],
       "unit": " min"
     },
-    {
-      "label": "support tickets",
-      "values": [
-        40,
-        38,
-        41,
-        45
-      ]
-    }
+    { "label": "support tickets", "values": [40, 38, 41, 45] }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Up isn't always good: time and tickets should go down. Say which way is better.

@@ -2,7 +2,9 @@
 
 Turn interviews, surveys and usability tests into evidence a team can read in a PR or a ticket. Every figure keeps who said it and where it came from.
 
-Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
+Kinds: `likert`, `themeMatrix`, `affinity`, `quoteCard`, `taskStats`, `emotionCurve`.
+
+Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
 
 ## Likert answers
 
@@ -21,49 +23,17 @@ Would use it weekly           ██▒▒▒▒░░░░░│░░░░�
                                                               SAMPLE DATA
 ```
 
-*How people rated the export flow. Easy to find export: 2, 3, 2, 8, 5 from strongly disagree to strongly agree. Trust the numbers: 6, 5, 4, 3, 2 from strongly disagree to strongly agree. Would use it weekly: 1, 2, 5, 7, 5 from strongly disagree to strongly agree*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "likert",
+  "title": "How people rated the export flow",
   "data": [
-    {
-      "label": "Easy to find export",
-      "counts": [
-        2,
-        3,
-        2,
-        8,
-        5
-      ]
-    },
-    {
-      "label": "Trust the numbers",
-      "counts": [
-        6,
-        5,
-        4,
-        3,
-        2
-      ]
-    },
-    {
-      "label": "Would use it weekly",
-      "counts": [
-        1,
-        2,
-        5,
-        7,
-        5
-      ]
-    }
+    { "label": "Easy to find export", "counts": [2, 3, 2, 8, 5] },
+    { "label": "Trust the numbers", "counts": [6, 5, 4, 3, 2] },
+    { "label": "Would use it weekly", "counts": [1, 2, 5, 7, 5] }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Show the counts or percentages; never hide neutral answers, they change the story.
 
@@ -82,44 +52,20 @@ wants keyboard     ·  ■  ■  ·  ·  ·    2
                              SAMPLE DATA
 ```
 
-*Themes across six interviews. can't find export: 5 participants. distrusts totals: 3 participants. wants keyboard: 2 participants*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "themeMatrix",
+  "title": "Themes across six interviews",
   "data": [
     {
       "label": "can't find export",
-      "by": [
-        "P1",
-        "P2",
-        "P4",
-        "P5",
-        "P6"
-      ]
+      "by": ["P1", "P2", "P4", "P5", "P6"]
     },
-    {
-      "label": "distrusts totals",
-      "by": [
-        "P1",
-        "P3",
-        "P5"
-      ]
-    },
-    {
-      "label": "wants keyboard",
-      "by": [
-        "P2",
-        "P3"
-      ]
-    }
+    { "label": "distrusts totals", "by": ["P1", "P3", "P5"] },
+    { "label": "wants keyboard", "by": ["P2", "P3"] }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** A theme from one loud participant looks small here, which is the point. Keep participant codes, never names.
 
@@ -137,34 +83,18 @@ search       ■■····  2 of 6
                 SAMPLE DATA
 ```
 
-*Notes per cluster. export: 5. permissions: 3. search: 2*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "affinity",
+  "title": "Notes per cluster",
   "data": [
-    {
-      "label": "export",
-      "count": 5
-    },
-    {
-      "label": "permissions",
-      "count": 3
-    },
-    {
-      "label": "search",
-      "count": 2
-    }
+    { "label": "export", "count": 5 },
+    { "label": "permissions", "count": 3 },
+    { "label": "search", "count": 2 }
   ],
-  "options": {
-    "total": 6
-  }
+  "options": { "total": 6 }
 }
 ```
-
-</details>
 
 **Watch for:** State what was counted (notes, people, sessions) in the title.
 
@@ -185,13 +115,10 @@ search       ■■····  2 of 6
                                  SAMPLE DATA
 ```
 
-*Evidence for 'can't find export'. P4, operations lead said: I looked for export in settings, then gave up and screenshotted the table.*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "quoteCard",
+  "title": "Evidence for 'can't find export'",
   "data": {
     "quote": "I looked for export in settings, then gave up and screenshotted the table.",
     "who": "P4, operations lead",
@@ -200,8 +127,6 @@ search       ■■····  2 of 6
   }
 }
 ```
-
-</details>
 
 **Watch for:** Quote verbatim, cite the session and time, and never attach a real name without consent.
 
@@ -221,13 +146,10 @@ share a view     ├─│███─┤                      median 21s · 8/8
                                                          SAMPLE DATA
 ```
 
-*Usability test, eight people. find export: median 52 seconds, 5 of 8 finished. share a view: median 21 seconds, 8 of 8 finished*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "taskStats",
+  "title": "Usability test, eight people",
   "data": [
     {
       "label": "find export",
@@ -250,13 +172,9 @@ share a view     ├─│███─┤                      median 21s · 8/8
       "of": 8
     }
   ],
-  "options": {
-    "scale": 120
-  }
+  "options": { "scale": 120 }
 }
 ```
-
-</details>
 
 **Watch for:** With fewer than about eight people, report the range and the completions, not a confident median.
 
@@ -277,38 +195,18 @@ share a view     ├─│███─┤                      median 21s · 8/8
                                                     SAMPLE DATA
 ```
 
-*How the first week felt. discover +1, sign up 0, import -2, first chart +2, share +1*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "emotionCurve",
+  "title": "How the first week felt",
   "data": [
-    {
-      "label": "discover",
-      "score": 1
-    },
-    {
-      "label": "sign up",
-      "score": 0
-    },
-    {
-      "label": "import",
-      "score": -2
-    },
-    {
-      "label": "first chart",
-      "score": 2
-    },
-    {
-      "label": "share",
-      "score": 1
-    }
+    { "label": "discover", "score": 1 },
+    { "label": "sign up", "score": 0 },
+    { "label": "import", "score": -2 },
+    { "label": "first chart", "score": 2 },
+    { "label": "share", "score": 1 }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** The score is a judgement from research, say whose and from what.

@@ -2,7 +2,9 @@
 
 Measurements and checklists for handing work to engineering and checking what came back.
 
-Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
+Kinds: `redline`, `qaChecklist`, `compare`.
+
+Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
 
 ## Spacing redline
 
@@ -16,31 +18,17 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
                                                  SAMPLE DATA
 ```
 
-*Content width. 16, then content 320, then 16*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "redline",
+  "title": "Content width",
   "data": [
-    {
-      "label": "16",
-      "size": 16
-    },
-    {
-      "label": "content 320",
-      "size": 320
-    },
-    {
-      "label": "16",
-      "size": 16
-    }
+    { "label": "16", "size": 16 },
+    { "label": "content 320", "size": 320 },
+    { "label": "16", "size": 16 }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Widths are proportional but labels carry the real numbers.
 
@@ -62,40 +50,23 @@ x blocked      Icon set (waiting on brand)
                                  SAMPLE DATA
 ```
 
-*Design QA. 2 of 5 done.*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "qaChecklist",
+  "title": "Design QA",
   "data": [
-    {
-      "text": "Spacing matches the 8px scale",
-      "status": "done"
-    },
-    {
-      "text": "Focus states on every button",
-      "status": "progress"
-    },
-    {
-      "text": "Empty state copy",
-      "status": "todo"
-    },
+    { "text": "Spacing matches the 8px scale", "status": "done" },
+    { "text": "Focus states on every button", "status": "progress" },
+    { "text": "Empty state copy", "status": "todo" },
     {
       "text": "Icon set",
       "status": "blocked",
       "note": "waiting on brand"
     },
-    {
-      "text": "Dark theme contrast",
-      "status": "done"
-    }
+    { "text": "Dark theme contrast", "status": "done" }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Blocked items need a reason in words.
 
@@ -113,13 +84,10 @@ custom colours  ████░░░░░░ 18  ░░░░░░░░░�
                                 SAMPLE DATA
 ```
 
-*Before and after the spacing pass. off-scale gaps: 31 against 2. custom colours: 18 against 0*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "compare",
+  "title": "Before and after the spacing pass",
   "data": [
     {
       "label": "off-scale gaps",
@@ -136,16 +104,8 @@ custom colours  ████░░░░░░ 18  ░░░░░░░░░�
       "bText": "0"
     }
   ],
-  "options": {
-    "headers": [
-      "MEASURE",
-      "BEFORE",
-      "AFTER"
-    ]
-  }
+  "options": { "headers": ["MEASURE", "BEFORE", "AFTER"] }
 }
 ```
-
-</details>
 
 **Watch for:** Every row needs its own unit in the text; ten cells is enough.

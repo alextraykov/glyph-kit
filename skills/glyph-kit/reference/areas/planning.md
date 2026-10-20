@@ -2,7 +2,9 @@
 
 Roadmaps, priorities, ownership and decisions in a form that lives next to the work and diffs when plans change.
 
-Each kind below shows the spec that made its figure. Save one as spec.json and render it with `node scripts/glyph-kit.mjs render spec.json --to markdown` (or `--to html`).
+Kinds: `board`, `impactEffort`, `swimlane`, `gantt`, `statusKey`, `decisionLog`.
+
+Each kind shows its figure and the spec that made it. `node scripts/glyph-kit.mjs guide <kind>` prints one kind's section without the figure.
 
 ## Now, next, later
 
@@ -21,30 +23,17 @@ Each kind below shows the spec that made its figure. Save one as spec.json and r
                                                      SAMPLE DATA
 ```
 
-*Roadmap. now: Export to CSV, Fix date parsing on import. next: Saved views, Keyboard shortcuts for tables. later: Scheduled reports*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "board",
+  "title": "Roadmap",
   "data": {
-    "now": [
-      "Export to CSV",
-      "Fix date parsing on import"
-    ],
-    "next": [
-      "Saved views",
-      "Keyboard shortcuts for tables"
-    ],
-    "later": [
-      "Scheduled reports"
-    ]
+    "now": ["Export to CSV", "Fix date parsing on import"],
+    "next": ["Saved views", "Keyboard shortcuts for tables"],
+    "later": ["Scheduled reports"]
   }
 }
 ```
-
-</details>
 
 **Watch for:** Keep items short enough to fit two lines.
 
@@ -80,44 +69,19 @@ high │ quick wins         │ big bets
                                     SAMPLE DATA
 ```
 
-*What to fix first. Fix date parsing: impact 0.9, effort 0.2. Saved views: impact 0.7, effort 0.6. New onboarding: impact 0.8, effort 0.9. Dark mode: impact 0.3, effort 0.5. Rename tabs: impact 0.2, effort 0.1*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "impactEffort",
+  "title": "What to fix first",
   "data": [
-    {
-      "label": "Fix date parsing",
-      "impact": 0.9,
-      "effort": 0.2
-    },
-    {
-      "label": "Saved views",
-      "impact": 0.7,
-      "effort": 0.6
-    },
-    {
-      "label": "New onboarding",
-      "impact": 0.8,
-      "effort": 0.9
-    },
-    {
-      "label": "Dark mode",
-      "impact": 0.3,
-      "effort": 0.5
-    },
-    {
-      "label": "Rename tabs",
-      "impact": 0.2,
-      "effort": 0.1
-    }
+    { "label": "Fix date parsing", "impact": 0.9, "effort": 0.2 },
+    { "label": "Saved views", "impact": 0.7, "effort": 0.6 },
+    { "label": "New onboarding", "impact": 0.8, "effort": 0.9 },
+    { "label": "Dark mode", "impact": 0.3, "effort": 0.5 },
+    { "label": "Rename tabs", "impact": 0.2, "effort": 0.1 }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Scores are estimates; write who scored them.
 
@@ -139,73 +103,29 @@ spec v2 ────────► build ──────────► ok, 
                                          SAMPLE DATA
 ```
 
-*Handoff for one feature. Lanes: Designer, Engineer, Reviewer.*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "swimlane",
+  "title": "Handoff for one feature",
   "data": {
-    "lanes": [
-      "Designer",
-      "Engineer",
-      "Reviewer"
-    ],
+    "lanes": ["Designer", "Engineer", "Reviewer"],
     "rows": [
       [
-        {
-          "lane": 0,
-          "text": "prototype"
-        },
-        {
-          "lane": 1,
-          "text": "read spec"
-        }
+        { "lane": 0, "text": "prototype" },
+        { "lane": 1, "text": "read spec" }
       ],
+      [{ "lane": 1, "text": "build" }, { "lane": 2, "text": "review" }],
+      [{ "lane": 2, "text": "x missing states" }],
+      { "back": { "from": 2, "to": 0, "text": "revise" } },
       [
-        {
-          "lane": 1,
-          "text": "build"
-        },
-        {
-          "lane": 2,
-          "text": "review"
-        }
-      ],
-      [
-        {
-          "lane": 2,
-          "text": "x missing states"
-        }
-      ],
-      {
-        "back": {
-          "from": 2,
-          "to": 0,
-          "text": "revise"
-        }
-      },
-      [
-        {
-          "lane": 0,
-          "text": "spec v2"
-        },
-        {
-          "lane": 1,
-          "text": "build"
-        },
-        {
-          "lane": 2,
-          "text": "ok, approve"
-        }
+        { "lane": 0, "text": "spec v2" },
+        { "lane": 1, "text": "build" },
+        { "lane": 2, "text": "ok, approve" }
       ]
     ]
   }
 }
 ```
-
-</details>
 
 **Watch for:** One action per row; returns go left once.
 
@@ -228,44 +148,19 @@ beta     ····························█████
                                                  SAMPLE DATA
 ```
 
-*Release plan, in weeks. research 0 to 2. design 1 to 4. build 3 to 8. beta 7 to 9*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "gantt",
+  "title": "Release plan, in weeks",
   "data": [
-    {
-      "label": "research",
-      "start": 0,
-      "end": 2
-    },
-    {
-      "label": "design",
-      "start": 1,
-      "end": 4
-    },
-    {
-      "label": "build",
-      "start": 3,
-      "end": 8
-    },
-    {
-      "label": "beta",
-      "start": 7,
-      "end": 9
-    }
+    { "label": "research", "start": 0, "end": 2 },
+    { "label": "design", "start": 1, "end": 4 },
+    { "label": "build", "start": 3, "end": 8 },
+    { "label": "beta", "start": 7, "end": 9 }
   ],
-  "options": {
-    "scale": 10,
-    "width": 40,
-    "unit": " wk"
-  }
+  "options": { "scale": 10, "width": 40, "unit": " wk" }
 }
 ```
-
-</details>
 
 **Watch for:** One scale for all rows; print start and end as text.
 
@@ -285,39 +180,19 @@ beta     ····························█████
               SAMPLE DATA
 ```
 
-*Status ladder. shipped, in review, in progress, supporting, not yet*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "statusKey",
+  "title": "Status ladder",
   "data": [
-    {
-      "level": 4,
-      "label": "shipped"
-    },
-    {
-      "level": 3,
-      "label": "in review"
-    },
-    {
-      "level": 2,
-      "label": "in progress"
-    },
-    {
-      "level": 1,
-      "label": "supporting"
-    },
-    {
-      "level": 0,
-      "label": "not yet"
-    }
+    { "level": 4, "label": "shipped" },
+    { "level": 3, "label": "in review" },
+    { "level": 2, "label": "in progress" },
+    { "level": 1, "label": "supporting" },
+    { "level": 0, "label": "not yet" }
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Keep the same mapping in every document of a project.
 
@@ -338,13 +213,10 @@ beta     ····························█████
                                                                  SAMPLE DATA
 ```
 
-*Decisions. Oct 2: CSV first, not PDF. Oct 9: Parse dates in the browser*
-
-<details><summary>Spec</summary>
-
 ```json
 {
   "kind": "decisionLog",
+  "title": "Decisions",
   "data": [
     {
       "date": "Oct 2",
@@ -361,7 +233,5 @@ beta     ····························█████
   ]
 }
 ```
-
-</details>
 
 **Watch for:** Write the why as evidence, not opinion.

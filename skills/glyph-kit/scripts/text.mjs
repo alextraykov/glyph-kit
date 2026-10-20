@@ -77,11 +77,16 @@ export function cells(value) {
   return out;
 }
 
+/** Text cut by cut() in this process, with the cells it had: the command line reports these,
+ *  so whoever wrote the spec can shorten a label instead of finding "…" in the figure. */
+export const cutLog = new Map();
+
 /** Cut to at most `max` cells without splitting a cluster. Removed text is marked. */
 export function cut(value, max, mark = "…") {
   const text = String(value ?? "");
   const limit = Math.max(0, Math.floor(max));
   if (width(text) <= limit) return text;
+  if (!cutLog.has(text) && cutLog.size < 100) cutLog.set(text, limit);
   const suffix = width(mark) <= limit ? String(mark) : "";
   const room = limit - width(suffix);
   let used = 0;

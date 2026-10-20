@@ -60,11 +60,11 @@ export function motionCounters(canvas, marks, lang) {
   });
 }
 
-/** Run a fresh diagram up to its still step and return that frame, with text settled. */
+/** The still step of a fresh diagram, with text settled. Every kind draws a frame from its step
+ *  alone (the queue catches itself up), so no earlier frames need drawing first. */
 export function stillGrid(make, still) {
   const frame = make();
   let g;
-  for (let s = 0; s < still; s++) frame(s, 0);
   Grid.settled = true;
   try { g = frame(still, 0); } finally { Grid.settled = false; }
   return g;

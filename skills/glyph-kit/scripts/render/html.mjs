@@ -297,10 +297,13 @@ ${map?.stylesheet ? `<link rel="stylesheet" href="${esc(map.stylesheet)}">` : ""
   text ? `<details><summary>The same spec as text</summary><pre class="gk-figure">${esc(text)}</pre></details>` : ""
 }</footer>
 <script>${PLAY_JS}${ARRIVE_JS}</script>
-${moving ? `<script>${inlineMotion()}\ndocument.querySelectorAll('[data-motion-spec]').forEach(t => { const spec = JSON.parse(t.content.textContent); const {make,still} = animate(spec); autoplay(t.previousElementSibling,make,still); });</script>` : ""}
+${moving ? `<script>${inlineMotion(moving)}\ndocument.querySelectorAll('[data-motion-spec]').forEach(t => { const spec = JSON.parse(t.content.textContent); const {make,still} = animate(spec); autoplay(t.previousElementSibling,make,still); });</script>` : ""}
 </body>
 </html>
 `;
+
+// The kinds a list of specs plays, or false when nothing moves.
+const playing = (specs) => { const kinds = specs.filter((s) => s.motion && moves(s.kind)).map((s) => s.kind); return kinds.length ? kinds : false; };
 
 /** A whole self-contained page for one spec, or for a list of specs one after another. */
 export function renderHtml(spec, { map, title: pageTitle } = {}) {
@@ -310,7 +313,7 @@ export function renderHtml(spec, { map, title: pageTitle } = {}) {
     const content = `<div style="display:grid;gap:56px;justify-items:center;width:100%">${spec
       .map((s) => `<section style="display:grid;gap:16px;justify-items:center;width:100%"><h2 style="margin:0;font-size:16px">${esc(s.title ?? resolve(s).label)}</h2>${fragment(s, { map })}</section>`)
       .join("")}</div>`;
-    return page({ lang: spec[0]?.lang, title: pageTitle ?? "Glyph kit", content, map, moving: spec.some((s) => s.motion && moves(s.kind)) });
+    return page({ lang: spec[0]?.lang, title: pageTitle ?? "Glyph kit", content, map, moving: playing(spec) });
   }
   const def = resolve(spec);
   const isScreen = spec.kind === "screen" || spec.kind === "responsive";
