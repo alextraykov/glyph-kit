@@ -292,7 +292,7 @@ const GUIDE_FIGS = {
   html: examples.wireframes.find((sp) => sp.kind === "screen"),
   deck: { kind: "flow", data: ["title", "section", "figure, in steps", "statement", "PDF, 16:9"] },
   pdf: { kind: "flow", data: ["cover", "summary", "sections", "figures", "A4 PDF"] },
-  layouts: { kind: "flow", data: ["readout.json", "sentence, lists, figures", "one page", "HTML or PDF"] },
+  layouts: { kind: "flow", data: ["readout.json", "slots", "one page", "HTML, PDF"] },
   svg: { kind: "flow", data: ["████ 12.4k", "rectangles, lines, dither", "funnel.svg"] },
   handover: { kind: "qaChecklist", data: [
     { text: "The lint passes", status: "todo" },
