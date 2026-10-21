@@ -222,7 +222,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .rules li { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: var(--hairline) solid var(--line); color: var(--text-soft); font-size: .92rem; }
 .rules strong { color: var(--ink); font-weight: 500; }
 
-/* Changes: CHANGELOG.md, one section a release. Lines stay at reading width; group names are labels. */
+/* Changelog: CHANGELOG.md, one section a release. Lines stay at reading width; group names are labels. */
 .heading > .prose { max-width: 62ch; color: var(--text-soft); }
 .prose { display: grid; gap: var(--space-3); max-width: 72ch; }
 .prose p, .prose ul { margin: 0; }
@@ -316,8 +316,8 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
   .stat + .stat { border-top: var(--hairline) solid var(--line); }
   .top .shell { flex-wrap: wrap; row-gap: 0; padding-block: var(--space-2); }
   .nav { width: 100%; justify-content: space-between; gap: var(--space-3); font-size: .9rem; }
-  /* Four links fit a phone row evenly; Changes and traykov.cc stay on larger screens (and the footer). */
-  .nav a[href$="/changes/"], .nav a[href="https://traykov.cc"] { display: none; }
+  /* Four links fit a phone row evenly; Changelog and traykov.cc stay on larger screens (and the footer). */
+  .nav a[href$="/changelog/"], .nav a[href="https://traykov.cc"] { display: none; }
   /* Long commands wrap inside their box instead of scrolling; Copy still copies the whole line. */
   .cmd code { white-space: pre-wrap; overflow-wrap: anywhere; }
   .install__hand span { display: block; margin-top: var(--space-1); }

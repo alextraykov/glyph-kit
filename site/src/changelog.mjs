@@ -1,4 +1,4 @@
-// CHANGELOG.md as HTML, for the site's Changes page. Read from the repo at build time; no dependencies.
+// CHANGELOG.md as HTML, for the site's Changelog page. Read from the repo at build time; no dependencies.
 // Only the Markdown the changelog uses: # headings, paragraphs, - lists (one level, wrapped lines
 // carry on), **bold**, `code` and [links](url). A paragraph that is all bold, like **Motion**, is a
 // group heading inside a release and becomes an <h3>.
