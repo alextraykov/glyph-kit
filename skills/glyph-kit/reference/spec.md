@@ -47,7 +47,7 @@ Or import the renderers (`render/text.mjs`, `render/html.mjs`, `render/deck.mjs`
 
 ## Presenting: decks
 
-A deck file is `{ "title", "subtitle"?, "byline"?, "theme"?: "paper" | "ink" | "phosphor" | "gilt", "slides": [...] }`. A slide is any spec, or one of `{ "type": "title", "title", "subtitle"?, "byline"? }`, `{ "type": "section", "kicker"?, "title" }` and `{ "type": "statement", "kicker"?, "text" }`. Any spec can carry a `present` block:
+A deck file is `{ "title", "subtitle"?, "byline"?, "theme"?: "paper" | "ink" | "phosphor" | "gilt" | { base, <role>, ramp }, "slides": [...] }`. A slide is any spec, or one of `{ "type": "title", "title", "subtitle"?, "byline"? }`, `{ "type": "section", "kicker"?, "title" }` and `{ "type": "statement", "kicker"?, "text" }`. Any spec can carry a `present` block:
 
 ```json
 "present": {
@@ -73,7 +73,7 @@ Types with an arrival order come in by that order instead of line by line, once,
 
 To find line numbers for `steps`, render the spec with `--to text` and count from 0.
 
-**Themes and colour.** `theme` picks a palette: `paper` (light, the default), `ink` (dark), `phosphor` (Synapse's green on near-black) or `gilt` (Our Saints' gold on black). In decks and HTML prototypes, figures are coloured by role, never for decoration: data glyphs (`█▓▒`, eighths, `■`) in the data colour, the empty part of a scale (`░`) dimmed, frames and rulers muted, problems (`fails`, `blocked`, `x missing`, `over`) in the warning colour, passes (`AA`, `AAA`, `done`, `ok`) in the success colour. In prototypes the roles come from the map's `accent`, `muted`, `danger` and `ok` tokens. The text form stays plain.
+**Themes and colour.** `theme` picks a palette: `paper` (light, the default), `ink` (dark), `phosphor` (Synapse's green on near-black) or `gilt` (Our Saints' gold on black). In decks and HTML prototypes, figures are coloured by role, never for decoration: data glyphs (`█▓▒`, eighths, `■`) in the data colour, the empty part of a scale (`░`) dimmed, frames and rulers muted, problems (`fails`, `blocked`, `x missing`, `over`) in the warning colour, passes (`AA`, `AAA`, `done`, `ok`) in the success colour. In prototypes the roles come from the map's `accent`, `muted`, `danger` and `ok` tokens. A theme can also change single roles, add a ramp for density grids, or take its colours from the map's `roles` block; every colour is checked for contrast (`reference/colour.md`). The text form stays plain.
 
 Three decks ship as examples: `export-review.json` (fictional, every type of slide), `motion-audit.json` and `usage-case.json` (real work, with the figures already published).
 
@@ -84,6 +84,7 @@ Three decks ship as examples: `export-review.json` (fictional, every type of sli
 | Section | Used by | What it maps |
 |---|---|---|
 | `tokens` | HTML prototypes and decks | Roles (`ink`, `surface`, `panel`, `muted`, `line`, `accent`, `onAccent`, `danger`, `space`, `radius`, `font`, `mono`, `durationBase`, `easingBase`) to your tokens. |
+| `roles` | Every rendered form, with `--map` | The kit's colour roles (`data`, `flag`, `ok`, `frame`, `bg`…) to your token names, checked for contrast (`reference/colour.md`). |
 | `components` | HTML (as `data-component`) and the product step | Wireframe primitives (`button`, `input`, `search`, `select`, `checkbox`, `radio`, `toggle`, `tabs`, `list`, `table`, `dialog`, `skeleton`, `emptyState`, `image`, `heading`, `text`) to your component names, imports and props. |
 | `motion` | Motion demos and the product step | Duration and easing tokens, and how your project handles reduced motion. |
 | `stylesheet` | HTML and decks | Optional URL of your design system's CSS, loaded before the kit's own styles. |

@@ -3,7 +3,7 @@
 // without JavaScript, under reduced motion and in print the figure is simply there.
 import { resolve } from "../registry.mjs";
 import { cellsOf } from "../arrive.mjs";
-import { paintLine } from "./paint.mjs";
+import { paintLine, paintOptions } from "./paint.mjs";
 
 const STAMP = /^\s*SAMPLE DATA\s*$/;
 // Block cells step blank → ░ → ▒ → final, one step each; text snaps.
@@ -14,8 +14,8 @@ const layer = (run, glyph) => [...run].map((ch) => (STEPS.test(ch) ? glyph : " "
 // A run of block cells: ░ and ▒ layers sit on top of the final cells, each shown for one step, then
 // the final cells. The layers are hidden unless the figure is arriving, so nothing else ever sees them.
 // `under` keeps a scale visible (░ or ·) behind cells that haven't arrived yet.
-const stepped = (run, at, under) =>
-  `<span class="gk-s">${under ? `<span class="gk-s0" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, under))}</span>` : ""}<span class="gk-s1" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, "░"))}</span><span class="gk-s2" aria-hidden="true" style="--d:${at + STEP_MS}ms">${paintLine(layer(run, "▒"))}</span><span class="gk-a" style="--d:${at + 2 * STEP_MS}ms">${paintLine(run)}</span></span>`;
+const stepped = (run, at, under, opts) =>
+  `<span class="gk-s">${under ? `<span class="gk-s0" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, under), opts)}</span>` : ""}<span class="gk-s1" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, "░"), opts)}</span><span class="gk-s2" aria-hidden="true" style="--d:${at + STEP_MS}ms">${paintLine(layer(run, "▒"), opts)}</span><span class="gk-a" style="--d:${at + 2 * STEP_MS}ms">${paintLine(run, opts)}</span></span>`;
 
 /** The figure's lines as HTML, with arrival spans when the type has an order. */
 export function arriveLines(spec, text) {
@@ -25,15 +25,16 @@ export function arriveLines(spec, text) {
   let end = lines.length;
   if (STAMP.test(lines.at(-1) ?? "")) end = lines.length - 2;
   if (!def.arrive) return null;
+  const paintOpts = paintOptions(spec);
   const options = { ...spec.options, ...(spec.lang ? { lang: spec.lang } : {}) };
   const delay = def.arrive(lines.slice(0, end), def.data, options);
   const html = cellsOf(lines).map((cells, r) => {
-    if (r >= end) return paintLine(lines[r]);
+    if (r >= end) return paintLine(lines[r], paintOpts);
     let out = "";
     let run = "";
     let at = 0;
     const flush = () => {
-      if (run) out += !at ? paintLine(run) : !delay.exact && STEPS.test(run) && ![...run].every((ch) => ch === "▒" || ch === " ") ? stepped(run, at, delay.under) : `<span class="gk-a" style="--d:${at}ms">${paintLine(run)}</span>`;
+      if (run) out += !at ? paintLine(run, paintOpts) : !delay.exact && STEPS.test(run) && ![...run].every((ch) => ch === "▒" || ch === " ") ? stepped(run, at, delay.under, paintOpts) : `<span class="gk-a" style="--d:${at}ms">${paintLine(run, paintOpts)}</span>`;
       run = "";
     };
     for (const { ch, col } of cells) {
