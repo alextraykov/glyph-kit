@@ -5,6 +5,7 @@
 //   gk-f  frame     box drawing, rulers, · and arrows              (structure)
 //   gk-x  problem   "fails", "blocked", "x missing", "▼▼ bad", "over" (a verdict, at the line's end)
 //   gk-ok success   "AAA", "AA", "done", "ok", "▲▲ great"
+//   gk-r1…4 ramp    ░ ▒ ▓ █ in the density grids (heatmap, cohort, calendar strip), one colour a step
 import { cellWidth, graphemes } from "../text.mjs";
 
 const DATA = "█▓▒▀▄▌▐▏▎▍▋▊▉▁▂▃▅▆▇■";
@@ -17,10 +18,16 @@ const SAMPLE_STAMP = /SAMPLE DATA/g;
 const SUCCESS = /\b(AAA|AA large text only|AA|done|ok, approve|ok)\b|▲▲ great/g;
 
 const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
-const roleOf = (ch) => (DATA.includes(ch) ? "d" : ch === EMPTY ? "e" : FRAME.includes(ch) ? "f" : "");
+const RAMP = "░▒▓█";
+const roleOf = (ch, ramp) => (ramp && RAMP.includes(ch) ? `r${RAMP.indexOf(ch) + 1}` : DATA.includes(ch) ? "d" : ch === EMPTY ? "e" : FRAME.includes(ch) ? "f" : "");
 
-/** The role of every character in a line: "d", "e", "f", "x", "ok" or "" (plain text). */
-export function classify(line) {
+/** Kinds whose shades are a scale of their own, drawn with the theme's ramp. */
+export const RAMP_KINDS = new Set(["heatmap", "cohort", "calendarStrip"]);
+/** Paint options for a spec: the ramp for density grids. */
+export const paintOptions = (spec) => ({ ramp: RAMP_KINDS.has(spec?.kind) });
+
+/** The role of every character in a line: "d", "e", "f", "x", "ok", "r1"…"r4" (with `ramp`) or "" (plain text). */
+export function classify(line, { ramp = false } = {}) {
   const word = Array(line.length).fill("");
   for (const [re, role] of [[SAMPLE_STAMP, "f"], [PROBLEM, "x"], [SUCCESS, "ok"]]) {
     re.lastIndex = 0;
@@ -31,16 +38,16 @@ export function classify(line) {
   let pos = 0;
   const roles = [];
   for (const cluster of graphemes(line)) {
-    const role = word[pos] || roleOf(cluster);
+    const role = word[pos] || roleOf(cluster, ramp);
     roles.push(...Array(cellWidth(cluster)).fill(role));
     pos += cluster.length;
   }
   return roles;
 }
 
-/** One line of a figure as HTML with role spans. */
-export function paintLine(line) {
-  const roles = classify(line);
+/** One line of a figure as HTML with role spans. opts: { ramp } (see paintOptions). */
+export function paintLine(line, opts = {}) {
+  const roles = classify(line, opts);
   let out = "";
   let run = "";
   let runRole = null;
@@ -64,8 +71,10 @@ export function paintLine(line) {
 }
 
 /** A whole figure. */
-export const paint = (text) => text.split("\n").map(paintLine).join("\n");
+export const paint = (text, opts = {}) => text.split("\n").map((line) => paintLine(line, opts)).join("\n");
 
-/** The CSS for the roles, given custom properties for each colour. */
+/** The CSS for the roles, given custom properties for each colour. Without a ramp, ramp cells look
+ *  exactly like data and empty cells; a theme's ramp sets ${p}ramp1…4 and ${p}ramp-o. */
 export const PAINT_CSS = (p) =>
-  `.gk-d{color:var(${p}data)}.gk-e{color:var(${p}data);opacity:.45}.gk-f{color:var(${p}frame)}.gk-x{color:var(${p}flag)}.gk-ok{color:var(${p}ok)}`;
+  `.gk-d{color:var(${p}data)}.gk-e{color:var(${p}data);opacity:.45}.gk-f{color:var(${p}frame)}.gk-x{color:var(${p}flag)}.gk-ok{color:var(${p}ok)}` +
+  `.gk-r1{color:var(${p}ramp1,var(${p}data));opacity:var(${p}ramp-o,.45)}.gk-r2{color:var(${p}ramp2,var(${p}data))}.gk-r3{color:var(${p}ramp3,var(${p}data))}.gk-r4{color:var(${p}ramp4,var(${p}data))}`;

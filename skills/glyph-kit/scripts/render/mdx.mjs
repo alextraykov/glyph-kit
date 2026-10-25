@@ -14,7 +14,7 @@ function figureMdx(spec, mode, theme, n) {
   if (mode === "component") {
     const { title: _t, intent, source, ...rest } = spec;
     const props = JSON.stringify({ ...rest, title, ...(intent ? { intent } : {}), ...(source ? { source } : {}) }, null, 2);
-    return `<Glyph theme="${theme}" spec={${props}} />\n`;
+    return `<Glyph theme=${typeof theme === "string" ? `"${theme}"` : `{${JSON.stringify(theme)}}`} spec={${props}} />\n`;
   }
   return [
     `**${n ? `Figure ${n}. ` : ""}${prose(title)}**`,

@@ -4,8 +4,8 @@
 // arrows become shapes, and text is locked to its cell width so columns always line up.
 // Colours come from the theme's roles (themes.mjs, paint.mjs). PNG is this SVG rasterised (export.mjs).
 import { resolve } from "../registry.mjs";
-import { classify } from "./paint.mjs";
-import { SPACING, palette } from "./themes.mjs";
+import { classify, paintOptions } from "./paint.mjs";
+import { SPACING, resolveTheme } from "./themes.mjs";
 import { body, label } from "./text.mjs";
 import { cellWidth, graphemes, width as textWidth } from "../text.mjs";
 
@@ -28,10 +28,12 @@ const LEFT_EIGHTHS = "▏▎▍▌▋▊▉"; // 1/8 … 7/8 wide
 const LOW_EIGHTHS = "▁▂▃▄▅▆▇"; // 1/8 … 7/8 tall
 const SHADES = { "░": 0.25, "▒": 0.5, "▓": 0.75 };
 
-/** Draw lines of text as SVG elements on a grid. Returns { svg, width, height } for the inner figure. */
-export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0 } = {}) {
+/** Draw lines of text as SVG elements on a grid. Returns { svg, width, height } for the inner figure.
+ *  rampCells: the figure is a density grid (paintOptions); ramp: the theme's four colours, drawn solid. */
+export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0, rampCells = false, ramp = null } = {}) {
   const c = colors;
-  const roleColor = { d: c.data, e: c.data, f: c.frame, x: c.flag, ok: c.ok, "": c.ink };
+  const roleColor = { d: c.data, e: c.data, f: c.frame, x: c.flag, ok: c.ok, "": c.ink, r1: ramp?.[0] ?? c.data, r2: ramp?.[1] ?? c.data, r3: ramp?.[2] ?? c.data, r4: ramp?.[3] ?? c.data };
+  const solid = (role) => Boolean(ramp) && /^r\d$/.test(role ?? "");
   const lines = text.split("\n");
   const cols = Math.max(1, ...lines.map(textWidth));
   const band = row * 0.72; // block height: leaves a gap between rows so charts breathe
@@ -52,7 +54,7 @@ export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0 } 
 
   lines.forEach((line, r) => {
     const chars = graphemes(line);
-    const roles = classify(line);
+    const roles = classify(line, { ramp: rampCells });
     const top = y0 + r * row;
     const cy = top + row / 2;
     let run = "";
@@ -99,6 +101,7 @@ export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0 } 
       flush();
       const bTop = cy - band / 2;
       if (ch === "█") out.push(`<rect x="${n(x)}" y="${n(bTop)}" width="${n(cell + 0.3)}" height="${n(band)}" fill="${color}"/>`);
+      else if (ch in SHADES && solid(roles[i])) out.push(`<rect x="${n(x)}" y="${n(bTop)}" width="${n(cell + 0.3)}" height="${n(band)}" fill="${color}"/>`);
       else if (ch in SHADES) out.push(`<rect x="${n(x)}" y="${n(bTop)}" width="${n(cell + 0.3)}" height="${n(band)}" fill="${pattern(ch, color)}"/>`);
       else if (LEFT_EIGHTHS.includes(ch)) out.push(`<rect x="${n(x)}" y="${n(bTop)}" width="${n(((LEFT_EIGHTHS.indexOf(ch) + 1) / 8) * cell)}" height="${n(band)}" fill="${color}"/>`);
       else if (LOW_EIGHTHS.includes(ch)) {
@@ -165,16 +168,17 @@ function boxLines({ w, d: [u, r, dn, l] }, x, top, cell, row, color) {
  * A spec as a standalone SVG: title, the figure on a panel, the source. Options:
  * theme (paper | ink | phosphor | gilt), cell and row size in px, frame: false for the figure alone.
  */
-export function renderSvg(spec, { theme = "paper", cell = 10, row = 22, frame = true } = {}) {
+export function renderSvg(spec, { theme = "paper", map, cell = 10, row = 22, frame = true } = {}) {
   const def = resolve(spec);
-  const c = palette(theme);
+  const t = resolveTheme(theme, { map });
+  const c = t.colors;
   const text = body(spec);
   const padX = SPACING.figurePadX;
   const padY = SPACING.figurePadY;
   const titleH = frame && spec.title ? 48 : 0;
   const intentH = frame && spec.intent ? 26 : 0;
   const sourceH = frame && spec.source ? 34 : 0;
-  const fig = figureSvg(text, { colors: c, cell, row, x0: padX * 2, y0: padY + titleH + intentH + padY });
+  const fig = figureSvg(text, { colors: c, cell, row, x0: padX * 2, y0: padY + titleH + intentH + padY, rampCells: paintOptions(spec).ramp, ramp: t.ramp });
   const width = Math.max(fig.width + padX * 4, frame && spec.title ? textWidth(spec.title) * 11 + padX * 2 : 0);
   const panelTop = padY + titleH + intentH;
   const panelH = fig.height + padY * 2;

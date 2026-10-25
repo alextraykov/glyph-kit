@@ -3,6 +3,10 @@ import { checks } from "../guard.mjs";
 import { bar, clamp, cut, join, len, padEnd, padStart, place, table } from "../core.mjs";
 import { LAYOUT, capRows, fitLabels } from "../layout.mjs";
 import { readingOrder } from "../arrive.mjs";
+import { contrastRatio } from "../render/themes.mjs";
+
+/** WCAG contrast ratio between two hex colours (shared with the theme check). */
+export { contrastRatio };
 
 /** Spacing tokens drawn to scale, one cell per `unit` pixels. tokens: [{ name, value }] */
 export function spacingScale(tokens, { unit = 4, maxWidth = LAYOUT.maxWidth } = {}) {
@@ -31,22 +35,6 @@ export function typeScale(steps, { width: preferred = 28, maxWidth = LAYOUT.maxW
   const width = Math.max(4, Math.min(preferred, maxWidth - nameW - suffixW - 4));
   const lines = steps.map((s, i) => `${padEnd(labels[i], nameW)}  ${bar(s.size, top, { width })}  ${s.size}/${s.lineHeight ?? Math.round(s.size * 1.4)}`);
   return join(capped.note ? [...lines, capped.note] : lines);
-}
-
-const channel = (c) => {
-  const v = c / 255;
-  return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-};
-const luminance = (hex) => {
-  const h = hex.replace("#", "");
-  const full = h.length === 3 ? [...h].map((c) => c + c).join("") : h;
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16));
-  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-};
-/** WCAG contrast ratio between two hex colours. */
-export function contrastRatio(fg, bg) {
-  const [a, b] = [luminance(fg), luminance(bg)].sort((x, y) => y - x);
-  return (a + 0.05) / (b + 0.05);
 }
 
 /**

@@ -2,6 +2,18 @@
 
 Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor version may change the spec format; the change is listed here with what to update.
 
+## 0.3.0 — 2026-10-29
+
+**Colour by role**
+
+- **Your colours.** A theme is a palette name or a base plus the roles you change: `{ "base": "paper", "data": "#1f4fd6", "flag": "#b8421f" }`. Put it on a spec, report or deck as `theme`, or pass `--theme theme.json` to `render`, `export`, `deck` and `live`. Guide: `reference/colour.md`.
+- **From your design system.** A `roles` block in `design-system.map.json` points roles at your tokens. HTML and decks write the token's `var(--…)` so your CSS wins; SVG, PNG and PDF use its fallback colour. A token with no fallback is refused.
+- **Contrast is checked.** Every colour you supply is checked against the page and the panel: 4.5 to 1 for words, 3 for marks, 1.5 for lines. A refusal names the pair and a nearby colour that passes.
+- **A ramp for density grids.** Four colours for `░ ▒ ▓ █` in `heatmap`, `cohort` and `calendarStrip`, drawn solid in SVG. Elsewhere shades keep the data colour, so the density ladder means the same thing.
+- **Colour follows meaning.** `color` on a node, bar or row is refused.
+- **Paper passes its own rule.** Its problem colour is darker (`#c4401c` to `#b8391a`) and its secondary text a touch darker (`#6d6c66` to `#6b6a64`), so both reach 4.5 to 1 on the panel.
+- Existing specs need no changes. The text form is unchanged.
+
 ## 0.2.1 — 2026-10-26
 
 **Fixes**

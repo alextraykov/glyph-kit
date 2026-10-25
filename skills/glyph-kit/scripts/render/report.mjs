@@ -10,8 +10,8 @@
 // as text. Printing (or export.mjs --to pdf) gives A4 pages with the cover on its own page.
 import { resolve } from "../registry.mjs";
 import { FONT_CSS } from "./font.mjs";
-import { PAINT_CSS, paint } from "./paint.mjs";
-import { SPACING, palette } from "./themes.mjs";
+import { PAINT_CSS, paint, paintOptions } from "./paint.mjs";
+import { SPACING, resolveTheme, themeCss } from "./themes.mjs";
 import { body, label } from "./text.mjs";
 
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -23,16 +23,16 @@ function figure(spec, number) {
   return `<figure class="r-fig">
 <figcaption class="r-fig__head"><span class="r-fig__n">Figure ${number}</span><span class="r-fig__title">${esc(spec.title ?? def.label)}</span></figcaption>
 ${spec.intent ? `<p class="r-fig__intent">${inline(spec.intent)}</p>` : ""}
-<div class="r-fig__panel"><pre class="r-fig__text" lang="${esc(spec.lang ?? "en")}" role="img" aria-label="${esc(label(spec))}">${paint(body(spec))}</pre></div>
+<div class="r-fig__panel"><pre class="r-fig__text" lang="${esc(spec.lang ?? "en")}" role="img" aria-label="${esc(label(spec))}">${paint(body(spec), paintOptions(spec))}</pre></div>
 ${spec.source ? `<div class="r-fig__foot"><span>Source: ${esc(spec.source)}</span></div>` : ""}
 </figure>`;
 }
 
 const MONO = `"Departure Mono",Menlo,"DejaVu Sans Mono",Consolas,monospace`;
 
-const CSS = (p) => `${FONT_CSS()}
+const CSS = (t) => `${FONT_CSS()}
 ${PAINT_CSS("--")}
-:root{--bg:${p.bg};--panel:${p.panel};--ink:${p.ink};--muted:${p.muted};--data:${p.data};--frame:${p.frame};--flag:${p.flag};--ok:${p.ok};--measure:${SPACING.measure}ch;--gap:${SPACING.sectionGap}px}
+:root{${themeCss(t, "--")};--measure:${SPACING.measure}ch;--gap:${SPACING.sectionGap}px}
 *,*::before,*::after{box-sizing:border-box}
 html{color-scheme:light dark;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
@@ -73,7 +73,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 ui-sans-serif
 .r-end{margin-top:var(--gap);padding-top:28px;border-top:1px solid color-mix(in srgb,var(--ink) 16%,transparent);color:var(--muted);font-size:13px}
 :focus-visible{outline:2px solid var(--data);outline-offset:3px}
 @media (max-width:700px){.r{padding:56px 22px 80px}.r-fig__panel{padding:22px}.r-summary{padding:24px}.r-sec{padding-top:64px}}
-@page{size:A4;margin:18mm 18mm 20mm;background:${p.bg};@bottom-right{content:counter(page);font:9px ${MONO};color:${p.muted}}}
+@page{size:A4;margin:18mm 18mm 20mm;background:${t.colors.bg};@bottom-right{content:counter(page);font:9px ${MONO};color:${t.colors.muted}}}
 @media print{
   body{font-size:10.5pt;background:var(--bg)}
   .r{max-width:none;padding:0}
@@ -88,8 +88,8 @@ body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 ui-sans-serif
 `;
 
 /** The report as one self-contained HTML document. */
-export function renderReport(report, { theme } = {}) {
-  const p = palette(theme ?? report.theme);
+export function renderReport(report, { theme, map } = {}) {
+  const t = resolveTheme(theme ?? report.theme, { map });
   let n = 0;
   const sections = report.sections
     .map((s, i) => {
@@ -109,7 +109,7 @@ ${s.note ? `<aside class="r-note"><p>${inline(s.note)}</p></aside>` : ""}
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(report.title)}</title>
-<style>${CSS(p)}</style>
+<style>${CSS(t)}</style>
 </head>
 <body>
 <main class="r" style="counter-reset:sec">

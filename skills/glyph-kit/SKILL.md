@@ -68,6 +68,7 @@ Every command is `node <skill>/scripts/glyph-kit.mjs <command>`.
 | Deck | `deck deck.json > deck.html` | `guide deck` |
 | Report (cover, summary, sections) | `export report.json --to html\|pdf` | `guide report` |
 | MDX, SVG, PNG, PDF of anything | `export <file> --to md\|mdx\|html\|svg\|png\|pdf` | `reference/export.md` |
+| Your colours, or a palette | `--theme ink` or `--theme theme.json`; roles from your tokens with `--map` | `reference/colour.md` |
 | Moving diagram: a process over time | `live spec.json --to html` (or `--to markdown` for its still) | `reference/live.md` |
 | Several layouts as one document | `export layouts.json --to html\|pdf`, a layout to a page | `reference/areas/layouts.md` |
 
