@@ -2,7 +2,7 @@
 // so the file opens anywhere with nothing beside it. Reduced motion shows the still frame.
 import { readFileSync } from "node:fs";
 import { FONT_CSS } from "../render/font.mjs";
-import { palette } from "../render/themes.mjs";
+import { resolveTheme } from "../render/themes.mjs";
 import { isSample } from "../guard.mjs";
 import { live, stillGrid } from "./kinds.mjs";
 import { KINDS } from "../registry.mjs";
@@ -52,8 +52,9 @@ export function inlineMotion(only) {
   return `const __glyph = {};\n${chunks.join("\n")}\nconst { animate, stillGrid, stillText } = __glyph[${motion}];\nconst { autoplay, player } = __glyph[${play}];\nconst MOTION = { ${table} };`;
 }
 
-export function renderLiveHtml(spec, { theme = "paper" } = {}) {
-  const p = palette(theme);
+export function renderLiveHtml(spec, { theme = "paper", map } = {}) {
+  const t = resolveTheme(theme, { map });
+  const p = t.colors;
   const { make, still, summary } = live(spec);
   return `<!doctype html>
 <html lang="${esc(spec.lang ?? "en")}">
@@ -62,7 +63,7 @@ export function renderLiveHtml(spec, { theme = "paper" } = {}) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(spec.title)}</title>
 <style>${FONT_CSS()}
-:root{color-scheme:${theme === "paper" ? "light" : "dark"}}
+:root{color-scheme:${t.dark ? "dark" : "light"}}
 body{margin:0;min-height:100vh;display:grid;place-items:center;background:${p.bg};color:${p.ink};font:16px/1.6 system-ui,sans-serif}
 figure{margin:0;padding:48px 40px;display:grid;gap:20px;max-width:100%}
 h1{margin:0;font:400 22px/1.3 "Departure Mono",monospace}

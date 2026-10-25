@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 // glyph-kit command line.
 //
-//   node glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map design-system.map.json]
+//   node glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map design-system.map.json] [--theme name|theme.json]
 //                         (the file may hold one spec or a list of them)
 //   node glyph-kit.mjs deck <deck.json | a.json b.json …> [--title "Name"] [--map …]   (HTML to stdout)
 //   node glyph-kit.mjs types                                                  (lists every type by area; `kinds` works too)
 //   node glyph-kit.mjs guide <kind | deck | report | spec>                    (one kind's example spec and notes)
-//   node glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme name]   (a moving diagram)
+//   node glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme name|theme.json]   (a moving diagram)
 //
-//   node glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme name] [--map map.json]
+//   node glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme name|theme.json] [--map map.json]
 //                         [--mdx component]   (the file may be a spec, a list of specs, a deck or a report)
 //
 // A spec is { "kind", "title"?, "intent"?, "source"?, "data", "options"? }. See reference/spec.md.
@@ -42,7 +42,9 @@ try {
   const compactText = bool("--compact");
   const to = flag("--to") ?? "text";
   const out = flag("--out");
-  const theme = flag("--theme");
+  const themeArg = flag("--theme");
+  // A palette name, or a theme file: { base?, <role>: "#hex", ramp? } (reference/colour.md).
+  const theme = themeArg?.endsWith(".json") ? read(themeArg) : themeArg;
   const mdxMode = flag("--mdx") ?? "static";
   const mapFile = flag("--map");
   const title = flag("--title");
@@ -87,7 +89,7 @@ try {
     const spec = read(files[0]);
     const text = () => (compactText ? compact(stillText(spec)) : stillText(spec));
     const outs = {
-      html: () => renderLiveHtml(spec, { theme }),
+      html: () => renderLiveHtml(spec, { theme: theme ?? spec.theme, map }),
       text,
       markdown: () => `**${spec.title ?? live(spec).label}**\n\n\`\`\`text\n${text()}\n\`\`\`\n\n${live(spec).summary}${spec.source ? ` Source: ${spec.source}` : ""}`
     };
@@ -99,7 +101,7 @@ try {
     const { renderHtml } = to === "html" ? await import("./render/html.mjs") : {};
     const spec = read(files[0]);
     const each = (fn) => (s) => (Array.isArray(s) ? s.map(fn).join("\n\n") : fn(s));
-    const out = { text: each((s) => renderText(s, { compact: compactText })), markdown: each((s) => renderMarkdown(s, { compact: compactText })), html: (s) => renderHtml(s, { map, title }) }[to];
+    const out = { text: each((s) => renderText(s, { compact: compactText })), markdown: each((s) => renderMarkdown(s, { compact: compactText })), html: (s) => renderHtml(s, { map, theme, title }) }[to];
     if (!out) throw new Error(`--to must be text, markdown or html, not "${to}".`);
     process.stdout.write(out(spec) + (to === "html" ? "" : "\n"));
   } else if (command === "export" && files.length === 1) {
@@ -124,18 +126,18 @@ try {
     const written = [];
     if (to === "md") written.push(write(`${stem}.md`, kind === "report" ? reportMarkdown(doc) : specs.map((s) => renderMarkdown(s)).join("\n\n")));
     else if (to === "mdx") written.push(write(`${stem}.mdx`, renderMdx(kind === "report" ? doc : specs, { mode: mdxMode, theme: theme ?? doc.theme ?? "paper" })));
-    else if (to === "html" && layouts) written.push(write(`${stem}.html`, renderLayoutPages(doc, { theme, title })));
-    else if (to === "html") written.push(write(`${stem}.html`, kind === "report" ? renderReport(doc, { theme }) : kind === "deck" ? renderDeck(doc, { map }) : renderHtml(doc, { map, title })));
+    else if (to === "html" && layouts) written.push(write(`${stem}.html`, renderLayoutPages(doc, { theme, title, map })));
+    else if (to === "html") written.push(write(`${stem}.html`, kind === "report" ? renderReport(doc, { theme, map }) : kind === "deck" ? renderDeck(doc, { map, theme }) : renderHtml(doc, { map, theme, title })));
     else if (to === "svg" || to === "png") {
       specs.forEach((spec, i) => {
-        const svg = renderSvg(spec, { theme: theme ?? doc.theme ?? "paper" });
+        const svg = renderSvg(spec, { theme: theme ?? spec.theme ?? doc.theme ?? "paper", map });
         const path = specs.length === 1 ? `${stem}.${to}` : `${stem}-${String(i + 1).padStart(2, "0")}.${to}`;
         if (to === "svg") written.push(write(path, svg));
         else (mkdirSync(dirname(path), { recursive: true }), written.push(svgToPng(svg, path)));
       });
     } else if (to === "pdf") {
       mkdirSync(dirname(`${stem}.pdf`), { recursive: true });
-      written.push(htmlToPdf(layouts ? renderLayoutPages(doc, { theme, title }) : kind === "deck" ? renderDeck(doc, { map }) : renderReport(asReport(), { theme }), `${stem}.pdf`));
+      written.push(htmlToPdf(layouts ? renderLayoutPages(doc, { theme, title, map }) : kind === "deck" ? renderDeck(doc, { map, theme }) : renderReport(asReport(), { theme, map }), `${stem}.pdf`));
     } else throw new Error(`--to must be md, mdx, html, svg, png or pdf, not "${to}".`);
     console.log(written.join("\n"));
   } else if (command === "deck" && files.length) {
@@ -143,9 +145,9 @@ try {
     const { renderDeck } = await import("./render/deck.mjs");
     const loaded = files.map(read);
     const deck = loaded.length === 1 && !Array.isArray(loaded[0]) && loaded[0].slides ? loaded[0] : loaded.flat();
-    process.stdout.write(renderDeck(deck, { title, map }));
+    process.stdout.write(renderDeck(deck, { title, map, theme }));
   } else {
-    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme paper|ink|phosphor|gilt]\n  glyph-kit.mjs kinds\n  glyph-kit.mjs guide <kind | deck | report | spec>");
+    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt|theme.json] [--map map.json]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme paper|ink|phosphor|gilt|theme.json]\n  glyph-kit.mjs kinds\n  glyph-kit.mjs guide <kind | deck | report | spec>");
     process.exit(1);
   }
   if (cutLog.size)
