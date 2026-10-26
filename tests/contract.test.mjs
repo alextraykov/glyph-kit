@@ -18,8 +18,9 @@ function labels(value, key = "") {
 }
 
 function assertLabels(spec, text) {
-  const compact = (value) => value.toUpperCase().replace(/[\s│║┃]/gu, "");
-  const tableRows = text.split("\n").filter((line) => /^[│║┃]/u.test(line)).map((line) => line.split(/[│║┃]/u));
+  // Box text is read down each column too, so a label wrapped over several lines of one box counts.
+  const compact = (value) => value.toUpperCase().replace(/[\s│║┃┆]/gu, "");
+  const tableRows = text.split("\n").filter((line) => /^[│║┃┆]/u.test(line)).map((line) => line.split(/[│║┃┆├┤]/u));
   const columns = Array.from({ length: Math.max(0, ...tableRows.map((row) => row.length)) }, (_, col) => tableRows.map((row) => row[col] ?? "").join(" "));
   const output = compact([text, ...columns].join("\n"));
   const missing = labels(spec.data).filter((label) => {

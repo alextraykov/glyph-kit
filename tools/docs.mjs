@@ -38,7 +38,7 @@ export const KIND_DOCS = {
   abResult: { when: "A test result with confidence intervals.", traps: "Overlapping intervals mean no clear difference yet; don't round that into a win." },
   metricPanel: { when: "A few metrics at a glance with their trend and change.", traps: "Up isn't always good: time and tickets should go down. Say which way is better." },
   flow: { when: "A short linear sequence.", traps: "Four or five boxes per row at most." },
-  branchFlow: { when: "A flow with decisions and failure paths.", traps: "Every decision's no-branch needs a destination, or it's a dead end nobody designed." },
+  branchFlow: { when: "A flow with decisions and failure paths.", traps: "Every decision's no-branch needs a destination, or it's a dead end nobody designed: `\"to\": \"Enter email\"` loops back, `\"to\": \"end\"` ends the flow there. Labels longer than 24 cells wrap onto two lines; write them in full." },
   stateMachine: { when: "Anything with loading, saving, error or retry states.", traps: "Read the footer: it lists ends and unreachable states." },
   journeyMap: { when: "Stages of an experience with what people do, think and feel.", traps: "Thoughts are quotes or close paraphrases from research, not invented." },
   tree: { when: "Sitemaps, IA, file layouts, spec folders.", traps: "Past three levels deep it stops being readable; collapse the rest." },
