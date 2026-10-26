@@ -4,7 +4,7 @@ import { upper } from "../text.mjs";
 import { checks } from "../guard.mjs";
 import { BOX, cut, flow, join, len, padEnd, textCells, tree, wrap } from "../core.mjs";
 import { LAYOUT, capRows, fitLabels, stack } from "../layout.mjs";
-import { byColumns } from "../arrive.mjs";
+import { ARRIVE_MAX, ARRIVE_STEP, byColumns } from "../arrive.mjs";
 
 /** A decision reads as a question; a label that already ends in one keeps it. */
 const asked = (label) => (/[?？]$/.test(label) ? label : `${label}?`);
@@ -184,10 +184,12 @@ function journeyWidth(stages, { colWidth: preferred = 18, maxWidth = LAYOUT.maxW
   return Math.min(preferred, available);
 }
 
-/** Where each stage's column starts, in cells. A deck prints the stages in order, 360ms apart. */
+/** Where each stage's column starts, in cells. The stages arrive in order, evenly spaced so the last
+ *  one lands within the budget, never more than 240ms apart. */
 export const journeyColumns = (stages, options) => {
   const colWidth = journeyWidth(stages, options);
-  return { cuts: stages.map((_, i) => journeyLabelW + i * colWidth), step: 360 };
+  const step = Math.max(2 * ARRIVE_STEP, Math.min(6 * ARRIVE_STEP, Math.floor((ARRIVE_MAX - 2 * ARRIVE_STEP) / Math.max(1, stages.length) / ARRIVE_STEP) * ARRIVE_STEP));
+  return { cuts: stages.map((_, i) => journeyLabelW + i * colWidth), step };
 };
 
 export function journeyMap(stages, options = {}) {

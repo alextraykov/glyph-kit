@@ -65,7 +65,15 @@ export function contrast(pairs, { width: preferred = 42, maxWidth = LAYOUT.maxWi
   }));
   const width = Math.max(8, Math.min(preferred, maxWidth - labelW - 2 - suffixWidth));
   const at = (r) => Math.round((r / 21) * width);
-  const marks = place([[labelW + 2 + at(3), "3"], [labelW + 2 + at(4.5), "4.5"], [labelW + 2 + at(7), "7"], [labelW + 2 + width - 3, "21:1"]]);
+  // Threshold labels need a space between them; on a narrow scale a label that would touch the one
+  // before it is dropped, and its ┊ still marks the place.
+  // The scale's end always keeps its label.
+  const kept = [];
+  for (const [col, text] of [[at(3), "3"], [at(4.5), "4.5"], [at(7), "7"]]) {
+    const prev = kept.at(-1);
+    if ((!prev || col > prev[0] + len(prev[1])) && col + len(text) < width - 3) kept.push([col, text]);
+  }
+  const marks = place([...kept, [width - 3, "21:1"]].map(([col, text]) => [labelW + 2 + col, text]));
   const rows = pairs.map((p, i) => {
     const ratio = contrastRatio(p.fg, p.bg);
     const grade = ratio >= 7 ? "AAA" : ratio >= 4.5 ? "AA" : ratio >= 3 ? "AA large text only" : "fails";
