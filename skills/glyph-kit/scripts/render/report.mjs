@@ -30,7 +30,7 @@ ${spec.source ? `<div class="r-fig__foot"><span>Source: ${esc(spec.source)}</spa
 
 const MONO = `"Departure Mono",Menlo,"DejaVu Sans Mono",Consolas,monospace`;
 
-const CSS = (p) => `${FONT_CSS}
+const CSS = (p) => `${FONT_CSS()}
 ${PAINT_CSS("--")}
 :root{--bg:${p.bg};--panel:${p.panel};--ink:${p.ink};--muted:${p.muted};--data:${p.data};--frame:${p.frame};--flag:${p.flag};--ok:${p.ok};--measure:${SPACING.measure}ch;--gap:${SPACING.sectionGap}px}
 *,*::before,*::after{box-sizing:border-box}

@@ -106,7 +106,7 @@ export function renderLayoutPages(specs, { theme, title } = {}) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title ?? list[0]?.title ?? "Glyph kit")}</title>
-<style>${FONT_CSS}${CSS(p)}</style>
+<style>${FONT_CSS()}${CSS(p)}</style>
 </head>
 <body>
 ${list.map((spec) => layoutHtml(spec, p)).join("\n")}
