@@ -1,104 +1,98 @@
 {
   "measured": "2026-10-20",
   "model": "Sonnet 5.5",
-  "runs": 195,
+  "study": "S2",
+  "runsEach": 5,
   "prices": "published prices",
-  "kit": "0.2.0 before the skill optimisation (9979bd3)",
+  "kit": "0.2.0 as released, with the 0.2.1 flow fix for the flow",
   "outputVsHtml": {
-    "funnel": 5.2,
-    "settings": 5.44,
-    "deck": 3.5,
-    "moving": 13.34,
-    "flow": 1.7,
-    "fewerEveryRun": true
+    "funnel": 10.98,
+    "flow": 5.66,
+    "settings": 9.0,
+    "deck": 5.72,
+    "moving": 38.28
   },
   "claudeCode": {
-    "moving": {
-      "kit": 0.1566,
-      "html": 0.563
-    },
-    "kitCheaperEveryRun": [
-      "funnel",
-      "settings",
-      "deck",
-      "moving"
-    ],
-    "htmlCheaperEveryRun": [
-      "flow"
-    ],
     "medians": {
-      "note": "Medians of 3 runs each in Claude Code 2.1.238: time in seconds, cost in US dollars, tokens written",
+      "note": "Medians of 5 runs each in Claude Code 2.1.238: time in seconds, cost in US dollars, tokens written",
       "funnel": {
         "label": "Funnel",
         "kit": {
-          "s": 29.7,
-          "usd": 0.1239,
-          "out": 1781
+          "s": 15.3,
+          "usd": 0.0735,
+          "out": 792
         },
         "html": {
-          "s": 88.1,
-          "usd": 0.3317,
-          "out": 9261
+          "s": 75.6,
+          "usd": 0.2729,
+          "out": 8699
         }
       },
       "flow": {
         "label": "Flow",
         "kit": {
-          "s": 36.7,
-          "usd": 0.1997,
-          "out": 3393
+          "s": 18.2,
+          "usd": 0.0805,
+          "out": 1012
         },
         "html": {
-          "s": 47.8,
-          "usd": 0.1361,
-          "out": 5758
+          "s": 52.8,
+          "usd": 0.1302,
+          "out": 5727
         }
       },
       "settings": {
         "label": "Settings screen",
         "kit": {
-          "s": 18.4,
-          "usd": 0.1129,
-          "out": 1735
+          "s": 19.3,
+          "usd": 0.0797,
+          "out": 1054
         },
         "html": {
           "s": 63.8,
-          "usd": 0.1986,
-          "out": 9443
+          "usd": 0.1926,
+          "out": 9491
         }
       },
       "deck": {
         "label": "Deck",
         "kit": {
-          "s": 83.7,
-          "usd": 0.2877,
-          "out": 5202
+          "s": 41.7,
+          "usd": 0.1632,
+          "out": 3981
         },
         "html": {
-          "s": 145.7,
-          "usd": 0.4644,
-          "out": 18233
+          "s": 180.1,
+          "usd": 0.5633,
+          "out": 22764
         }
       },
       "moving": {
         "label": "Moving diagram",
         "kit": {
-          "s": 26.3,
-          "usd": 0.1566,
-          "out": 2093
+          "s": 18.8,
+          "usd": 0.0773,
+          "out": 761
         },
         "html": {
-          "s": 238.8,
-          "usd": 0.563,
-          "out": 27919
+          "s": 255.5,
+          "usd": 0.5918,
+          "out": 29132
         }
       }
-    }
+    },
+    "kitBetterEveryRun": [
+      "funnel",
+      "flow",
+      "settings",
+      "deck",
+      "moving"
+    ]
   },
   "correct": {
-    "runs": 65,
-    "kit": 65,
-    "byHand": 61,
-    "html": 64
+    "runs": 25,
+    "kit": 25,
+    "html": 25,
+    "byHand": 24
   }
 }

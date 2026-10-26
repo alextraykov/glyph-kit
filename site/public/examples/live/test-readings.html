@@ -500,10 +500,11 @@ function compareLayout(rows, { headers = ["", "A", "B"], width: preferred = 10, 
   return { headers, capped, labels, labelW, cell, aCol, colW };
 }
 
-/** Where the after column starts, in cells. A deck prints it one step after the before column. */
+/** Where the before and after columns start, in cells. The before column steps in, and the after
+ *  column starts as soon as it has settled, so the pair reads as one comparison. */
 function compareColumns(rows, options) {
   const { labelW, colW } = compareLayout(rows, options);
-  return { cuts: [labelW + 2 + colW], step: 600 };
+  return { cuts: [labelW + 2, labelW + 2 + colW], step: 120 };
 }
 
 /** Side-by-side comparison table. rows: [{ label, a, b, aText, bText }] with a and b as 0..1. */
@@ -546,7 +547,8 @@ function meter(value, cap, { width: preferred = 24, label = "of the cap", maxWid
   const pct = `${Math.round(f * 100)}%`;
   // The bar gives way first, keeping room for the label's first few cells; then the label is cut.
   const width = clamp(Math.round(Number(preferred)) || 1, 1, Math.max(1, maxWidth - 4 - 1 - len(pct) - len(over) - 6));
-  const n = clamp(Math.round(f * width), f > 0 ? 1 : 0, width);
+  // A positive value never draws as empty, and a value below the cap never draws as full.
+  const n = clamp(Math.round(f * width), f > 0 ? 1 : 0, f < 1 && width > 1 ? width - 1 : width);
   const room = maxWidth - width - 4 - 1 - len(pct) - len(over) - 1;
   return `[ ${"█".repeat(n)}${"░".repeat(width - n)} ] ${pct} ${cut(String(label ?? ""), Math.max(1, room))}${over}`;
 }

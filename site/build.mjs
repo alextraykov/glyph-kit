@@ -111,7 +111,7 @@ const usd = (n) => `$${n.toFixed(2)}`;
 const mv = study.claudeCode.medians.moving;
 const times = (r) => `${r >= 10 ? Math.round(r) : r.toFixed(1)}×`;
 const secs = (n) => (n >= 90 ? `${(n / 60).toFixed(0)} min` : `${Math.round(n)} s`);
-const thousands = (n) => `${(n / 1000).toFixed(1)}k`;
+const thousands = (n) => (n < 1000 ? String(Math.round(n)) : `${(n / 1000).toFixed(1)}k`);
 // Output: one figure from the motion audit. Its text form comes first, because that is the deliverable
 // most people paste; the other forms of the same spec swap in place.
 const AUDIT_SPEC = json("examples/reports/motion-audit.json").sections.flatMap((x) => x.figures ?? []).find((f) => f.kind === "gantt");
@@ -536,12 +536,13 @@ const home = page({
 <section class="section" aria-labelledby="cheap">
   <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Against HTML/JS <span class="new">New</span></p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>Claude Code got the same brief twice for each of five deliverables: once with the kit, once as hand-written HTML/JS. Like for like: a still flow against a still SVG flow, a working prototype against a working prototype, a moving diagram against an animated one.</p></header>
   <div class="stats">
-    <article class="stat"><p class="label">Faster</p><strong>${times(mv.html.s / mv.kit.s)}</strong><p>A moving diagram took ${secs(mv.kit.s)} against ${secs(mv.html.s)}. The kit was faster at the median for all five.</p></article>
-    <article class="stat"><p class="label">Cheaper</p><strong>${times(mv.html.usd / mv.kit.usd)}</strong><p>${usd(mv.kit.usd)} against ${usd(mv.html.usd)} for a moving diagram, and cheaper on every run for four of the five. For a simple flow, HTML cost less.</p></article>
-    <article class="stat"><p class="label">Ended correct</p><strong>${study.correct.kit} of ${study.correct.runs}</strong><p>Every kit run ended correct. HTML/JS: ${study.correct.html}. Drawn by hand: ${study.correct.byHand}.</p></article>
-    <article class="stat"><p class="label">Fewer tokens written</p><strong>${times(study.outputVsHtml.moving)}</strong><p>For a moving diagram; about ${Math.round(study.outputVsHtml.funnel)}× for a funnel or a screen. Fewer on every run. A figure draws in ${stats.us} μs.</p></article>
+    <article class="stat"><p class="label">Faster</p><strong>${times(mv.html.s / mv.kit.s)}</strong><p>A moving diagram took ${secs(mv.kit.s)} against ${secs(mv.html.s)}. Faster on every run, for all five.</p></article>
+    <article class="stat"><p class="label">Cheaper</p><strong>${times(mv.html.usd / mv.kit.usd)}</strong><p>${usd(mv.kit.usd)} against ${usd(mv.html.usd)} for a moving diagram. Cheaper on every run, for all five.</p></article>
+    <article class="stat"><p class="label">Right first time</p><strong>${study.correct.kit} of ${study.correct.runs}</strong><p>Every kit run. HTML/JS: ${study.correct.html} of ${study.correct.runs}. Drawn by hand: ${study.correct.byHand}.</p></article>
+    <article class="stat"><p class="label">Fewer tokens written</p><strong>${times(study.outputVsHtml.moving)}</strong><p>For a moving diagram; ${Math.round(study.outputVsHtml.funnel)}× for a funnel. Fewer on every run. A figure draws in ${stats.us} μs.</p></article>
   </div>
-  <p class="stats-note">${study.model} in Claude Code · ${study.runs} runs · medians of 3 runs per figure · ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · published prices · more testing is planned, with other models and more figures</p>
+  <div class="study">${STUDY_TABLE}</div>
+  <p class="stats-note">${study.model} in Claude Code · ${study.runsEach} runs per figure and approach · medians · ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · published prices · more testing is planned, with other models and more figures</p>
 </section>
 
 <section class="section" aria-labelledby="use">

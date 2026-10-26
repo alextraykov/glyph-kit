@@ -2,15 +2,23 @@
 
 Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor version may change the spec format; the change is listed here with what to update.
 
-## Unreleased
+## 0.2.1 — 2026-10-26
 
 **Fixes**
 
-- **A comparison arrives as one move.** The before column steps in, and the after column starts as soon as it has settled, instead of 600ms later. A journey map's stages follow each other within 240ms, so the whole map lands within about 600ms.
+- **Long flow labels wrap instead of being cut.** A flow box no longer cuts a label over 24 cells; it wraps it onto more lines. Agents were spending turns shortening labels and drawing again: with this fix, a flow costs a third less to make in Claude Code.
+- **A meter below its cap never draws as full.** 64 of 65 used to fill every cell.
+- **Layout pages and reports embed Departure Mono again,** so they line up offline.
+- **A comparison arrives as one move.** The before column steps in, and the after column starts as soon as it has settled, instead of 600ms later. A journey map's stages follow each other within 240ms.
 - **"over" in a label stays plain.** "over" and "fails" are painted as problems only as the verdict at the end of a line, so a label such as "Processes over time" is no longer red.
 - **Contrast thresholds on a narrow scale.** The 3, 4.5 and 7 labels keep a space between them; one that would touch its neighbour is dropped and its ┊ still marks the place.
-- **A meter below its cap never draws as full.** 64 of 65 used to fill every cell.
-- `tools/gaps.mjs` reports how long each example's arrival sits still; the tests hold every example under 300ms.
+
+**Site**
+
+- **A Changelog page** at /changelog/, every release newest first.
+- **The kit against HTML/JS, measured again** on the current kit: cheaper, faster and fewer tokens written on every run, for all five deliverables tested in Claude Code.
+
+Existing specs need no changes.
 
 ## 0.2.0 — 2026-10-20
 
