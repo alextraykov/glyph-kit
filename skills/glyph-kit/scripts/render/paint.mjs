@@ -5,6 +5,7 @@
 //   gk-f  frame     box drawing, rulers, · and arrows              (structure)
 //   gk-x  problem   "fails", "blocked", "x missing", "▼▼ bad", "over"
 //   gk-ok success   "AAA", "AA", "done", "ok", "▲▲ great"
+//   gk-u  under     a page under a layer (drawer, sheet, popover, menu, toast), in the muted colour
 import { cellWidth, graphemes } from "../text.mjs";
 
 const DATA = "█▓▒▀▄▌▐▏▎▍▋▊▉▁▂▃▅▆▇■";
@@ -17,8 +18,10 @@ const SUCCESS = /\b(AAA|AA large text only|AA|done|ok, approve|ok)\b|▲▲ grea
 const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const roleOf = (ch) => (DATA.includes(ch) ? "d" : ch === EMPTY ? "e" : FRAME.includes(ch) ? "f" : "");
 
-/** The role of every character in a line: "d", "e", "f", "x", "ok" or "" (plain text). */
-export function classify(line) {
+/** The role of every character in a line: "d", "e", "f", "x", "ok", "u" (with a mask) or "" (plain
+ *  text). opts.mask: one letter per cell, p page, l layer, s shadow (a page kind's mask). Page cells
+ *  under a layer are "u", except its rules; shadow cells are frame; layer cells keep their roles. */
+export function classify(line, { mask } = {}) {
   const word = Array(line.length).fill("");
   for (const [re, role] of [[SAMPLE_STAMP, "f"], [PROBLEM, "x"], [SUCCESS, "ok"]]) {
     re.lastIndex = 0;
@@ -33,12 +36,13 @@ export function classify(line) {
     roles.push(...Array(cellWidth(cluster)).fill(role));
     pos += cluster.length;
   }
-  return roles;
+  if (!mask) return roles;
+  return roles.map((role, col) => (mask[col] === "p" ? (role === "f" ? "f" : "u") : mask[col] === "s" ? "f" : role));
 }
 
-/** One line of a figure as HTML with role spans. */
-export function paintLine(line) {
-  const roles = classify(line);
+/** One line of a figure as HTML with role spans. opts: { mask } (see classify). */
+export function paintLine(line, opts = {}) {
+  const roles = classify(line, opts);
   let out = "";
   let run = "";
   let runRole = null;
@@ -61,9 +65,9 @@ export function paintLine(line) {
   return out;
 }
 
-/** A whole figure. */
-export const paint = (text) => text.split("\n").map(paintLine).join("\n");
+/** A whole figure. opts.mask: the figure's mask, one string a line. */
+export const paint = (text, opts = {}) => text.split("\n").map((line, i) => paintLine(line, { ...opts, mask: opts.mask?.[i] })).join("\n");
 
 /** The CSS for the roles, given custom properties for each colour. */
 export const PAINT_CSS = (p) =>
-  `.gk-d{color:var(${p}data)}.gk-e{color:var(${p}data);opacity:.45}.gk-f{color:var(${p}frame)}.gk-x{color:var(${p}flag)}.gk-ok{color:var(${p}ok)}`;
+  `.gk-d{color:var(${p}data)}.gk-e{color:var(${p}data);opacity:.45}.gk-f{color:var(${p}frame)}.gk-x{color:var(${p}flag)}.gk-ok{color:var(${p}ok)}.gk-u{color:var(${p}muted)}`;

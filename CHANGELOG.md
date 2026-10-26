@@ -2,6 +2,22 @@
 
 Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor version may change the spec format; the change is listed here with what to update.
 
+## Unreleased
+
+**Pages and layers: a small UI system**
+
+- **`page`, a new type.** A page is sections, top to bottom; a section holds rows of pieces, 2 to 4 columns (`split: "1:3"` and the like, never cells) or a row of 2 or 3 cards of one height. Code draws every separator and joint (`╦` `╩` `╬`), the window or browser frame, and note markers. Limits: 8 sections, 4 columns of 12 cells or more, 40 to 80 cells, 80 rows.
+- **Seven components** expand to primitives at the width they get: `nav`, `tabsBar`, `fieldGroup` (labels line up), `dataTable` (columns sized to their content, checkboxes, paging, 12 rows then a count), `card`, `stats` and `emptyState`. New primitive `bar` (text left, text or buttons right); `divider` takes a `label`.
+- **Six layers** over a page, at most two: `drawer` (left or right, under the first section), `sheet`, `popover`, `menu`, `toast` and `dialog`. Sizes are `s`, `m` or `l`; popovers and menus open under their `anchor` (a button, a nav, tab or list item, or a piece's `id`) with `▲` over it. Each casts a ░ shadow toward the page, joins its edge to the double rules, and cuts a covered word back to its last whole word. The page grows when a layer needs more room. Under a dialog the page is dimmed and its rules become plain sides.
+- **Six patterns** to copy and edit: `pricing`, `settings`, `list-filters`, `inbox`, `dashboard`, `sign-in`. `glyph-kit.mjs pattern` lists them; `pattern <name>` prints one.
+- **Checks before drawing.** `glyph-kit.mjs check spec.json` lists every problem at once, each a sentence that names the fix, with "did you mean" for names within two edits. New components and layers refuse unknown options; the old primitives warn and draw without them.
+- **The page under a layer is muted** in HTML, SVG, PNG, PDF, decks and reports (a new `gk-u` class in the theme's muted colour). The text form doesn't change.
+- **Layers arrive after their page.** The page lands in reading order within 360ms; then a drawer slides in from its edge, a sheet rises, a popover or menu lands its edge and then its body, and a toast rises a row. Everything settles within 600ms. Reduced motion and print show it open.
+- **A working prototype.** In HTML a page is real regions; a drawer is an `<aside>`, a menu opens under its button with `aria-expanded`, Esc and a click outside close layers. Components are tagged with the map's names, their inner pieces with `data-part`, and choice options with `data-props`.
+- **The map** gains entries for the components and layers, `parts`, and options mapped by choice (`"size": { "s": "size=\"sm\"" }`). `glyph-kit.mjs map check spec.json --map map.json` lists the pieces with no entry.
+- **A shorter wireframes guide** (about 3,700 tokens to 2,300): a table that routes a request to a pattern, one page with a drawer, and the pieces and layers as tables.
+- **The old kinds stay.** `appShell`, `cardGrid`, `listDetail` and `modal` give the same bytes as 0.2.0; the first three now build pages. `guide <name>` still prints their specs.
+
 ## 0.2.0 — 2026-10-20
 
 **Motion**

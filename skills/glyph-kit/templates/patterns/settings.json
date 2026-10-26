@@ -1,0 +1,20 @@
+{
+  "kind": "page",
+  "title": "Notification settings",
+  "intent": "Settings: a side list and grouped fields, Save at the foot.",
+  "data": {
+    "title": "Acme · Settings",
+    "sections": [
+      { "rows": [{ "type": "nav", "brand": "Acme", "items": ["Projects", "Reports", "Settings"], "selected": "Settings", "actions": [{ "label": "AT" }] }] },
+      { "split": "1:3", "columns": [
+        [{ "type": "list", "items": ["Profile", { "text": "Notifications", "selected": true }, "Billing", "Members"] }],
+        [
+          { "type": "fieldGroup", "title": "Email", "fields": [{ "type": "toggle", "label": "Report is ready", "on": true }, { "type": "toggle", "label": "Weekly summary", "on": false }] },
+          { "type": "divider" },
+          { "type": "fieldGroup", "title": "Digest", "help": "One email with everything from the week.", "fields": [{ "type": "select", "label": "Day", "value": "Monday" }, { "type": "input", "label": "Send to", "value": "team@acme.com" }] }
+        ]
+      ] },
+      { "rows": [{ "type": "buttons", "items": [{ "label": "Cancel" }, { "label": "Save", "primary": true }], "align": "right" }] }
+    ]
+  }
+}

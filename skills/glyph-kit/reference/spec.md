@@ -84,10 +84,12 @@ Three decks ship as examples: `export-review.json` (fictional, every type of sli
 | Section | Used by | What it maps |
 |---|---|---|
 | `tokens` | HTML prototypes and decks | Roles (`ink`, `surface`, `panel`, `muted`, `line`, `accent`, `onAccent`, `danger`, `space`, `radius`, `font`, `mono`, `durationBase`, `easingBase`) to your tokens. |
-| `components` | HTML (as `data-component`) and the product step | Wireframe primitives (`button`, `input`, `search`, `select`, `checkbox`, `radio`, `toggle`, `tabs`, `list`, `table`, `dialog`, `skeleton`, `emptyState`, `image`, `heading`, `text`) to your component names, imports and props. |
+| `components` | HTML (as `data-component`) and the product step | Wireframe primitives (`button`, `input`, `search`, `select`, `checkbox`, `radio`, `toggle`, `tabs`, `list`, `table`, `skeleton`, `image`, `heading`, `text`), page components (`nav`, `tabsBar`, `fieldGroup`, `dataTable`, `card`, `stats`, `emptyState`) and layers (`drawer`, `sheet`, `popover`, `menu`, `toast`, `dialog`) to your component names, imports and props. `parts` names a component's inner pieces (HTML `data-part`); an option mapped to an object maps each choice to a prop, `"size": { "s": "size=\"sm\"" }` (HTML `data-props`). |
 | `motion` | Motion demos and the product step | Duration and easing tokens, and how your project handles reduced motion. |
 | `stylesheet` | HTML and decks | Optional URL of your design system's CSS, loaded before the kit's own styles. |
 
 Give every token a fallback, `var(--color-text, #111110)`, so a prototype renders correctly both inside your project and as a standalone file.
+
+The kit keeps one meaning per name: a `drawer` comes from the side and a `sheet` from the bottom, whatever a library calls them; the map says what your project calls each. `glyph-kit.mjs map check spec.json --map design-system.map.json` lists every piece in a spec with no entry, all at once.
 
 The map is the contract that keeps fidelity honest: a wireframe says `toggle`, the map says your project's toggle is `Switch` from `@your/ui`, and the agent builds with `Switch` instead of inventing one.

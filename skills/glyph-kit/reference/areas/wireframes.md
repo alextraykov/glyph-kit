@@ -1,313 +1,100 @@
 # Wireframes
 
-Screens built from a small set of primitives. The same primitive names map to real components in the design-system map, which is what lets a text wireframe become a prototype and then production code without reinterpretation.
+Pages built from named pieces: you pick and fill them, the kit places every cell. Never count cells or draw frames. The names map to real components in `design-system.map.json`.
 
-Types: `screen`, `responsive`, `appShell`, `cardGrid`, `listDetail`, `modal`.
+Types: `page`; `screen` and `responsive` for one panel; `appShell`, `cardGrid`, `listDetail`, `modal` as before.
 
-Each type shows its figure and the spec that made it; the spec's `kind` field names the type. `node scripts/glyph-kit.mjs guide <type>` prints one type's section without the figure.
+## Start from a pattern
 
-## Screen wireframe
+Copy a pattern and edit its words: `node scripts/glyph-kit.mjs pattern <name>` prints one.
 
-`kind: "screen"`
+| the ask sounds like | pattern |
+|---|---|
+| pricing, plans, a marketing page | `pricing` |
+| settings, preferences, a profile form | `settings` |
+| a table with filters, an admin list, "a drawer over a table" | `list-filters` |
+| inbox, messages, list and detail | `inbox` |
+| dashboard, overview, KPIs | `dashboard` |
+| sign in, sign up, reset password | `sign-in` |
 
-**Use it for** a layout proposal: content, order and controls before visuals.
+Words that name a layer ("opening over", "drawer", "popover", "menu", "toast", "confirm") add one to `layers`. Nothing fits: an app page starts from `dashboard`, a public page from `pricing`. Two states are two specs, the second with the layer. Numbers the user didn't give need an "Illustrative" source. `glyph-kit.mjs check spec.json` lists every problem at once.
 
-```text
-╔═ Settings ═════════════════════════════════╗
-║  Profile │ Notifications │ Billing         ║
-║           ━━━━━━━━━━━━━━━                  ║
-║                                            ║
-║ Email me when a report is ready   [ ■] on  ║ [1]
-║ Weekly summary                    [■ ] off ║
-║ Digest day  [ Monday                    ▼] ║
-║ Send to  [team@example.com_______________] ║
-╠════════════════════════════════════════════╣
-║                     [ Cancel ]  [[ Save ]] ║ [2]
-╚════════════════════════════════════════════╝
+## Page
 
-[1] Off by default for new teams.
-[2] Save is disabled until something changes.
-
-                                       SAMPLE DATA
-```
-
-```json
-{
-  "kind": "screen",
-  "title": "Notification settings",
-  "data": {
-    "title": "Settings",
-    "rows": [
-      {
-        "type": "tabs",
-        "items": ["Profile", "Notifications", "Billing"],
-        "selected": "Notifications"
-      },
-      { "type": "space" },
-      {
-        "type": "toggle",
-        "label": "Email me when a report is ready",
-        "on": true,
-        "note": "1"
-      },
-      { "type": "toggle", "label": "Weekly summary", "on": false },
-      {
-        "type": "select",
-        "label": "Digest day",
-        "value": "Monday",
-        "options": ["Monday", "Wednesday", "Friday"]
-      },
-      {
-        "type": "input",
-        "label": "Send to",
-        "value": "team@example.com"
-      },
-      { "type": "divider" },
-      {
-        "type": "buttons",
-        "items": [
-          { "label": "Cancel" },
-          { "label": "Save", "primary": true, "untilChange": true }
-        ],
-        "align": "right",
-        "note": "2"
-      }
-    ],
-    "notes": {
-      "1": "Off by default for new teams.",
-      "2": "Save is disabled until something changes."
-    }
-  }
-}
-```
-
-**Watch for:** One screen per sketch; notes go outside the frame; use only the primitives so the map can translate them.
-
-## Responsive pair
-
-`kind: "responsive"`
-
-**Use it for** the same screen at two widths.
-
-```text
-Desktop                                     Mobile
-╔═ Report ═════════════════════════════╗    ╔═ Report ═════════════╗
-║ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ ║    ║ ░░░░░░░░░░░░░░░░░░░░ ║
-║ ░░░░░░░░░░░░░[ chart ]░░░░░░░░░░░░░░ ║    ║ ░░░░░[ chart ]░░░░░░ ║
-║ ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░ ║    ║ ░░░░░░░░░░░░░░░░░░░░ ║
-║ Revenue by month, last 12 months.    ║    ║ [[ Export ]]         ║
-║ [[ Export ]]  [ Share ]              ║    ╚══════════════════════╝
-╚══════════════════════════════════════╝
-
-                                                         SAMPLE DATA
-```
-
-```json
-{
-  "kind": "responsive",
-  "title": "Report, desktop and mobile",
-  "data": [
-    {
-      "label": "Desktop",
-      "spec": {
-        "title": "Report",
-        "width": 40,
-        "rows": [
-          { "type": "image", "label": "chart", "height": 3 },
-          {
-            "type": "text",
-            "text": "Revenue by month, last 12 months."
-          },
-          {
-            "type": "buttons",
-            "items": [
-              { "label": "Export", "primary": true },
-              { "label": "Share" }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "label": "Mobile",
-      "spec": {
-        "title": "Report",
-        "width": 24,
-        "rows": [
-          { "type": "image", "label": "chart", "height": 3 },
-          {
-            "type": "buttons",
-            "items": [{ "label": "Export", "primary": true }]
-          }
-        ]
-      }
-    }
-  ]
-}
-```
-
-**Watch for:** Show what moves or disappears, not just a narrower copy.
-
-## App shell
-
-`kind: "appShell"`
-
-**Use it for** an app page with a header, a sidebar and content: admin pages, settings apps, anything with navigation. The default for a screen.
+`kind: "page"`
 
 ```text
 ╔═ Acme ═══════════════════════════════════════╗
-║ > Search                                     ║
-╠══════════════╦═══════════════════════════════╣
-║ █ Projects   ║ PROJECTS                      ║
-║   Reports    ║ name           owner          ║
-║              ║ ───────────────────────────── ║
-║              ║ Checkout       Mia            ║
-║              ║ Billing        Ana            ║
-╚══════════════╩═══════════════════════════════╝
-
-                                     SAMPLE DATA
+║ ACME    Projects                  [ Filter ] ║
+║         ━━━━━━━━                             ║
+╠═════════════════════╦════════════════════════╣
+║ NAME               ░║ FILTER               × ║
+║ ───────────────────░╠════════════════════════╣
+║ Checkout           ░║ [x] Live               ║
+║ Billing            ░║ [[ Apply ]]            ║
+║ Search             ░║                        ║
+╚═════════════════════╩════════════════════════╝
 ```
 
 ```json
 {
-  "kind": "appShell",
-  "title": "Projects",
+  "kind": "page",
+  "title": "Projects, filtered",
   "data": {
     "title": "Acme",
-    "header": [{ "type": "search", "placeholder": "Search" }],
-    "sidebar": [
-      {
-        "type": "list",
-        "items": [{ "text": "Projects", "selected": true }, "Reports"]
-      }
-    ],
-    "content": [
-      { "type": "heading", "text": "Projects" },
-      {
-        "type": "table",
-        "columns": ["name", "owner"],
-        "rows": [["Checkout", "Mia"], ["Billing", "Ana"]]
-      }
-    ],
     "width": 48,
-    "sidebarWidth": 14
-  }
-}
-```
-
-**Watch for:** Sidebar 10 to width − 24 cells (18 by default); regions take the screen primitives.
-
-## Card grid
-
-`kind: "cardGrid"`
-
-**Use it for** galleries, template pickers, grids of projects.
-
-```text
-╔═ Templates ══════════════════════════════════╗
-║ ┌─ Readout ─────────┐  ┌─ Status ──────────┐ ║
-║ │ ░░░░[ image ]░░░░ │  │ ░░░░[ image ]░░░░ │ ║
-║ └───────────────────┘  └───────────────────┘ ║
-╚══════════════════════════════════════════════╝
-
-                                     SAMPLE DATA
-```
-
-```json
-{
-  "kind": "cardGrid",
-  "title": "Templates",
-  "data": {
-    "title": "Templates",
-    "cards": [
-      { "title": "Readout", "rows": [{ "type": "image", "height": 1 }] },
-      { "title": "Status", "rows": [{ "type": "image", "height": 1 }] }
+    "sections": [
+      { "rows": [{ "type": "nav", "brand": "Acme", "items": ["Projects"], "selected": "Projects", "actions": [{ "label": "Filter" }] }] },
+      { "rows": [{ "type": "dataTable", "columns": ["name", "owner"], "rows": [["Checkout", "Mia"], ["Billing", "Ana"], ["Search", "Lee"]] }] }
     ],
-    "width": 48
+    "layers": [{ "type": "drawer", "size": "s", "title": "Filter", "rows": [{ "type": "checkbox", "label": "Live", "checked": true }, { "type": "buttons", "items": [{ "label": "Apply", "primary": true }] }] }]
   }
 }
 ```
 
-**Watch for:** Up to 6 cards, 2 or 3 to a row by width; keep each card to a few rows.
+A page is `sections`, top to bottom. A section holds `rows` (pieces), `columns` (2 to 4 lists of pieces) or `cards` (2 or 3 cards). Nothing nests further; a card holds primitives.
 
-## List and detail
+| field | values |
+|---|---|
+| page `width`, `url` | 40 to 80 (80); a browser bar |
+| `split` | `1:1`, `1:2`, `1:3`, `1:4`, `2:1`, `1:1:1`, `1:2:1`, `1:1:2`, `1:1:1:1` |
+| `above` | `double` (default), `line`, `space`, `none` |
+| `rule`, `align`, `measure`, `pad` | `false`; `center`; `narrow` (40 cells, centred); 0 to 2 rows |
+| piece `id`, `note` | a name to anchor to; a note marker |
 
-`kind: "listDetail"`
+## Pieces
 
-**Use it for** inboxes, master and detail, anything where picking an item shows it.
+Primitives: `heading` `text` `muted` `input` `search` `buttons` `checkbox` `radio` `toggle` `select` `tabs` `list` `table` `image` `skeleton` `empty` `bar` (`left`, `right`) `space` `divider` (`label`).
 
-```text
-╔═ Inbox ════════╦═════════════════════════════╗
-║ █ Mia          ║ Ship the new copy Monday?   ║
-║   Sam          ║ [[ Reply ]]                 ║
-║   Ana          ║                             ║
-╚════════════════╩═════════════════════════════╝
+| component | fields |
+|---|---|
+| `nav` | `brand`, `items`, `selected`, `actions` |
+| `tabsBar` | `items` (text or `{ text, count }`), `selected`, `actions` |
+| `fieldGroup` | `title`, `help`, `fields` (input, select, toggle, checkbox, radio) |
+| `dataTable` | `columns`, `rows`, `search`, `actions`, `selectable`, `checked`, `total` |
+| `card` | `title`, `meta`, `rows`, `footer` |
+| `stats` | `items`: up to 4 `{ label, value, change }` |
+| `emptyState` | `title`, `text`, `action`, `secondary` |
 
-                                     SAMPLE DATA
-```
+## Layers
 
-```json
-{
-  "kind": "listDetail",
-  "title": "Inbox",
-  "data": {
-    "title": "Inbox",
-    "list": ["Mia", "Sam", "Ana"],
-    "selected": 0,
-    "detail": [
-      { "type": "text", "text": "Ship the new copy Monday?" },
-      {
-        "type": "buttons",
-        "items": [{ "label": "Reply", "primary": true }]
-      }
-    ],
-    "width": 48,
-    "listWidth": 16
-  }
-}
-```
+Up to 2 in `layers`, drawn in order; the page stays in view.
 
-**Watch for:** Mark the picked item with selected (its index or text).
+| layer | placed | fields |
+|---|---|---|
+| `drawer` | at the `side`, under the first section | `side`, `size`, `title`, `rows`, `footer` |
+| `sheet` | across the bottom | `title`, `rows` |
+| `popover` | under its `anchor` | `anchor`, `size`, `rows` |
+| `menu` | under its `anchor` | `anchor`, `items` (text, `{ text, meta }`, `"-"`) |
+| `toast` | bottom right | `text`, `action` |
+| `dialog` | centred, page dimmed | `size`, `title`, `rows`, `footer` |
 
-## Modal over a page
+`size` is `s`, `m` or `l`, never cells. An `anchor` is a button label, a nav, tab or list item, or an `id`. A layer's rows hold primitives and `fieldGroup`; a menu from a drawer is the second layer. The page grows to fit a layer.
 
-`kind: "modal"`
+**Limits:** 8 sections, 4 columns of 12 cells or more, 3 cards, 4 stats, 12 table rows (then `… and 6 more rows`), 80 rows. Past one, the kit refuses with the fix.
 
-**Use it for** a dialog over a page: confirm, delete, a short form.
+**Watch for:** One state per figure. Unknown names are refused with the closest valid one.
 
-```text
-╔═ Projects ═══════════════════════════════╗
-║░░░░░░┌─ Delete project? ──────────┐░░░░░░║
-║░░░░░░│ [ Cancel ]  [[ Delete ]]   │░░░░░░║
-║░░░░░░└────────────────────────────┘░░░░░░║
-║░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░║
-╚══════════════════════════════════════════╝
+## Old names
 
-                                 SAMPLE DATA
-```
-
-```json
-{
-  "kind": "modal",
-  "title": "Delete a project",
-  "data": {
-    "title": "Projects",
-    "page": [{ "type": "skeleton", "lines": 4 }],
-    "dialog": {
-      "title": "Delete project?",
-      "rows": [
-        {
-          "type": "buttons",
-          "items": [
-            { "label": "Cancel" },
-            { "label": "Delete", "primary": true }
-          ]
-        }
-      ]
-    },
-    "width": 44
-  }
-}
-```
-
-**Watch for:** The page shows dimmed behind it; make the page tall enough for the dialog.
+`screen` is one frame of rows with notes beside it, and `responsive` two screens side by side; use `page` for navigation, columns or layers. `appShell` is a header, then `columns` split `1:3`; `cardGrid` a `cards` section; `listDetail` a `list` column and the detail; `modal` a `dialog` layer. `guide <name>` prints a spec.

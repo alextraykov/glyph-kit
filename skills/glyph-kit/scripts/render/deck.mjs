@@ -21,6 +21,7 @@ import { FONT_CSS } from "./font.mjs";
 import { resolve } from "../registry.mjs";
 import { BASE_CSS, PLAY_JS, esc, fragment, tokensCss } from "./html.mjs";
 import { PAINT_CSS, paintLine } from "./paint.mjs";
+import { maskOf } from "./mask.mjs";
 import { PALETTES, SPACING } from "./themes.mjs";
 import { body, label } from "./text.mjs";
 import { ARRIVE_CSS, arriveLines } from "./arrive.mjs";
@@ -100,8 +101,8 @@ export const THEMES = Object.fromEntries(
 );
 
 // A type with an arrival order comes in by its own order; any other prints line by line.
-const lines = (text, arrived) =>
-  text.split("\n").map((l, i) => `<span class="gk-ln" data-l="${i}">${(arrived ? arrived[i] : paintLine(l)) || " "}</span>`).join("");
+const lines = (text, arrived, mask) =>
+  text.split("\n").map((l, i) => `<span class="gk-ln" data-l="${i}">${(arrived ? arrived[i] : paintLine(l, { mask: mask?.[i] })) || " "}</span>`).join("");
 
 function figureSlide(spec, i, total, map, kicker) {
   const def = resolve(spec);
@@ -112,7 +113,7 @@ function figureSlide(spec, i, total, map, kicker) {
   const arrived = !screen && !moving ? arriveLines(spec, text) : null;
   const fig = screen
     ? `<div class="gk-proto">${fragment(spec, { map })}</div>`
-    : `<pre lang="${esc(spec.lang ?? "en")}" class="gk-fig${arrived ? " gk-fig--arrive" : ""}" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(text, arrived)}</pre>`;
+    : `<pre lang="${esc(spec.lang ?? "en")}" class="gk-fig${arrived ? " gk-fig--arrive" : ""}" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(text, arrived, arrived ? undefined : maskOf(spec))}</pre>`;
   return `<section class="gk-slide" data-steps="${esc(JSON.stringify(p.steps ?? []))}" data-flag="${esc(p.flag ?? "")}" aria-roledescription="slide" aria-label="${i + 1} of ${total}">
 <header><p class="gk-kicker">${esc(kicker || def.label)}</p><h2 class="gk-title">${esc(spec.title ?? def.label)}</h2>${spec.intent ? `<p class="gk-lead">${esc(spec.intent)}</p>` : ""}</header>
 <div class="gk-view"><div class="gk-world">${fig}</div></div>

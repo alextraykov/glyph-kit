@@ -65,7 +65,11 @@
     },
     "dialog": {
       "name": "Dialog",
-      "import": "@your/ui"
+      "import": "@your/ui",
+      "parts": {
+        "title": "Dialog.Title",
+        "footer": "Dialog.Footer"
+      }
     },
     "skeleton": {
       "name": "Skeleton",
@@ -86,6 +90,86 @@
     "text": {
       "name": "Text",
       "import": "@your/ui"
+    },
+    "nav": {
+      "name": "TopNav",
+      "import": "@your/ui",
+      "parts": {
+        "items": "TopNav.Item",
+        "actions": "TopNav.Actions"
+      },
+      "selected": "aria-current=\"page\""
+    },
+    "tabsBar": {
+      "name": "Tabs",
+      "import": "@your/ui",
+      "parts": {
+        "items": "Tabs.Tab",
+        "count": "Badge"
+      }
+    },
+    "fieldGroup": {
+      "name": "Fieldset",
+      "import": "@your/ui",
+      "parts": {
+        "title": "Fieldset.Legend",
+        "help": "Fieldset.Description"
+      }
+    },
+    "dataTable": {
+      "name": "DataTable",
+      "import": "@your/ui",
+      "parts": {
+        "search": "SearchField",
+        "actions": "Toolbar",
+        "total": "Pagination"
+      },
+      "selectable": "selectionMode=\"multiple\""
+    },
+    "card": {
+      "name": "Card",
+      "import": "@your/ui",
+      "parts": {
+        "title": "Card.Header",
+        "footer": "Card.Footer"
+      }
+    },
+    "stats": {
+      "name": "Stat",
+      "import": "@your/ui"
+    },
+    "drawer": {
+      "name": "Sheet",
+      "import": "@your/ui",
+      "side": "side",
+      "size": {
+        "s": "size=\"sm\"",
+        "m": "size=\"md\"",
+        "l": "size=\"lg\""
+      }
+    },
+    "sheet": {
+      "name": "Drawer",
+      "import": "@your/ui"
+    },
+    "popover": {
+      "name": "Popover",
+      "import": "@your/ui",
+      "anchor": "Popover.Trigger"
+    },
+    "menu": {
+      "name": "DropdownMenu",
+      "import": "@your/ui",
+      "anchor": "DropdownMenu.Trigger",
+      "parts": {
+        "items": "DropdownMenu.Item",
+        "-": "DropdownMenu.Separator"
+      }
+    },
+    "toast": {
+      "name": "Toast",
+      "import": "@your/ui",
+      "action": "action"
     }
   },
   "motion": {

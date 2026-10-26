@@ -229,7 +229,8 @@ test("arrival: types with an order arrive in HTML and decks, and end on the exac
   for (const kind of Object.keys(KINDS)) if (!KINDS[kind].layout) assert.ok(KINDS[kind].arrive || KINDS[kind].motion, `${kind} has no motion`);
   const strip = (html) => html.replace(/<[^>]+>/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
   // Screens become working prototypes in HTML and decks; they arrive where they are drawn as text.
-  const specs = Object.values(examples).flat().filter((s) => KINDS[s.kind].arrive && s.kind !== "screen" && s.kind !== "responsive");
+  // A page is a prototype in HTML; its arrival, layers and all, is tested in pages.test.mjs.
+  const specs = Object.values(examples).flat().filter((s) => KINDS[s.kind].arrive && s.kind !== "screen" && s.kind !== "responsive" && s.kind !== "page");
   for (const spec of specs) {
     const text = body(spec);
     // HTML: the figure is marked to arrive, every delay sits on the 40ms step, and the text is unchanged.

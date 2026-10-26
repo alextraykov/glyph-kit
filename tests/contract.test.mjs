@@ -14,6 +14,8 @@ function labels(value, key = "") {
   if (Array.isArray(value)) return value.flatMap((item) => labels(item, key));
   // An open modal intentionally obscures its background (approved exception).
   if (value?.overlay) return labels(value.overlay);
+  // So does a layer over a page: the page's words under it are covered on purpose.
+  if (Array.isArray(value?.layers) && value.layers.length && value.sections) return labels(value.layers);
   return value && typeof value === "object" ? Object.entries(value).flatMap(([k, v]) => labels(v, k)) : [];
 }
 

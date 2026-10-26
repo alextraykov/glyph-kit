@@ -24,7 +24,7 @@ Work in the user's folder, not this skill's, so specs and outputs land there. `<
    | Funnels, retention, A/B results, metrics, charts | `funnel` `cohort` `abResult` `metricPanel` `barChart` `compare` `forecast` `meter` `sparkline` `heatmap` `calendarStrip` |
    | Flows with decisions, state machines, journeys, sitemaps | `flow` `branchFlow` `stateMachine` `journeyMap` `tree` |
    | Roadmaps, priorities, ownership, timelines, decisions | `board` `impactEffort` `swimlane` `gantt` `statusKey` `decisionLog` |
-   | Screens: one screen, an app shell, a card grid, list and detail, a modal | `screen` `responsive` `appShell` `cardGrid` `listDetail` `modal` |
+   | Pages and screens: pricing, settings, a table with filters, an inbox, a dashboard, sign-in; a drawer, sheet, popover, menu, toast or dialog over a page | `page` (start from a pattern: `reference/areas/wireframes.md`) `screen` `responsive` |
    | Tokens, scales, contrast, component states, layers | `spacingScale` `typeScale` `contrast` `stateMatrix` `layerStack` `tokenTable` `table` |
    | Redlines, QA checklists, component anatomy, before and after | `redline` `qaChecklist` `anatomy` `compare` |
    | Motion intent, timing, transitions, stagger, easing | `motionTiming` `intentCard` `transitionSpec` `stagger` `filmstrip` `easingTable` |
@@ -64,7 +64,7 @@ Every command is `node <skill>/scripts/glyph-kit.mjs <command>`.
 | Output | Command | Read first |
 |---|---|---|
 | Text, Markdown | `render spec.json [--to text\|markdown]` | nothing |
-| HTML page; a `screen` becomes a working prototype | `render spec.json --to html [--map design-system.map.json]` | `reference/fidelity.md` for prototypes and code |
+| HTML page; a `screen` or `page` becomes a working prototype | `render spec.json --to html [--map design-system.map.json]` | `reference/fidelity.md` for prototypes and code |
 | Deck | `deck deck.json > deck.html` | `guide deck` |
 | Report (cover, summary, sections) | `export report.json --to html\|pdf` | `guide report` |
 | MDX, SVG, PNG, PDF of anything | `export <file> --to md\|mdx\|html\|svg\|png\|pdf` | `reference/export.md` |
