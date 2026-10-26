@@ -1,0 +1,622 @@
+[
+ {
+  "spec": {
+   "kind": "appShell",
+   "data": {
+    "title": "Acme",
+    "header": [
+     {
+      "type": "search",
+      "placeholder": "Search"
+     }
+    ],
+    "sidebar": [
+     {
+      "type": "list",
+      "items": [
+       {
+        "text": "Projects",
+        "selected": true
+       },
+       "Reports"
+      ]
+     }
+    ],
+    "content": [
+     {
+      "type": "heading",
+      "text": "Projects"
+     },
+     {
+      "type": "table",
+      "columns": [
+       "name",
+       "owner"
+      ],
+      "rows": [
+       [
+        "Checkout",
+        "Mia"
+       ],
+       [
+        "Billing",
+        "Ana"
+       ]
+      ]
+     }
+    ],
+    "width": 48,
+    "sidebarWidth": 14
+   }
+  },
+  "text": "╔═ Acme ═══════════════════════════════════════╗\n║ > Search                                     ║\n╠══════════════╦═══════════════════════════════╣\n║ █ Projects   ║ PROJECTS                      ║\n║   Reports    ║ name           owner          ║\n║              ║ ───────────────────────────── ║\n║              ║ Checkout       Mia            ║\n║              ║ Billing        Ana            ║\n╚══════════════╩═══════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "cardGrid",
+   "data": {
+    "title": "Templates",
+    "cards": [
+     {
+      "title": "Readout",
+      "rows": [
+       {
+        "type": "image",
+        "height": 1
+       }
+      ]
+     },
+     {
+      "title": "Status",
+      "rows": [
+       {
+        "type": "image",
+        "height": 1
+       }
+      ]
+     }
+    ],
+    "width": 48
+   }
+  },
+  "text": "╔═ Templates ══════════════════════════════════╗\n║ ┌─ Readout ─────────┐  ┌─ Status ──────────┐ ║\n║ │ ░░░░[ image ]░░░░ │  │ ░░░░[ image ]░░░░ │ ║\n║ └───────────────────┘  └───────────────────┘ ║\n╚══════════════════════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "listDetail",
+   "data": {
+    "title": "Inbox",
+    "list": [
+     "Mia",
+     "Sam",
+     "Ana"
+    ],
+    "selected": 0,
+    "detail": [
+     {
+      "type": "text",
+      "text": "Ship the new copy Monday?"
+     },
+     {
+      "type": "buttons",
+      "items": [
+       {
+        "label": "Reply",
+        "primary": true
+       }
+      ]
+     }
+    ],
+    "width": 48,
+    "listWidth": 16
+   }
+  },
+  "text": "╔═ Inbox ════════╦═════════════════════════════╗\n║ █ Mia          ║ Ship the new copy Monday?   ║\n║   Sam          ║ [[ Reply ]]                 ║\n║   Ana          ║                             ║\n╚════════════════╩═════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "modal",
+   "data": {
+    "title": "Projects",
+    "page": [
+     {
+      "type": "skeleton",
+      "lines": 4
+     }
+    ],
+    "dialog": {
+     "title": "Delete project?",
+     "rows": [
+      {
+       "type": "buttons",
+       "items": [
+        {
+         "label": "Cancel"
+        },
+        {
+         "label": "Delete",
+         "primary": true
+        }
+       ]
+      }
+     ]
+    },
+    "width": 44
+   }
+  },
+  "text": "╔═ Projects ═══════════════════════════════╗\n║░░░░░░┌─ Delete project? ──────────┐░░░░░░║\n║░░░░░░│ [ Cancel ]  [[ Delete ]]   │░░░░░░║\n║░░░░░░└────────────────────────────┘░░░░░░║\n║░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░║\n╚══════════════════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "appShell",
+   "data": {
+    "title": "Acme",
+    "sidebar": [
+     {
+      "type": "list",
+      "items": [
+       "A",
+       "B"
+      ]
+     }
+    ],
+    "content": [
+     {
+      "type": "text",
+      "text": "Row 1"
+     },
+     {
+      "type": "text",
+      "text": "Row 2"
+     },
+     {
+      "type": "text",
+      "text": "Row 3"
+     }
+    ]
+   }
+  },
+  "text": "╔═ Acme ═══════════╦═══════════════════════════════════════════╗\n║   A              ║ Row 1                                     ║\n║   B              ║ Row 2                                     ║\n║                  ║ Row 3                                     ║\n╚══════════════════╩═══════════════════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "appShell",
+   "data": {
+    "title": "A long title that runs past the sidebar",
+    "width": 80,
+    "sidebarWidth": 22,
+    "header": [],
+    "sidebar": [
+     {
+      "type": "text",
+      "text": "Row 1"
+     },
+     {
+      "type": "text",
+      "text": "Row 2"
+     },
+     {
+      "type": "text",
+      "text": "Row 3"
+     },
+     {
+      "type": "text",
+      "text": "Row 4"
+     },
+     {
+      "type": "text",
+      "text": "Row 5"
+     },
+     {
+      "type": "text",
+      "text": "Row 6"
+     },
+     {
+      "type": "text",
+      "text": "Row 7"
+     },
+     {
+      "type": "text",
+      "text": "Row 8"
+     },
+     {
+      "type": "text",
+      "text": "Row 9"
+     },
+     {
+      "type": "text",
+      "text": "Row 10"
+     },
+     {
+      "type": "text",
+      "text": "Row 11"
+     },
+     {
+      "type": "text",
+      "text": "Row 12"
+     },
+     {
+      "type": "text",
+      "text": "Row 13"
+     },
+     {
+      "type": "text",
+      "text": "Row 14"
+     },
+     {
+      "type": "text",
+      "text": "Row 15"
+     },
+     {
+      "type": "text",
+      "text": "Row 16"
+     },
+     {
+      "type": "text",
+      "text": "Row 17"
+     },
+     {
+      "type": "text",
+      "text": "Row 18"
+     },
+     {
+      "type": "text",
+      "text": "Row 19"
+     },
+     {
+      "type": "text",
+      "text": "Row 20"
+     }
+    ],
+    "content": [
+     {
+      "type": "divider"
+     },
+     {
+      "type": "text",
+      "text": "Row 1"
+     },
+     {
+      "type": "text",
+      "text": "Row 2"
+     }
+    ]
+   }
+  },
+  "text": "╔═ A long title that … ╦═══════════════════════════════════════════════════════╗\n║ Row 1                ║ ───────────────────────────────────────────────────── ║\n║ Row 2                ║ Row 1                                                 ║\n║ Row 3                ║ Row 2                                                 ║\n║ Row 4                ║                                                       ║\n║ Row 5                ║                                                       ║\n║ Row 6                ║                                                       ║\n║ Row 7                ║                                                       ║\n║ Row 8                ║                                                       ║\n║ Row 9                ║                                                       ║\n║ Row 10               ║                                                       ║\n║ Row 11               ║                                                       ║\n║ Row 12               ║                                                       ║\n║ Row 13               ║                                                       ║\n║ Row 14               ║                                                       ║\n║ Row 15               ║                                                       ║\n║ Row 16               ║                                                       ║\n║ … and 4 more rows    ║                                                       ║\n╚══════════════════════╩═══════════════════════════════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "appShell",
+   "data": {
+    "width": 70,
+    "header": [
+     {
+      "type": "search"
+     },
+     {
+      "type": "divider"
+     }
+    ],
+    "sidebar": [],
+    "content": [
+     {
+      "type": "table",
+      "columns": [
+       "a",
+       "b",
+       "c"
+      ],
+      "rows": [
+       [
+        "1",
+        "2",
+        "3"
+       ]
+      ]
+     }
+    ]
+   }
+  },
+  "text": "╔════════════════════════════════════════════════════════════════════╗\n║ > Search                                                           ║\n║ ────────────────────────────────────────────────────────────────── ║\n╠══════════════════╦═════════════════════════════════════════════════╣\n║                  ║ a               b               c               ║\n║                  ║ ─────────────────────────────────────────────── ║\n║                  ║ 1               2               3               ║\n╚══════════════════╩═════════════════════════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "cardGrid",
+   "data": {
+    "title": "Grid",
+    "cards": [
+     {
+      "title": "A",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     },
+     {
+      "title": "B",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       },
+       {
+        "type": "text",
+        "text": "Row 2"
+       },
+       {
+        "type": "text",
+        "text": "Row 3"
+       }
+      ]
+     },
+     {
+      "title": "C",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     },
+     {
+      "title": "D",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       },
+       {
+        "type": "text",
+        "text": "Row 2"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "text": "╔═ Grid ═══════════════════════════════════════════════════════════════════════╗\n║ ┌─ A ──────────────────┐  ┌─ B ──────────────────┐  ┌─ C ──────────────────┐ ║\n║ │ Row 1                │  │ Row 1                │  │ Row 1                │ ║\n║ │                      │  │ Row 2                │  │                      │ ║\n║ │                      │  │ Row 3                │  │                      │ ║\n║ └──────────────────────┘  └──────────────────────┘  └──────────────────────┘ ║\n║                                                                              ║\n║ ┌─ D ──────────────────┐                                                     ║\n║ │ Row 1                │                                                     ║\n║ │ Row 2                │                                                     ║\n║ └──────────────────────┘                                                     ║\n╚══════════════════════════════════════════════════════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "cardGrid",
+   "data": {
+    "width": 48,
+    "columns": 1,
+    "cards": [
+     {
+      "title": "Only",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "text": "╔══════════════════════════════════════════════╗\n║ ┌─ Only ───────────────────────────────────┐ ║\n║ │ Row 1                                    │ ║\n║ └──────────────────────────────────────────┘ ║\n╚══════════════════════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "cardGrid",
+   "data": {
+    "width": 60,
+    "header": [
+     {
+      "type": "heading",
+      "text": "Head"
+     }
+    ],
+    "cards": [
+     {
+      "title": "Card 0",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     },
+     {
+      "title": "Card 1",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     },
+     {
+      "title": "Card 2",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     },
+     {
+      "title": "Card 3",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     },
+     {
+      "title": "Card 4",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     },
+     {
+      "title": "Card 5",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     },
+     {
+      "title": "Card 6",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     },
+     {
+      "title": "Card 7",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "text": "╔══════════════════════════════════════════════════════════╗\n║ HEAD                                                     ║\n╠══════════════════════════════════════════════════════════╣\n║ ┌─ Card 0 ────────────────┐  ┌─ Card 1 ────────────────┐ ║\n║ │ Row 1                   │  │ Row 1                   │ ║\n║ └─────────────────────────┘  └─────────────────────────┘ ║\n║                                                          ║\n║ ┌─ Card 2 ────────────────┐  ┌─ Card 3 ────────────────┐ ║\n║ │ Row 1                   │  │ Row 1                   │ ║\n║ └─────────────────────────┘  └─────────────────────────┘ ║\n║                                                          ║\n║ ┌─ Card 4 ────────────────┐  ┌─ Card 5 ────────────────┐ ║\n║ │ Row 1                   │  │ Row 1                   │ ║\n║ └─────────────────────────┘  └─────────────────────────┘ ║\n║                                                          ║\n║ … and 2 more cards                                       ║\n╚══════════════════════════════════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "cardGrid",
+   "data": {
+    "width": 80,
+    "columns": 2,
+    "cards": [
+     {
+      "title": "",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     },
+     {
+      "rows": []
+     },
+     {
+      "title": "A very long card title that is cut",
+      "rows": [
+       {
+        "type": "text",
+        "text": "Row 1"
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "text": "╔══════════════════════════════════════════════════════════════════════════════╗\n║ ┌───────────────────────────────────┐  ┌───────────────────────────────────┐ ║\n║ │ Row 1                             │  │                                   │ ║\n║ └───────────────────────────────────┘  └───────────────────────────────────┘ ║\n║                                                                              ║\n║ ┌─ A very long card title that is… ─┐                                        ║\n║ │ Row 1                             │                                        ║\n║ └───────────────────────────────────┘                                        ║\n╚══════════════════════════════════════════════════════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "listDetail",
+   "data": {
+    "title": "Inbox",
+    "list": [
+     "Mia",
+     "Sam"
+    ],
+    "selected": "Sam",
+    "detail": [
+     {
+      "type": "text",
+      "text": "Row 1"
+     },
+     {
+      "type": "text",
+      "text": "Row 2"
+     },
+     {
+      "type": "text",
+      "text": "Row 3"
+     },
+     {
+      "type": "text",
+      "text": "Row 4"
+     },
+     {
+      "type": "text",
+      "text": "Row 5"
+     }
+    ],
+    "width": 64
+   }
+  },
+  "text": "╔═ Inbox ══════════════════╦═══════════════════════════════════╗\n║   Mia                    ║ Row 1                             ║\n║ █ Sam                    ║ Row 2                             ║\n║                          ║ Row 3                             ║\n║                          ║ Row 4                             ║\n║                          ║ Row 5                             ║\n╚══════════════════════════╩═══════════════════════════════════╝"
+ },
+ {
+  "spec": {
+   "kind": "modal",
+   "data": {
+    "title": "P",
+    "page": [
+     {
+      "type": "text",
+      "text": "Row 1"
+     },
+     {
+      "type": "text",
+      "text": "Row 2"
+     },
+     {
+      "type": "text",
+      "text": "Row 3"
+     },
+     {
+      "type": "text",
+      "text": "Row 4"
+     },
+     {
+      "type": "text",
+      "text": "Row 5"
+     },
+     {
+      "type": "text",
+      "text": "Row 6"
+     },
+     {
+      "type": "text",
+      "text": "Row 7"
+     },
+     {
+      "type": "text",
+      "text": "Row 8"
+     }
+    ],
+    "dialog": {
+     "title": "Sure?",
+     "rows": [
+      {
+       "type": "buttons",
+       "items": [
+        {
+         "label": "No"
+        },
+        {
+         "label": "Yes",
+         "primary": true
+        }
+       ]
+      }
+     ]
+    }
+   }
+  },
+  "text": "╔═ P ══════════════════════════════════════════════════╗\n║░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░║\n║░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░║\n║░░░░░░░░░░░░┌─ Sure? ────────────────────┐░░░░░░░░░░░░║\n║░░░░░░░░░░░░│ [ No ]  [[ Yes ]]          │░░░░░░░░░░░░║\n║░░░░░░░░░░░░└────────────────────────────┘░░░░░░░░░░░░║\n║░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░║\n║░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░║\n║░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░║\n╚══════════════════════════════════════════════════════╝"
+ }
+]

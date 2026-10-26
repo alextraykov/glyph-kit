@@ -6,7 +6,8 @@ import { compact, estimateTextTokens } from "../skills/glyph-kit/scripts/tokens.
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { AREA_DOCS, KIND_DOCS, LIVE_DOC } from "./docs.mjs";
+import { format } from "./format.mjs";
+import { AREA_DOCS, KIND_DOCS, LIVE_DOC, WIREFRAMES_EXAMPLES, WIREFRAMES_GUIDE } from "./docs.mjs";
 import { AREAS, KINDS } from "../skills/glyph-kit/scripts/registry.mjs";
 import { body } from "../skills/glyph-kit/scripts/render/text.mjs";
 
@@ -30,6 +31,13 @@ const jsonTight = (value, indent = "") => {
 };
 
 for (const [area, { label: areaLabel, kinds }] of Object.entries(AREAS)) {
+  if (area === "wireframes") {
+    // Written whole: patterns, one page with a layer, and tables (docs.mjs).
+    const json = (spec) => format(spec);
+    writeFileSync(join(root, "reference/areas/wireframes.md"), WIREFRAMES_GUIDE({ figure: (spec) => body(spec), json, ...WIREFRAMES_EXAMPLES }));
+    console.log("reference/areas/wireframes.md");
+    continue;
+  }
   const examples = JSON.parse(readFileSync(join(here, "examples", `${area}.json`), "utf8"));
   const out = [
     `# ${areaLabel}`,

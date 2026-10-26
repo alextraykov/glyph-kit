@@ -7,6 +7,9 @@
 //   node glyph-kit.mjs types                                                  (lists every type by area; `kinds` works too)
 //   node glyph-kit.mjs guide <kind | deck | report | spec>                    (one kind's example spec and notes)
 //   node glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme name]   (a moving diagram)
+//   node glyph-kit.mjs check <spec.json>                                      (every problem at once)
+//   node glyph-kit.mjs pattern [name]                                         (the page patterns, or one)
+//   node glyph-kit.mjs map check <spec.json> --map design-system.map.json    (pieces with no map entry)
 //
 //   node glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme name] [--map map.json]
 //                         [--mdx component]   (the file may be a spec, a list of specs, a deck or a report)
@@ -67,7 +70,13 @@ try {
     };
     const topics = { spec: ["spec.md", "## A spec"], deck: ["spec.md", "## Presenting: decks"], report: ["export.md", "## Reports"] };
     const name = files[0];
-    if (topics[name]) console.log(section(...topics[name]));
+    const { KINDS: all } = await import("./registry.mjs");
+    const guideText = all[name] ? readFileSync(join(ref, "areas", `${all[name].area}.md`), "utf8") : "";
+    if (all[name]?.example && !guideText.split("\n").includes(`\`kind: "${name}"\``)) {
+      // A kind the guide covers in a line (the old screen names): that line and a short spec.
+      const line = guideText.split("\n").find((l) => l.includes(`\`${name}\``) && !l.startsWith("Types:")) ?? "";
+      console.log(`## ${all[name].label}\n\n${line.trim()}\n\n\`\`\`json\n${JSON.stringify({ kind: name, title: all[name].label, data: all[name].example })}\n\`\`\``);
+    } else if (topics[name]) console.log(section(...topics[name]));
     else {
       const { KINDS } = await import("./registry.mjs");
       const def = KINDS[name];
@@ -138,6 +147,54 @@ try {
       written.push(htmlToPdf(layouts ? renderLayoutPages(doc, { theme, title }) : kind === "deck" ? renderDeck(doc, { map }) : renderReport(asReport(), { theme }), `${stem}.pdf`));
     } else throw new Error(`--to must be md, mdx, html, svg, png or pdf, not "${to}".`);
     console.log(written.join("\n"));
+  } else if (command === "check" && files.length === 1) {
+    // Every problem in a spec at once, one a line, so one retry fixes them all.
+    const { KINDS } = await import("./registry.mjs");
+    const problems = [];
+    for (const spec of [read(files[0])].flat()) {
+      const def = KINDS[spec?.kind];
+      if (def?.check && spec.data && typeof spec.data === "object") problems.push(...def.check(spec.data));
+      else
+        try {
+          const { resolve } = await import("./registry.mjs");
+          resolve(spec);
+        } catch (error) {
+          problems.push(error.message);
+        }
+    }
+    if (problems.length) {
+      console.error(problems.join("\n"));
+      process.exitCode = 1;
+    } else console.log("No problems.");
+  } else if (command === "pattern" && files.length <= 1) {
+    const dir = join(dirname(fileURLToPath(import.meta.url)), "../templates/patterns");
+    const names = ["pricing", "settings", "list-filters", "inbox", "dashboard", "sign-in"];
+    if (!files.length) for (const n of names) console.log(`${n.padEnd(13)} ${JSON.parse(readFileSync(join(dir, `${n}.json`), "utf8")).intent}`);
+    else {
+      if (!names.includes(files[0])) {
+        const { closest } = await import("./areas/grammar.mjs");
+        const near = closest(files[0], names);
+        throw new Error(`There is no pattern called "${files[0]}".${near ? ` Did you mean ${near}?` : ""} Patterns: ${names.join(", ")}.`);
+      }
+      process.stdout.write(readFileSync(join(dir, `${files[0]}.json`), "utf8"));
+    }
+  } else if (command === "map" && files[0] === "check" && files.length === 2) {
+    // Every piece in a spec the map has no entry for, all in one go.
+    if (!map) throw new Error("map check needs the map: --map design-system.map.json.");
+    const types = new Set();
+    const walk = (v) => {
+      if (Array.isArray(v)) return v.forEach(walk);
+      if (!v || typeof v !== "object") return;
+      if (typeof v.type === "string") types.add(v.type === "buttons" ? "button" : v.type);
+      if (v.cards) types.add("card");
+      Object.values(v).forEach(walk);
+    };
+    for (const spec of [read(files[1])].flat()) walk(spec.data);
+    const missing = [...types].filter((t) => !["space", "divider", "muted", "bar"].includes(t) && !map.components?.[t]);
+    if (missing.length) {
+      console.log(`No map entry: ${missing.join(", ")}. Ask what the project uses for each before building it.`);
+      process.exitCode = 1;
+    } else console.log("Every piece has a map entry.");
   } else if (command === "deck" && files.length) {
     // One deck file ({ title, slides }), or any number of spec files whose specs become slides.
     const { renderDeck } = await import("./render/deck.mjs");
@@ -145,9 +202,11 @@ try {
     const deck = loaded.length === 1 && !Array.isArray(loaded[0]) && loaded[0].slides ? loaded[0] : loaded.flat();
     process.stdout.write(renderDeck(deck, { title, map }));
   } else {
-    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme paper|ink|phosphor|gilt]\n  glyph-kit.mjs kinds\n  glyph-kit.mjs guide <kind | deck | report | spec>");
+    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme paper|ink|phosphor|gilt]\n  glyph-kit.mjs kinds\n  glyph-kit.mjs guide <kind | deck | report | spec>\n  glyph-kit.mjs check <spec.json>\n  glyph-kit.mjs pattern [name]\n  glyph-kit.mjs map check <spec.json> --map map.json");
     process.exit(1);
   }
+  const { warnLog } = await import("./areas/grammar.mjs");
+  if (warnLog.size) console.error([...warnLog].join("\n"));
   if (cutLog.size)
     console.error(`Cut to fit, shown with "…" in the figure. Shorten these to the cells given:\n${[...cutLog].map(([text, cells]) => `  ${cells} cells: ${JSON.stringify(text)}`).join("\n")}`);
 } catch (error) {

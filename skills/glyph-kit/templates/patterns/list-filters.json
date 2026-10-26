@@ -1,0 +1,17 @@
+{
+  "kind": "page",
+  "title": "Projects, filtered",
+  "intent": "A table with tabs, search and paging, a filter drawer open over it.",
+  "data": {
+    "title": "Acme",
+    "sections": [
+      { "rows": [{ "type": "nav", "brand": "Acme", "items": ["Projects", "Reports"], "selected": "Projects", "actions": [{ "label": "New", "primary": true }] }] },
+      { "rows": [
+        { "type": "tabsBar", "items": [{ "text": "All", "count": 18 }, { "text": "Live", "count": 9 }, { "text": "Draft", "count": 6 }], "selected": "All" },
+        { "type": "space" },
+        { "type": "dataTable", "search": "Search projects", "actions": [{ "label": "Filter" }, { "label": "Sort" }], "columns": ["name", "owner", "status", "updated"], "rows": [["Checkout", "Mia", "live", "2 h ago"], ["Onboarding", "Sam", "draft", "1 d ago"], ["Billing", "Ana", "live", "3 d ago"], ["Search", "Lee", "paused", "1 w ago"], ["Invoices", "Kai", "draft", "2 w ago"]], "total": 18 }
+      ] }
+    ],
+    "layers": [{ "type": "drawer", "side": "right", "size": "m", "title": "Filter", "rows": [{ "type": "fieldGroup", "fields": [{ "type": "select", "label": "Owner", "value": "Anyone" }] }, { "type": "space" }, { "type": "heading", "text": "Status" }, { "type": "checkbox", "label": "Live", "checked": true }, { "type": "checkbox", "label": "Draft", "checked": true }, { "type": "checkbox", "label": "Paused" }], "footer": [{ "label": "Reset" }, { "label": "Apply", "primary": true }] }]
+  }
+}

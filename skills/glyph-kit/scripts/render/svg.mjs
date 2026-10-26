@@ -5,6 +5,7 @@
 // Colours come from the theme's roles (themes.mjs, paint.mjs). PNG is this SVG rasterised (export.mjs).
 import { resolve } from "../registry.mjs";
 import { classify } from "./paint.mjs";
+import { maskOf } from "./mask.mjs";
 import { SPACING, palette } from "./themes.mjs";
 import { body, label } from "./text.mjs";
 import { cellWidth, graphemes, width as textWidth } from "../text.mjs";
@@ -29,9 +30,9 @@ const LOW_EIGHTHS = "▁▂▃▄▅▆▇"; // 1/8 … 7/8 tall
 const SHADES = { "░": 0.25, "▒": 0.5, "▓": 0.75 };
 
 /** Draw lines of text as SVG elements on a grid. Returns { svg, width, height } for the inner figure. */
-export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0 } = {}) {
+export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0, mask } = {}) {
   const c = colors;
-  const roleColor = { d: c.data, e: c.data, f: c.frame, x: c.flag, ok: c.ok, "": c.ink };
+  const roleColor = { d: c.data, e: c.data, f: c.frame, x: c.flag, ok: c.ok, u: c.muted, "": c.ink };
   const lines = text.split("\n");
   const cols = Math.max(1, ...lines.map(textWidth));
   const band = row * 0.72; // block height: leaves a gap between rows so charts breathe
@@ -52,7 +53,7 @@ export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0 } 
 
   lines.forEach((line, r) => {
     const chars = graphemes(line);
-    const roles = classify(line);
+    const roles = classify(line, { mask: mask?.[r] });
     const top = y0 + r * row;
     const cy = top + row / 2;
     let run = "";
@@ -174,7 +175,7 @@ export function renderSvg(spec, { theme = "paper", cell = 10, row = 22, frame = 
   const titleH = frame && spec.title ? 48 : 0;
   const intentH = frame && spec.intent ? 26 : 0;
   const sourceH = frame && spec.source ? 34 : 0;
-  const fig = figureSvg(text, { colors: c, cell, row, x0: padX * 2, y0: padY + titleH + intentH + padY });
+  const fig = figureSvg(text, { colors: c, cell, row, x0: padX * 2, y0: padY + titleH + intentH + padY, mask: maskOf(spec) });
   const width = Math.max(fig.width + padX * 4, frame && spec.title ? textWidth(spec.title) * 11 + padX * 2 : 0);
   const panelTop = padY + titleH + intentH;
   const panelH = fig.height + padY * 2;

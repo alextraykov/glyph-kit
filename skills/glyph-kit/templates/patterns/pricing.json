@@ -1,0 +1,43 @@
+{
+  "kind": "page",
+  "title": "Pricing",
+  "intent": "A marketing page: plans side by side, questions, a footer.",
+  "data": {
+    "url": "acme.com/pricing",
+    "sections": [
+      { "rows": [{ "type": "nav", "brand": "Acme", "items": ["Product", "Pricing", "Docs"], "selected": "Pricing", "actions": [{ "label": "Log in" }, { "label": "Sign up", "primary": true }] }] },
+      { "align": "center", "pad": 1, "rows": [
+        { "type": "heading", "text": "Pricing that grows with your team" },
+        { "type": "muted", "text": "Start free. Pay per seat after three." }
+      ] },
+      { "above": "none", "cards": [
+        { "title": "Free", "rows": [
+          { "type": "heading", "text": "$0" },
+          { "type": "muted", "text": "3 seats" },
+          { "type": "muted", "text": "5 projects" }
+        ], "footer": [{ "label": "Start" }] },
+        { "title": "Team", "meta": "Popular", "rows": [
+          { "type": "heading", "text": "$12 a seat / mo" },
+          { "type": "muted", "text": "Unlimited projects" },
+          { "type": "muted", "text": "Shared libraries" }
+        ], "footer": [{ "label": "Try 14 days", "primary": true }] },
+        { "title": "Enterprise", "rows": [
+          { "type": "heading", "text": "Talk to us" },
+          { "type": "muted", "text": "SSO and audit log" },
+          { "type": "muted", "text": "99.9% uptime SLA" }
+        ], "footer": [{ "label": "Contact" }] }
+      ] },
+      { "above": "space", "rows": [
+        { "type": "heading", "text": "Questions" },
+        { "type": "text", "text": "Can I change plans later?" },
+        { "type": "muted", "text": "Yes. Seats are prorated to the day." }
+      ] },
+      { "rule": false, "columns": [
+        [{ "type": "muted", "text": "ACME" }],
+        [{ "type": "muted", "text": "Docs" }],
+        [{ "type": "muted", "text": "Status" }],
+        [{ "type": "muted", "text": "Privacy" }]
+      ] }
+    ]
+  }
+}

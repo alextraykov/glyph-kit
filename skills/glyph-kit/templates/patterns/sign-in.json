@@ -1,0 +1,25 @@
+{
+  "kind": "page",
+  "title": "Sign in",
+  "intent": "Sign in: a narrow centred form.",
+  "data": {
+    "title": "Acme",
+    "sections": [
+      { "measure": "narrow", "pad": 1, "rows": [
+        { "type": "heading", "text": "Sign in to Acme" },
+        { "type": "muted", "text": "Use your work email." },
+        { "type": "space" },
+        { "type": "fieldGroup", "fields": [{ "type": "input", "label": "Email", "placeholder": "name@acme.com" }, { "type": "input", "label": "Password", "placeholder": "" }] },
+        { "type": "checkbox", "label": "Keep me signed in", "checked": true },
+        { "type": "space" },
+        { "type": "buttons", "items": [{ "label": "Sign in", "primary": true }] },
+        { "type": "space" },
+        { "type": "divider", "label": "or" },
+        { "type": "space" },
+        { "type": "buttons", "items": [{ "label": "Continue with SSO" }] },
+        { "type": "space" },
+        { "type": "muted", "text": "Forgot your password?" }
+      ] }
+    ]
+  }
+}

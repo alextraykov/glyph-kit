@@ -370,5 +370,928 @@
       },
       "width": 44
     }
+  },
+  {
+    "kind": "page",
+    "title": "Projects, filtered",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "title": "Acme",
+      "sections": [
+        {
+          "rows": [
+            {
+              "type": "nav",
+              "brand": "Acme",
+              "items": [
+                "Projects",
+                "Reports"
+              ],
+              "selected": "Projects",
+              "actions": [
+                {
+                  "label": "New",
+                  "primary": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "type": "tabsBar",
+              "items": [
+                {
+                  "text": "All",
+                  "count": 18
+                },
+                {
+                  "text": "Live",
+                  "count": 9
+                },
+                {
+                  "text": "Draft",
+                  "count": 6
+                }
+              ],
+              "selected": "All"
+            },
+            {
+              "type": "space"
+            },
+            {
+              "type": "dataTable",
+              "search": "Search projects",
+              "actions": [
+                {
+                  "label": "Filter"
+                },
+                {
+                  "label": "Sort"
+                }
+              ],
+              "columns": [
+                "name",
+                "owner",
+                "status",
+                "updated"
+              ],
+              "rows": [
+                [
+                  "Checkout",
+                  "Mia",
+                  "live",
+                  "2 h ago"
+                ],
+                [
+                  "Onboarding",
+                  "Sam",
+                  "draft",
+                  "1 d ago"
+                ],
+                [
+                  "Billing",
+                  "Ana",
+                  "live",
+                  "3 d ago"
+                ],
+                [
+                  "Search",
+                  "Lee",
+                  "paused",
+                  "1 w ago"
+                ],
+                [
+                  "Invoices",
+                  "Kai",
+                  "draft",
+                  "2 w ago"
+                ]
+              ],
+              "total": 18
+            }
+          ]
+        }
+      ],
+      "layers": [
+        {
+          "type": "drawer",
+          "side": "right",
+          "size": "m",
+          "title": "Filter",
+          "rows": [
+            {
+              "type": "fieldGroup",
+              "fields": [
+                {
+                  "type": "select",
+                  "label": "Owner",
+                  "value": "Anyone"
+                }
+              ]
+            },
+            {
+              "type": "space"
+            },
+            {
+              "type": "heading",
+              "text": "Status"
+            },
+            {
+              "type": "checkbox",
+              "label": "Live",
+              "checked": true
+            },
+            {
+              "type": "checkbox",
+              "label": "Draft",
+              "checked": true
+            },
+            {
+              "type": "checkbox",
+              "label": "Paused"
+            }
+          ],
+          "footer": [
+            {
+              "label": "Reset"
+            },
+            {
+              "label": "Apply",
+              "primary": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "kind": "page",
+    "title": "Overview",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "title": "Acme · Overview",
+      "sections": [
+        {
+          "rows": [
+            {
+              "type": "nav",
+              "brand": "Acme",
+              "items": [
+                "Overview",
+                "Projects",
+                "Reports"
+              ],
+              "selected": "Overview",
+              "actions": [
+                {
+                  "label": "Last 30 days"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "split": "1:4",
+          "columns": [
+            [
+              {
+                "type": "list",
+                "scroll": false,
+                "items": [
+                  {
+                    "text": "Overview",
+                    "selected": true
+                  },
+                  "Revenue",
+                  "Usage",
+                  "Members"
+                ]
+              }
+            ],
+            [
+              {
+                "type": "bar",
+                "left": "OVERVIEW",
+                "right": "[ Export ]"
+              },
+              {
+                "type": "space"
+              },
+              {
+                "type": "stats",
+                "items": [
+                  {
+                    "label": "Revenue",
+                    "value": "$48.2k",
+                    "change": "▲ 12%"
+                  },
+                  {
+                    "label": "Active teams",
+                    "value": "1,204",
+                    "change": "▲ 3%"
+                  },
+                  {
+                    "label": "Churn",
+                    "value": "2.1%",
+                    "change": "▼ 0.4 pts"
+                  }
+                ]
+              },
+              {
+                "type": "space"
+              },
+              {
+                "type": "card",
+                "title": "Revenue by week",
+                "rows": [
+                  {
+                    "type": "image",
+                    "label": "chart",
+                    "height": 3
+                  }
+                ]
+              },
+              {
+                "type": "space"
+              },
+              {
+                "type": "dataTable",
+                "columns": [
+                  "team",
+                  "plan",
+                  "seats"
+                ],
+                "rows": [
+                  [
+                    "Northwind",
+                    "Team",
+                    "42"
+                  ],
+                  [
+                    "Globex",
+                    "Enterprise",
+                    "310"
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "kind": "page",
+    "title": "Inbox",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "title": "Acme · Inbox",
+      "sections": [
+        {
+          "rows": [
+            {
+              "type": "bar",
+              "left": "> Search mail",
+              "right": "[[ Compose ]]"
+            }
+          ]
+        },
+        {
+          "split": "1:1:2",
+          "columns": [
+            [
+              {
+                "type": "list",
+                "scroll": false,
+                "items": [
+                  {
+                    "text": "Inbox",
+                    "meta": "12",
+                    "selected": true
+                  },
+                  {
+                    "text": "Starred"
+                  },
+                  {
+                    "text": "Sent"
+                  },
+                  {
+                    "text": "Archive"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "type": "list",
+                "scroll": false,
+                "items": [
+                  {
+                    "text": "Mia",
+                    "meta": "9:41",
+                    "selected": true
+                  },
+                  {
+                    "text": "Sam",
+                    "meta": "Mon"
+                  },
+                  {
+                    "text": "Ana",
+                    "meta": "Sun"
+                  },
+                  {
+                    "text": "Lee",
+                    "meta": "12 Oct"
+                  }
+                ]
+              }
+            ],
+            [
+              {
+                "type": "bar",
+                "left": "SHIP THE NEW COPY?",
+                "right": "[ More ]"
+              },
+              {
+                "type": "muted",
+                "text": "Mia · 9:41"
+              },
+              {
+                "type": "space"
+              },
+              {
+                "type": "text",
+                "text": "The empty state copy is ready. Can we ship it Monday with the rollout?"
+              },
+              {
+                "type": "space"
+              },
+              {
+                "type": "buttons",
+                "items": [
+                  {
+                    "label": "Reply",
+                    "primary": true
+                  },
+                  {
+                    "label": "Forward"
+                  }
+                ]
+              }
+            ]
+          ]
+        }
+      ],
+      "layers": [
+        {
+          "type": "menu",
+          "anchor": "More",
+          "items": [
+            {
+              "text": "Mark unread",
+              "meta": "U"
+            },
+            {
+              "text": "Snooze",
+              "meta": "B"
+            },
+            "-",
+            {
+              "text": "Delete"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "kind": "page",
+    "title": "Pricing",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "url": "acme.com/pricing",
+      "sections": [
+        {
+          "rows": [
+            {
+              "type": "nav",
+              "brand": "Acme",
+              "items": [
+                "Product",
+                "Pricing",
+                "Docs"
+              ],
+              "selected": "Pricing",
+              "actions": [
+                {
+                  "label": "Log in"
+                },
+                {
+                  "label": "Sign up",
+                  "primary": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "align": "center",
+          "pad": 1,
+          "rows": [
+            {
+              "type": "heading",
+              "text": "Pricing that grows with your team"
+            },
+            {
+              "type": "muted",
+              "text": "Start free. Pay per seat after three."
+            }
+          ]
+        },
+        {
+          "above": "none",
+          "cards": [
+            {
+              "title": "Free",
+              "rows": [
+                {
+                  "type": "heading",
+                  "text": "$0"
+                },
+                {
+                  "type": "muted",
+                  "text": "3 seats"
+                },
+                {
+                  "type": "muted",
+                  "text": "5 projects"
+                }
+              ],
+              "footer": [
+                {
+                  "label": "Start"
+                }
+              ]
+            },
+            {
+              "title": "Team",
+              "meta": "Popular",
+              "rows": [
+                {
+                  "type": "heading",
+                  "text": "$12 a seat / mo"
+                },
+                {
+                  "type": "muted",
+                  "text": "Unlimited projects"
+                },
+                {
+                  "type": "muted",
+                  "text": "Shared libraries"
+                }
+              ],
+              "footer": [
+                {
+                  "label": "Try 14 days",
+                  "primary": true
+                }
+              ]
+            },
+            {
+              "title": "Enterprise",
+              "rows": [
+                {
+                  "type": "heading",
+                  "text": "Talk to us"
+                },
+                {
+                  "type": "muted",
+                  "text": "SSO and audit log"
+                },
+                {
+                  "type": "muted",
+                  "text": "99.9% uptime SLA"
+                }
+              ],
+              "footer": [
+                {
+                  "label": "Contact"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "above": "space",
+          "rows": [
+            {
+              "type": "heading",
+              "text": "Questions"
+            },
+            {
+              "type": "text",
+              "text": "Can I change plans later?"
+            },
+            {
+              "type": "muted",
+              "text": "Yes. Seats are prorated to the day."
+            }
+          ]
+        },
+        {
+          "rule": false,
+          "columns": [
+            [
+              {
+                "type": "muted",
+                "text": "ACME"
+              }
+            ],
+            [
+              {
+                "type": "muted",
+                "text": "Docs"
+              }
+            ],
+            [
+              {
+                "type": "muted",
+                "text": "Status"
+              }
+            ],
+            [
+              {
+                "type": "muted",
+                "text": "Privacy"
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "kind": "page",
+    "title": "Layers",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "title": "Acme",
+      "width": 64,
+      "sections": [
+        {
+          "rows": [
+            {
+              "type": "nav",
+              "brand": "Acme",
+              "items": [
+                "Projects",
+                "Reports"
+              ],
+              "selected": "Projects",
+              "actions": [
+                {
+                  "label": "More"
+                },
+                {
+                  "label": "New",
+                  "primary": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "type": "dataTable",
+              "columns": [
+                "name",
+                "owner",
+                "updated"
+              ],
+              "rows": [
+                [
+                  "Checkout",
+                  "Mia",
+                  "2 h ago"
+                ],
+                [
+                  "Onboarding",
+                  "Sam",
+                  "1 d ago"
+                ],
+                [
+                  "Billing",
+                  "Ana",
+                  "3 d ago"
+                ],
+                [
+                  "Search",
+                  "Lee",
+                  "1 w ago"
+                ],
+                [
+                  "Invoices",
+                  "Kai",
+                  "2 w ago"
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "layers": [
+        {
+          "type": "sheet",
+          "title": "Share Checkout",
+          "rows": [
+            {
+              "type": "input",
+              "label": "Invite",
+              "placeholder": "name@acme.com"
+            },
+            {
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Copy link"
+                },
+                {
+                  "label": "Send",
+                  "primary": true
+                }
+              ],
+              "align": "right"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "kind": "page",
+    "title": "Layers",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "title": "Acme",
+      "width": 64,
+      "sections": [
+        {
+          "rows": [
+            {
+              "type": "nav",
+              "brand": "Acme",
+              "items": [
+                "Projects",
+                "Reports"
+              ],
+              "selected": "Projects",
+              "actions": [
+                {
+                  "label": "More"
+                },
+                {
+                  "label": "New",
+                  "primary": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "type": "dataTable",
+              "columns": [
+                "name",
+                "owner",
+                "updated"
+              ],
+              "rows": [
+                [
+                  "Checkout",
+                  "Mia",
+                  "2 h ago"
+                ],
+                [
+                  "Onboarding",
+                  "Sam",
+                  "1 d ago"
+                ],
+                [
+                  "Billing",
+                  "Ana",
+                  "3 d ago"
+                ],
+                [
+                  "Search",
+                  "Lee",
+                  "1 w ago"
+                ],
+                [
+                  "Invoices",
+                  "Kai",
+                  "2 w ago"
+                ]
+              ]
+            }
+          ]
+        }
+      ],
+      "layers": [
+        {
+          "type": "toast",
+          "text": "Billing archived.",
+          "action": "Undo"
+        }
+      ]
+    }
+  },
+  {
+    "kind": "page",
+    "title": "Layers",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "title": "Acme",
+      "width": 64,
+      "sections": [
+        {
+          "rows": [
+            {
+              "type": "nav",
+              "brand": "Acme",
+              "items": [
+                "Projects",
+                "Reports"
+              ],
+              "selected": "Projects",
+              "actions": [
+                {
+                  "label": "More"
+                },
+                {
+                  "label": "New",
+                  "primary": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "split": "1:3",
+          "columns": [
+            [
+              {
+                "type": "list",
+                "items": [
+                  "One",
+                  "Two"
+                ]
+              }
+            ],
+            [
+              {
+                "type": "dataTable",
+                "columns": [
+                  "name",
+                  "owner",
+                  "updated"
+                ],
+                "rows": [
+                  [
+                    "Checkout",
+                    "Mia",
+                    "2 h ago"
+                  ],
+                  [
+                    "Onboarding",
+                    "Sam",
+                    "1 d ago"
+                  ],
+                  [
+                    "Billing",
+                    "Ana",
+                    "3 d ago"
+                  ],
+                  [
+                    "Search",
+                    "Lee",
+                    "1 w ago"
+                  ],
+                  [
+                    "Invoices",
+                    "Kai",
+                    "2 w ago"
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      ],
+      "layers": [
+        {
+          "type": "dialog",
+          "title": "Delete Billing?",
+          "rows": [
+            {
+              "type": "text",
+              "text": "Its 14 figures go too. You can't undo this."
+            }
+          ],
+          "footer": [
+            {
+              "label": "Cancel"
+            },
+            {
+              "label": "Delete",
+              "primary": true
+            }
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "kind": "page",
+    "title": "Layers",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "title": "Acme",
+      "width": 48,
+      "sections": [
+        {
+          "rows": [
+            {
+              "type": "nav",
+              "brand": "Acme",
+              "items": [
+                "Projects"
+              ],
+              "selected": "Projects",
+              "actions": [
+                {
+                  "label": "Filter"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "split": "1:2",
+          "columns": [
+            [
+              {
+                "type": "list",
+                "items": [
+                  "One",
+                  "Two"
+                ]
+              }
+            ],
+            [
+              {
+                "type": "text",
+                "text": "Some long text that wraps under the drawer here"
+              }
+            ]
+          ]
+        }
+      ],
+      "layers": [
+        {
+          "type": "drawer",
+          "side": "left",
+          "size": "s",
+          "title": "Filter",
+          "rows": [
+            {
+              "type": "checkbox",
+              "label": "Live",
+              "checked": true
+            },
+            {
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Apply",
+                  "primary": true
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "menu",
+          "anchor": "Apply",
+          "items": [
+            "Now",
+            "Later"
+          ]
+        }
+      ]
+    }
   }
 ]

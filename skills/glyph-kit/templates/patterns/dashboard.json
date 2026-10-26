@@ -1,0 +1,23 @@
+{
+  "kind": "page",
+  "title": "Overview",
+  "intent": "An app home: a side list, stats, a chart and a table.",
+  "data": {
+    "title": "Acme · Overview",
+    "sections": [
+      { "rows": [{ "type": "nav", "brand": "Acme", "items": ["Overview", "Projects", "Reports"], "selected": "Overview", "actions": [{ "label": "Last 30 days" }] }] },
+      { "split": "1:4", "columns": [
+        [{ "type": "list", "scroll": false, "items": [{ "text": "Overview", "selected": true }, "Revenue", "Usage", "Members"] }],
+        [
+          { "type": "bar", "left": "OVERVIEW", "right": "[ Export ]" },
+          { "type": "space" },
+          { "type": "stats", "items": [{ "label": "Revenue", "value": "$48.2k", "change": "▲ 12%" }, { "label": "Active teams", "value": "1,204", "change": "▲ 3%" }, { "label": "Churn", "value": "2.1%", "change": "▼ 0.4 pts" }] },
+          { "type": "space" },
+          { "type": "card", "title": "Revenue by week", "rows": [{ "type": "image", "label": "chart", "height": 3 }] },
+          { "type": "space" },
+          { "type": "dataTable", "columns": ["team", "plan", "seats"], "rows": [["Northwind", "Team", "42"], ["Globex", "Enterprise", "310"]] }
+        ]
+      ] }
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "kind": "page",
+  "title": "Inbox",
+  "intent": "Folders, messages and the open message, its menu open.",
+  "data": {
+    "title": "Acme · Inbox",
+    "sections": [
+      { "rows": [{ "type": "bar", "left": "> Search mail", "right": "[[ Compose ]]" }] },
+      { "split": "1:1:2", "columns": [
+        [{ "type": "list", "scroll": false, "items": [{ "text": "Inbox", "meta": "12", "selected": true }, { "text": "Starred" }, { "text": "Sent" }, { "text": "Archive" }] }],
+        [{ "type": "list", "scroll": false, "items": [{ "text": "Mia", "meta": "9:41", "selected": true }, { "text": "Sam", "meta": "Mon" }, { "text": "Ana", "meta": "Sun" }, { "text": "Lee", "meta": "12 Oct" }] }],
+        [
+          { "type": "bar", "left": "SHIP THE NEW COPY?", "right": "[ More ]" },
+          { "type": "muted", "text": "Mia · 9:41" },
+          { "type": "space" },
+          { "type": "text", "text": "The empty state copy is ready. Can we ship it Monday with the rollout?" },
+          { "type": "space" },
+          { "type": "buttons", "items": [{ "label": "Reply", "primary": true }, { "label": "Forward" }] }
+        ]
+      ] }
+    ],
+    "layers": [{ "type": "menu", "anchor": "More", "items": [{ "text": "Mark unread", "meta": "U" }, { "text": "Snooze", "meta": "B" }, "-", { "text": "Delete" }] }]
+  }
+}

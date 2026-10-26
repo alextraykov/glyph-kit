@@ -20,7 +20,7 @@ spec ──► text      review structure, content and numbers in a PR or a tick
 ## The product step, for an agent
 
 1. Read the spec and `design-system.map.json`. If the map is missing, stop and ask for it, or write one with the user from their design system before building.
-2. For every wireframe primitive, use the component the map names. If the map has no entry for a primitive, ask; don't invent a component.
+2. For every wireframe primitive, component and layer, use the component the map names, and its `parts` for the pieces inside. If the map has no entry for a piece (`map check` lists them), ask; don't invent a component.
 3. Use only tokens from the map for colour, space, radius, type, duration and easing.
 4. Carry the notes (`[1]`, `[2]`) into behaviour, not comments: "Save is disabled until something changes" is logic.
 5. Motion: implement the intent card's duration and easing tokens, and its reduced-motion still.
