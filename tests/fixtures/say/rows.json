@@ -1,0 +1,887 @@
+{
+  "status": "synthetic-authored",
+  "note": "Written test phrases and hand-authored expected rows; no microphone recordings or recognition output.",
+  "cases": [
+    {
+      "sentence": "a heading called “Account details”",
+      "expectedRow": {
+        "type": "heading",
+        "text": "Account details"
+      }
+    },
+    {
+      "sentence": "a header reading “Your profile”",
+      "expectedRow": {
+        "type": "heading",
+        "text": "Your profile"
+      }
+    },
+    {
+      "sentence": "section title: “Plan details”",
+      "expectedRow": {
+        "type": "heading",
+        "text": "Plan details"
+      }
+    },
+    {
+      "sentence": "heading: Billing address",
+      "expectedRow": {
+        "type": "heading",
+        "text": "Billing address"
+      }
+    },
+    {
+      "sentence": "title inside called “Email preferences”",
+      "expectedRow": {
+        "type": "heading",
+        "text": "Email preferences"
+      }
+    },
+    {
+      "sentence": "text saying “Your team can change this later.”",
+      "expectedRow": {
+        "type": "text",
+        "text": "Your team can change this later."
+      }
+    },
+    {
+      "sentence": "a paragraph: “Invite people after saving.”",
+      "expectedRow": {
+        "type": "text",
+        "text": "Invite people after saving."
+      }
+    },
+    {
+      "sentence": "description reading “Changes apply next month.”",
+      "expectedRow": {
+        "type": "text",
+        "text": "Changes apply next month."
+      }
+    },
+    {
+      "sentence": "copy that says “Welcome back.”",
+      "expectedRow": {
+        "type": "text",
+        "text": "Welcome back."
+      }
+    },
+    {
+      "sentence": "a sentence: “This field is optional.”",
+      "expectedRow": {
+        "type": "text",
+        "text": "This field is optional."
+      }
+    },
+    {
+      "sentence": "a hint: “Optional”",
+      "expectedRow": {
+        "type": "muted",
+        "text": "Optional"
+      }
+    },
+    {
+      "sentence": "help text saying “Use a work email.”",
+      "expectedRow": {
+        "type": "muted",
+        "text": "Use a work email."
+      }
+    },
+    {
+      "sentence": "caption “Updated today”",
+      "expectedRow": {
+        "type": "muted",
+        "text": "Updated today"
+      }
+    },
+    {
+      "sentence": "secondary text reading “Only you can see this.”",
+      "expectedRow": {
+        "type": "muted",
+        "text": "Only you can see this."
+      }
+    },
+    {
+      "sentence": "small print: “Rates may vary.”",
+      "expectedRow": {
+        "type": "muted",
+        "text": "Rates may vary."
+      }
+    },
+    {
+      "sentence": "a name field",
+      "expectedRow": {
+        "type": "input",
+        "label": "Name"
+      }
+    },
+    {
+      "sentence": "a text box for the name",
+      "expectedRow": {
+        "type": "input",
+        "label": "Name"
+      }
+    },
+    {
+      "sentence": "input labelled “API key”",
+      "expectedRow": {
+        "type": "input",
+        "label": "API key"
+      }
+    },
+    {
+      "sentence": "somewhere to type the project name",
+      "expectedRow": {
+        "type": "input",
+        "label": "Project name"
+      }
+    },
+    {
+      "sentence": "email field with placeholder “you@example.com”",
+      "expectedRow": {
+        "type": "input",
+        "label": "Email",
+        "placeholder": "you@example.com"
+      }
+    },
+    {
+      "sentence": "search for projects",
+      "expectedRow": {
+        "type": "search",
+        "placeholder": "Search projects"
+      }
+    },
+    {
+      "sentence": "a search box labelled “Find a workspace”",
+      "expectedRow": {
+        "type": "search",
+        "placeholder": "Find a workspace"
+      }
+    },
+    {
+      "sentence": "search field, placeholder “Search by name”",
+      "expectedRow": {
+        "type": "search",
+        "placeholder": "Search by name"
+      }
+    },
+    {
+      "sentence": "find box for “People”",
+      "expectedRow": {
+        "type": "search",
+        "placeholder": "People"
+      }
+    },
+    {
+      "sentence": "search: “Filter the list”",
+      "expectedRow": {
+        "type": "search",
+        "placeholder": "Filter the list"
+      }
+    },
+    {
+      "sentence": "Cancel and Save buttons",
+      "expectedRow": {
+        "type": "buttons",
+        "items": [
+          {
+            "label": "Cancel"
+          },
+          {
+            "label": "Save"
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "buttons: Back, Continue",
+      "expectedRow": {
+        "type": "buttons",
+        "items": [
+          {
+            "label": "Back"
+          },
+          {
+            "label": "Continue"
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a Delete button",
+      "expectedRow": {
+        "type": "buttons",
+        "items": [
+          {
+            "label": "Delete"
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "button “Save and close”",
+      "expectedRow": {
+        "type": "buttons",
+        "items": [
+          {
+            "label": "Save and close"
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "actions: Save, Preview",
+      "expectedRow": {
+        "type": "buttons",
+        "items": [
+          {
+            "label": "Save"
+          },
+          {
+            "label": "Preview"
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "checkbox: Remember me",
+      "expectedRow": {
+        "type": "checkbox",
+        "label": "Remember me"
+      }
+    },
+    {
+      "sentence": "tick box “Email me”",
+      "expectedRow": {
+        "type": "checkbox",
+        "label": "Email me"
+      }
+    },
+    {
+      "sentence": "checkbox “Keep me signed in”, checked",
+      "expectedRow": {
+        "type": "checkbox",
+        "label": "Keep me signed in",
+        "checked": true
+      }
+    },
+    {
+      "sentence": "check “Use default”, ticked",
+      "expectedRow": {
+        "type": "checkbox",
+        "label": "Use default",
+        "checked": true
+      }
+    },
+    {
+      "sentence": "checkbox for “Public profile”, not checked",
+      "expectedRow": {
+        "type": "checkbox",
+        "label": "Public profile",
+        "checked": false
+      }
+    },
+    {
+      "sentence": "two radio options, staging and production",
+      "expectedRow": {
+        "type": "radio",
+        "options": [
+          "Staging",
+          "Production"
+        ]
+      }
+    },
+    {
+      "sentence": "radio buttons for “Billing cycle”: Monthly, Yearly",
+      "expectedRow": {
+        "type": "radio",
+        "options": [
+          "Monthly",
+          "Yearly"
+        ]
+      }
+    },
+    {
+      "sentence": "pick one of Basic, Team, Enterprise",
+      "expectedRow": {
+        "type": "radio",
+        "options": [
+          "Basic",
+          "Team",
+          "Enterprise"
+        ]
+      }
+    },
+    {
+      "sentence": "options: “One time”, “Every week” as radio",
+      "expectedRow": {
+        "type": "radio",
+        "options": [
+          "One time",
+          "Every week"
+        ]
+      }
+    },
+    {
+      "sentence": "either Standard or Express",
+      "expectedRow": {
+        "type": "radio",
+        "options": [
+          "Standard",
+          "Express"
+        ]
+      }
+    },
+    {
+      "sentence": "switch for weekly summary, off",
+      "expectedRow": {
+        "type": "toggle",
+        "label": "Weekly summary",
+        "on": false
+      }
+    },
+    {
+      "sentence": "toggle “Dark mode” on",
+      "expectedRow": {
+        "type": "toggle",
+        "label": "Dark mode",
+        "on": true
+      }
+    },
+    {
+      "sentence": "switch “Public profile”, on",
+      "expectedRow": {
+        "type": "toggle",
+        "label": "Public profile",
+        "on": true
+      }
+    },
+    {
+      "sentence": "weekly email summary toggle off",
+      "expectedRow": {
+        "type": "toggle",
+        "label": "Weekly email summary",
+        "on": false
+      }
+    },
+    {
+      "sentence": "toggle for “Product updates”, enabled",
+      "expectedRow": {
+        "type": "toggle",
+        "label": "Product updates",
+        "on": true
+      }
+    },
+    {
+      "sentence": "dropdown, Digest day, set to Monday",
+      "expectedRow": {
+        "type": "select",
+        "label": "Digest day",
+        "value": "Monday"
+      }
+    },
+    {
+      "sentence": "select “Team role”, value “Editor”",
+      "expectedRow": {
+        "type": "select",
+        "label": "Team role",
+        "value": "Editor"
+      }
+    },
+    {
+      "sentence": "picker for “Time zone” with “UTC” selected",
+      "expectedRow": {
+        "type": "select",
+        "label": "Time zone",
+        "value": "UTC"
+      }
+    },
+    {
+      "sentence": "choose from “Small”, “Medium”, “Large”",
+      "expectedRow": {
+        "type": "select",
+        "label": "Choose one",
+        "value": "Small",
+        "options": [
+          "Small",
+          "Medium",
+          "Large"
+        ]
+      }
+    },
+    {
+      "sentence": "menu for “Language”, set to English",
+      "expectedRow": {
+        "type": "select",
+        "label": "Language",
+        "value": "English"
+      }
+    },
+    {
+      "sentence": "tabs for Profile, Notifications, Billing",
+      "expectedRow": {
+        "type": "tabs",
+        "items": [
+          "Profile",
+          "Notifications",
+          "Billing"
+        ]
+      }
+    },
+    {
+      "sentence": "sections across the top: Overview, Activity, Files",
+      "expectedRow": {
+        "type": "tabs",
+        "items": [
+          "Overview",
+          "Activity",
+          "Files"
+        ]
+      }
+    },
+    {
+      "sentence": "segments called Today, Week, Month; Week selected",
+      "expectedRow": {
+        "type": "tabs",
+        "items": [
+          "Today",
+          "Week",
+          "Month"
+        ],
+        "selected": "Week"
+      }
+    },
+    {
+      "sentence": "tabs: “All items”, “Mine”, “Archived”",
+      "expectedRow": {
+        "type": "tabs",
+        "items": [
+          "All items",
+          "Mine",
+          "Archived"
+        ]
+      }
+    },
+    {
+      "sentence": "tabs for “Details” and “Access”, Access selected",
+      "expectedRow": {
+        "type": "tabs",
+        "items": [
+          "Details",
+          "Access"
+        ],
+        "selected": "Access"
+      }
+    },
+    {
+      "sentence": "a list of Draft, In review, Shipped",
+      "expectedRow": {
+        "type": "list",
+        "items": [
+          "Draft",
+          "In review",
+          "Shipped"
+        ]
+      }
+    },
+    {
+      "sentence": "items: Alice, Bo, Chi",
+      "expectedRow": {
+        "type": "list",
+        "items": [
+          "Alice",
+          "Bo",
+          "Chi"
+        ]
+      }
+    },
+    {
+      "sentence": "three entries: “North team”, “South team”",
+      "expectedRow": {
+        "type": "list",
+        "items": [
+          "North team",
+          "South team"
+        ]
+      }
+    },
+    {
+      "sentence": "list with rows: Design, Research, Engineering",
+      "expectedRow": {
+        "type": "list",
+        "items": [
+          "Design",
+          "Research",
+          "Engineering"
+        ]
+      }
+    },
+    {
+      "sentence": "a list of “Workspace settings” and “Billing history”",
+      "expectedRow": {
+        "type": "list",
+        "items": [
+          "Workspace settings",
+          "Billing history"
+        ]
+      }
+    },
+    {
+      "sentence": "table with columns Name, Owner, Status",
+      "expectedRow": {
+        "type": "table",
+        "columns": [
+          "Name",
+          "Owner",
+          "Status"
+        ],
+        "rows": []
+      }
+    },
+    {
+      "sentence": "grid of Name, Plan, Seats with row “Atlas, Studio, 12”",
+      "expectedRow": {
+        "type": "table",
+        "columns": [
+          "Name",
+          "Plan",
+          "Seats"
+        ],
+        "rows": [
+          [
+            "Atlas",
+            "Studio",
+            "12"
+          ]
+        ]
+      }
+    },
+    {
+      "sentence": "table columns Project | Status and row North | Active",
+      "expectedRow": {
+        "type": "table",
+        "columns": [
+          "Project",
+          "Status"
+        ],
+        "rows": [
+          [
+            "North",
+            "Active"
+          ]
+        ]
+      }
+    },
+    {
+      "sentence": "table with columns “Member”, “Role” and row “Rae”, “Editor”",
+      "expectedRow": {
+        "type": "table",
+        "columns": [
+          "Member",
+          "Role"
+        ],
+        "rows": [
+          [
+            "Rae",
+            "Editor"
+          ]
+        ]
+      }
+    },
+    {
+      "sentence": "table with columns Date, Owner, Review and rows “Monday, Sam, Ready” and “Tuesday, Lee, Waiting”",
+      "expectedRow": {
+        "type": "table",
+        "columns": [
+          "Date",
+          "Owner",
+          "Review"
+        ],
+        "rows": [
+          [
+            "Monday",
+            "Sam",
+            "Ready"
+          ],
+          [
+            "Tuesday",
+            "Lee",
+            "Waiting"
+          ]
+        ]
+      }
+    },
+    {
+      "sentence": "a picture of Revenue chart",
+      "expectedRow": {
+        "type": "image",
+        "label": "Revenue chart"
+      }
+    },
+    {
+      "sentence": "image placeholder labelled “Team photo”",
+      "expectedRow": {
+        "type": "image",
+        "label": "Team photo"
+      }
+    },
+    {
+      "sentence": "thumbnail for “Map preview”",
+      "expectedRow": {
+        "type": "image",
+        "label": "Map preview"
+      }
+    },
+    {
+      "sentence": "a photo called “Office”",
+      "expectedRow": {
+        "type": "image",
+        "label": "Office"
+      }
+    },
+    {
+      "sentence": "chart placeholder labelled “Monthly usage”",
+      "expectedRow": {
+        "type": "image",
+        "label": "Monthly usage"
+      }
+    },
+    {
+      "sentence": "three loading placeholder lines",
+      "expectedRow": {
+        "type": "skeleton",
+        "lines": 3
+      }
+    },
+    {
+      "sentence": "skeleton with 2 lines",
+      "expectedRow": {
+        "type": "skeleton",
+        "lines": 2
+      }
+    },
+    {
+      "sentence": "loading state, four lines",
+      "expectedRow": {
+        "type": "skeleton",
+        "lines": 4
+      }
+    },
+    {
+      "sentence": "placeholder lines: 3",
+      "expectedRow": {
+        "type": "skeleton",
+        "lines": 3
+      }
+    },
+    {
+      "sentence": "loading placeholder",
+      "expectedRow": {
+        "type": "skeleton"
+      }
+    },
+    {
+      "sentence": "empty state: No saved views yet",
+      "expectedRow": {
+        "type": "empty",
+        "text": "No saved views yet"
+      }
+    },
+    {
+      "sentence": "nothing here yet: Add your first project",
+      "expectedRow": {
+        "type": "empty",
+        "text": "Add your first project"
+      }
+    },
+    {
+      "sentence": "empty state “No matching people” with action “Clear filters”",
+      "expectedRow": {
+        "type": "empty",
+        "text": "No matching people",
+        "action": "Clear filters"
+      }
+    },
+    {
+      "sentence": "empty message: “No activity yet.”",
+      "expectedRow": {
+        "type": "empty",
+        "text": "No activity yet."
+      }
+    },
+    {
+      "sentence": "empty state saying “Your archive is empty.”",
+      "expectedRow": {
+        "type": "empty",
+        "text": "Your archive is empty."
+      }
+    },
+    {
+      "sentence": "a gap",
+      "expectedRow": {
+        "type": "space"
+      }
+    },
+    {
+      "sentence": "some space",
+      "expectedRow": {
+        "type": "space"
+      }
+    },
+    {
+      "sentence": "breathing room",
+      "expectedRow": {
+        "type": "space"
+      }
+    },
+    {
+      "sentence": "a blank line",
+      "expectedRow": {
+        "type": "space"
+      }
+    },
+    {
+      "sentence": "space",
+      "expectedRow": {
+        "type": "space"
+      }
+    },
+    {
+      "sentence": "a divider",
+      "expectedRow": {
+        "type": "divider"
+      }
+    },
+    {
+      "sentence": "a horizontal line",
+      "expectedRow": {
+        "type": "divider"
+      }
+    },
+    {
+      "sentence": "separator",
+      "expectedRow": {
+        "type": "divider"
+      }
+    },
+    {
+      "sentence": "a rule",
+      "expectedRow": {
+        "type": "divider"
+      }
+    },
+    {
+      "sentence": "line",
+      "expectedRow": {
+        "type": "divider"
+      }
+    },
+    {
+      "sentence": "a username field with placeholder “alex”",
+      "expectedRow": {
+        "type": "input",
+        "label": "Username",
+        "placeholder": "alex"
+      }
+    },
+    {
+      "sentence": "radio options: Red, Green, Blue; Green selected",
+      "expectedRow": {
+        "type": "radio",
+        "options": [
+          "Red",
+          "Green",
+          "Blue"
+        ],
+        "selected": "Green"
+      }
+    },
+    {
+      "sentence": "Save and Cancel buttons, Save is primary",
+      "expectedRow": {
+        "type": "buttons",
+        "items": [
+          {
+            "label": "Save",
+            "primary": true
+          },
+          {
+            "label": "Cancel"
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "Cancel and Apply buttons, aligned right",
+      "expectedRow": {
+        "type": "buttons",
+        "items": [
+          {
+            "label": "Cancel"
+          },
+          {
+            "label": "Apply"
+          }
+        ],
+        "align": "right"
+      }
+    },
+    {
+      "sentence": "table with columns Team, Active and row “North, 8”",
+      "expectedRow": {
+        "type": "table",
+        "columns": [
+          "Team",
+          "Active"
+        ],
+        "rows": [
+          [
+            "North",
+            "8"
+          ]
+        ]
+      }
+    },
+    {
+      "sentence": "select for “Digest day”, set to Friday, options Monday, Wednesday, Friday",
+      "expectedRow": {
+        "type": "select",
+        "label": "Digest day",
+        "value": "Friday",
+        "options": [
+          "Monday",
+          "Wednesday",
+          "Friday"
+        ]
+      }
+    },
+    {
+      "sentence": "a heading reading “API access”",
+      "expectedRow": {
+        "type": "heading",
+        "text": "API access"
+      }
+    },
+    {
+      "sentence": "image of “Product preview”",
+      "expectedRow": {
+        "type": "image",
+        "label": "Product preview"
+      }
+    },
+    {
+      "sentence": "a checkbox labelled “Send a copy”, ticked",
+      "expectedRow": {
+        "type": "checkbox",
+        "label": "Send a copy",
+        "checked": true
+      }
+    },
+    {
+      "sentence": "a muted caption: “Changes save automatically.”",
+      "expectedRow": {
+        "type": "muted",
+        "text": "Changes save automatically."
+      }
+    }
+  ]
+}

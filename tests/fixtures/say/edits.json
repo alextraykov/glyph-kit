@@ -1,0 +1,1765 @@
+{
+  "status": "synthetic-authored",
+  "note": "Fifty hand-authored starting specs, edit phrases and expected outcomes; not recognition transcripts.",
+  "cases": [
+    {
+      "sentence": "rename this screen to “Workspace settings”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Profile",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Overview"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Workspace settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Overview"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "rename this screen to “Invite a teammate”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Invite",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Overview"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Invite a teammate",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Overview"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "rename this screen to “Notification preferences”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Overview"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Notification preferences",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Overview"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "rename this screen to “Project archive”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Projects",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Overview"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Project archive",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Overview"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "rename this screen to “Plan and payment”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Billing",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Overview"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Plan and payment",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Overview"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "make Production selected",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "radio",
+              "options": [
+                "Staging",
+                "Production"
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "radio",
+              "options": [
+                "Staging",
+                "Production"
+              ],
+              "selected": "Production"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "select Notifications",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "tabs",
+              "items": [
+                "Profile",
+                "Notifications",
+                "Billing"
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "tabs",
+              "items": [
+                "Profile",
+                "Notifications",
+                "Billing"
+              ],
+              "selected": "Notifications"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "set the digest day to Friday",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "select",
+              "label": "Digest day",
+              "value": "Monday",
+              "options": [
+                "Monday",
+                "Wednesday",
+                "Friday"
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "select",
+              "label": "Digest day",
+              "value": "Friday",
+              "options": [
+                "Monday",
+                "Wednesday",
+                "Friday"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "choose Monthly",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "radio",
+              "options": [
+                "Monthly",
+                "Yearly"
+              ],
+              "selected": "Yearly"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "radio",
+              "options": [
+                "Monthly",
+                "Yearly"
+              ],
+              "selected": "Monthly"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "set the second tab selected",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "tabs",
+              "items": [
+                "Overview",
+                "Activity",
+                "Files"
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "tabs",
+              "items": [
+                "Overview",
+                "Activity",
+                "Files"
+              ],
+              "selected": "Activity"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "set the last radio option selected",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "radio",
+              "options": [
+                "Basic",
+                "Team",
+                "Enterprise"
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "radio",
+              "options": [
+                "Basic",
+                "Team",
+                "Enterprise"
+              ],
+              "selected": "Enterprise"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "set the country to Canada",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "select",
+              "label": "Country",
+              "value": "United States"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "select",
+              "label": "Country",
+              "value": "Canada"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "select Billing",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "tabs",
+              "items": [
+                "Profile",
+                "Notifications",
+                "Billing"
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "tabs",
+              "items": [
+                "Profile",
+                "Notifications",
+                "Billing"
+              ],
+              "selected": "Billing"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "make Team the selected option",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "radio",
+              "options": [
+                "Solo",
+                "Team",
+                "Business"
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "radio",
+              "options": [
+                "Solo",
+                "Team",
+                "Business"
+              ],
+              "selected": "Team"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "set the language to English",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "select",
+              "label": "Language",
+              "value": "French"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "select",
+              "label": "Language",
+              "value": "English"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "tick Remember me",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Preferences",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "checkbox",
+              "label": "Remember me"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Preferences",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "checkbox",
+              "label": "Remember me",
+              "checked": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "turn weekly summary on",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Preferences",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "toggle",
+              "label": "Weekly summary",
+              "on": false
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Preferences",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "toggle",
+              "label": "Weekly summary",
+              "on": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "clear Public profile",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Preferences",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "checkbox",
+              "label": "Public profile",
+              "checked": true
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Preferences",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "checkbox",
+              "label": "Public profile",
+              "checked": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "check the first box",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Preferences",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "checkbox",
+              "label": "Keep me signed in"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Preferences",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "checkbox",
+              "label": "Keep me signed in",
+              "checked": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "turn Dark mode off",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Preferences",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "toggle",
+              "label": "Dark mode",
+              "on": true
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Preferences",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "toggle",
+              "label": "Dark mode",
+              "on": false
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "no, make those radio buttons",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Staging"
+                },
+                {
+                  "label": "Production"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "radio",
+              "options": [
+                "Staging",
+                "Production"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "actually make that a search field",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Projects"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "search",
+              "placeholder": "Projects"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "instead make it a heading called “Billing”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "text",
+              "text": "Plan"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Billing"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "no, make this a dropdown",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "radio",
+              "options": [
+                "Monday",
+                "Friday"
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "select",
+              "label": "Choose one",
+              "value": "Monday",
+              "options": [
+                "Monday",
+                "Friday"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "scrap that, make it a checkbox called “Send a copy”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "toggle",
+              "label": "Send a copy",
+              "on": true
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "checkbox",
+              "label": "Send a copy",
+              "checked": true
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "remove the search",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Directory",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "search",
+              "placeholder": "Find a person"
+            },
+            {
+              "id": "row-002",
+              "type": "list",
+              "items": [
+                "Alex"
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Directory",
+          "rows": [
+            {
+              "id": "row-002",
+              "type": "list",
+              "items": [
+                "Alex"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "take out the last row",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Directory",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Members"
+            },
+            {
+              "id": "row-002",
+              "type": "divider"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Directory",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Members"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "delete the divider",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Directory",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Plan"
+            },
+            {
+              "id": "row-002",
+              "type": "divider"
+            },
+            {
+              "id": "row-003",
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Save"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Directory",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Plan"
+            },
+            {
+              "id": "row-003",
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Save"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "remove the second row",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Directory",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Team"
+            },
+            {
+              "id": "row-002",
+              "type": "muted",
+              "text": "Optional"
+            },
+            {
+              "id": "row-003",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Directory",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Team"
+            },
+            {
+              "id": "row-003",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "take out the search field",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Directory",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "search",
+              "placeholder": "Search"
+            },
+            {
+              "id": "row-002",
+              "type": "table",
+              "columns": [
+                "Name",
+                "Role"
+              ],
+              "rows": []
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Directory",
+          "rows": [
+            {
+              "id": "row-002",
+              "type": "table",
+              "columns": [
+                "Name",
+                "Role"
+              ],
+              "rows": []
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "move the buttons to the bottom",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Save"
+                }
+              ]
+            },
+            {
+              "id": "row-002",
+              "type": "heading",
+              "text": "Account"
+            },
+            {
+              "id": "row-003",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-002",
+              "type": "heading",
+              "text": "Account"
+            },
+            {
+              "id": "row-003",
+              "type": "input",
+              "label": "Name"
+            },
+            {
+              "id": "row-001",
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Save"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "put the search at the top",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "People"
+            },
+            {
+              "id": "row-002",
+              "type": "list",
+              "items": [
+                "Sam"
+              ]
+            },
+            {
+              "id": "row-003",
+              "type": "search",
+              "placeholder": "Find"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-003",
+              "type": "search",
+              "placeholder": "Find"
+            },
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "People"
+            },
+            {
+              "id": "row-002",
+              "type": "list",
+              "items": [
+                "Sam"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "move the divider below the heading",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Settings"
+            },
+            {
+              "id": "row-002",
+              "type": "input",
+              "label": "Name"
+            },
+            {
+              "id": "row-003",
+              "type": "divider"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Settings"
+            },
+            {
+              "id": "row-003",
+              "type": "divider"
+            },
+            {
+              "id": "row-002",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "put the email field after the name field",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Email"
+            },
+            {
+              "id": "row-002",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-002",
+              "type": "input",
+              "label": "Name"
+            },
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Email"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "move the last row to the top",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Plan"
+            },
+            {
+              "id": "row-002",
+              "type": "muted",
+              "text": "Monthly"
+            },
+            {
+              "id": "row-003",
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Upgrade"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-003",
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Upgrade"
+                }
+              ]
+            },
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Plan"
+            },
+            {
+              "id": "row-002",
+              "type": "muted",
+              "text": "Monthly"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "note that save is off until something changes",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Save"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Save"
+                }
+              ],
+              "note": "1"
+            }
+          ],
+          "notes": {
+            "1": "Save is off until something changes."
+          }
+        }
+      }
+    },
+    {
+      "sentence": "note this field is required",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Email"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Email",
+              "note": "1"
+            }
+          ],
+          "notes": {
+            "1": "This field is required."
+          }
+        }
+      }
+    },
+    {
+      "sentence": "note that this is optional",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "checkbox",
+              "label": "Send updates"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "checkbox",
+              "label": "Send updates",
+              "note": "1"
+            }
+          ],
+          "notes": {
+            "1": "This is optional."
+          }
+        }
+      }
+    },
+    {
+      "sentence": "add a note: only admins can change this",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "toggle",
+              "label": "Public profile",
+              "on": false
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "toggle",
+              "label": "Public profile",
+              "on": false,
+              "note": "1"
+            }
+          ],
+          "notes": {
+            "1": "Only admins can change this."
+          }
+        }
+      }
+    },
+    {
+      "sentence": "make a note that the list is alphabetic",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "list",
+              "items": [
+                "Ari",
+                "Bo"
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "list",
+              "items": [
+                "Ari",
+                "Bo"
+              ],
+              "note": "1"
+            }
+          ],
+          "notes": {
+            "1": "The list is alphabetic."
+          }
+        }
+      }
+    },
+    {
+      "sentence": "change the input label to “Display name”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Display name"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "rename the search to “Find projects”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "search",
+              "placeholder": "Projects"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "search",
+              "placeholder": "Find projects"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "set the button label to “Continue”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Next"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Continue"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "make the heading say “Your workspace”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Workspace"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "heading",
+              "text": "Your workspace"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "change the image label to “Usage chart”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "image",
+              "label": "Chart"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "image",
+              "label": "Usage chart"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "steps": [
+        {
+          "sentence": "a heading called “Account”. Then a name field.",
+          "label": "synthetic multi-row edit"
+        },
+        {
+          "sentence": "undo",
+          "label": "undo the whole last edit"
+        }
+      ],
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Profile",
+          "rows": []
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Profile",
+          "rows": []
+        }
+      },
+      "note": "Undo removes the most recent spoken transaction."
+    },
+    {
+      "steps": [
+        {
+          "sentence": "a heading called “Alerts”. Then a checkbox called “Email me”.",
+          "label": "synthetic multi-row edit"
+        },
+        {
+          "sentence": "undo",
+          "label": "undo the whole last edit"
+        }
+      ],
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Notifications",
+          "rows": []
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Notifications",
+          "rows": []
+        }
+      },
+      "note": "Undo removes the most recent spoken transaction."
+    },
+    {
+      "steps": [
+        {
+          "sentence": "a search for projects. Then a list of Atlas, North.",
+          "label": "synthetic multi-row edit"
+        },
+        {
+          "sentence": "undo",
+          "label": "undo the whole last edit"
+        }
+      ],
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Projects",
+          "rows": []
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Projects",
+          "rows": []
+        }
+      },
+      "note": "Undo removes the most recent spoken transaction."
+    },
+    {
+      "steps": [
+        {
+          "sentence": "a heading called “Payment”. Then a dropdown, Digest day, set to Monday.",
+          "label": "synthetic multi-row edit"
+        },
+        {
+          "sentence": "undo",
+          "label": "undo the whole last edit"
+        }
+      ],
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Billing",
+          "rows": []
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Billing",
+          "rows": []
+        }
+      },
+      "note": "Undo removes the most recent spoken transaction."
+    },
+    {
+      "steps": [
+        {
+          "sentence": "a heading called “Members”. Then a Save button.",
+          "label": "synthetic multi-row edit"
+        },
+        {
+          "sentence": "undo",
+          "label": "undo the whole last edit"
+        }
+      ],
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Access",
+          "rows": []
+        }
+      },
+      "expected": {
+        "kind": "screen",
+        "data": {
+          "title": "Access",
+          "rows": []
+        }
+      },
+      "note": "Undo removes the most recent spoken transaction."
+    }
+  ]
+}

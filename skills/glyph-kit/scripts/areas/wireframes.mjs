@@ -4,6 +4,33 @@ import { upper } from "../text.mjs";
 import { BOX, center, cut, join, len, padEnd, padStart, textCells, wrap } from "../core.mjs";
 import { LAYOUT, capRows } from "../layout.mjs";
 
+// Everyday language accepted by say.mjs. Keep each row's aliases beside the
+// primitive it names so the reader and the renderer share one closed vocabulary.
+export const ROW_NAMES = Object.freeze({
+  heading: ["heading", "header", "section heading", "section title", "title inside"],
+  text: ["text", "paragraph", "sentence", "copy", "description"],
+  muted: ["hint", "help text", "small print", "secondary text", "muted caption", "caption"],
+  input: ["field", "input", "text box", "box to type in", "somewhere to type"],
+  search: ["search", "search box", "search field", "find box"],
+  buttons: ["button", "buttons", "actions"],
+  checkbox: ["checkbox", "tick box", "check"],
+  radio: ["radio", "radio buttons", "radio options", "choices", "pick one", "pick one of"],
+  toggle: ["toggle", "switch", "on/off"],
+  select: ["dropdown", "select", "picker", "menu", "choose from"],
+  tabs: ["tabs", "segments", "sections across the top"],
+  list: ["list", "rows", "items", "entries"],
+  table: ["table", "grid of", "columns"],
+  image: ["image", "picture", "photo", "chart placeholder", "thumbnail"],
+  skeleton: ["loading", "placeholder lines", "skeleton"],
+  empty: ["empty state", "empty message", "nothing here yet"],
+  space: ["gap", "space", "breathing room", "blank line"],
+  divider: ["horizontal line", "line", "rule", "divider", "separator"]
+});
+
+export const SCREEN_NAMES = Object.freeze([
+  "popover", "popup", "dialog", "modal", "sheet", "panel", "card", "screen", "page", "window"
+]);
+
 /**
  * The primitives. Each returns the lines it occupies inside a frame of `w` characters.
  * Every row may carry `note: "1"`; the marker [1] is drawn outside the frame.

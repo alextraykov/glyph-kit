@@ -1,0 +1,650 @@
+{
+  "status": "synthetic-authored",
+  "note": "Thirty deliberately ambiguous or out-of-vocabulary typed phrases; expected guesses are contextual or preserved as unread text.",
+  "cases": [
+    {
+      "sentence": "header called “People”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "",
+          "rows": []
+        }
+      },
+      "expected": {
+        "title": "People",
+        "rows": [],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "add a header called “Members”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "title": "Settings",
+        "rows": [
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "heading",
+            "text": "Members"
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "a header for “Your plan”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "",
+          "rows": []
+        }
+      },
+      "expected": {
+        "title": "Your plan",
+        "rows": [],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "header: Notifications",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "title": "Settings",
+        "rows": [
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "heading",
+            "text": "Notifications"
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "add a section heading called “Billing”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "title": "Settings",
+        "rows": [
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "heading",
+            "text": "Billing"
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "put a box below",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "add a box",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "",
+          "rows": []
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "box for “Project name”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "",
+          "rows": []
+        }
+      },
+      "expected": {
+        "title": "Project name",
+        "rows": [],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "a box for “Email”",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "title": "Settings",
+        "rows": [
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "input",
+            "label": "Email"
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "make the box wider",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "give me two choices, Edit and Delete",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "title": "Settings",
+        "rows": [
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Edit"
+              },
+              {
+                "label": "Delete"
+              }
+            ]
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "give me two choices, Red and Blue",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "title": "Settings",
+        "rows": [
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "radio",
+            "options": [
+              "Red",
+              "Blue"
+            ]
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "two choices: Save, Cancel",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "",
+          "rows": []
+        }
+      },
+      "expected": {
+        "title": "",
+        "rows": [
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save"
+              },
+              {
+                "label": "Cancel"
+              }
+            ]
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "two choices: Small, Large",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "",
+          "rows": []
+        }
+      },
+      "expected": {
+        "title": "",
+        "rows": [
+          {
+            "type": "radio",
+            "options": [
+              "Small",
+              "Large"
+            ]
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "pick one, Standard or Express",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "",
+          "rows": []
+        }
+      },
+      "expected": {
+        "title": "",
+        "rows": [
+          {
+            "type": "radio",
+            "options": [
+              "Standard",
+              "Express"
+            ]
+          }
+        ],
+        "unread": false
+      }
+    },
+    {
+      "sentence": "make it feel more like the old dashboard",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "a sort of card thing with a thumbnail",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "put the important bit somewhere near the top",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "give that a bit more breathing room but keep it tight",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "make it look less busy",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "show the usual stuff for a team",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "add the thing people expect on this page",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "that should probably be a more obvious choice",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "add a video buttons row",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "make this feel warmer",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "put a nice visual here",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "the thing we talked about last week",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "maybe show the better option first",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "do the common pattern for an invite",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    },
+    {
+      "sentence": "this could use a little polish",
+      "initial": {
+        "kind": "screen",
+        "data": {
+          "title": "Settings",
+          "rows": [
+            {
+              "id": "row-001",
+              "type": "input",
+              "label": "Name"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "unread": true
+      }
+    }
+  ]
+}
