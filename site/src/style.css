@@ -163,6 +163,27 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .study .win { color: var(--signal-ok); } .study .lose { color: var(--text-caption); }
 .stats-note { font: 400 var(--px-11)/1.6 var(--pixel); color: var(--text-caption); }
 
+/* Release 0.3.0: four items, each a label, kit figures and one line. */
+.release { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-5); }
+.release__item { display: grid; align-content: start; gap: var(--space-3); min-width: 0; padding-top: var(--space-4); border-top: var(--hairline) solid var(--ink); }
+.release__item > p:last-child { max-width: 56ch; color: var(--text-soft); font-size: .92rem; }
+.release figure { display: grid; gap: var(--space-1); min-width: 0; margin: 0; }
+/* A figure that fits its box: 11px while it fits, smaller only when it doesn't (a cell is 0.64 em). */
+.fit { position: relative; container-type: inline-size; display: grid; justify-items: center; min-width: 0; padding: var(--space-5); background: var(--panel); color: var(--ink); }
+/* ↺ and Copy sit in the box's corners, clear of the figure. */
+.fit .gk-replay-wrap { position: static; }
+/* On touch, Copy is always shown, so it gets its own strip below the figure. */
+@media (hover: none) { .fit.has-figure-copy { padding-bottom: calc(28px + 2 * var(--space-2)); } }
+.fit .grid-figure { padding: 0; overflow: visible; background: transparent; color: var(--ink); font-size: min(var(--px-11), 100cqi / (0.64 * (var(--cols) + 1))); }
+.fit[data-palette] .gk-d { color: var(--palette-data); }
+.palettes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-2); }
+.palettes .fit { padding: var(--space-4) var(--space-3); }
+.edit { display: grid; justify-items: stretch; gap: var(--space-2); }
+.edit .cmd { justify-self: center; }
+.edits { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-1) var(--space-4); margin: 0; padding-top: var(--space-3); border-top: var(--hairline) solid var(--line); }
+.edits dt { font: 400 var(--px-11)/1.9 var(--pixel); }
+.edits dd { margin: 0; color: var(--text-soft); font-size: .9rem; }
+
 /* Galleries */
 .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 36rem), 1fr)); gap: var(--space-5); }
 .areas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr)); gap: var(--space-6) var(--space-5); }
@@ -305,7 +326,7 @@ footer { border-top: var(--hairline) solid var(--ink); padding-block: var(--spac
 footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); }
 
 @media (max-width: 900px) {
-  .hero__body, .note, .try { grid-template-columns: minmax(0, 1fr); }
+  .hero__body, .note, .try, .release { grid-template-columns: minmax(0, 1fr); }
   .strip__row { grid-template-columns: minmax(0, 1fr); align-items: start; }
   .outputs__view > .grid-figure { font-size: var(--px-11); }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -317,6 +338,7 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 @media (max-width: 640px) {
   .heading h2 { font-size: var(--px-22); }
   .note__copy h2 { font-size: var(--px-33); }
+  .fit { padding: var(--space-4) var(--space-3); }
   .stats { grid-template-columns: minmax(0, 1fr); }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bento__cell { grid-column: auto; }

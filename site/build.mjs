@@ -27,6 +27,8 @@ const { LIVE, live, stillGrid } = await imp("scripts/live/kinds.mjs");
 const { resolve } = await imp("scripts/registry.mjs");
 const { classify } = await imp("scripts/render/paint.mjs");
 const { ARRIVE_CSS, ARRIVE_JS, arriveLines } = await imp("scripts/render/arrive.mjs");
+const { PALETTES } = await imp("scripts/render/themes.mjs");
+const { readBack } = await imp("scripts/read.mjs");
 const core = await import(new URL(`file://${join(root, "site/src/showcase-core.mjs")}`).href);
 const { parseChangelog, markdownToHtml, longDate } = await import(new URL(`file://${join(root, "site/src/changelog.mjs")}`).href);
 
@@ -122,7 +124,7 @@ const FORMATS = [
   { id: "svg", name: "SVG", copy: renderSvg(AUDIT_SPEC, { theme: "paper" }), view: (t) => `<div class="outputs__svg">${t}</div>` }
 ];
 // Areas new in this release, or with a new type, for the home page's New labels.
-const NEW_AREAS = { process: "New area", layouts: "New area", handoff: "New: anatomy", wireframes: "New: screen layouts" };
+const NEW_AREAS = { systems: `New: ${KINDS.palette.label.toLowerCase()}, ${KINDS.colourRoles.label.toLowerCase()}` };
 // The study's medians as one table: for each figure and each measure, the kit's value and HTML/JS's,
 // each with a bar on the pair's own scale, and how many times better the kit did. Wins are green.
 // Rows arrive in reading order; in each pair both bars grow at the same speed, so the kit's lands
@@ -180,10 +182,10 @@ try {
 } catch {}
 // Figures arrive the way the kit's HTML does: once, in the order that carries their point. Figures the
 // guide animates itself stay plain.
-const figure = (spec, { arrive = true } = {}) => {
-  const text = body(spec);
+// `text` draws a figure as someone left it (an edited drawing) with its spec's arrival.
+const figure = (spec, { arrive = true, text = body(spec), aria = label(spec) } = {}) => {
   const arrived = arrive ? arriveLines(spec, text) : null;
-  return `<pre class="grid-figure"${arrived ? " data-arrive" : ""} role="img" aria-label="${esc(label(spec))}">${arrived ? arrived.join("\n") : paint(text)}</pre>`;
+  return `<pre class="grid-figure"${arrived ? " data-arrive" : ""} role="img" aria-label="${esc(aria)}">${arrived ? arrived.join("\n") : paint(text)}</pre>`;
 };
 const stage = (cols, rows, pre) => `<div class="stage" style="--cols:${cols};--rows:${rows}">${pre}</div>`;
 const liveFigure = (mv) => `<figure class="demo">
@@ -508,6 +510,59 @@ const guide = page({
 </section>`
 });
 
+// ── Release 0.3.0 on the home page ─────────────────────────────────────────────────────────────
+// Four kit figures: a focus, a colour type, one figure in each palette, and an edit read back.
+// A figure fits its box: --cols lets it step down from 11px on a phone instead of scrolling.
+// With `palette`, the figure takes that palette's colours: the custom properties the builder's Colours
+// menu sets (site/src/try.js), from the kit's own palettes.
+const widest = (text) => Math.max(...text.split("\n").map(textWidth));
+const paletteVars = (c) => `;--paper:${c.bg};--panel:${c.panel};--ink:${c.ink};--text-caption:${c.frame};--signal-fail:${c.flag};--signal-ok:${c.ok};--palette-data:${c.data}`;
+const fit = (spec, { palette, ...opts } = {}) =>
+  `<div class="fit"${palette ? " data-palette" : ""} style="--cols:${widest(opts.text ?? body(spec))}${palette ? paletteVars(palette) : ""}">${figure(spec, opts)}</div>`;
+const MADE_UP = "Sample data, made up for this example";
+const RELEASE = (() => {
+  const cohort = {
+    kind: "cohort", title: "Monthly retention", source: MADE_UP,
+    data: [
+      { label: "Jan", size: 1200, values: [1, 0.84, 0.41, 0.38, 0.36] },
+      { label: "Feb", size: 1350, values: [1, 0.81, 0.4, 0.37] },
+      { label: "Mar", size: 1100, values: [1, 0.86, 0.44] },
+      { label: "Apr", size: 1420, values: [1, 0.83] }
+    ],
+    focus: { on: ["M2"], tone: "problem", say: "Every cohort halves between M1 and M2." }
+  };
+  const roles = {
+    kind: "colourRoles", title: "Colour tokens", source: MADE_UP,
+    data: { page: { light: "#f7f6f1" }, roles: [
+      { role: "words", token: "--color-ink", light: "#151513", use: "words" },
+      { role: "secondary", token: "--color-muted", light: "#6b6a64", use: "words" },
+      { role: "accent", token: "--color-accent", light: "#1f4fd6", use: "words" },
+      { role: "problems", token: "--color-danger", light: "#f08080", use: "words" },
+      { role: "passes", token: "--color-success", light: "#0a7a50", use: "words" },
+      { role: "lines", token: "--color-line", light: "#a3a199", use: "lines" }
+    ] }
+  };
+  const bars = { kind: "barChart", title: "Task success", source: "Sample data", data: [{ label: "task 1", value: 92, text: "92%" }, { label: "task 2", value: 71, text: "71%" }, { label: "task 3", value: 38, text: "38%" }], options: { width: 7 } };
+  // An edit by hand: one row's status changed, its columns left uneven. `read` turns it back into the
+  // spec and draws it again, count and all.
+  const qa = { kind: "qaChecklist", title: "Before you hand over", data: [
+    { text: "The lint passes", status: "done" },
+    { text: "Sources named", status: "progress" },
+    { text: "About 80 columns", status: "todo" }
+  ] };
+  const edited = body(qa).replace("▒ in progress  Sources named", "█ done Sources named");
+  const after = readBack(qa, edited);
+  const items = [
+    { name: "Focus", figure: fit(cohort), line: "The text gets a ► line, so it reads without colour. On screen the focus takes its tone, the rest recedes, and it arrives last." },
+    // On the page colour its contrast is measured against, in either site theme.
+    { name: "Colour types", figure: fit(roles, { palette: { ...PALETTES.paper, panel: PALETTES.paper.bg } }), line: "Two new types: palette and colour roles. A swatch is drawn in its own colour; the text keeps the value, so it still reads." },
+    { name: "Your colours", figure: `<div class="palettes">${Object.keys(PALETTES).map((name) => `<figure><figcaption class="label">${esc(name[0].toUpperCase() + name.slice(1))}</figcaption>${fit(bars, { palette: PALETTES[name] })}</figure>`).join("")}</div>`, line: "Four palettes, your own colours or your design system's tokens. Every colour you supply is checked for contrast. The builder's Colours menu has all four." },
+    { name: "Editing", figure: `<div class="edit"><figure><figcaption class="label">Edited by hand</figcaption>${fit(qa, { text: edited, aria: "The checklist with one row changed by hand to done; the count still says 1 of 3." })}</figure>${cmd("glyph-kit read notes.md")}<figure><figcaption class="label">Read back</figcaption>${fit(after)}</figure></div>
+    <dl class="edits"><dt>check</dt><dd>Every problem at once.</dd><dt>redraw</dt><dd>Draws figures again in place.</dd><dt>read</dt><dd>Turns an edited drawing back into its spec.</dd><dt>--with-spec</dt><dd>Keeps the spec beside the figure.</dd></dl>`, line: "Change the drawing and read it back, or change the spec and redraw. Only the figure changes; the rest of the file stays as it was." }
+  ];
+  return `<div class="release">${items.map((it) => `<article class="release__item"><p class="label">${esc(it.name)}</p>${it.figure}<p>${esc(it.line)}</p></article>`).join("\n")}</div>`;
+})();
+
 // ── Home ───────────────────────────────────────────────────────────────────────────────────────
 const home = page({
   path: "/",
@@ -530,12 +585,18 @@ const home = page({
 </section>
 
 <section class="section builder-section" aria-label="Builder">
-  <header class="heading"><p class="kicker">01 Builder</p></header>
+  <header class="heading"><p class="kicker">01 Builder <span class="new">New: Colours</span></p></header>
   ${builder}
 </section>
 
+<section class="section" aria-labelledby="release">
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Release 0.3.0</p><h2 id="release">Colour by role. Focus on any type.</h2><a class="text-link" href="/changelog/#v0-3-0">Everything in 0.3.0</a></header>
+  ${RELEASE}
+  <p class="outputs__also">Also new: <a class="text-link" href="${REPO}/blob/main/CONTRIBUTING.md">How to contribute</a> · <a class="text-link" href="${REPO}/blob/main/docs/adding-a-type.md">Adding a type</a></p>
+</section>
+
 <section class="section" aria-labelledby="cheap">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Against HTML/JS <span class="new">New</span></p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>Claude Code got the same brief twice for each of five deliverables: once with the kit, once as hand-written HTML/JS. Like for like: a still flow against a still SVG flow, a working prototype against a working prototype, a moving diagram against an animated one.</p></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">03 Against HTML/JS</p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>Claude Code got the same brief twice for each of five deliverables: once with the kit, once as hand-written HTML/JS. Like for like: a still flow against a still SVG flow, a working prototype against a working prototype, a moving diagram against an animated one.</p></header>
   <div class="stats">
     <article class="stat"><p class="label">Faster</p><strong>${times(mv.html.s / mv.kit.s)}</strong><p>A moving diagram took ${secs(mv.kit.s)} against ${secs(mv.html.s)}. Faster on every run, for all five.</p></article>
     <article class="stat"><p class="label">Cheaper</p><strong>${times(mv.html.usd / mv.kit.usd)}</strong><p>${usd(mv.kit.usd)} against ${usd(mv.html.usd)} for a moving diagram. Cheaper on every run, for all five.</p></article>
@@ -547,7 +608,7 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="use">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">03 How to use</p><h2 id="use">Ask in words. Pick a format.</h2><a class="text-link" href="/how-to-use/">Read the guide</a></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 How to use</p><h2 id="use">Ask in words. Pick a format.</h2><a class="text-link" href="/how-to-use/">Read the guide</a></header>
   <ol class="steps">
     <li><p class="label">1 · Install</p>${cmd("npx skills add alextraykov/glyph-kit")}<p>Or as a Claude Code plugin, or from the zip.</p></li>
     <li><p class="label">2 · Ask in words</p><ul class="asks">${USE_ASKS.map((a) => `<li>“${esc(a)}”</li>`).join("")}</ul></li>
@@ -556,7 +617,7 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="moving">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Motion <span class="new">New</span></p><h2 id="moving">Six keep moving. Every type arrives.</h2></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Motion</p><h2 id="moving">Six keep moving. Every type arrives.</h2></header>
   <div class="switch" data-switch style="--rows:${Math.max(...moving.slice(0, 6).map((mv) => mv.rows))}">
     <div class="switch__chips" role="tablist" aria-label="Moving diagrams">${moving.slice(0, 6).map((mv, i) => `<button type="button" role="tab" id="mv-${mv.id}" aria-controls="mv-${mv.id}-panel" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ""}>${esc(mv.spec.title)}</button>`).join("")}</div>
     ${moving.slice(0, 6).map((mv, i) => `<div role="tabpanel" id="mv-${mv.id}-panel" aria-labelledby="mv-${mv.id}"${i ? " hidden" : ""}>${liveFigure(mv)}</div>`).join("\n    ")}
@@ -564,7 +625,7 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="areas">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Coverage</p><h2 id="areas">${kindCount} types. ${areaCount} areas.</h2><a class="text-link" href="/types/">Every type</a></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">06 Coverage</p><h2 id="areas">${kindCount} types. ${areaCount} areas.</h2><a class="text-link" href="/types/">Every type</a></header>
   <div class="bento">${Object.entries(AREAS).map(([id, area]) => {
     const n = Object.keys(area.kinds).length;
     return `<article class="bento__cell"><header class="bento__head"><h3><a href="/types/#${id}">${esc(area.label)}</a></h3><span class="label">${n} ${n === 1 ? "type" : "types"}</span></header>${NEW_AREAS[id] ? `<span class="new">${esc(NEW_AREAS[id])}</span>` : ""}<div class="bento__peek" aria-hidden="true">${paint(body(examples[id][0]))}</div></article>`;
@@ -572,7 +633,7 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="guard">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">06 Trust</p><h2 id="guard">Sample data is stamped.</h2></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">07 Trust</p><h2 id="guard">Sample data is stamped.</h2></header>
   <ul class="rules">
     <li><strong>No source, no numbers.</strong> A figure with numbers waits until it says where they came from.</li>
     <li><strong>Sample data is stamped.</strong> Made-up numbers carry SAMPLE DATA in every format.</li>
@@ -584,7 +645,7 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="formats">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">07 Output</p><h2 id="formats">Copy it as text. Export the rest.</h2><p>Every figure is plain text first, ready to paste into a PR, a ticket, Slack, an email or a model's context as it is. The same spec exports to Markdown, MDX, SVG, HTML, decks and PDF.</p></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">08 Output</p><h2 id="formats">Copy it as text. Export the rest.</h2><p>Every figure is plain text first, ready to paste into a PR, a ticket, Slack, an email or a model's context as it is. The same spec exports to Markdown, MDX, SVG, HTML, decks and PDF.</p></header>
   <div class="outputs" data-outputs>
     <div class="outputs__bar">
       <div class="switch__chips" role="tablist" aria-label="Formats">${FORMATS.map((f, i) => `<button type="button" role="tab" id="out-${f.id}" aria-controls="out-${f.id}-panel" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ""}>${esc(f.name)}</button>`).join("")}</div>
@@ -599,7 +660,7 @@ const home = page({
 </section>
 
 <section class="section support" aria-labelledby="support">
-  <header class="heading"><p class="kicker">08 Support</p><h2 id="support">Free. MIT.</h2></header>
+  <header class="heading"><p class="kicker">09 Support</p><h2 id="support">Free. MIT.</h2></header>
   <div class="actions"><a class="button" href="${REPO}" target="_blank" rel="noopener">★ Star on GitHub</a>${SUPPORT_URL ? `<a class="button button--quiet" href="${esc(SUPPORT_URL)}">Buy me a coffee</a>` : ""}</div>
 </section>
 
