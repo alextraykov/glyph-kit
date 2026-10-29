@@ -2,7 +2,8 @@
 // so the browser plays the arrival with no script per frame. Hidden only while a figure is arriving:
 // without JavaScript, under reduced motion and in print the figure is simply there.
 import { resolve } from "../registry.mjs";
-import { STEPPED as STEPS, cellsOf } from "../arrive.mjs";
+import { STEPPED as STEPS, STEPPED_LAND, cellsOf } from "../arrive.mjs";
+import { cellWidth, graphemes } from "../text.mjs";
 import { classify, paintLine, paintOptions } from "./paint.mjs";
 
 const STAMP = /^\s*SAMPLE DATA\s*$/;
@@ -14,9 +15,33 @@ const layer = (run, glyph) => [...run].map((ch) => (STEPS.test(ch) ? glyph : " "
 // the final cells. The layers are hidden unless the figure is arriving, so nothing else ever sees them.
 // `under` keeps a scale visible (░ or ·) behind cells that haven't arrived yet.
 // The layers are painted as what they show (░, ▒); only the final cells take the line's roles.
-const stepped = (run, at, under, { roles, ...layerOpts }) =>
-  `<span class="gk-s">${under ? `<span class="gk-s0" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, under), layerOpts)}</span>` : ""}<span class="gk-s1" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, "░"), layerOpts)}</span><span class="gk-s2" aria-hidden="true" style="--d:${at + STEP_MS}ms">${paintLine(layer(run, "▒"), layerOpts)}</span><span class="gk-a" style="--d:${at + 2 * STEP_MS}ms">${paintLine(run, { ...layerOpts, roles })}</span></span>`;
+const steps = (run, at, under, layerOpts) =>
+  `${under ? `<span class="gk-s0" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, under), layerOpts)}</span>` : ""}<span class="gk-s1" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, "░"), layerOpts)}</span><span class="gk-s2" aria-hidden="true" style="--d:${at + STEP_MS}ms">${paintLine(layer(run, "▒"), layerOpts)}</span>`;
 
+// The landing flash: for one 120ms step each landing cell shows its inverse, in its own cell only, so
+// it takes the figure's shape and never paints the gaps between cells. Inverting a shade in place
+// barely changes it (▒ inverted is ▒), so a light cell turns solid in its colour and a dark one
+// turns to paper; a letter turns paper on ink. A problem, a pass and the focus always flash; a measure
+// flashes unless it stepped in, since stepping is its arrival.
+const LIGHT = /[░▒▁▂▃▄▏▎▍▌]/u;
+const FLASH_MS = 120;
+const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+function flash(run, roles, inFocus, stepped) {
+  let out = "";
+  let any = false;
+  let col = 0;
+  for (const ch of graphemes(run)) {
+    const role = roles[col] || "";
+    const lands = ch !== " " && (inFocus(col) || role === "x" || role === "ok" || (role === "d" && !stepped));
+    if (!lands) out += " ".repeat(cellWidth(ch));
+    else if (LIGHT.test(ch)) out += `<span class="gk-${role || "d"}">█</span>`;
+    else if (STEPS.test(ch)) out += `<span class="gk-hole">█</span>`;
+    else out += `<span class="gk-inv">${esc(ch)}</span>`;
+    any ||= lands;
+    col += cellWidth(ch);
+  }
+  return any ? out : "";
+}
 /** The figure's lines as HTML, with arrival spans when the type has an order. */
 export function arriveLines(spec, text) {
   const def = resolve(spec);
@@ -47,9 +72,20 @@ export function arriveLines(spec, text) {
     let start = 0;
     // Roles come from the whole line, so a word or a swatch split across runs keeps its colour.
     const lineRoles = classify(lines[r], { ...paintOpts, row: r });
+    const focus = paintOpts.mask?.get(r);
     const flush = (col) => {
-      const opts = { ...paintOpts, roles: lineRoles.slice(start, col) };
-      if (run) out += !at ? paintLine(run, opts) : !delay.exact && STEPS.test(run) && ![...run].every((ch) => ch === "▒" || ch === " ") ? stepped(run, at, delay.under, opts) : `<span class="gk-a" style="--d:${at}ms">${paintLine(run, opts)}</span>`;
+      const roles = lineRoles.slice(start, col);
+      const opts = { ...paintOpts, roles };
+      if (run && !at) out += paintLine(run, opts);
+      else if (run) {
+        const stepped = !delay.exact && STEPS.test(run) && ![...run].every((ch) => ch === "▒" || ch === " ");
+        const lands = stepped ? at + STEPPED_LAND : at;
+        const from = start;
+        const shown = flash(run, roles, (c) => Boolean(focus?.has(from + c)), stepped);
+        const final = `<span class="gk-a" style="--d:${lands}ms">${paintLine(run, opts)}</span>`;
+        const layers = (stepped ? steps(run, at, delay.under, paintOpts) : "") + (shown ? `<span class="gk-s3" aria-hidden="true" style="--d:${lands}ms">${shown}</span>` : "");
+        out += layers ? `<span class="gk-s">${layers}${final}</span>` : final;
+      }
       run = "";
       start = col;
     };
@@ -75,16 +111,15 @@ const REPLAY_CSS = `.gk-replay-wrap{position:relative;display:grid;min-width:0}.
 export const ARRIVE_CSS = `${REPLAY_CSS}
 @keyframes gk-wait{from,to{visibility:hidden}}
 .is-waiting .gk-a{visibility:hidden}
-@keyframes gk-land{from{background:var(--gk-arrive-ink);color:var(--gk-arrive-paper)}to{background:transparent}}
 .is-arriving .gk-a{animation:gk-wait calc(var(--base,0ms) + var(--d)) steps(1,end)}
-.is-arriving .gk-a .gk-x,.is-arriving .gk-a .gk-d,.is-arriving .gk-a .gk-ok{animation:gk-land 120ms steps(1,end) calc(var(--base,0ms) + var(--d))}
 @keyframes gk-gone{from,to{visibility:hidden}}
-.gk-s{position:relative}.gk-s0,.gk-s1,.gk-s2{position:absolute;left:0;top:0;visibility:hidden;user-select:none}
+.gk-s{position:relative}.gk-s0,.gk-s1,.gk-s2,.gk-s3{position:absolute;left:0;top:0;visibility:hidden;user-select:none}
 .is-waiting .gk-s0{visibility:visible}.is-arriving .gk-s0{visibility:visible;animation:gk-gone 1ms steps(1,end) calc(var(--base,0ms) + var(--d)) forwards}
-.is-arriving .gk-s1,.is-arriving .gk-s2{visibility:visible;animation:gk-wait calc(var(--base,0ms) + var(--d)) steps(1,end),gk-gone 1ms steps(1,end) calc(var(--base,0ms) + var(--d) + 40ms) forwards}
-.is-arriving .gk-s .gk-a .gk-d{animation:none}
-@media (prefers-reduced-motion:reduce){.is-waiting .gk-a{visibility:visible}.is-arriving .gk-a,.is-arriving .gk-a .gk-d{animation:none}.gk-s0,.gk-s1,.gk-s2,.is-waiting .gk-s0,.is-arriving .gk-s0,.is-arriving .gk-s1,.is-arriving .gk-s2{visibility:hidden;animation:none}}
-@media print{.is-waiting .gk-a{visibility:visible}.is-arriving .gk-a,.is-arriving .gk-a .gk-d{animation:none}.gk-s0,.gk-s1,.gk-s2,.is-waiting .gk-s0,.is-arriving .gk-s0,.is-arriving .gk-s1,.is-arriving .gk-s2{visibility:hidden;animation:none}}`;
+.is-arriving .gk-s1,.is-arriving .gk-s2{visibility:visible;animation:gk-wait calc(var(--base,0ms) + var(--d)) steps(1,end),gk-gone 1ms steps(1,end) calc(var(--base,0ms) + var(--d) + ${STEP_MS}ms) forwards}
+.is-arriving .gk-s3{visibility:visible;animation:gk-wait calc(var(--base,0ms) + var(--d)) steps(1,end),gk-gone 1ms steps(1,end) calc(var(--base,0ms) + var(--d) + ${FLASH_MS}ms) forwards}
+.gk-s3>*{opacity:1}.gk-s3 .gk-hole{color:var(--gk-arrive-paper);-webkit-text-stroke:2px var(--gk-arrive-paper)}.gk-s3 .gk-inv{background:var(--gk-arrive-ink);color:var(--gk-arrive-paper)}
+@media (prefers-reduced-motion:reduce){.is-waiting .gk-a{visibility:visible}.is-arriving .gk-a{animation:none}.gk-s0,.gk-s1,.gk-s2,.gk-s3,.is-waiting .gk-s0,.is-arriving .gk-s0,.is-arriving .gk-s1,.is-arriving .gk-s2,.is-arriving .gk-s3{visibility:hidden;animation:none}}
+@media print{.is-waiting .gk-a{visibility:visible}.is-arriving .gk-a{animation:none}.gk-s0,.gk-s1,.gk-s2,.gk-s3,.is-waiting .gk-s0,.is-arriving .gk-s0,.is-arriving .gk-s1,.is-arriving .gk-s2,.is-arriving .gk-s3{visibility:hidden;animation:none}}`;
 
 /** Each figure arrives once, when a quarter of it is in view, and gets a small ↺ in its corner to play
  *  it again. A figure shown with a motion demo waits for the demo, and its ↺ replays both. Nothing is
