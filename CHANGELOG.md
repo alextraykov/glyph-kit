@@ -10,6 +10,8 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 - **From your design system.** A `roles` block in `design-system.map.json` points roles at your tokens. HTML and decks write the token's `var(--…)` so your CSS wins; SVG, PNG and PDF use its fallback colour. A token with no fallback is refused.
 - **Contrast is checked.** Every colour you supply is checked against the page and the panel: 4.5 to 1 for words, 3 for marks, 1.5 for lines. A refusal names the pair and a nearby colour that passes.
 - **A ramp for density grids.** Four colours for `░ ▒ ▓ █` in `heatmap`, `cohort` and `calendarStrip`, drawn solid in SVG. Elsewhere shades keep the data colour, so the density ladder means the same thing.
+- **Colour in the terminal.** Text drawn to a terminal is coloured by role in the 16 standard colours: problems red, passes green, lines dim. `NO_COLOR` and `--no-color` turn it off; `--color` turns it on for a pipe. Markdown and files stay plain.
+- **Pick the colours on the site.** The builder has a Colours menu with the four palettes; exports use the one you pick.
 - **Colour follows meaning.** `color` on a node, bar or row is refused.
 - **Paper passes its own rule.** Its problem colour is darker (`#c4401c` to `#b8391a`) and its secondary text a touch darker (`#6d6c66` to `#6b6a64`), so both reach 4.5 to 1 on the panel.
 - Existing specs need no changes. The text form is unchanged.

@@ -13,6 +13,12 @@ Figures are coloured by role, never for decoration, in HTML, decks, reports, SVG
 | `bg`, `panel` | the page and the surface behind figures | |
 | `ramp` | four colours for `░ ▒ ▓ █` in `heatmap`, `cohort` and `calendarStrip` only | each step further from the page; the last 3 to 1 |
 
+## In the terminal
+
+`render --to text` and `live --to text` colour by role when the output is a terminal: problems red, passes green, lines and empty cells dim, data and words in the terminal's own colour. The 16 standard colours are used, so the terminal's palette decides the shade. A terminal that takes 24-bit colour (`COLORTERM=truecolor`) uses a theme's own colours when you pass one.
+
+`NO_COLOR` turns it off, `--no-color` turns it off for one call, and `--color` turns it on when writing to a file or a pipe. Markdown is never coloured. Every role also has a word or a glyph, so a figure reads the same without colour.
+
 ## A theme
 
 A palette name (`paper`, `ink`, `phosphor`, `gilt`), or a base and the roles you change:

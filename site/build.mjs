@@ -324,6 +324,7 @@ const builder = `<section class="builder" id="try" aria-label="Builder" data-lay
       <div class="tabs" role="tablist" aria-label="Preview, data or history"><button type="button" role="tab" aria-selected="true" data-tab="preview">Preview</button><button type="button" role="tab" aria-selected="false" data-tab="data">Data</button><button type="button" role="tab" aria-selected="false" data-tab="history">History</button></div>
       <span class="label builder__title" data-try-title>Example · ${esc(exampleSpec.title)}</span>
       <span class="builder__hint" data-try-hint hidden>Scroll sideways to see all of it.</span>
+      <details class="export" data-try-palette><summary>Colours</summary><div class="export__menu" role="group" aria-label="Colours" data-try-palette-menu></div></details>
       <details class="export" data-try-export><summary>Export</summary><div class="export__menu" data-try-export-menu></div></details>
       <span class="label" data-try-stamp>Sample data</span>
     </div>

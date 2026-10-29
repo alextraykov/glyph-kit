@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // glyph-kit command line.
 //
-//   node glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map design-system.map.json] [--theme name|theme.json]
+//   node glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map design-system.map.json] [--theme name|theme.json] [--color | --no-color]
 //                         (the file may hold one spec or a list of them)
 //   node glyph-kit.mjs deck <deck.json | a.json b.json …> [--title "Name"] [--map …]   (HTML to stdout)
 //   node glyph-kit.mjs types                                                  (lists every type by area; `kinds` works too)
@@ -40,6 +40,9 @@ const read = (file) => loadData(JSON.parse(readFileSync(file === "-" ? 0 : file,
 
 try {
   const compactText = bool("--compact");
+  // Colour in the terminal: on when the output is a terminal and NO_COLOR isn't set; --color and --no-color win.
+  const [colourOn, colourOff] = [bool("--color"), bool("--no-color")];
+  const colourFlag = colourOff ? false : colourOn || undefined;
   const to = flag("--to") ?? "text";
   const out = flag("--out");
   const themeArg = flag("--theme");
@@ -88,9 +91,10 @@ try {
     const { live, stillText } = await import("./live/kinds.mjs");
     const spec = read(files[0]);
     const text = () => (compactText ? compact(stillText(spec)) : stillText(spec));
+    const { ansi, wantsColour } = await import("./render/ansi.mjs");
     const outs = {
       html: () => renderLiveHtml(spec, { theme: theme ?? spec.theme, map }),
-      text,
+      text: () => (wantsColour({ force: colourFlag }) ? ansi(text(), { spec, theme }) : text()),
       markdown: () => `**${spec.title ?? live(spec).label}**\n\n\`\`\`text\n${text()}\n\`\`\`\n\n${live(spec).summary}${spec.source ? ` Source: ${spec.source}` : ""}`
     };
     const render = outs[to === "md" ? "markdown" : to];
@@ -101,7 +105,9 @@ try {
     const { renderHtml } = to === "html" ? await import("./render/html.mjs") : {};
     const spec = read(files[0]);
     const each = (fn) => (s) => (Array.isArray(s) ? s.map(fn).join("\n\n") : fn(s));
-    const out = { text: each((s) => renderText(s, { compact: compactText })), markdown: each((s) => renderMarkdown(s, { compact: compactText })), html: (s) => renderHtml(s, { map, theme, title }) }[to];
+    const { ansi, wantsColour } = to === "text" ? await import("./render/ansi.mjs") : {};
+    const colour = to === "text" && wantsColour({ force: colourFlag });
+    const out = { text: each((s) => (colour ? ansi(renderText(s, { compact: compactText }), { spec: s, theme }) : renderText(s, { compact: compactText }))), markdown: each((s) => renderMarkdown(s, { compact: compactText })), html: (s) => renderHtml(s, { map, theme, title }) }[to];
     if (!out) throw new Error(`--to must be text, markdown or html, not "${to}".`);
     process.stdout.write(out(spec) + (to === "html" ? "" : "\n"));
   } else if (command === "export" && files.length === 1) {

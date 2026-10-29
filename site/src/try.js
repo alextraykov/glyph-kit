@@ -18,7 +18,7 @@ import { KINDS } from "./kit/registry.mjs";
 import { autoplay } from "./kit/live/play.mjs";
 import { cellsFromGrid, cellsFromText, fillFrame, planBuild, shimmerFrame, skeleton, toHtml } from "./showcase-core.mjs";
 import { figureSvg } from "./kit/render/svg.mjs";
-import { SPACING, palette } from "./kit/render/themes.mjs";
+import { PALETTES, SPACING, palette } from "./kit/render/themes.mjs";
 
 // ── The Data view: the spec laid out to read, not as code ───────────────────────────────────────
 // Title, intent and source first, then the data: a list of records becomes a table, a list of words a
@@ -224,8 +224,19 @@ function figureText({ spec, mode }) {
   return { text: body(spec), aria: label(spec), still: false };
 }
 /** A standalone SVG, laid out like the kit's own: title, intent, the figure on a panel, the source. */
+// The palette the figure is shown and exported in: the site's own colours, or one of the kit's.
+const PALETTE_KEY = "glyph-kit-palette";
+const PALETTE_NAMES = { site: "This site", paper: "Paper", ink: "Ink", phosphor: "Phosphor", gilt: "Gilt" };
+let currentPalette = (() => {
+  try {
+    const saved = localStorage.getItem(PALETTE_KEY);
+    return PALETTES[saved] ? saved : "site";
+  } catch {
+    return "site";
+  }
+})();
 function figureImage(spec, text) {
-  const c = palette("paper");
+  const c = palette(currentPalette === "site" ? "paper" : currentPalette);
   const padX = SPACING.figurePadX;
   const padY = SPACING.figurePadY;
   const titleH = spec.title ? 48 : 0;
@@ -756,8 +767,53 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
       return row;
     }));
   });
+  // Colours: show the figure in one of the kit's palettes. Exports use the same one.
+  const paletteEl = out.querySelector("[data-try-palette]");
+  const paletteMenu = out.querySelector("[data-try-palette-menu]");
+  const applyPalette = (name) => {
+    currentPalette = name;
+    const c = PALETTES[name];
+    const vars = c ? { "--paper": c.bg, "--panel": c.panel, "--ink": c.ink, "--text-caption": c.frame, "--signal-fail": c.flag, "--signal-ok": c.ok, "--palette-data": c.data } : {};
+    for (const prop of ["--paper", "--panel", "--ink", "--text-caption", "--signal-fail", "--signal-ok", "--palette-data"]) {
+      if (vars[prop]) stage.style.setProperty(prop, vars[prop]);
+      else stage.style.removeProperty(prop);
+    }
+    stage.toggleAttribute("data-palette", Boolean(c));
+    paletteEl.querySelector("summary").textContent = c ? `Colours · ${PALETTE_NAMES[name]}` : "Colours";
+    paletteMenu.querySelectorAll("[data-palette]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.palette === name)));
+  };
+  if (paletteEl && paletteMenu) {
+    paletteMenu.replaceChildren(...Object.keys(PALETTE_NAMES).map((name) => {
+      const row = el("div", "export__row");
+      const b = el("button", "export__save palette__item");
+      b.type = "button";
+      b.dataset.palette = name;
+      const c = PALETTES[name];
+      if (c) {
+        const swatch = el("span", "palette__swatch");
+        swatch.setAttribute("aria-hidden", "true");
+        swatch.style.background = c.bg;
+        for (const role of ["data", "flag", "ok", "frame"]) {
+          const cell = el("span", "", "█");
+          cell.style.color = c[role];
+          swatch.append(cell);
+        }
+        b.append(swatch);
+      }
+      b.append(PALETTE_NAMES[name]);
+      b.addEventListener("click", () => {
+        applyPalette(name);
+        try { localStorage.setItem(PALETTE_KEY, name); } catch {}
+        paletteEl.open = false;
+      });
+      row.append(b);
+      return row;
+    }));
+    applyPalette(currentPalette);
+  }
   document.addEventListener("click", (event) => {
     if (exportEl?.open && !exportEl.contains(event.target)) exportEl.open = false;
+    if (paletteEl?.open && !paletteEl.contains(event.target)) paletteEl.open = false;
   });
 
   /** Draw a result: it builds in over its own skeleton, then a moving one plays. */
