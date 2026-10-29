@@ -8,6 +8,7 @@
 //   gk-r1…4 ramp    ░ ▒ ▓ █ in the density grids (heatmap, cohort, calendar strip), one colour a step
 //   gk-sw   swatch  ██ followed by its own hex value (palette, colour roles): drawn in that colour
 //   gk-m    receded a measure outside the figure's focus (render/focus.mjs)
+//   gk-m1…4 receded ramp step: a density grid's cell outside the focus keeps its ramp colour, dimmed
 import { cellWidth, graphemes } from "../text.mjs";
 import { TONE_ROLE, focusCells } from "./focus.mjs";
 
@@ -37,8 +38,15 @@ export function paintOptions(spec, text) {
   return { ...opts, mask, region, tone };
 }
 const RECEDES = new Set(["d", "e", "r1", "r2", "r3", "r4"]);
+const RAMP_ROLE = /^r[1-4]$/;
+// Outside a focus a measure recedes; a ramp step keeps its own colour, dimmed (m1…m4), so a density grid
+// still reads light to strong. Inside it, a problem or a pass takes its tone's colour, because the tone
+// is the point and the shade glyph still shows the step; a plain focus has no verdict to show, so a ramp
+// step keeps its colour and the rest receding is what calls it out.
+const receded = (role) => (RAMP_ROLE.test(role) ? `m${role[1]}` : "m");
+const focused = (role, tone) => (tone === "plain" && RAMP_ROLE.test(role) ? role : TONE_ROLE[tone] ?? "d");
 
-/** The role of every character in a line: "d", "e", "f", "x", "ok", "r1"…"r4" (with `ramp`), "sw-<hex>", "m" (receded, outside a focus) or "" (plain text). */
+/** The role of every character in a line: "d", "e", "f", "x", "ok", "r1"…"r4" (with `ramp`), "sw-<hex>", "m" or "m1"…"m4" (receded, outside a focus) or "" (plain text). */
 export function classify(line, { ramp = false, mask = null, region = null, tone = "plain", row = -1 } = {}) {
   const word = Array(line.length).fill("");
   SWATCH.lastIndex = 0;
@@ -60,8 +68,8 @@ export function classify(line, { ramp = false, mask = null, region = null, tone 
   if (mask) {
     const here = mask.get(row);
     roles.forEach((role, c) => {
-      if (here?.has(c)) roles[c] = TONE_ROLE[tone] ?? "d";
-      else if (RECEDES.has(role) && region?.has(row)) roles[c] = "m";
+      if (here?.has(c)) roles[c] = focused(role, tone);
+      else if (RECEDES.has(role) && region?.has(row)) roles[c] = receded(role);
     });
   }
   return roles;
@@ -96,8 +104,12 @@ export function paintLine(line, opts = {}) {
 /** A whole figure. */
 export const paint = (text, opts = {}) => text.split("\n").map((line, row) => paintLine(line, { ...opts, row })).join("\n");
 
+/** How far a measure outside the focus recedes: its colour at this opacity. */
+export const RECEDE = 0.28;
+
 /** The CSS for the roles, given custom properties for each colour. Without a ramp, ramp cells look
- *  exactly like data and empty cells; a theme's ramp sets ${p}ramp1…4 and ${p}ramp-o. */
+ *  exactly like data and empty cells, receded or not; a theme's ramp sets ${p}ramp1…4 and ${p}ramp-o. */
 export const PAINT_CSS = (p) =>
-  `.gk-d{color:var(${p}data)}.gk-e{color:var(${p}data);opacity:.45}.gk-m{color:var(${p}data);opacity:.28}.gk-f{color:var(${p}frame)}.gk-x{color:var(${p}flag)}.gk-ok{color:var(${p}ok)}` +
-  `.gk-r1{color:var(${p}ramp1,var(${p}data));opacity:var(${p}ramp-o,.45)}.gk-r2{color:var(${p}ramp2,var(${p}data))}.gk-r3{color:var(${p}ramp3,var(${p}data))}.gk-r4{color:var(${p}ramp4,var(${p}data))}`;
+  `.gk-d{color:var(${p}data)}.gk-e{color:var(${p}data);opacity:.45}.gk-m{color:var(${p}data);opacity:${RECEDE}}.gk-f{color:var(${p}frame)}.gk-x{color:var(${p}flag)}.gk-ok{color:var(${p}ok)}` +
+  `.gk-r1{color:var(${p}ramp1,var(${p}data));opacity:var(${p}ramp-o,.45)}.gk-r2{color:var(${p}ramp2,var(${p}data))}.gk-r3{color:var(${p}ramp3,var(${p}data))}.gk-r4{color:var(${p}ramp4,var(${p}data))}` +
+  [1, 2, 3, 4].map((i) => `.gk-m${i}{color:var(${p}ramp${i},var(${p}data));opacity:${RECEDE}}`).join("");

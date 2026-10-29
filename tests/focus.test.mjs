@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { body } from "../skills/glyph-kit/scripts/render/text.mjs";
-import { classify, paint, paintOptions } from "../skills/glyph-kit/scripts/render/paint.mjs";
+import { classify, paint, paintOptions, PAINT_CSS } from "../skills/glyph-kit/scripts/render/paint.mjs";
 import { arriveLines } from "../skills/glyph-kit/scripts/render/arrive.mjs";
 import { renderSvg } from "../skills/glyph-kit/scripts/render/svg.mjs";
 import { ansi } from "../skills/glyph-kit/scripts/render/ansi.mjs";
@@ -56,11 +56,44 @@ test("the focus takes its tone's colour, and only its own block recedes", () => 
   const jan = lines.findIndex((l) => l.startsWith("Jan"));
   const roles = classify(lines[jan], { ...opts, row: jan });
   assert.equal(roles[lines[jan].indexOf("▒")], "x");
-  assert.equal(roles[lines[jan].indexOf("█")], "m");
+  assert.equal(roles[lines[jan].indexOf("█")], "m4");
+  assert.equal(roles[lines[jan].lastIndexOf("▒")], "m2");
   const key = lines.findIndex((l) => l.startsWith("█ 80%"));
-  assert.notEqual(classify(lines[key], { ...opts, row: key })[0], "m");
+  assert.doesNotMatch(classify(lines[key], { ...opts, row: key })[0], /^m/);
   assert.equal(classify(lines[jan], { ...paintOptions({ ...cohort, focus: { on: ["M2"], tone: "good" } }, text), row: jan })[lines[jan].indexOf("▒")], "ok");
-  assert.match(paint(text, opts), /<span class="gk-m">/);
+  assert.match(paint(text, opts), /<span class="gk-m4">/);
+});
+
+// The ramp step is the data, so a receded cell keeps it, only dimmed; a plain focus keeps it at full strength.
+const ramp = ["#c6d8f5", "#8fb3ea", "#4a7fd4", "#1f4fb0"];
+const blue = { ...cohort, theme: { base: "paper", ramp }, focus: { on: ["Feb"], tone: "plain" } };
+
+test("receded ramp cells keep their step, dimmed, and a plain focus keeps its step", () => {
+  const text = body(blue);
+  const opts = paintOptions(blue, text);
+  const lines = text.split("\n");
+  const jan = lines.findIndex((l) => l.startsWith("Jan"));
+  const feb = lines.findIndex((l) => l.startsWith("Feb"));
+  const janRoles = classify(lines[jan], { ...opts, row: jan });
+  assert.equal(janRoles[lines[jan].indexOf("█")], "m4");
+  assert.equal(janRoles[lines[jan].indexOf("▒")], "m2");
+  const febRoles = classify(lines[feb], { ...opts, row: feb });
+  assert.equal(febRoles[lines[feb].indexOf("█")], "r4");
+  assert.equal(febRoles[lines[feb].indexOf("▒")], "r2");
+});
+
+test("every coloured form dims a receded ramp cell in its own ramp colour", () => {
+  assert.match(PAINT_CSS("--gk-"), /\.gk-m4\{color:var\(--gk-ramp4,var\(--gk-data\)\);opacity:0\.28\}/);
+  const svg = renderSvg(blue, { theme: blue.theme });
+  // #1f4fb0 at 28% over the paper panel: still blue, not grey.
+  const dimmed = [...svg.matchAll(/fill="(#[0-9a-f]{6})"/g)].map((m) => m[1]);
+  assert.ok(dimmed.includes("#1f4fb0"), "the focused row keeps the strongest step");
+  assert.ok(dimmed.some((hex) => parseInt(hex.slice(5, 7), 16) > parseInt(hex.slice(1, 3), 16) + 20 && hex !== "#1f4fb0" && !ramp.includes(hex)), "a receded cell is a dimmed blue");
+  const out = ansi(body(blue), { spec: blue, env: { COLORTERM: "truecolor" } });
+  const [jan, feb] = ["Jan", "Feb"].map((label) => out.split("\n").find((l) => l.startsWith(label)));
+  assert.match(jan, /\x1b\[2m\x1b\[38;2;31;79;176m██/);
+  assert.match(feb, /\x1b\[38;2;31;79;176m██/);
+  assert.doesNotMatch(feb, /\x1b\[2m/);
 });
 
 test("every coloured form shows the focus: SVG in the flag colour, the terminal in red", () => {

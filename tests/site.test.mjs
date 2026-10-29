@@ -26,3 +26,7 @@ test("standalone exports reuse Departure Mono and offer a stop control", () => {
   assert.match(html, /data-play aria-pressed="true"/);
   assert.match(html, /stop\(\); stop = null/);
 });
+test("the site dims every receded role the painter gives, ramp steps included", () => {
+  const css = readFileSync(new URL("../site/src/style.css", import.meta.url), "utf8");
+  for (const role of ["m", "m1", "m2", "m3", "m4"]) assert.match(css, new RegExp(`\\.gk-${role}[ ,][^}]*opacity: \\.28`), role);
+});

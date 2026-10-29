@@ -4,7 +4,7 @@
 // arrows become shapes, and text is locked to its cell width so columns always line up.
 // Colours come from the theme's roles (themes.mjs, paint.mjs). PNG is this SVG rasterised (export.mjs).
 import { resolve } from "../registry.mjs";
-import { classify, paintOptions } from "./paint.mjs";
+import { RECEDE, classify, paintOptions } from "./paint.mjs";
 import { SPACING, resolveTheme } from "./themes.mjs";
 import { body, label } from "./text.mjs";
 import { cellWidth, graphemes, width as textWidth } from "../text.mjs";
@@ -28,12 +28,23 @@ const LEFT_EIGHTHS = "▏▎▍▌▋▊▉"; // 1/8 … 7/8 wide
 const LOW_EIGHTHS = "▁▂▃▄▅▆▇"; // 1/8 … 7/8 tall
 const SHADES = { "░": 0.25, "▒": 0.5, "▓": 0.75 };
 
+/** `hex` at `alpha` over `under`, as one solid colour: SVG and PNG draw a receded ramp step this way. */
+const over = (hex, under, alpha) => {
+  const ch = (h, i) => parseInt(h.slice(1 + i * 2, 3 + i * 2), 16);
+  return "#" + [0, 1, 2].map((i) => Math.round(ch(hex, i) * alpha + ch(under, i) * (1 - alpha)).toString(16).padStart(2, "0")).join("");
+};
+
 /** Draw lines of text as SVG elements on a grid. Returns { svg, width, height } for the inner figure.
  *  rampCells: the figure is a density grid (paintOptions); ramp: the theme's four colours, drawn solid. */
 export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0, rampCells = false, ramp = null, focus = null } = {}) {
   const c = colors;
-  const roleColor = { d: c.data, e: c.data, m: c.muted, f: c.frame, x: c.flag, ok: c.ok, "": c.ink, r1: ramp?.[0] ?? c.data, r2: ramp?.[1] ?? c.data, r3: ramp?.[2] ?? c.data, r4: ramp?.[3] ?? c.data };
-  const solid = (role) => Boolean(ramp) && /^r\d$/.test(role ?? "");
+  const roleColor = { d: c.data, e: c.data, m: c.muted, f: c.frame, x: c.flag, ok: c.ok, "": c.ink };
+  // A ramp step, and the same step receded outside a focus: its own colour over the panel, dimmed.
+  for (let i = 1; i <= 4; i++) {
+    roleColor[`r${i}`] = ramp?.[i - 1] ?? c.data;
+    roleColor[`m${i}`] = ramp ? over(ramp[i - 1], c.panel, RECEDE) : c.muted;
+  }
+  const solid = (role) => Boolean(ramp) && /^[rm]\d$/.test(role ?? "");
   const lines = text.split("\n");
   const cols = Math.max(1, ...lines.map(textWidth));
   const band = row * 0.72; // block height: leaves a gap between rows so charts breathe
