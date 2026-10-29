@@ -21,6 +21,13 @@ export function figures(source, file = "") {
   const lines = source.split("\n");
   const found = [];
   for (let i = 0; i < lines.length; i++) {
+    // A longer fence (```` or more) shows Markdown as an example; nothing inside it is a figure.
+    const outer = lines[i].match(/^(`{4,}|~{3,})/);
+    if (outer) {
+      const close = lines.findIndex((l, k) => k > i && l.startsWith(outer[1]) && !l.slice(outer[1].length).trim());
+      i = close < 0 ? lines.length : close;
+      continue;
+    }
     if (lines[i] !== "```text") continue;
     const end = lines.indexOf("```", i + 1);
     if (end < 0) break;

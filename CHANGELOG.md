@@ -4,6 +4,12 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 
 ## 0.3.0 — 2026-10-29
 
+**Open source**
+
+- **Using it in your own work:** what the MIT licence allows and how to credit the kit if you want to, in the README.
+- **`CONTRIBUTING.md`:** what's welcome, the rules every change keeps and the checks to run. **`docs/adding-a-type.md`** walks through adding a type end to end, using `palette`.
+- **Issue templates** for a new type and for something that's wrong, and a pull request checklist. CI now also checks that the guides match the code.
+
 **Editing**
 
 - **`check` lists every problem at once:** a missing source, a colour on one row, the type's own data checks, labels that will be cut and frames that don't close. Problems exit 1; notes don't. Works on a spec, a list of specs or a Markdown file.

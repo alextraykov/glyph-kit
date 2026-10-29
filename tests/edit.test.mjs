@@ -65,6 +65,12 @@ test("redraw changes only the figure whose spec changed, and nothing else in the
   assert.match(out.source, /The end\.$/);
 });
 
+test("figures shown as examples inside a longer fence are left alone", () => {
+  const source = ["````markdown", renderMarkdown(bars, { withSpec: true }), "````", "", renderMarkdown(log, { withSpec: true })].join("\n");
+  assert.equal(figures(source).length, 1);
+  assert.equal(JSON.parse(figures(source)[0].json).kind, "decisionLog");
+});
+
 test("redraw leaves a broken spec's figure alone and says where it is", () => {
   const source = doc(bars).replace('"kind": "barChart"', '"kind": "barChart",,');
   const out = redraw(source);
