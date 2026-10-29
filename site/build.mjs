@@ -113,12 +113,30 @@ const times = (r) => `${r >= 10 ? Math.round(r) : r.toFixed(1)}×`;
 const secs = (n) => (n >= 90 ? `${(n / 60).toFixed(0)} min` : `${Math.round(n)} s`);
 const thousands = (n) => (n < 1000 ? String(Math.round(n)) : `${(n / 1000).toFixed(1)}k`);
 // Output: one figure from the motion audit. Its text form comes first, because that is the deliverable
-// most people paste; the other forms of the same spec swap in place.
+// most people paste; the other forms of the same spec swap in place. The views wrap long sentences to
+// the drawing's width, so the drawing sets the size; small screens get the same spec drawn narrower.
+// Copy copies the text as the kit writes it.
 const AUDIT_SPEC = json("examples/reports/motion-audit.json").sections.flatMap((x) => x.figures ?? []).find((f) => f.kind === "gantt");
+const AUDIT_NARROW = { ...AUDIT_SPEC, options: { ...AUDIT_SPEC.options, width: 16 } };
+const widest = (t) => Math.max(...t.split("\n").map((l) => [...l].length));
+const wrapTo = (t, w) => t.split("\n").map((l) => {
+  if ([...l].length <= w) return l;
+  const out = [""];
+  for (const word of l.split(" ")) {
+    const cur = out[out.length - 1];
+    if (cur && [...cur].length + 1 + [...word].length > w) out.push(word);
+    else out[out.length - 1] = cur ? `${cur} ${word}` : word;
+  }
+  return out.join("\n");
+}).join("\n");
+const fitted = (make, cls) => [AUDIT_SPEC, AUDIT_NARROW].map((spec, i) => {
+  const t = wrapTo(make(spec), widest(body(spec)));
+  return `<pre class="${cls} outputs__${i ? "narrow" : "wide"}" style="--cols:${widest(t)}">${cls === "grid-figure" ? paint(t) : esc(t)}</pre>`;
+}).join("");
 const FORMATS = [
-  { id: "text", name: "Text", copy: renderText(AUDIT_SPEC), view: (t) => `<pre class="grid-figure">${paint(t)}</pre>` },
-  { id: "md", name: "Markdown", copy: renderMarkdown(AUDIT_SPEC), view: (t) => `<pre class="outputs__text">${esc(t)}</pre>` },
-  { id: "mdx", name: "MDX", copy: renderMdx([AUDIT_SPEC]), view: (t) => `<pre class="outputs__text">${esc(t)}</pre>` },
+  { id: "text", name: "Text", copy: renderText(AUDIT_SPEC), view: () => fitted(renderText, "grid-figure") },
+  { id: "md", name: "Markdown", copy: renderMarkdown(AUDIT_SPEC), view: () => fitted(renderMarkdown, "outputs__text") },
+  { id: "mdx", name: "MDX", copy: renderMdx([AUDIT_SPEC]), view: () => fitted((sp) => renderMdx([sp]), "outputs__text") },
   { id: "svg", name: "SVG", copy: renderSvg(AUDIT_SPEC, { theme: "paper" }), view: (t) => `<div class="outputs__svg">${t}</div>` }
 ];
 // Areas new in this release, or with a new type, for the home page's New labels.
@@ -126,7 +144,8 @@ const NEW_AREAS = { process: "New area", layouts: "New area", handoff: "New: ana
 // The study's medians as one table: for each figure and each measure, the kit's value and HTML/JS's,
 // each with a bar on the pair's own scale, and how many times better the kit did. Wins are green.
 // Rows arrive in reading order; in each pair both bars grow at the same speed, so the kit's lands
-// first, and the result lands when the longer bar finishes.
+// first, and the result lands when the longer bar finishes. Where the whole table would go below
+// 11px, the page shows the same rows as one table per measure, stacked, with each type as a heading.
 const STUDY_TABLE = (() => {
   const B = 8, STEP = 25, ROW = 160;
   const rows = Object.entries(study.claudeCode.medians).filter(([k]) => k !== "note").map(([, r]) => r);
@@ -139,37 +158,56 @@ const STUDY_TABLE = (() => {
   const GW = 1 + B + 1 + B + 1 + 5 + 1; // " kit····· html···· ×···· "
   const seg = (text, cls = "", d = null) => ({ text, cls, d });
   const pad = (segs, w) => { const n = segs.reduce((a, s) => a + [...s.text].length, 0); return [...segs, seg(" ".repeat(Math.max(0, w - n)))]; };
+  const pairs = rows.map((r, i) => metrics.map((m) => {
+    const t0 = i * ROW, k = r.kit[m.key], h = r.html[m.key], top = Math.max(k, h);
+    const kn = Math.max(1, Math.round((k / top) * B)), hn = Math.max(1, Math.round((h / top) * B));
+    return { t0, k, h, kn, hn, m, won: k < h, done: t0 + Math.max(kn, hn) * STEP };
+  }));
+  const head = () => [seg(" "), seg("kit".padEnd(B + 1), "win"), seg("HTML/JS".padEnd(B + 1), "lose"), seg("wins")];
+  const values = (p) => [
+    seg(" "), seg(p.m.fmt(p.k).padEnd(B + 1), "", p.t0), seg(p.m.fmt(p.h).padEnd(B + 1), "", p.t0),
+    p.won ? seg(times(p.h / p.k), "win", p.done + 40) : seg("–", "lose", p.done + 40)
+  ];
+  const bar = (p, n, cls) => [...Array.from({ length: n }, (_, c) => seg("█", `gk-d ${cls}`, p.t0 + (c + 1) * STEP)), seg(" ".repeat(B - n + 1))];
+  const bars = (p) => [seg(" "), ...bar(p, p.kn, "win"), ...bar(p, p.hn, "lose")];
+
+  // All three measures side by side, with the type in its own column.
   const line = (first, groups) => [seg("│ "), ...pad(first, FW), seg(" │"), ...groups.flatMap((g) => [...pad(g, GW), seg("│")])];
   const rule = (l, m, r) => [seg(l + "─".repeat(FW + 2) + m + Array(metrics.length).fill("─".repeat(GW)).join(m) + r, "gk-f")];
-  const out = [
+  const wide = [
     rule("┌", "┬", "┐"),
     line([], metrics.map((m) => [seg(" " + m.title)])),
     [seg("│ " + " ".repeat(FW) + " ├" + Array(metrics.length).fill("─".repeat(GW)).join("┼") + "┤", "gk-f")],
-    line([seg("Type")], metrics.map(() => [seg(" "), seg("kit".padEnd(B + 1), "win"), seg("HTML/JS".padEnd(B + 1), "lose"), seg("wins")])),
+    line([seg("Type")], metrics.map(head)),
     rule("├", "┼", "┤")
   ];
-  rows.forEach((r, i) => {
-    const t0 = i * ROW;
-    const pairs = metrics.map((m) => {
-      const k = r.kit[m.key], h = r.html[m.key], top = Math.max(k, h);
-      const kn = Math.max(1, Math.round((k / top) * B)), hn = Math.max(1, Math.round((h / top) * B));
-      return { k, h, kn, hn, m, won: k < h, done: t0 + Math.max(kn, hn) * STEP };
-    });
-    out.push(line([seg(r.label, "", t0)], pairs.map((p) => [
-      seg(" "), seg(p.m.fmt(p.k).padEnd(B + 1), "", t0), seg(p.m.fmt(p.h).padEnd(B + 1), "", t0),
-      p.won ? seg(times(p.h / p.k), "win", p.done + 40) : seg("–", "lose", p.done + 40)
-    ])));
-    const bar = (n, cls) => [...Array.from({ length: n }, (_, c) => seg("█", `gk-d ${cls}`, t0 + (c + 1) * STEP)), seg(" ".repeat(B - n + 1))];
-    out.push(line([], pairs.map((p) => [seg(" "), ...bar(p.kn, "win"), ...bar(p.hn, "lose")])));
-    if (i < rows.length - 1) out.push(line([], metrics.map(() => [])));
+  pairs.forEach((ps, i) => {
+    wide.push(line([seg(rows[i].label, "", ps[0].t0)], ps.map(values)), line([], ps.map(bars)));
+    if (i < rows.length - 1) wide.push(line([], metrics.map(() => [])));
   });
-  out.push(rule("└", "┴", "┘"));
-  const html = out.map((l) => l.map((s) => {
+  wide.push(rule("└", "┴", "┘"));
+
+  // One measure per table, the type as a heading over its numbers and bars.
+  const cell = (segs) => [seg("│"), ...pad(segs, GW), seg("│")];
+  const edge = (l, r) => [seg(l + "─".repeat(GW) + r, "gk-f")];
+  const stacked = metrics.flatMap((m, j) => [
+    ...(j ? [[]] : []),
+    edge("┌", "┐"), cell([seg(" " + m.title)]), edge("├", "┤"), cell(head()), edge("├", "┤"),
+    ...pairs.flatMap((ps, i) => [
+      cell([seg(" "), seg(rows[i].label, "", ps[j].t0)]), cell(values(ps[j])), cell(bars(ps[j])),
+      ...(i < rows.length - 1 ? [cell([])] : [])
+    ]),
+    edge("└", "┘")
+  ]);
+
+  const toHtml = (out) => out.map((l) => l.map((s) => {
     const body = s.cls ? `<span class="${s.cls}">${esc(s.text)}</span>` : esc(s.text);
     return s.d == null ? body : `<span class="gk-a" style="--d:${s.d}ms">${body}</span>`;
   }).join("")).join("\n");
+  const cols = (out) => Math.max(...out.map((l) => l.reduce((a, s) => a + [...s.text].length, 0)));
   const label = `The kit against HTML/JS in Claude Code, medians: ${rows.map((r) => `${r.label}: ${metrics.map((m) => `${m.title.toLowerCase()} ${m.fmt(r.kit[m.key])} against ${m.fmt(r.html[m.key])}`).join(", ")}`).join("; ")}.`;
-  return `<pre class="grid-figure" data-arrive role="img" aria-label="${esc(label)}">${html}</pre>`;
+  const pre = (out, cls) => `<div class="${cls}"><pre class="grid-figure" style="--cols:${cols(out)}" data-arrive role="img" aria-label="${esc(label)}">${toHtml(out)}</pre></div>`;
+  return pre(wide, "study__wide") + pre(stacked, "study__stacked");
 })();
 const kindCount = Object.keys(KINDS).length;
 const areaCount = Object.keys(AREAS).length;
@@ -183,7 +221,7 @@ try {
 const figure = (spec, { arrive = true } = {}) => {
   const text = body(spec);
   const arrived = arrive ? arriveLines(spec, text) : null;
-  return `<pre class="grid-figure"${arrived ? " data-arrive" : ""} role="img" aria-label="${esc(label(spec))}">${arrived ? arrived.join("\n") : paint(text)}</pre>`;
+  return `<pre class="grid-figure" style="--cols:${widest(text)}"${arrived ? " data-arrive" : ""} role="img" aria-label="${esc(label(spec))}">${arrived ? arrived.join("\n") : paint(text)}</pre>`;
 };
 const stage = (cols, rows, pre) => `<div class="stage" style="--cols:${cols};--rows:${rows}">${pre}</div>`;
 const liveFigure = (mv) => `<figure class="demo">
@@ -382,7 +420,7 @@ const GUIDE_FIGS = {
 // A kit figure that acts out its section (site/src/guide-motion.js); without scripts it stays as drawn.
 const moved = (key) => `<div class="guide-figure">${figure(GUIDE_FIGS[key], { arrive: false }).replace('<pre class="grid-figure"', `<pre class="grid-figure" data-guide-motion="${key}"`)}</div>`;
 // Animations: the same diagram twice, its still beside it moving, to show the still makes the same point.
-const stillAndMoving = (mv) => `<div class="pair">
+const stillAndMoving = (mv) => `<div class="pair" style="--cols:${mv.cols}">
   <figure class="pair__item"><figcaption class="label">Still · reduced motion, print, docs</figcaption><pre class="grid-figure" role="img" aria-label="${esc(mv.summary)}">${mv.html}</pre></figure>
   <figure class="pair__item"><figcaption class="label">Moving · on screen</figcaption><pre class="grid-figure live" role="img" aria-label="${esc(mv.summary)}" data-live="${mv.id}">${mv.html}</pre></figure>
 </div>`;
