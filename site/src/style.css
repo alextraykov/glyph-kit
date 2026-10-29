@@ -396,9 +396,13 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 .export__row:last-child { border-bottom: 0; }
 .export__save, .export__copy { min-height: 36px; padding: 0 var(--space-3); border: 0; background: transparent; color: var(--ink); font: 400 .88rem/1 var(--sans); text-align: left; cursor: pointer; }
 .export__copy { border-left: var(--hairline) solid var(--line); color: var(--text-soft); }
-.palette__swatch { font-family: var(--pixel); letter-spacing: 0; }
-.palette__item { display: flex; align-items: center; gap: var(--space-2); width: 100%; }
-.palette__item[aria-pressed="true"]::after { content: "●"; margin-left: auto; font-family: var(--pixel); }
+/* When the bar wraps, Colours starts its row: its menu opens rightwards so it stays on screen. */
+@media (max-width: 900px) { .palette .export__menu { right: auto; left: 0; } }
+@media (pointer: coarse) { .palette__item { min-height: var(--tap); } }
+.palette__swatch { display: inline-flex; padding: 0 2px; outline: var(--hairline) solid var(--line); font: 400 var(--px-11)/1 var(--pixel); letter-spacing: 0; user-select: none; }
+.export > summary .palette__swatch { margin-right: var(--space-2); }
+.palette__item { display: flex; align-items: center; gap: var(--space-2); width: 100%; min-height: 40px; }
+.palette__item[aria-pressed="true"]::after { content: "■"; margin-left: auto; font: 400 var(--px-11)/1 var(--pixel); }
 .stage[data-palette] { background: var(--panel); color: var(--ink); }
 .stage[data-palette] .gk-d { color: var(--palette-data); }
 .export__save:hover, .export__save:focus-visible, .export__copy:hover, .export__copy:focus-visible { background: var(--panel); }

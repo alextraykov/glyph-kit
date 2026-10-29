@@ -770,6 +770,20 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
   // Colours: show the figure in one of the kit's palettes. Exports use the same one.
   const paletteEl = out.querySelector("[data-try-palette]");
   const paletteMenu = out.querySelector("[data-try-palette-menu]");
+  // Four cells in the palette's own colours, on its page: data, problems, passes, lines. The site's
+  // own palette uses the site's tokens, so every name in the menu starts at the same place.
+  const swatchFor = (name) => {
+    const c = PALETTES[name];
+    const swatch = el("span", "palette__swatch");
+    swatch.setAttribute("aria-hidden", "true");
+    swatch.style.background = c ? c.bg : "var(--paper)";
+    for (const [role, site] of [["data", "--ink"], ["flag", "--signal-fail"], ["ok", "--signal-ok"], ["frame", "--text-caption"]]) {
+      const cell = el("span", "", "█");
+      cell.style.color = c ? c[role] : `var(${site})`;
+      swatch.append(cell);
+    }
+    return swatch;
+  };
   const applyPalette = (name) => {
     currentPalette = name;
     const c = PALETTES[name];
@@ -779,7 +793,9 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
       else stage.style.removeProperty(prop);
     }
     stage.toggleAttribute("data-palette", Boolean(c));
-    paletteEl.querySelector("summary").textContent = c ? `Colours · ${PALETTE_NAMES[name]}` : "Colours";
+    // The summary keeps one width: the chosen palette shows as its swatch, not as a longer label.
+    paletteEl.querySelector("summary").replaceChildren(swatchFor(name), "Colours");
+    paletteEl.querySelector("summary").setAttribute("aria-label", `Colours: ${PALETTE_NAMES[name]}`);
     paletteMenu.querySelectorAll("[data-palette]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.palette === name)));
   };
   if (paletteEl && paletteMenu) {
@@ -788,19 +804,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
       const b = el("button", "export__save palette__item");
       b.type = "button";
       b.dataset.palette = name;
-      const c = PALETTES[name];
-      if (c) {
-        const swatch = el("span", "palette__swatch");
-        swatch.setAttribute("aria-hidden", "true");
-        swatch.style.background = c.bg;
-        for (const role of ["data", "flag", "ok", "frame"]) {
-          const cell = el("span", "", "█");
-          cell.style.color = c[role];
-          swatch.append(cell);
-        }
-        b.append(swatch);
-      }
-      b.append(PALETTE_NAMES[name]);
+      b.append(swatchFor(name), PALETTE_NAMES[name]);
       b.addEventListener("click", () => {
         applyPalette(name);
         try { localStorage.setItem(PALETTE_KEY, name); } catch {}
