@@ -9,6 +9,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 import { ansi, ansiCodes, wantsColour } from "../skills/glyph-kit/scripts/render/ansi.mjs";
 import { renderText } from "../skills/glyph-kit/scripts/render/text.mjs";
+import { classify } from "../skills/glyph-kit/scripts/render/paint.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const cli = join(here, "../skills/glyph-kit/scripts/glyph-kit.mjs");
@@ -28,6 +29,17 @@ test("problems are red, passes green, lines dim, data in the terminal's own colo
   assert.match(out, /\x1b\[32mAAA\x1b\[0m/);
   assert.match(out, /\x1b\[2m[·┊]/);
   assert.doesNotMatch(out, /\x1b\[[0-9;]*m█/);
+});
+
+test("a verdict is a word on its own: token names such as --ok and --done stay plain", () => {
+  const verdicts = (line) => [...line].filter((_, i) => /^(x|ok)$/.test(classify(line)[i])).join("");
+  for (const name of ["--ok", "--done", "--ok-text", "$ok", "ok-text", "theme.ok", "--blocked", "--over", "$fails", "--x missing"]) assert.equal(verdicts(`│ ${name}   │ #0a7a50 │`), "", name);
+  assert.equal(verdicts("│ ok    │ AA    │"), "okAA");
+  assert.equal(verdicts("Spacing   done"), "done");
+  assert.equal(verdicts("muted on paper   2.1   fails"), "fails");
+  assert.equal(verdicts("Icon set  blocked"), "blocked");
+  const tokens = { kind: "tokenTable", data: [{ name: "--ok", value: "#0a7a50", use: "A check that passed" }, { name: "--done", value: "#151513", use: "Finished work" }] };
+  assert.doesNotMatch(ansi(renderText(tokens), { spec: tokens, env: {} }), /\x1b\[3[12]m/);
 });
 
 test("stripped of colour, the text is exactly the plain figure", () => {

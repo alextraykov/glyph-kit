@@ -17,11 +17,12 @@ const EMPTY = "░";
 const FRAME = "─│┌┐└┘├┤┬┴┼━┃┏┓┗┛┣┫┳┻╋═║╔╗╚╝╠╣╦╩╬▕·┊►◄▲▼→↺";
 // "fails" and "over" are verdicts: they count only at the end of a line, after the value, so a label
 // such as "Processes over time" stays plain.
-const PROBLEM = /\b(fails|over)(?=\s*$)|\b(blocked|x missing[a-z ]*)\b|▼▼ bad|\bx (?=[a-z])|^x(?=  )/g;
+// A verdict is a word on its own: never part of a name like --ok, $done or ok-text.
+const PROBLEM = /(?<![\w$.-])(fails|over)(?=\s*$)|(?<![\w$.-])(blocked|x missing[a-z ]*)(?![\w-])|▼▼ bad|(?<![\w$.-])x (?=[a-z])|^x(?=  )/g;
 const SAMPLE_STAMP = /SAMPLE DATA/g;
 // A swatch shows a colour the figure is about, so it is the one place a cell takes a colour of its own.
 const SWATCH = /██(?= (#[0-9a-fA-F]{6})\b)/g;
-const SUCCESS = /\b(AAA|AA large text only|AA|done|ok, approve|ok)\b|▲▲ great/g;
+const SUCCESS = /(?<![\w$.-])(AAA|AA large text only|AA|done|ok, approve|ok)(?![\w-])|▲▲ great/g;
 
 const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 const RAMP = "░▒▓█";
