@@ -21,7 +21,7 @@ import { FONT_CSS } from "./font.mjs";
 import { resolve } from "../registry.mjs";
 import { BASE_CSS, PLAY_JS, esc, fragment, tokensCss } from "./html.mjs";
 import { PAINT_CSS, paintLine, paintOptions } from "./paint.mjs";
-import { SPACING, resolveTheme, themeCss } from "./themes.mjs";
+import { PALETTES, SPACING, resolveTheme, themeCss } from "./themes.mjs";
 import { body, label } from "./text.mjs";
 import { ARRIVE_CSS, arriveLines } from "./arrive.mjs";
 import { moves, stillText } from "../motion.mjs";
@@ -90,6 +90,14 @@ ${ARRIVE_CSS}
   .gk-proto{zoom:1.4}
 }
 `;
+
+// The built-in palettes under the deck's custom property names, for pages that lay out a deck themselves.
+export const THEMES = Object.fromEntries(
+  Object.entries(PALETTES).map(([name, p]) => [
+    name,
+    { "deck-bg": p.bg, "deck-ink": p.ink, "deck-muted": p.muted, "deck-data": p.data, "deck-frame": p.frame, "deck-flag": p.flag, "deck-ok": p.ok }
+  ])
+);
 
 // A type with an arrival order comes in by its own order; any other prints line by line.
 const lines = (text, arrived, opts) =>
