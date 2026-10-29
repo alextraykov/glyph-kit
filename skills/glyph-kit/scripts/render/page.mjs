@@ -50,7 +50,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 var(--mono);-w
 `;
 
 function figureHtml(it, ctx) {
-  const fig = figureSvg(it.lines.join("\n"), { colors: ctx.colors, cell: CELL, row: ROW, rampCells: paintOptions(it.spec).ramp, ramp: ctx.ramp });
+  const fig = figureSvg(it.lines.join("\n"), { colors: ctx.colors, cell: CELL, row: ROW, rampCells: paintOptions(it.spec).ramp, ramp: ctx.ramp, focus: paintOptions(it.spec, it.lines.join("\n")) });
   const name = label({ ...it.spec, source: it.spec.source ?? ctx.source });
   return `<svg viewBox="0 0 ${fig.width} ${fig.height}" width="${fig.width}" height="${fig.height}" role="img" aria-label="${esc(name)}"><defs>${fig.defs}</defs><g font-family="'Departure Mono', Menlo, 'DejaVu Sans Mono', monospace" font-size="${ROW * 0.66}">${fig.svg}</g></svg>`;
 }

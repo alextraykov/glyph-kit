@@ -9,7 +9,7 @@ import { resolveTheme } from "./themes.mjs";
 import { cellWidth, graphemes } from "../text.mjs";
 
 const RESET = "\x1b[0m";
-const BASIC = { d: "", e: "\x1b[2m", f: "\x1b[2m", x: "\x1b[31m", ok: "\x1b[32m", r1: "\x1b[2m", r2: "", r3: "", r4: "\x1b[1m" };
+const BASIC = { d: "", m: "\x1b[2m", e: "\x1b[2m", f: "\x1b[2m", x: "\x1b[31m", ok: "\x1b[32m", r1: "\x1b[2m", r2: "", r3: "", r4: "\x1b[1m" };
 const ROLE = { d: "data", e: "data", f: "frame", x: "flag", ok: "ok" };
 
 const rgb = (hex) => {
@@ -35,11 +35,11 @@ export const wantsColour = ({ force, stream = process.stdout, env = process.env 
 export function ansi(text, { spec, theme, env } = {}) {
   const codes = ansiCodes(theme ?? spec?.theme, env);
   const truecolour = /^(truecolor|24bit)$/i.test((env ?? process.env).COLORTERM ?? "");
-  const opts = paintOptions(spec);
+  const opts = paintOptions(spec, text);
   return text
     .split("\n")
-    .map((line) => {
-      const roles = classify(line, opts);
+    .map((line, row) => {
+      const roles = classify(line, { ...opts, row });
       let out = "";
       let open = "";
       let col = 0;

@@ -266,7 +266,7 @@ export function fragment(spec, { map, notes = true } = {}) {
   if (spec.motion && moves(spec.kind)) return `<pre lang="${esc(spec.lang ?? "en")}" class="gk-figure" data-moving role="img" aria-label="${esc(label(spec))}">${esc(stillText(spec))}</pre><template data-motion-spec>${esc(JSON.stringify(spec))}</template>`;
   const text = body(spec);
   const arrived = arriveLines(spec, text);
-  const figure = `<pre lang="${esc(spec.lang ?? "en")}" class="gk-figure"${arrived ? " data-arrive" : ""} role="img" aria-label="${esc(label(spec))}">${arrived ? arrived.join("\n") : paint(text, paintOptions(spec))}</pre>`;
+  const figure = `<pre lang="${esc(spec.lang ?? "en")}" class="gk-figure"${arrived ? " data-arrive" : ""} role="img" aria-label="${esc(label(spec))}">${arrived ? arrived.join("\n") : paint(text, paintOptions(spec, text))}</pre>`;
   const demo = motionDemo(spec);
   if (!demo) return figure;
   // Every demo rule starts with .gk-stage; scope it to this stage so several demos can share a page.

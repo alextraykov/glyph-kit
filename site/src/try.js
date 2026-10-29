@@ -11,7 +11,7 @@
 // Fallbacks: a draw gives up after 45 s; a moving figure that can't play is drawn still; anything that
 // can't be drawn here brings the last figure back. A figure too wide for its box scrolls inside it.
 import { body, label } from "./kit/render/text.mjs";
-import { classify } from "./kit/render/paint.mjs";
+import { classify, paintOptions } from "./kit/render/paint.mjs";
 import { LIVE } from "./kit/live/kinds.mjs";
 import { animate as animateSpec, stillGrid } from "./kit/motion.mjs";
 import { KINDS } from "./kit/registry.mjs";
@@ -470,7 +470,8 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
       }
     }
     const text = body(spec);
-    return { cells: cellsFromText(text, classify), aria: label(spec), play: null };
+    const opts = paintOptions(spec, text);
+    return { cells: cellsFromText(text, (line, row) => classify(line, { ...opts, row })), aria: label(spec), play: null };
   };
 
   const describe = (spec, heading) => {

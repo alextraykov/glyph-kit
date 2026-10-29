@@ -6,12 +6,13 @@ import { cells as textCells, width as textWidth } from "../../skills/glyph-kit/s
 
 const esc = (c) => (c === "<" ? "&lt;" : c === ">" ? "&gt;" : c === "&" ? "&amp;" : c);
 
-/** Cells from text, coloured with the kit's paint roles (classify from render/paint.mjs). */
+/** Cells from text, coloured with the kit's paint roles (classify from render/paint.mjs, called with
+ *  the line and its row, so a figure's focus lands on the right cells). */
 export function cellsFromText(text, classify) {
   const lines = text.split("\n");
   return {
     ch: lines.map(textCells),
-    cl: lines.map((l) => classify(l).map((role) => (role ? `gk-${role}` : "")))
+    cl: lines.map((l, row) => classify(l, row).map((role) => (role ? `gk-${role}` : "")))
   };
 }
 

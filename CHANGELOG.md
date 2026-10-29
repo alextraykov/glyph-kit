@@ -18,6 +18,12 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 - **`redraw` draws figures again in place.** Only each figure's text and description change; the rest of the file stays as it was. `redraw --check` lists stale figures and exits 1, for CI or a pre-commit hook.
 - **`read` turns an edited drawing back into its spec** for tables, token tables, decision logs, QA checklists, now/next/later boards and colour roles. Columns don't have to line up; nothing is written when an edit can't be read exactly. Guide: `reference/editing.md`.
 
+**Focus**
+
+- **Call something out on any type.** `"focus": { "on": ["M2"], "tone": "problem", "say": "Every cohort halves between M1 and M2." }` names what to look at as it is drawn: a row label, a column heading, both, or any words in the figure. Instead of a colour on one row, which is still refused.
+- **The same in every form.** The text gets a `►` line with the point, so it reads without colour. HTML, decks, SVG, PNG, PDF and the terminal paint the focus in its tone (problem, good or plain) and let the rest of its block recede. In HTML and decks the focus arrives last and lands with the inverted flash, and the figure still settles within 600ms.
+- **A name that isn't drawn is refused,** in plain words, and `check` lists it with everything else.
+
 **Colour types**
 
 - **`palette`: a tonal scale.** One column per hue, one row per step, each step's contrast on the page; ▲ marks the first step that reads as words. Steps out of order are named. Four hues fit in 80 cells.

@@ -30,9 +30,9 @@ const SHADES = { "░": 0.25, "▒": 0.5, "▓": 0.75 };
 
 /** Draw lines of text as SVG elements on a grid. Returns { svg, width, height } for the inner figure.
  *  rampCells: the figure is a density grid (paintOptions); ramp: the theme's four colours, drawn solid. */
-export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0, rampCells = false, ramp = null } = {}) {
+export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0, rampCells = false, ramp = null, focus = null } = {}) {
   const c = colors;
-  const roleColor = { d: c.data, e: c.data, f: c.frame, x: c.flag, ok: c.ok, "": c.ink, r1: ramp?.[0] ?? c.data, r2: ramp?.[1] ?? c.data, r3: ramp?.[2] ?? c.data, r4: ramp?.[3] ?? c.data };
+  const roleColor = { d: c.data, e: c.data, m: c.muted, f: c.frame, x: c.flag, ok: c.ok, "": c.ink, r1: ramp?.[0] ?? c.data, r2: ramp?.[1] ?? c.data, r3: ramp?.[2] ?? c.data, r4: ramp?.[3] ?? c.data };
   const solid = (role) => Boolean(ramp) && /^r\d$/.test(role ?? "");
   const lines = text.split("\n");
   const cols = Math.max(1, ...lines.map(textWidth));
@@ -54,7 +54,7 @@ export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0, r
 
   lines.forEach((line, r) => {
     const chars = graphemes(line);
-    const roles = classify(line, { ramp: rampCells });
+    const roles = classify(line, { ramp: rampCells, ...(focus ?? {}), row: r });
     const top = y0 + r * row;
     const cy = top + row / 2;
     let run = "";
@@ -178,7 +178,8 @@ export function renderSvg(spec, { theme = "paper", map, cell = 10, row = 22, fra
   const titleH = frame && spec.title ? 48 : 0;
   const intentH = frame && spec.intent ? 26 : 0;
   const sourceH = frame && spec.source ? 34 : 0;
-  const fig = figureSvg(text, { colors: c, cell, row, x0: padX * 2, y0: padY + titleH + intentH + padY, rampCells: paintOptions(spec).ramp, ramp: t.ramp });
+  const opts = paintOptions(spec, text);
+  const fig = figureSvg(text, { colors: c, cell, row, x0: padX * 2, y0: padY + titleH + intentH + padY, rampCells: opts.ramp, ramp: t.ramp, focus: opts });
   const width = Math.max(fig.width + padX * 4, frame && spec.title ? textWidth(spec.title) * 11 + padX * 2 : 0);
   const panelTop = padY + titleH + intentH;
   const panelH = fig.height + padY * 2;

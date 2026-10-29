@@ -3,14 +3,25 @@ import { isSample, stamp } from "../guard.mjs";
 import { resolve } from "../registry.mjs";
 import { compact as toAscii } from "../tokens.mjs";
 import { stillGrid } from "../motion/shared.mjs";
+import { focusCells, focusLine, focusProblems } from "./focus.mjs";
 
 /** The diagram as plain text. Made-up data carries a SAMPLE DATA stamp in the figure itself. */
 export function body(spec, resolved) {
   const def = typeof resolved?.render === "function" ? resolved : resolve(spec);
   const options = { ...spec.options, ...(spec.lang ? { lang: spec.lang } : {}), ...(def.layout ? { source: spec.source, draw: drawInside } : {}) };
   const moving = spec.motion && def.motion ? def.motion(def.data, options) : null;
-  const text = moving ? stillGrid(moving.make, moving.still).toText() : def.render(def.data, options);
+  let text = moving ? stillGrid(moving.make, moving.still).toText() : def.render(def.data, options);
+  if (spec.focus) text = focused(spec, text);
   return isSample(spec.source) ? stamp(text) : text;
+}
+
+/** A figure with a focus says what to look at on a line of its own, so the point survives without colour. */
+function focused(spec, text) {
+  const problems = focusProblems(spec.focus);
+  const { missing } = problems.length ? { missing: [] } : focusCells(text, spec.focus);
+  if (missing.length) problems.push(`Focus names ${missing.map((m) => `"${m}"`).join(", ")}, which ${missing.length === 1 ? "isn't" : "aren't"} in the figure. Use a row label or a column heading as it is drawn.`);
+  if (problems.length) throw new Error(`${spec.title ? `"${spec.title}"` : `This ${spec.kind}`}: ${problems.join(" ")}`);
+  return `${text}\n\n${focusLine(spec.focus)}`;
 }
 
 /** A figure inside a layout: it uses the layout's source unless it has its own, and is stamped

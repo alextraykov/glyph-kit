@@ -101,7 +101,7 @@ export const THEMES = Object.fromEntries(
 
 // A type with an arrival order comes in by its own order; any other prints line by line.
 const lines = (text, arrived, opts) =>
-  text.split("\n").map((l, i) => `<span class="gk-ln" data-l="${i}">${(arrived ? arrived[i] : paintLine(l, opts)) || " "}</span>`).join("");
+  text.split("\n").map((l, i) => `<span class="gk-ln" data-l="${i}">${(arrived ? arrived[i] : paintLine(l, { ...opts, row: i })) || " "}</span>`).join("");
 
 function figureSlide(spec, i, total, map, kicker) {
   const def = resolve(spec);
@@ -112,7 +112,7 @@ function figureSlide(spec, i, total, map, kicker) {
   const arrived = !screen && !moving ? arriveLines(spec, text) : null;
   const fig = screen
     ? `<div class="gk-proto">${fragment(spec, { map })}</div>`
-    : `<pre lang="${esc(spec.lang ?? "en")}" class="gk-fig${arrived ? " gk-fig--arrive" : ""}" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(text, arrived, paintOptions(spec))}</pre>`;
+    : `<pre lang="${esc(spec.lang ?? "en")}" class="gk-fig${arrived ? " gk-fig--arrive" : ""}" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(text, arrived, paintOptions(spec, text))}</pre>`;
   return `<section class="gk-slide" data-steps="${esc(JSON.stringify(p.steps ?? []))}" data-flag="${esc(p.flag ?? "")}" aria-roledescription="slide" aria-label="${i + 1} of ${total}">
 <header><p class="gk-kicker">${esc(kicker || def.label)}</p><h2 class="gk-title">${esc(spec.title ?? def.label)}</h2>${spec.intent ? `<p class="gk-lead">${esc(spec.intent)}</p>` : ""}</header>
 <div class="gk-view"><div class="gk-world">${fig}</div></div>

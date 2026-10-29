@@ -133,7 +133,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 /* Character grids: one cell per glyph, lines join, air comes from padding. */
 .grid-figure { margin: 0; padding: var(--space-5); overflow-x: auto; background: var(--panel); color: var(--ink); font: 400 var(--px-11)/1.25 var(--pixel); font-variant-ligatures: none; letter-spacing: 0; white-space: pre; }
 .live { padding: var(--space-6) var(--space-5); }
-.gk-e { opacity: .45; } .gk-f { color: var(--text-caption); } .gk-x { color: var(--signal-fail); } .gk-ok { color: var(--signal-ok); }
+.gk-e { opacity: .45; } .gk-m { opacity: .28; } .gk-f { color: var(--text-caption); } .gk-x { color: var(--signal-fail); } .gk-ok { color: var(--signal-ok); }
 .gl-ok { color: var(--signal-ok); } .gl-fail { color: var(--signal-fail); } .gl-mute { color: var(--text-caption); }
 /* Skeletons: the structure faint, the content as dim placeholder cells. */
 .sk { opacity: .32; } .sk-line { opacity: .5; }

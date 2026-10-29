@@ -26,9 +26,20 @@ export function arriveLines(spec, text) {
   let end = lines.length;
   if (STAMP.test(lines.at(-1) ?? "")) end = lines.length - 2;
   if (!def.arrive) return null;
-  const paintOpts = paintOptions(spec);
+  const paintOpts = paintOptions(spec, text);
   const options = { ...spec.options, ...(spec.lang ? { lang: spec.lang } : {}) };
   const delay = def.arrive(lines.slice(0, end), def.data, options);
+  // A focus arrives last: one step after everything else has settled, then lands with the flash.
+  let last = 0;
+  if (paintOpts.mask) cellsOf(lines.slice(0, end)).forEach((cells, r) => cells.forEach(({ ch, col }) => ch !== " " && (last = Math.max(last, Math.round(delay(r, col, ch) ?? 0)))));
+  // The rest is pressed into 360ms: the focus lands at 480ms and its flash ends at 600ms, on the 40ms grid.
+  const squeeze = paintOpts.mask && last > 360 ? 360 / last : 1;
+  const snap = (ms) => Math.round(ms / STEP_MS) * STEP_MS;
+  const when = (r, col, ch) => {
+    const d = Math.max(0, Math.round(delay(r, col, ch) ?? 0));
+    if (!paintOpts.mask) return d;
+    return paintOpts.mask.get(r)?.has(col) ? snap(last * squeeze) + 120 : snap(d * squeeze);
+  };
   const html = cellsOf(lines).map((cells, r) => {
     if (r >= end) return paintLine(lines[r], paintOpts);
     let out = "";
@@ -36,7 +47,7 @@ export function arriveLines(spec, text) {
     let at = 0;
     let start = 0;
     // Roles come from the whole line, so a word or a swatch split across runs keeps its colour.
-    const lineRoles = classify(lines[r], paintOpts);
+    const lineRoles = classify(lines[r], { ...paintOpts, row: r });
     const flush = (col) => {
       const opts = { ...paintOpts, roles: lineRoles.slice(start, col) };
       if (run) out += !at ? paintLine(run, opts) : !delay.exact && STEPS.test(run) && ![...run].every((ch) => ch === "▒" || ch === " ") ? stepped(run, at, delay.under, opts) : `<span class="gk-a" style="--d:${at}ms">${paintLine(run, opts)}</span>`;
@@ -44,7 +55,7 @@ export function arriveLines(spec, text) {
       start = col;
     };
     for (const { ch, col } of cells) {
-      const d = ch === " " ? at : Math.max(0, Math.round(delay(r, col, ch) ?? 0));
+      const d = ch === " " ? at : when(r, col, ch);
       if (d !== at) {
         flush(col);
         at = d;
@@ -67,7 +78,7 @@ export const ARRIVE_CSS = `${REPLAY_CSS}
 .is-waiting .gk-a{visibility:hidden}
 @keyframes gk-land{from{background:var(--gk-arrive-ink);color:var(--gk-arrive-paper)}to{background:transparent}}
 .is-arriving .gk-a{animation:gk-wait calc(var(--base,0ms) + var(--d)) steps(1,end)}
-.is-arriving .gk-a .gk-x,.is-arriving .gk-a .gk-d{animation:gk-land 120ms steps(1,end) calc(var(--base,0ms) + var(--d))}
+.is-arriving .gk-a .gk-x,.is-arriving .gk-a .gk-d,.is-arriving .gk-a .gk-ok{animation:gk-land 120ms steps(1,end) calc(var(--base,0ms) + var(--d))}
 @keyframes gk-gone{from,to{visibility:hidden}}
 .gk-s{position:relative}.gk-s0,.gk-s1,.gk-s2{position:absolute;left:0;top:0;visibility:hidden;user-select:none}
 .is-waiting .gk-s0{visibility:visible}.is-arriving .gk-s0{visibility:visible;animation:gk-gone 1ms steps(1,end) calc(var(--base,0ms) + var(--d)) forwards}

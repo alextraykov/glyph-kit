@@ -82,10 +82,11 @@ When another agent or a later turn needs the figure, pass the spec (a few hundre
 
 1. **Every glyph has a referent**: a number, a state or a structure. No decoration, no green-on-black or glyph rain unless the product is a terminal.
 2. **One meaning per glyph per document.** `█` measured or done, `░` projected or the empty part of a scale, `·` an empty cell.
-3. **Numbers are printed as text** next to the glyphs, and every figure with numbers shows its source.
-4. **Labels may use any script.** Width is counted in cells: CJK takes two. Set `lang` for casing and number format. Font and right-to-left limits: `reference/characters.md`.
-5. **Every type moves in HTML and decks.** The processes and a test result with readings over time keep moving; every other type arrives once, in the order that carries its point, then stays still. Each keeps a still that makes the same point; it is what reduced motion, print and Markdown show. Say what the motion shows in the sentence next to it.
-6. **Drawing by hand** (only when no type fits): use the glyphs in `reference/characters.md`, follow `reference/layout.md` (two cells of padding inside a box, four between boxes, at most 80 columns), then lint.
-7. **Going up in fidelity** (prototype, production code): use only the components and tokens the design-system map names, and ask when it has no entry. `reference/spec.md` describes the spec fields and the map.
+3. **To call something out, use `focus`, never a colour.** "Highlight the drop-off", "show where it fails": name it as drawn in `focus.on`, pick a tone, and say the point in `focus.say` (`reference/spec.md`). It colours, recedes the rest and arrives last in every form, and the text keeps a `►` line.
+4. **Numbers are printed as text** next to the glyphs, and every figure with numbers shows its source.
+5. **Labels may use any script.** Width is counted in cells: CJK takes two. Set `lang` for casing and number format. Font and right-to-left limits: `reference/characters.md`.
+6. **Every type moves in HTML and decks.** The processes and a test result with readings over time keep moving; every other type arrives once, in the order that carries its point, then stays still. Each keeps a still that makes the same point; it is what reduced motion, print and Markdown show. Say what the motion shows in the sentence next to it.
+7. **Drawing by hand** (only when no type fits): use the glyphs in `reference/characters.md`, follow `reference/layout.md` (two cells of padding inside a box, four between boxes, at most 80 columns), then lint.
+8. **Going up in fidelity** (prototype, production code): use only the components and tokens the design-system map names, and ask when it has no entry. `reference/spec.md` describes the spec fields and the map.
 
 If figures look misaligned where the user reads them, the font is drawing a glyph at the wrong width: suggest Departure Mono (free, departuremono.com), never require it.

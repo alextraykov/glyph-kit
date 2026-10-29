@@ -7,7 +7,9 @@
 //   gk-ok success   "AAA", "AA", "done", "ok", "▲▲ great"
 //   gk-r1…4 ramp    ░ ▒ ▓ █ in the density grids (heatmap, cohort, calendar strip), one colour a step
 //   gk-sw   swatch  ██ followed by its own hex value (palette, colour roles): drawn in that colour
+//   gk-m    receded a measure outside the figure's focus (render/focus.mjs)
 import { cellWidth, graphemes } from "../text.mjs";
+import { TONE_ROLE, focusCells } from "./focus.mjs";
 
 const DATA = "█▓▒▀▄▌▐▏▎▍▋▊▉▁▂▃▅▆▇■";
 const EMPTY = "░";
@@ -26,11 +28,18 @@ const roleOf = (ch, ramp) => (ramp && RAMP.includes(ch) ? `r${RAMP.indexOf(ch) +
 
 /** Kinds whose shades are a scale of their own, drawn with the theme's ramp. */
 export const RAMP_KINDS = new Set(["heatmap", "cohort", "calendarStrip"]);
-/** Paint options for a spec: the ramp for density grids. */
-export const paintOptions = (spec) => ({ ramp: RAMP_KINDS.has(spec?.kind) });
+/** Paint options for a spec: the ramp for density grids, and, given the drawn text, its focus. Pass
+ *  `row` with each line when painting line by line, so the focus lands on the right cells. */
+export function paintOptions(spec, text) {
+  const opts = { ramp: RAMP_KINDS.has(spec?.kind) };
+  if (!spec?.focus || text == null) return opts;
+  const { mask, region, tone } = focusCells(text, spec.focus);
+  return { ...opts, mask, region, tone };
+}
+const RECEDES = new Set(["d", "e", "r1", "r2", "r3", "r4"]);
 
-/** The role of every character in a line: "d", "e", "f", "x", "ok", "r1"…"r4" (with `ramp`), "sw-<hex>" or "" (plain text). */
-export function classify(line, { ramp = false } = {}) {
+/** The role of every character in a line: "d", "e", "f", "x", "ok", "r1"…"r4" (with `ramp`), "sw-<hex>", "m" (receded, outside a focus) or "" (plain text). */
+export function classify(line, { ramp = false, mask = null, region = null, tone = "plain", row = -1 } = {}) {
   const word = Array(line.length).fill("");
   SWATCH.lastIndex = 0;
   for (let m; (m = SWATCH.exec(line)); ) word[m.index] = word[m.index + 1] = `sw-${m[1].slice(1).toLowerCase()}`;
@@ -46,6 +55,14 @@ export function classify(line, { ramp = false } = {}) {
     const role = word[pos] || roleOf(cluster, ramp);
     roles.push(...Array(cellWidth(cluster)).fill(role));
     pos += cluster.length;
+  }
+  // A focus: its cells take the tone's role and every other measure recedes.
+  if (mask) {
+    const here = mask.get(row);
+    roles.forEach((role, c) => {
+      if (here?.has(c)) roles[c] = TONE_ROLE[tone] ?? "d";
+      else if (RECEDES.has(role) && region?.has(row)) roles[c] = "m";
+    });
   }
   return roles;
 }
@@ -77,10 +94,10 @@ export function paintLine(line, opts = {}) {
 }
 
 /** A whole figure. */
-export const paint = (text, opts = {}) => text.split("\n").map((line) => paintLine(line, opts)).join("\n");
+export const paint = (text, opts = {}) => text.split("\n").map((line, row) => paintLine(line, { ...opts, row })).join("\n");
 
 /** The CSS for the roles, given custom properties for each colour. Without a ramp, ramp cells look
  *  exactly like data and empty cells; a theme's ramp sets ${p}ramp1…4 and ${p}ramp-o. */
 export const PAINT_CSS = (p) =>
-  `.gk-d{color:var(${p}data)}.gk-e{color:var(${p}data);opacity:.45}.gk-f{color:var(${p}frame)}.gk-x{color:var(${p}flag)}.gk-ok{color:var(${p}ok)}` +
+  `.gk-d{color:var(${p}data)}.gk-e{color:var(${p}data);opacity:.45}.gk-m{color:var(${p}data);opacity:.28}.gk-f{color:var(${p}frame)}.gk-x{color:var(${p}flag)}.gk-ok{color:var(${p}ok)}` +
   `.gk-r1{color:var(${p}ramp1,var(${p}data));opacity:var(${p}ramp-o,.45)}.gk-r2{color:var(${p}ramp2,var(${p}data))}.gk-r3{color:var(${p}ramp3,var(${p}data))}.gk-r4{color:var(${p}ramp4,var(${p}data))}`;

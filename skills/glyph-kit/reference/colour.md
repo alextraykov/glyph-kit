@@ -19,6 +19,10 @@ Figures are coloured by role, never for decoration, in HTML, decks, reports, SVG
 
 `NO_COLOR` turns it off, `--no-color` turns it off for one call, and `--color` turns it on when writing to a file or a pipe. Markdown is never coloured. Every role also has a word or a glyph, so a figure reads the same without colour.
 
+## Focus: colour on what matters
+
+A theme colours roles. To colour one thing in a figure, the cohort column where people drop off or the step that fails, give the spec a `focus` (`reference/spec.md`): it names the thing as drawn and a tone. The focus takes the tone's colour, the rest of its block recedes, and a `►` line under the figure says what to look at, so the point holds without colour. In HTML and decks the focus also arrives last, with the inverted flash. Colour on one row by hand (`"color"`) is still refused: focus is how a figure says "look here".
+
 ## A theme
 
 A palette name (`paper`, `ink`, `phosphor`, `gilt`), or a base and the roles you change:

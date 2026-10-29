@@ -23,7 +23,7 @@ function figure(spec, number) {
   return `<figure class="r-fig">
 <figcaption class="r-fig__head"><span class="r-fig__n">Figure ${number}</span><span class="r-fig__title">${esc(spec.title ?? def.label)}</span></figcaption>
 ${spec.intent ? `<p class="r-fig__intent">${inline(spec.intent)}</p>` : ""}
-<div class="r-fig__panel"><pre class="r-fig__text" lang="${esc(spec.lang ?? "en")}" role="img" aria-label="${esc(label(spec))}">${paint(body(spec), paintOptions(spec))}</pre></div>
+<div class="r-fig__panel"><pre class="r-fig__text" lang="${esc(spec.lang ?? "en")}" role="img" aria-label="${esc(label(spec))}">${((text) => paint(text, paintOptions(spec, text)))(body(spec))}</pre></div>
 ${spec.source ? `<div class="r-fig__foot"><span>Source: ${esc(spec.source)}</span></div>` : ""}
 </figure>`;
 }

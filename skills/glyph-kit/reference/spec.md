@@ -26,8 +26,23 @@ Every artifact the kit makes is described by one JSON object:
 | `options` | no | Layout settings: widths, scales, column labels. |
 | `motion` | no | For a `funnel`: `true` plays it as people moving through the steps. The six processes always move; every other type arrives once in HTML pages and decks, then stays still. |
 | `lang` | no | A BCP 47 language tag, such as `de` or `tr`, for numbers, casing and export language. |
+| `focus` | no | What the figure wants you to look at: `{ "on": [...], "tone": "problem" \| "good" \| "plain", "say": "..." }`. See "Focus" below. |
 
 Each type also checks its own data and refuses what can't be true, in plain words: a funnel that grows, a value outside its range, a test result outside its interval, a timeline that ends before it starts, dates out of order, a moving state machine whose path skips a transition.
+
+### Focus
+
+When an ask wants something highlighted, called out or emphasised (the drop-off in a cohort, the slowest step, the one failing pair), add `focus` instead of a colour. It works the same way on every type:
+
+```json
+"focus": { "on": ["M2"], "tone": "problem", "say": "Every cohort halves between M1 and M2." }
+```
+
+- **`on`** names things as they are drawn: a row's label (`"Mar"`), a column's heading (`"M2"`), or any words in the figure (`"empty state"`). A row and a column together mean the cells where they cross. A name that isn't in the figure is refused.
+- **`tone`**: `problem` paints the focus in the flag colour, `good` in the passing colour, `plain` (the default) in the data colour at full strength.
+- **`say`** is the line printed under the figure, after `►`. Without it, the line lists the names.
+
+Every form does the same thing with it. The text gets the `►` line, so the point reads without colour. HTML, decks, SVG, PNG, PDF and the terminal colour the focus by its tone and let the rest of its block recede; a key or a note below a blank line keeps its colour. In HTML and decks the focus arrives last and lands with the inverted flash, and the figure still settles within 600ms.
 
 A file may hold one spec or a list of them. Keep specs next to the document that uses them (`docs/specs/*.json`), so the figure, its data and its text change in one commit.
 
