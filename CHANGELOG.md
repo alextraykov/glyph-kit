@@ -4,6 +4,12 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 
 ## 0.3.0 — 2026-10-29
 
+**Colour types**
+
+- **`palette`: a tonal scale.** One column per hue, one row per step, each step's contrast on the page; ▲ marks the first step that reads as words. Steps out of order are named. Four hues fit in 80 cells.
+- **`colourRoles`: what each colour is for.** Role, token, light and dark values, each on its own page, and a verdict by use: words need 4.5 to 1 (7 for AAA), marks 3, lines 1.5, the same rule as the theme check.
+- **Swatches in their own colour.** In both types a swatch is `██` followed by its value. HTML, SVG, PNG, PDF and 24-bit terminals draw it in that colour; the text keeps the value, so it still reads.
+
 **Colour by role**
 
 - **Your colours.** A theme is a palette name or a base plus the roles you change: `{ "base": "paper", "data": "#1f4fd6", "flag": "#b8421f" }`. Put it on a spec, report or deck as `theme`, or pass `--theme theme.json` to `render`, `export`, `deck` and `live`. Guide: `reference/colour.md`.

@@ -3,7 +3,7 @@
 // without JavaScript, under reduced motion and in print the figure is simply there.
 import { resolve } from "../registry.mjs";
 import { cellsOf } from "../arrive.mjs";
-import { paintLine, paintOptions } from "./paint.mjs";
+import { classify, paintLine, paintOptions } from "./paint.mjs";
 
 const STAMP = /^\s*SAMPLE DATA\s*$/;
 // Block cells step blank → ░ → ▒ → final, one step each; text snaps.
@@ -14,8 +14,9 @@ const layer = (run, glyph) => [...run].map((ch) => (STEPS.test(ch) ? glyph : " "
 // A run of block cells: ░ and ▒ layers sit on top of the final cells, each shown for one step, then
 // the final cells. The layers are hidden unless the figure is arriving, so nothing else ever sees them.
 // `under` keeps a scale visible (░ or ·) behind cells that haven't arrived yet.
-const stepped = (run, at, under, opts) =>
-  `<span class="gk-s">${under ? `<span class="gk-s0" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, under), opts)}</span>` : ""}<span class="gk-s1" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, "░"), opts)}</span><span class="gk-s2" aria-hidden="true" style="--d:${at + STEP_MS}ms">${paintLine(layer(run, "▒"), opts)}</span><span class="gk-a" style="--d:${at + 2 * STEP_MS}ms">${paintLine(run, opts)}</span></span>`;
+// The layers are painted as what they show (░, ▒); only the final cells take the line's roles.
+const stepped = (run, at, under, { roles, ...layerOpts }) =>
+  `<span class="gk-s">${under ? `<span class="gk-s0" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, under), layerOpts)}</span>` : ""}<span class="gk-s1" aria-hidden="true" style="--d:${at}ms">${paintLine(layer(run, "░"), layerOpts)}</span><span class="gk-s2" aria-hidden="true" style="--d:${at + STEP_MS}ms">${paintLine(layer(run, "▒"), layerOpts)}</span><span class="gk-a" style="--d:${at + 2 * STEP_MS}ms">${paintLine(run, { ...layerOpts, roles })}</span></span>`;
 
 /** The figure's lines as HTML, with arrival spans when the type has an order. */
 export function arriveLines(spec, text) {
@@ -33,19 +34,24 @@ export function arriveLines(spec, text) {
     let out = "";
     let run = "";
     let at = 0;
-    const flush = () => {
-      if (run) out += !at ? paintLine(run, paintOpts) : !delay.exact && STEPS.test(run) && ![...run].every((ch) => ch === "▒" || ch === " ") ? stepped(run, at, delay.under, paintOpts) : `<span class="gk-a" style="--d:${at}ms">${paintLine(run, paintOpts)}</span>`;
+    let start = 0;
+    // Roles come from the whole line, so a word or a swatch split across runs keeps its colour.
+    const lineRoles = classify(lines[r], paintOpts);
+    const flush = (col) => {
+      const opts = { ...paintOpts, roles: lineRoles.slice(start, col) };
+      if (run) out += !at ? paintLine(run, opts) : !delay.exact && STEPS.test(run) && ![...run].every((ch) => ch === "▒" || ch === " ") ? stepped(run, at, delay.under, opts) : `<span class="gk-a" style="--d:${at}ms">${paintLine(run, opts)}</span>`;
       run = "";
+      start = col;
     };
     for (const { ch, col } of cells) {
       const d = ch === " " ? at : Math.max(0, Math.round(delay(r, col, ch) ?? 0));
       if (d !== at) {
-        flush();
+        flush(col);
         at = d;
       }
       run += ch;
     }
-    flush();
+    flush(Infinity);
     return out;
   });
   // Real-time orders (the motion types) are marked, so a page can offer to play them again.

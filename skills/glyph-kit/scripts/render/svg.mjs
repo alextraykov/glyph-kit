@@ -77,7 +77,7 @@ export function figureSvg(text, { colors, cell = 10, row = 22, x0 = 0, y0 = 0, r
       const cells = cellWidth(ch);
       col += cells;
       const x = x0 + i * cell;
-      const color = roleColor[roles[i]] ?? c.ink;
+      const color = roles[i]?.startsWith("sw-") ? `#${roles[i].slice(3)}` : roleColor[roles[i]] ?? c.ink;
       const box = BOX[ch];
       const graphic = box || ch === "█" || ch in SHADES || LEFT_EIGHTHS.includes(ch) || LOW_EIGHTHS.includes(ch) || "▀▄▐■□·►◄▲▼▕┊".includes(ch);
       if (ch === " ") {

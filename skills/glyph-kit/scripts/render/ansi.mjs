@@ -1,8 +1,9 @@
 // Colour by role in the terminal. The roles are the ones paint.mjs gives HTML; only the codes differ.
 // Without a theme: the 16 standard colours, so the terminal's own palette decides the exact shade.
 //   problems red, passes green, frame and empty cells dim, data and text the terminal's own colour.
-// With a theme and a terminal that says it takes 24-bit colour (COLORTERM=truecolor or 24bit): the
-// theme's own colours. Every role still has a word or a glyph, so nothing is lost without colour.
+// In a terminal that says it takes 24-bit colour (COLORTERM=truecolor or 24bit): a theme's own
+// colours when one is given, and swatches (██ #hex) in their own colour. Every role still has a word or a
+// glyph, so nothing is lost without colour.
 import { classify, paintOptions } from "./paint.mjs";
 import { resolveTheme } from "./themes.mjs";
 import { cellWidth, graphemes } from "../text.mjs";
@@ -33,6 +34,7 @@ export const wantsColour = ({ force, stream = process.stdout, env = process.env 
 /** A figure's text with colour codes by role. spec gives the ramp for density grids. */
 export function ansi(text, { spec, theme, env } = {}) {
   const codes = ansiCodes(theme ?? spec?.theme, env);
+  const truecolour = /^(truecolor|24bit)$/i.test((env ?? process.env).COLORTERM ?? "");
   const opts = paintOptions(spec);
   return text
     .split("\n")
@@ -42,7 +44,8 @@ export function ansi(text, { spec, theme, env } = {}) {
       let open = "";
       let col = 0;
       for (const ch of graphemes(line)) {
-        const code = ch === " " ? open : codes[roles[col]] ?? "";
+        const role = roles[col];
+        const code = ch === " " ? open : role?.startsWith("sw-") ? (truecolour ? rgb(`#${role.slice(3)}`) : "") : codes[role] ?? "";
         if (code !== open) {
           out += (open ? RESET : "") + code;
           open = code;

@@ -6,6 +6,7 @@
 //   gk-x  problem   "fails", "blocked", "x missing", "▼▼ bad", "over" (a verdict, at the line's end)
 //   gk-ok success   "AAA", "AA", "done", "ok", "▲▲ great"
 //   gk-r1…4 ramp    ░ ▒ ▓ █ in the density grids (heatmap, cohort, calendar strip), one colour a step
+//   gk-sw   swatch  ██ followed by its own hex value (palette, colour roles): drawn in that colour
 import { cellWidth, graphemes } from "../text.mjs";
 
 const DATA = "█▓▒▀▄▌▐▏▎▍▋▊▉▁▂▃▅▆▇■";
@@ -15,6 +16,8 @@ const FRAME = "─│┌┐└┘├┤┬┴┼━┃┏┓┗┛┣┫┳┻�
 // such as "Processes over time" stays plain.
 const PROBLEM = /\b(fails|over)(?=\s*$)|\b(blocked|x missing[a-z ]*)\b|▼▼ bad|\bx (?=[a-z])|^x(?=  )/g;
 const SAMPLE_STAMP = /SAMPLE DATA/g;
+// A swatch shows a colour the figure is about, so it is the one place a cell takes a colour of its own.
+const SWATCH = /██(?= (#[0-9a-fA-F]{6})\b)/g;
 const SUCCESS = /\b(AAA|AA large text only|AA|done|ok, approve|ok)\b|▲▲ great/g;
 
 const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
@@ -26,9 +29,11 @@ export const RAMP_KINDS = new Set(["heatmap", "cohort", "calendarStrip"]);
 /** Paint options for a spec: the ramp for density grids. */
 export const paintOptions = (spec) => ({ ramp: RAMP_KINDS.has(spec?.kind) });
 
-/** The role of every character in a line: "d", "e", "f", "x", "ok", "r1"…"r4" (with `ramp`) or "" (plain text). */
+/** The role of every character in a line: "d", "e", "f", "x", "ok", "r1"…"r4" (with `ramp`), "sw-<hex>" or "" (plain text). */
 export function classify(line, { ramp = false } = {}) {
   const word = Array(line.length).fill("");
+  SWATCH.lastIndex = 0;
+  for (let m; (m = SWATCH.exec(line)); ) word[m.index] = word[m.index + 1] = `sw-${m[1].slice(1).toLowerCase()}`;
   for (const [re, role] of [[SAMPLE_STAMP, "f"], [PROBLEM, "x"], [SUCCESS, "ok"]]) {
     re.lastIndex = 0;
     let m;
@@ -45,15 +50,16 @@ export function classify(line, { ramp = false } = {}) {
   return roles;
 }
 
-/** One line of a figure as HTML with role spans. opts: { ramp } (see paintOptions). */
+/** One line of a figure as HTML with role spans. opts: { ramp } (see paintOptions), or `roles` when the
+ *  line is a piece of a longer one and its roles were read from the whole line. */
 export function paintLine(line, opts = {}) {
-  const roles = classify(line, opts);
+  const roles = opts.roles ?? classify(line, opts);
   let out = "";
   let run = "";
   let runRole = null;
   const flush = () => {
     if (!run) return;
-    out += runRole ? `<span class="gk-${runRole}">${esc(run)}</span>` : esc(run);
+    out += !runRole ? esc(run) : runRole.startsWith("sw-") ? `<span class="gk-sw" style="color:#${runRole.slice(3)}">${esc(run)}</span>` : `<span class="gk-${runRole}">${esc(run)}</span>`;
     run = "";
   };
   let col = 0;

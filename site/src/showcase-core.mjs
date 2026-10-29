@@ -48,7 +48,7 @@ export function toHtml({ ch, cl }) {
         const cls = cl[r][k];
         if (cls !== open) {
           if (open) out += "</span>";
-          if (cls) out += `<span class="${cls}">`;
+          if (cls) out += cls.startsWith("gk-sw-") ? `<span class="gk-sw" style="color:#${cls.slice(6)}">` : `<span class="${cls}">`;
           open = cls;
         }
         out += esc(c);

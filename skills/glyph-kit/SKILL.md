@@ -25,7 +25,7 @@ Work in the user's folder, not this skill's, so specs and outputs land there. `<
    | Flows with decisions, state machines, journeys, sitemaps | `flow` `branchFlow` `stateMachine` `journeyMap` `tree` |
    | Roadmaps, priorities, ownership, timelines, decisions | `board` `impactEffort` `swimlane` `gantt` `statusKey` `decisionLog` |
    | Screens: one screen, an app shell, a card grid, list and detail, a modal | `screen` `responsive` `appShell` `cardGrid` `listDetail` `modal` |
-   | Tokens, scales, contrast, component states, layers | `spacingScale` `typeScale` `contrast` `stateMatrix` `layerStack` `tokenTable` `table` |
+   | Tokens, scales, colour, contrast, component states, layers | `spacingScale` `typeScale` `palette` `colourRoles` `contrast` `stateMatrix` `layerStack` `tokenTable` `table` |
    | Redlines, QA checklists, component anatomy, before and after | `redline` `qaChecklist` `anatomy` `compare` |
    | Motion intent, timing, transitions, stagger, easing | `motionTiming` `intentCard` `transitionSpec` `stagger` `filmstrip` `easingTable` |
    | Work moving over time: rework loops, state machines, queues, rollouts, loading | `loop` `states` `queue` `rollout` `loading` |
