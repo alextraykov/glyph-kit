@@ -101,14 +101,22 @@ test("every coloured form shows the focus: SVG in the flag colour, the terminal 
   assert.match(ansi(body(cohort), { spec: cohort, env: {} }), /\x1b\[31m▒▒/);
 });
 
-test("in HTML the focus arrives last, and the figure still settles within 600ms", () => {
-  const html = arriveLines(cohort, body(cohort)).join("\n");
-  const delays = [...html.matchAll(/--d:(\d+)ms/g)].map((m) => Number(m[1]));
-  const focus = [...html.matchAll(/--d:(\d+)ms"><span class="gk-x"/g)].map((m) => Number(m[1]));
-  assert.ok(focus.length > 0);
-  assert.equal(Math.min(...focus), Math.max(...delays));
-  assert.ok(Math.max(...delays) + 120 <= 600, `lands at ${Math.max(...delays)}ms`);
-  assert.ok(delays.every((d) => d % 40 === 0));
+test("in HTML the focus arrives last, its flash ends by 600ms, stepping or not", () => {
+  const heatmap = { kind: "heatmap", source, options: { rowLabels: ["Mon", "Tue", "Wed"], colLabels: "a b c d" }, data: [[0.1, 0.5, 0.9, 1], [0.3, 0.6, 1, 0.8], [0.2, 0.4, 0.7, 0.9]], focus: { on: ["Tue"] } };
+  // The cohort's M2 cells are all ▒ and snap in; the heatmap's Tue row steps through ░ and ▒.
+  for (const spec of [cohort, heatmap, { ...cohort, focus: { on: ["Feb"], tone: "problem" } }]) {
+    const html = arriveLines(spec, body(spec)).join("\n");
+    const flashes = [...html.matchAll(/class="gk-s3" aria-hidden="true" style="--d:(\d+)ms"/g)].map((m) => Number(m[1]));
+    // Every landing: the focus's own, after its shade steps, and everything else's.
+    const lands = [...html.matchAll(/class="gk-a" style="--d:(\d+)ms">((?:<span[^>]*>[^<]*<\/span>|[^<])*)<\/span>/g)].map((m) => Number(m[1]));
+    const focus = Math.max(...flashes);
+    assert.ok(flashes.length > 0, `${spec.kind}: the focus flashes`);
+    assert.ok(focus <= 480 && focus + 120 <= 600, `${spec.kind}: the focus lands at ${focus}ms`);
+    assert.equal(Math.max(...lands), focus, `${spec.kind}: the focus lands last`);
+    const rest = Math.max(...lands.filter((d) => d < focus));
+    assert.ok(rest <= 360, `${spec.kind}: the rest lands at ${rest}ms`);
+    assert.ok([...html.matchAll(/--d:(\d+)ms/g)].every((m) => Number(m[1]) % 40 === 0));
+  }
 });
 
 test("a focus that names something not drawn, or has a bad tone, is refused in plain words", () => {

@@ -2,7 +2,7 @@
 // so the browser plays the arrival with no script per frame. Hidden only while a figure is arriving:
 // without JavaScript, under reduced motion and in print the figure is simply there.
 import { resolve } from "../registry.mjs";
-import { STEPPED as STEPS, STEPPED_LAND, cellsOf } from "../arrive.mjs";
+import { ARRIVE_MAX, STEPPED as STEPS, STEPPED_LAND, cellsOf } from "../arrive.mjs";
 import { cellWidth, graphemes } from "../text.mjs";
 import { classify, paintLine, paintOptions } from "./paint.mjs";
 
@@ -25,6 +25,9 @@ const steps = (run, at, under, layerOpts) =>
 // flashes unless it stepped in, since stepping is its arrival.
 const LIGHT = /[░▒▁▂▃▄▏▎▍▌]/u;
 const FLASH_MS = 120;
+// With a focus, everything else has landed by this (360ms): one step later the focus starts, steps if
+// it is made of blocks, and lands by ARRIVE_MAX less its flash.
+const REST_LANDS = ARRIVE_MAX - FLASH_MS - STEPPED_LAND - STEP_MS;
 const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 function flash(run, roles, inFocus, stepped) {
   let out = "";
@@ -53,17 +56,23 @@ export function arriveLines(spec, text) {
   const paintOpts = paintOptions(spec, text);
   const options = { ...spec.options, ...(spec.lang ? { lang: spec.lang } : {}) };
   const delay = def.arrive(lines.slice(0, end), def.data, options);
-  // A focus arrives last: one step after everything else has settled, then lands with the flash.
-  let last = 0;
-  if (paintOpts.mask) cellsOf(lines.slice(0, end)).forEach((cells, r) => cells.forEach(({ ch, col }) => ch !== " " && (last = Math.max(last, Math.round(delay(r, col, ch) ?? 0)))));
-  // The rest is pressed into 360ms: the focus lands at 480ms and its flash ends at 600ms, on the 40ms grid.
-  const squeeze = paintOpts.mask && last > 360 ? 360 / last : 1;
-  const snap = (ms) => Math.round(ms / STEP_MS) * STEP_MS;
-  const when = (r, col, ch) => {
-    const d = Math.max(0, Math.round(delay(r, col, ch) ?? 0));
-    if (!paintOpts.mask) return d;
-    return paintOpts.mask.get(r)?.has(col) ? snap(last * squeeze) + 120 : snap(d * squeeze);
-  };
+  // A focus arrives last: one step after everything else has landed, then lands with the flash. The
+  // rest lands by 360ms (a block cell's shade steps included), so the focus, stepping or not, lands by
+  // 480ms and its 120ms flash ends by 600ms, on the 40ms grid.
+  const focused = (r, col) => Boolean(paintOpts.mask?.get(r)?.has(col));
+  const stepping = (ch) => (!delay.exact && STEPS.test(ch) ? STEPPED_LAND : 0);
+  const raw = (r, col, ch) => Math.max(0, Math.round(delay(r, col, ch) ?? 0));
+  let squeeze = 1;
+  if (paintOpts.mask) cellsOf(lines.slice(0, end)).forEach((cells, r) => cells.forEach(({ ch, col }) => {
+    const d = ch === " " || focused(r, col) ? 0 : raw(r, col, ch);
+    if (d) squeeze = Math.min(squeeze, (REST_LANDS - stepping(ch)) / d);
+  }));
+  const rest = (d) => (d && squeeze < 1 ? Math.max(STEP_MS, Math.floor((d * squeeze) / STEP_MS) * STEP_MS) : d);
+  let landed = 0;
+  if (paintOpts.mask) cellsOf(lines.slice(0, end)).forEach((cells, r) => cells.forEach(({ ch, col }) => {
+    if (ch !== " " && !focused(r, col)) landed = Math.max(landed, rest(raw(r, col, ch)) + stepping(ch));
+  }));
+  const when = (r, col, ch) => (focused(r, col) ? landed + STEP_MS : rest(raw(r, col, ch)));
   const html = cellsOf(lines).map((cells, r) => {
     if (r >= end) return paintLine(lines[r], paintOpts);
     let out = "";
