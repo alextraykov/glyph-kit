@@ -18,7 +18,7 @@
 
 ## 0.3.0
 
-Motion plays from a file, figures redraw in place in Markdown, and a board is a file. Plan: `docs/handover/0.3.0-plan.md`. Terminal colour (8) moves after it, and the `frames` command from 9 comes forward into it.
+Colour by role ships, in every form and in the terminal; two colour types, `palette` and `colourRoles`; figures that are easier to edit (`check`, redraw in place, read back); and clear guidelines for open source. Boards and the canvas stay out. Plan: `docs/handover/0.3.0-plan.md`. It takes items 3 and 8 below.
 
 ## Next
 
