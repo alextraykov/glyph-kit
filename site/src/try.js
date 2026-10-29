@@ -408,7 +408,10 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
   // ── What's on the stage ────────────────────────────────────────────────────────────────────────
   let raf = 0;
   let stopMoving = null;
+  // A still result builds in again on a 6s cycle, like every figure on the site.
+  let rebuild = 0;
   const halt = () => {
+    clearTimeout(rebuild);
     cancelAnimationFrame(raf);
     stopMoving?.();
     stopMoving = null;
@@ -464,7 +467,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
         const { make, still, summary } = animateSpec(spec);
         const g = stillGrid(make, still);
         g.toText();
-        return { cells: cellsFromGrid(g), aria: summary, play: (pre) => autoplay(pre, make, still) };
+        return { cells: cellsFromGrid(g), aria: summary, play: (pre) => autoplay(pre, make, still, { solo: false }) };
       } catch {
         // Can't play here: the still drawing of the same data.
       }
@@ -834,17 +837,31 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
       pre.innerHTML = toHtml(drawn.cells);
       if (drawn.play) stopMoving = drawn.play(pre);
     };
-    if (!build || reduce.matches) return done();
     const skel = skeleton(drawn.cells);
     const plan = planBuild(drawn.cells, { lang: result.spec.lang });
-    animate((t) => {
+    const buildIn = () => animate((t) => {
       if (t >= plan.total) {
         done();
+        if (!drawn.play) rebuild = setTimeout(again, Math.max(0, 6000 - plan.total));
         return true;
       }
       pre.innerHTML = toHtml(fillFrame(drawn.cells, plan, t, skel));
       return false;
     });
+    // Held while someone is using the builder, looking at it closely, or has the tab hidden.
+    const again = () => {
+      const held = busy || document.hidden || out.matches(":focus-within") || (matchMedia("(hover: hover) and (pointer: fine)").matches && stage.matches(":hover"));
+      if (reduce.matches || !pre.isConnected) return;
+      if (held || stage.getBoundingClientRect().bottom < 0 || stage.getBoundingClientRect().top > innerHeight) rebuild = setTimeout(again, 6000);
+      else buildIn();
+    };
+    if (reduce.matches) return done();
+    if (!build) {
+      done();
+      if (!drawn.play) rebuild = setTimeout(again, 6000);
+      return;
+    }
+    buildIn();
   };
 ;
   const restore = () => {

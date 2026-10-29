@@ -6,6 +6,7 @@
 // Figures are drawn through `draw(spec, source)`, passed in by render/text.mjs, so this module
 // imports nothing that imports the registry.
 import { LAYOUT, capRows } from "../layout.mjs";
+import { readingOrder } from "../arrive.mjs";
 import { cut, padEnd, upper, width, wrap } from "../text.mjs";
 
 const W = LAYOUT.maxWidth;
@@ -200,6 +201,8 @@ const make = (layout) => ({
   label: LABELS[layout],
   layout: true,
   check: (data) => checkSlots(layout, data),
+  // A page arrives in reading order, block by block, within the 600ms budget.
+  arrive: readingOrder,
   render: (data, { source, lang, draw } = {}) => {
     const text = blocksText(compose(layout, data, { source, lang, draw }), lang);
     const rows = text.split("\n").length;

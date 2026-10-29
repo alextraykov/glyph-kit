@@ -1,4 +1,5 @@
-// Moving diagrams play from their still frame while on screen; reduced motion keeps the still.
+// Every figure on the site moves while it is in view: moving diagrams loop, and every other figure
+// arrives again on a loop. Reduced motion keeps the still.
 // Install commands copy with one click.
 import { animate } from "./kit/motion.mjs";
 import { autoplay } from "./kit/live/play.mjs";
@@ -8,8 +9,31 @@ document.querySelectorAll("[data-live]").forEach((pre) => {
   const spec = specs[pre.dataset.live];
   if (!spec) return;
   const { make, still } = animate(spec);
-  autoplay(pre, make, still);
+  autoplay(pre, make, still, { solo: false });
 });
+
+// Arriving figures replay their arrival: arrive (within 600ms, 1.1s for diagrams), hold, arrive
+// again, on a 6s cycle. A figure holds still while it's hovered or focused, off screen, in a hidden
+// tab, or under reduced motion. The first arrival is the kit's own (ARRIVE_JS).
+const CYCLE_MS = 6000;
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+const finePointer = matchMedia("(hover: hover) and (pointer: fine)");
+const looping = new Map();
+const replay = (pre) => {
+  const held = (finePointer.matches && pre.matches(":hover")) || pre.closest(".gk-replay-wrap, .stage, figure")?.matches(":focus-within");
+  if (reduceMotion.matches || document.hidden || held) return;
+  pre.classList.remove("is-arriving", "is-waiting");
+  void pre.offsetWidth;
+  pre.classList.add("is-arriving");
+};
+const loops = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    clearInterval(looping.get(e.target));
+    looping.delete(e.target);
+    if (e.isIntersecting) looping.set(e.target, setInterval(() => replay(e.target), CYCLE_MS));
+  }
+}, { threshold: 0.25 });
+document.querySelectorAll("pre[data-arrive]").forEach((pre) => loops.observe(pre));
 
 // Every still figure on the page can be copied as the plain text it is. Hidden arrival layers are
 // left out, so the copy is exactly the figure.

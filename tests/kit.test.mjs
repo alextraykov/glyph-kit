@@ -258,11 +258,12 @@ test("motion types play their own timing in the figure, at real speed", () => {
 
 test("arrival: types with an order arrive in HTML and decks, and end on the exact still", () => {
   // Every type moves: it either keeps moving (the processes) or arrives in its own order.
-  // A document layout is a page of other figures, so it has no motion of its own.
-  for (const kind of Object.keys(KINDS)) if (!KINDS[kind].layout) assert.ok(KINDS[kind].arrive || KINDS[kind].motion, `${kind} has no motion`);
+  // A document layout arrives in reading order wherever it is drawn as one figure (the site, decks).
+  for (const kind of Object.keys(KINDS)) assert.ok(KINDS[kind].arrive || KINDS[kind].motion, `${kind} has no motion`);
   const strip = (html) => html.replace(/<[^>]+>/g, "").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
-  // Screens become working prototypes in HTML and decks; they arrive where they are drawn as text.
-  const specs = Object.values(examples).flat().filter((s) => KINDS[s.kind].arrive && s.kind !== "screen" && s.kind !== "responsive");
+  // Screens become working prototypes in HTML and decks, and layouts become whole pages in HTML;
+  // they arrive where they are drawn as text.
+  const specs = Object.values(examples).flat().filter((s) => KINDS[s.kind].arrive && !KINDS[s.kind].layout && s.kind !== "screen" && s.kind !== "responsive");
   for (const spec of specs) {
     const text = body(spec);
     // HTML: the figure is marked to arrive, every delay sits on the 40ms step, and the text is unchanged.

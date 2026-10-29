@@ -37,6 +37,7 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 - **Contrast is checked.** Every colour you supply is checked against the page and the panel: 4.5 to 1 for words, 3 for marks, 1.5 for lines. A refusal names the pair and a nearby colour that passes.
 - **A ramp for density grids.** Four colours for `░ ▒ ▓ █` in `heatmap`, `cohort` and `calendarStrip`, drawn solid in SVG. Elsewhere shades keep the data colour, so the density ladder means the same thing.
 - **Colour in the terminal.** Text drawn to a terminal is coloured by role in the 16 standard colours: problems red, passes green, lines dim. `NO_COLOR` and `--no-color` turn it off; `--color` turns it on for a pipe. Markdown and files stay plain.
+- **Every figure on the site moves.** Moving diagrams loop side by side; every other figure arrives again on a 6-second cycle while it is in view. A figure holds still while hovered or focused, off screen or in a hidden tab, and reduced motion shows stills. Layouts now arrive in reading order too, in decks and on the site. `autoplay(…, { solo: false })` lets a page play every moving diagram in view instead of one.
 - **Pick the colours on the site.** The builder has a Colours menu with the four palettes; exports use the one you pick.
 - **Colour follows meaning.** `color` on a node, bar or row is refused.
 - **Paper passes its own rule.** Its problem colour is darker (`#c4401c` to `#b8391a`) and its secondary text a touch darker (`#6d6c66` to `#6b6a64`), so both reach 4.5 to 1 on the panel.

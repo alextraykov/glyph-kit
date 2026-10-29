@@ -1913,8 +1913,9 @@ const resync = () => players.forEach((p) => p.sync());
 const leader = () => [...players].reduce((best, p) => (p.ratio > (best?.ratio ?? 0) ? p : best), null);
 
 /** A self-running player for standalone pages: requestAnimationFrame, paused off screen, for reduced
- *  motion, and when another moving diagram is more in view. Returns a stop function. */
-function autoplay(pre, make, still) {
+ *  motion, and when another moving diagram is more in view. `solo: false` lets it play beside others,
+ *  for a page where every figure in view moves. Returns a stop function. */
+function autoplay(pre, make, still, { solo = true } = {}) {
   const p = player(pre, make, still);
   const reduce = globalThis.matchMedia?.("(prefers-reduced-motion: reduce)");
   let visible = true;
@@ -1934,7 +1935,7 @@ function autoplay(pre, make, still) {
     prev = 0;
     if (stopped) return;
     if (reduce?.matches || printing || document.hidden) p.still();
-    else if (visible && leader() === self) raf = requestAnimationFrame(loop);
+    else if (visible && (!solo || leader() === self)) raf = requestAnimationFrame(loop);
   };
   players.add(self);
   const observer = new IntersectionObserver((entries) => {

@@ -257,7 +257,7 @@ if (typeof document !== "undefined") {
       // Hold the panel at the drawn figure's size, so a frame with less on it never shifts the page.
       pre.style.minWidth = `${pre.getBoundingClientRect().width}px`;
       pre.style.minHeight = `${pre.getBoundingClientRect().height}px`;
-      autoplay(pre, make, still);
+      autoplay(pre, make, still, { solo: false });
     } catch {
       // The figure the kit drew stays as it is.
     }
