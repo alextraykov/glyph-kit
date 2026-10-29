@@ -8,6 +8,10 @@
 //   node glyph-kit.mjs guide <kind | deck | report | spec>                    (one kind's example spec and notes)
 //   node glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme name|theme.json]   (a moving diagram)
 //
+//   node glyph-kit.mjs check <spec.json | file.md>                           (every problem at once; exits 1 on a problem)
+//   node glyph-kit.mjs redraw <file.md> [--check]                             (draw figures again from the specs kept beside them)
+//   node glyph-kit.mjs read <file.md> [--check]                               (read edited drawings back into their specs)
+//
 //   node glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme name|theme.json] [--map map.json]
 //                         [--mdx component]   (the file may be a spec, a list of specs, a deck or a report)
 //
@@ -40,6 +44,8 @@ const read = (file) => loadData(JSON.parse(readFileSync(file === "-" ? 0 : file,
 
 try {
   const compactText = bool("--compact");
+  const withSpec = bool("--with-spec");
+  const checkOnly = bool("--check");
   // Colour in the terminal: on when the output is a terminal and NO_COLOR isn't set; --color and --no-color win.
   const [colourOn, colourOff] = [bool("--color"), bool("--no-color")];
   const colourFlag = colourOff ? false : colourOn || undefined;
@@ -100,6 +106,35 @@ try {
     const render = outs[to === "md" ? "markdown" : to];
     if (!render) throw new Error(`--to must be html, text or markdown, not "${to}".`);
     process.stdout.write(render() + "\n");
+  } else if (command === "check" && files.length === 1) {
+    // Every problem at once: the data, the drawing and the text. Exits 1 when there is a problem.
+    const { checkDoc, checkMarkdown, report } = await import("./check.mjs");
+    const md = /\.(md|markdown)$/i.test(files[0]);
+    const problems = md ? checkMarkdown(readFileSync(files[0], "utf8"), files[0]) : checkDoc(read(files[0]));
+    if (problems.length) console.log(report(problems));
+    else console.log("No problems.");
+    process.exitCode = problems.some((p) => p.level === "error") ? 1 : 0;
+  } else if ((command === "redraw" || command === "read") && files.length === 1) {
+    // redraw: draw each figure in a Markdown file again from its spec. read: read edited drawings
+    // back into their specs. --check changes nothing and exits 1 when a figure is out of date.
+    const { figures, readEdits, redraw } = await import("./markdown.mjs");
+    const source = readFileSync(files[0], "utf8");
+    const result = command === "redraw" ? redraw(source, files[0]) : readEdits(source, files[0]);
+    const done = command === "redraw" ? result.changed : result.read;
+    for (const p of result.problems) console.log(`problem  Line ${p.line}: ${p.message}`);
+    if (checkOnly) {
+      for (const line of done) console.log(`out of date  Line ${line}`);
+      const count = figures(source, files[0]).length;
+      if (!done.length && !result.problems.length) console.log(count === 1 ? "The figure matches its spec." : `All ${count} figures match their specs.`);
+      process.exitCode = done.length || result.problems.length ? 1 : 0;
+    } else {
+      if (result.source !== source) writeFileSync(files[0], result.source);
+      const verb = command === "redraw" ? "Drew again" : "Read back";
+      if (done.length) console.log(`${verb}: ${done.map((l) => `line ${l}`).join(", ")}.`);
+      else if (!result.problems.length) console.log(command === "redraw" ? "Every figure already matches its spec." : "No drawing was edited.");
+      for (const f of result.files ?? []) console.log(`Wrote ${f}`);
+      process.exitCode = result.problems.length ? 1 : 0;
+    }
   } else if (command === "render" && files.length === 1) {
     const { renderMarkdown, renderText } = await import("./render/text.mjs");
     const { renderHtml } = to === "html" ? await import("./render/html.mjs") : {};
@@ -107,7 +142,7 @@ try {
     const each = (fn) => (s) => (Array.isArray(s) ? s.map(fn).join("\n\n") : fn(s));
     const { ansi, wantsColour } = to === "text" ? await import("./render/ansi.mjs") : {};
     const colour = to === "text" && wantsColour({ force: colourFlag });
-    const out = { text: each((s) => (colour ? ansi(renderText(s, { compact: compactText }), { spec: s, theme }) : renderText(s, { compact: compactText }))), markdown: each((s) => renderMarkdown(s, { compact: compactText })), html: (s) => renderHtml(s, { map, theme, title }) }[to];
+    const out = { text: each((s) => (colour ? ansi(renderText(s, { compact: compactText }), { spec: s, theme }) : renderText(s, { compact: compactText }))), markdown: each((s) => renderMarkdown(s, { compact: compactText, withSpec })), html: (s) => renderHtml(s, { map, theme, title }) }[to];
     if (!out) throw new Error(`--to must be text, markdown or html, not "${to}".`);
     process.stdout.write(out(spec) + (to === "html" ? "" : "\n"));
   } else if (command === "export" && files.length === 1) {
@@ -130,7 +165,7 @@ try {
     // Anything that isn't a report becomes one for PDF, so a single chart still prints as a page.
     const asReport = () => (kind === "report" ? doc : { title: doc.title ?? specs[0]?.title ?? "Figures", theme: theme ?? doc.theme, sections: [{ title: doc.title ?? "Figures", figures: specs }] });
     const written = [];
-    if (to === "md") written.push(write(`${stem}.md`, kind === "report" ? reportMarkdown(doc) : specs.map((s) => renderMarkdown(s)).join("\n\n")));
+    if (to === "md") written.push(write(`${stem}.md`, kind === "report" ? reportMarkdown(doc) : specs.map((s) => renderMarkdown(s, { withSpec })).join("\n\n")));
     else if (to === "mdx") written.push(write(`${stem}.mdx`, renderMdx(kind === "report" ? doc : specs, { mode: mdxMode, theme: theme ?? doc.theme ?? "paper" })));
     else if (to === "html" && layouts) written.push(write(`${stem}.html`, renderLayoutPages(doc, { theme, title, map })));
     else if (to === "html") written.push(write(`${stem}.html`, kind === "report" ? renderReport(doc, { theme, map }) : kind === "deck" ? renderDeck(doc, { map, theme }) : renderHtml(doc, { map, theme, title })));
@@ -153,7 +188,7 @@ try {
     const deck = loaded.length === 1 && !Array.isArray(loaded[0]) && loaded[0].slides ? loaded[0] : loaded.flat();
     process.stdout.write(renderDeck(deck, { title, map, theme }));
   } else {
-    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt|theme.json] [--map map.json]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme paper|ink|phosphor|gilt|theme.json]\n  glyph-kit.mjs kinds\n  glyph-kit.mjs guide <kind | deck | report | spec>");
+    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt|theme.json] [--map map.json]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme paper|ink|phosphor|gilt|theme.json]\n  glyph-kit.mjs check <spec.json | file.md>\n  glyph-kit.mjs redraw <file.md> [--check]\n  glyph-kit.mjs read <file.md> [--check]\n  glyph-kit.mjs kinds\n  glyph-kit.mjs guide <kind | deck | report | spec>");
     process.exit(1);
   }
   if (cutLog.size)

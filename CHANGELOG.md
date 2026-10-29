@@ -4,6 +4,13 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 
 ## 0.3.0 — 2026-10-29
 
+**Editing**
+
+- **`check` lists every problem at once:** a missing source, a colour on one row, the type's own data checks, labels that will be cut and frames that don't close. Problems exit 1; notes don't. Works on a spec, a list of specs or a Markdown file.
+- **A figure keeps its spec beside it.** `--with-spec` on `render --to markdown` and `export --to md` writes the spec after the figure in a folded `<details>` block; a figure can also name a spec file on the line above it.
+- **`redraw` draws figures again in place.** Only each figure's text and description change; the rest of the file stays as it was. `redraw --check` lists stale figures and exits 1, for CI or a pre-commit hook.
+- **`read` turns an edited drawing back into its spec** for tables, token tables, decision logs, QA checklists, now/next/later boards and colour roles. Columns don't have to line up; nothing is written when an edit can't be read exactly. Guide: `reference/editing.md`.
+
 **Colour types**
 
 - **`palette`: a tonal scale.** One column per hue, one row per step, each step's contrast on the page; ▲ marks the first step that reads as words. Steps out of order are named. Four hues fit in 80 cells.

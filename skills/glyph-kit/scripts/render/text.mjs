@@ -35,13 +35,16 @@ export function renderText(spec, { meta = true, compact = false } = {}) {
   return lines.join("\n");
 }
 
-/** Markdown: heading, intent, the figure in a text block, the description and the source. */
-export function renderMarkdown(spec, { level = 3, compact = false } = {}) {
+/** Markdown: heading, intent, the figure in a text block, the description and the source; `withSpec`
+ *  adds the spec in a <details> block after it. */
+export function renderMarkdown(spec, { level = 3, compact = false, withSpec = false } = {}) {
   const out = [];
   if (spec.title) out.push(`${"#".repeat(level)} ${spec.title}`, "");
   if (spec.intent) out.push(spec.intent, "");
   out.push("```text", compact ? toAscii(body(spec)) : body(spec), "```", "");
   out.push(`*${label(spec)}*`);
   if (spec.source) out.push("", `Source: ${spec.source}`);
+  // The spec beside the figure, so `glyph-kit redraw` can draw it again in place.
+  if (withSpec) out.push("", `<details><summary>Spec</summary>\n\n\`\`\`json\n${JSON.stringify(spec, null, 2)}\n\`\`\`\n\n</details>`);
   return out.join("\n");
 }

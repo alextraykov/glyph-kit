@@ -21,7 +21,7 @@ export function hasNumbers(value) {
 }
 
 /** Where a spec gives one thing its own colour: "color" or "colour" on a node, bar or row. */
-function ownColour(value, path = "data") {
+export function ownColour(value, path = "data") {
   if (Array.isArray(value)) {
     for (let i = 0; i < value.length; i++) {
       const found = ownColour(value[i], `${path}[${i}]`);

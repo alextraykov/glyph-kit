@@ -3,7 +3,7 @@ name: glyph-kit
 description: Draws product-design figures and one-page readouts, dashboards and status updates as text with block (░▒▓█) and box-drawing characters - research and survey results, funnels and A/B tests, UX flows and state machines, roadmaps, screen wireframes, design-system docs, handoff and QA checklists, motion specs and moving diagrams. Use for an ASCII or Unicode diagram, text wireframe, sparkline or bar chart in Markdown, a PR, a ticket or a doc; a design review deck; a report or audit as a PDF; or turning a text wireframe into an HTML prototype or components from the project's design system. Draws from a small JSON spec with real, sourced data and exports Markdown, MDX, HTML, SVG, PNG and PDF.
 license: MIT
 metadata:
-  version: "0.2.1"
+  version: "0.3.0"
   author: Alexander Traykov
   homepage: https://traykov.cc/glyph-kit
 ---
@@ -55,7 +55,7 @@ Work in the user's folder, not this skill's, so specs and outputs land there. `<
    The kit refuses a spec it can't draw truthfully and says why in a sentence. Labels over the limit (usually 24 cells) are cut with "…", and the kit lists each one on stderr with its limit. Shorten those labels and render again: a figure with "…" loses words.
 5. **Put the conclusion in the sentence around the figure.** The figure supports it.
 
-Kit output needs no further checking: frames close and widths fit by construction. Run `node <skill>/scripts/lint.mjs <file.md>` only on figures drawn by hand.
+Kit output needs no further checking: frames close and widths fit by construction. When a spec is refused, run `check spec.json` to see every problem at once instead of fixing them one draw at a time. Run `node <skill>/scripts/lint.mjs <file.md>` only on figures drawn by hand.
 
 ## Other outputs
 
@@ -68,6 +68,8 @@ Every command is `node <skill>/scripts/glyph-kit.mjs <command>`.
 | Deck | `deck deck.json > deck.html` | `guide deck` |
 | Report (cover, summary, sections) | `export report.json --to html\|pdf` | `guide report` |
 | MDX, SVG, PNG, PDF of anything | `export <file> --to md\|mdx\|html\|svg\|png\|pdf` | `reference/export.md` |
+| Every problem with a spec at once | `check spec.json` or `check notes.md` | nothing |
+| A figure that stays editable in Markdown | `render spec.json --to markdown --with-spec`, then `redraw notes.md` after a spec change or `read notes.md` after a drawing edit | `reference/editing.md` |
 | Your colours, or a palette | `--theme ink` or `--theme theme.json`; roles from your tokens with `--map` | `reference/colour.md` |
 | Moving diagram: a process over time | `live spec.json --to html` (or `--to markdown` for its still) | `reference/live.md` |
 | Several layouts as one document | `export layouts.json --to html\|pdf`, a layout to a page | `reference/areas/layouts.md` |
