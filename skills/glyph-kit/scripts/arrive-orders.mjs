@@ -2,18 +2,21 @@
 // motion review settled on: what the reader must see, in the order that shows it. Orders work in
 // abstract steps; `scaled` maps them onto the 40ms clock within the budget, so a figure arrives
 // within about 600ms and a diagram that grows along its lines within about 1.1s.
-import { ARRIVE_MAX, ARRIVE_STEP, barsFill, cellsOf, readingOrder } from "./arrive.mjs";
+import { ARRIVE_MAX, ARRIVE_STEP, STEPPED, STEPPED_LAND, barsFill, cellsOf, readingOrder } from "./arrive.mjs";
 
 const BOX = "─│┌┐└┘├┤┬┴┼━┃┏┓┗┛┣┫┳┻╋═║╔╗╚╝╠╣╦╩╬┄┆";
 const BLOCK = /[█▓▒░■▏▎▍▌▋▊▉▁▂▃▄▅▆▇]/u;
 const grid = (lines) => lines.map((l) => [...l]);
 
-/** Map an order in abstract steps onto milliseconds, whole 40ms steps, within `budget`. */
+/** Map an order in abstract steps onto milliseconds, whole 40ms steps, within `budget`: every cell,
+ *  a block cell's two steps included, has landed by `budget` plus the first step. */
 function scaled(lines, units, { budget = ARRIVE_MAX - 2 * ARRIVE_STEP, under } = {}) {
   const g = grid(lines);
-  let max = 0;
-  g.forEach((row, r) => row.forEach((ch, c) => { if (ch !== " ") max = Math.max(max, units(r, c, ch, g) || 0); }));
-  const per = max ? Math.min(ARRIVE_STEP, budget / max) : 0;
+  let per = ARRIVE_STEP;
+  g.forEach((row, r) => row.forEach((ch, c) => {
+    const u = ch === " " ? 0 : units(r, c, ch, g) || 0;
+    if (u) per = Math.min(per, (budget - (STEPPED.test(ch) ? STEPPED_LAND : 0)) / u);
+  }));
   const fn = (r, c, ch) => {
     const u = units(r, c, ch, g) || 0;
     return u ? ARRIVE_STEP + Math.round((u * per) / ARRIVE_STEP) * ARRIVE_STEP : 0;
@@ -120,10 +123,11 @@ export const ORDERS = {
   // Densest cells first, down to the lightest.
   heatmap: (lines) => scaled(lines, (r, c, ch) => ({ "█": 1, "▓": 3, "▒": 5, "░": 7 })[ch] ?? 0),
   // Day by day in date order; the count lands at the end.
-  calendarStrip: (lines) => scaled(lines, (r, c, ch, g) => {
-    const b = g[r].findIndex((x) => x === "■" || x === "·");
+  calendarStrip: (lines, data, { hit = "■", miss = "·" } = {}) => scaled(lines, (r, c, ch, g) => {
+    const day = (x) => x === hit || x === miss;
+    const b = g[r].findIndex(day);
     if (b < 0) return 0;
-    const end = g[r].findLastIndex((x) => x === "■" || x === "·");
+    const end = g[r].findLastIndex(day);
     return c <= end ? 1 + (c - b) / 2 : 1 + (end - b) / 2 + 2;
   }),
   // Period by period, every cohort at once.

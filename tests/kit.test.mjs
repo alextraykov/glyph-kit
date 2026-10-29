@@ -321,6 +321,30 @@ test("arrival: types with an order arrive in HTML and decks, and end on the exac
   assert.match(html, /\.gk-s1,\.gk-s2\{position:absolute;left:0;top:0;visibility:hidden/);
 });
 
+// When the last cell has landed: a block cell's final glyph comes after its two shade steps.
+const settles = (spec) => Math.max(0, ...[...arriveLines(spec, body(spec)).join("").matchAll(/class="gk-a" style="--d:(\d+)ms"/g)].map((m) => Number(m[1])));
+
+test("arrival: every figure settles within 600ms, block cells' shade steps included", () => {
+  // Diagrams that grow along their lines tell a sequence, and have about 1.1s.
+  const sequences = ["branchFlow", "emotionCurve", "flow", "stateMachine", "swimlane"];
+  const specs = Object.values(examples).flat().filter((s) => KINDS[s.kind].arrive && !KINDS[s.kind].layout && s.kind !== "screen" && s.kind !== "responsive" && !sequences.includes(s.kind));
+  for (const spec of specs) if (!arriveLines(spec, body(spec)).exact) assert.ok(settles(spec) <= 600, `${spec.kind} settles at ${settles(spec)}ms`);
+});
+
+test("arrival: a calendar strip arrives day by day with its own glyphs, within 600ms", () => {
+  const days = [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1];
+  for (const options of [{}, { hit: "█", miss: "░" }, { hit: "x", miss: "-" }]) {
+    const spec = { kind: "calendarStrip", source: "Sample data", data: days, options };
+    const text = body(spec);
+    const order = KINDS.calendarStrip.arrive(text.split("\n"), resolve(spec).data, options);
+    const row = [...text.split("\n")[0]];
+    const at = row.map((ch, c) => (ch === " " ? null : order(0, c, ch))).filter((d) => d != null);
+    assert.ok(at.every((d, i) => d > 0 && (i === 0 || d >= at[i - 1])), `${options.hit ?? "■"}: day by day`);
+    assert.ok(at.at(-1) > at[0], `${options.hit ?? "■"}: the days don't all arrive at once`);
+    assert.ok(settles(spec) <= 600, `${options.hit ?? "■"}: settles at ${settles(spec)}ms`);
+  }
+});
+
 test("lint: catches a broken frame and an unmeasured glyph", () => {
   const broken = "┌────┐\n│ ab │\n│ abc │\n└────┘";
   assert.ok(lintBlock(broken).some((p) => /right edge missing/.test(p.message)));

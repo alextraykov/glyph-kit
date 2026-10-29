@@ -6,6 +6,9 @@ import { cellWidth, graphemes } from "./text.mjs";
 
 export const ARRIVE_STEP = 40; // ms, the site's step
 export const ARRIVE_MAX = 600; // a figure settles within this
+// Block cells don't snap: in HTML they step blank → ░ → ▒ → final, so they land two steps after their delay.
+export const STEPPED = /[█▓▒■▁▂▃▄▅▆▇▏▎▍▌▋▊▉]/u;
+export const STEPPED_LAND = 2 * ARRIVE_STEP;
 
 const BOX = "─│┌┐└┘├┤┬┴┼━┃┏┓┗┛┣┫┳┻╋═║╔╗╚╝╠╣╦╩╬┄┆";
 const snap = (ms) => Math.round(ms / ARRIVE_STEP) * ARRIVE_STEP;

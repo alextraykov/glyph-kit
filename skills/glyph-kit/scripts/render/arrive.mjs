@@ -2,12 +2,11 @@
 // so the browser plays the arrival with no script per frame. Hidden only while a figure is arriving:
 // without JavaScript, under reduced motion and in print the figure is simply there.
 import { resolve } from "../registry.mjs";
-import { cellsOf } from "../arrive.mjs";
+import { STEPPED as STEPS, cellsOf } from "../arrive.mjs";
 import { classify, paintLine, paintOptions } from "./paint.mjs";
 
 const STAMP = /^\s*SAMPLE DATA\s*$/;
-// Block cells step blank → ░ → ▒ → final, one step each; text snaps.
-const STEPS = /[█▓▒■▁▂▃▄▅▆▇▏▎▍▌▋▊▉]/u;
+// Block cells (STEPS) step blank → ░ → ▒ → final, one step each; text snaps.
 const STEP_MS = 40;
 const layer = (run, glyph) => [...run].map((ch) => (STEPS.test(ch) ? glyph : " ")).join("");
 
