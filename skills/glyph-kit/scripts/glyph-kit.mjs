@@ -8,6 +8,7 @@
 //   node glyph-kit.mjs guide <kind | deck | report | spec>                    (one kind's example spec and notes)
 //   node glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme name|theme.json]   (a moving diagram)
 //
+//   node glyph-kit.mjs say "An email field. A Send button." [--to json]       (plain words to a screen spec)
 //   node glyph-kit.mjs check <spec.json | file.md>                           (every problem at once; exits 1 on a problem)
 //   node glyph-kit.mjs redraw <file.md> [--check]                             (draw figures again from the specs kept beside them)
 //   node glyph-kit.mjs read <file.md> [--check]                               (read edited drawings back into their specs)
@@ -60,7 +61,15 @@ try {
   const map = mapFile ? read(mapFile) : undefined;
   const [command, ...files] = args;
 
-  if (command === "types" || command === "kinds") {
+  if (command === "say" && files.length) {
+    // Plain words to a screen: "An email field. A Send button." The spec, then its drawing.
+    const { read: readWords, apply, screenSpec } = await import("./say.mjs");
+    const { renderText } = await import("./render/text.mjs");
+    const initial = { kind: "screen", data: { title: "", rows: [] } };
+    const spec = screenSpec(apply(initial, readWords(files.join(" "), initial)));
+    if (to === "json") process.stdout.write(JSON.stringify(spec, null, 2) + "\n");
+    else process.stdout.write(renderText(spec) + "\n\n" + JSON.stringify(spec, null, 2) + "\n");
+  } else if (command === "types" || command === "kinds") {
     const { AREAS } = await import("./registry.mjs");
     const { moves } = await import("./motion.mjs");
     for (const [area, { label, kinds }] of Object.entries(AREAS)) {
@@ -188,7 +197,7 @@ try {
     const deck = loaded.length === 1 && !Array.isArray(loaded[0]) && loaded[0].slides ? loaded[0] : loaded.flat();
     process.stdout.write(renderDeck(deck, { title, map, theme }));
   } else {
-    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt|theme.json] [--map map.json]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme paper|ink|phosphor|gilt|theme.json]\n  glyph-kit.mjs check <spec.json | file.md>\n  glyph-kit.mjs redraw <file.md> [--check]\n  glyph-kit.mjs read <file.md> [--check]\n  glyph-kit.mjs kinds\n  glyph-kit.mjs guide <kind | deck | report | spec>");
+    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt|theme.json] [--map map.json]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme paper|ink|phosphor|gilt|theme.json]\n  glyph-kit.mjs say \"An email field. A Send button.\" [--to json]\n  glyph-kit.mjs check <spec.json | file.md>\n  glyph-kit.mjs redraw <file.md> [--check]\n  glyph-kit.mjs read <file.md> [--check]\n  glyph-kit.mjs kinds\n  glyph-kit.mjs guide <kind | deck | report | spec>");
     process.exit(1);
   }
   if (cutLog.size)

@@ -12,7 +12,7 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 
 **Editing**
 
-- **Plain words to a screen.** `scripts/say.mjs` reads lines such as "An email field. A Send button." into a `screen` spec, from one closed list of names for each part, and says which words it couldn't place.
+- **Plain words to a screen.** `scripts/say.mjs` reads lines such as "An email field. A Send button." into a `screen` spec (`glyph-kit say "…"`), from one closed list of names for each part, and says which words it couldn't place.
 - **`check` lists every problem at once:** a missing source, a colour on one row, the type's own data checks, labels that will be cut and frames that don't close. Problems exit 1; notes don't. Works on a spec, a list of specs or a Markdown file.
 - **A figure keeps its spec beside it.** `--with-spec` on `render --to markdown` and `export --to md` writes the spec after the figure in a folded `<details>` block; a figure can also name a spec file on the line above it.
 - **`redraw` draws figures again in place.** Only each figure's text and description change; the rest of the file stays as it was. `redraw --check` lists stale figures and exits 1, for CI or a pre-commit hook.
