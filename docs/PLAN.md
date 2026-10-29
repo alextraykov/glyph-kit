@@ -16,6 +16,10 @@
 - Language-aware formatting and export tags; Unicode cell widths, RTL guidance and bounded adversarial layouts.
 - Motion as a kind capability; standalone/deck playback, site Play/Still control and portfolio integration.
 
+## 0.3.0
+
+Motion plays from a file, figures redraw in place in Markdown, and a board is a file. Plan: `docs/handover/0.3.0-plan.md`. Terminal colour (8) moves after it, and the `frames` command from 9 comes forward into it.
+
 ## Next
 
 1. **Measure text tokens.** Run `ANTHROPIC_API_KEY=… node scripts/measure.mjs --write` and publish the numbers, whichever way they fall.
