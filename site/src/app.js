@@ -43,7 +43,7 @@ const figureText = (pre) => {
   return copy.textContent;
 };
 document.querySelectorAll("pre.grid-figure:not(.live)").forEach((pre) => {
-  if (pre.closest(".outputs, .builder, .try")) return;
+  if (pre.closest(".outputs, .builder, .try, .palettes")) return;
   const b = document.createElement("button");
   b.type = "button";
   b.className = "figure-copy";
