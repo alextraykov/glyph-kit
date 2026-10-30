@@ -1,0 +1,53 @@
+{
+  "kind": "palette",
+  "title": "Halloween on its panel",
+  "intent": "Every colour, faintest to strongest, on the surface figures sit on. Words start at ▲.",
+  "source": "Glyph kit's halloween palette, scripts/render/themes.mjs",
+  "data": {
+    "page": "#1a1420",
+    "hues": [
+      {
+        "name": "On the panel",
+        "steps": [
+          {
+            "name": "ramp 1",
+            "value": "#3b2a4c"
+          },
+          {
+            "name": "lines",
+            "value": "#5d4673"
+          },
+          {
+            "name": "ramp 2",
+            "value": "#6b3f78"
+          },
+          {
+            "name": "ramp 3",
+            "value": "#b8572f"
+          },
+          {
+            "name": "problem",
+            "value": "#ff5a8a"
+          },
+          {
+            "name": "data, ramp 4",
+            "value": "#f2801f"
+          },
+          {
+            "name": "secondary text",
+            "value": "#a99db0"
+          },
+          {
+            "name": "text",
+            "value": "#ece3d0"
+          },
+          {
+            "name": "good",
+            "value": "#d6f590"
+          }
+        ]
+      }
+    ]
+  },
+  "theme": "halloween"
+}

@@ -62,7 +62,7 @@ Or import the renderers (`render/text.mjs`, `render/html.mjs`, `render/deck.mjs`
 
 ## Presenting: decks
 
-A deck file is `{ "title", "subtitle"?, "byline"?, "theme"?: "paper" | "ink" | "phosphor" | "gilt" | { base, <role>, ramp }, "slides": [...] }`. A slide is any spec, or one of `{ "type": "title", "title", "subtitle"?, "byline"? }`, `{ "type": "section", "kicker"?, "title" }` and `{ "type": "statement", "kicker"?, "text" }`. Any spec can carry a `present` block:
+A deck file is `{ "title", "subtitle"?, "byline"?, "theme"?: "paper" | "ink" | "phosphor" | "gilt" | "halloween" | { base, <role>, ramp }, "slides": [...] }`. A slide is any spec, or one of `{ "type": "title", "title", "subtitle"?, "byline"? }`, `{ "type": "section", "kicker"?, "title" }` and `{ "type": "statement", "kicker"?, "text" }`. Any spec can carry a `present` block:
 
 ```json
 "present": {
@@ -88,7 +88,7 @@ Types with an arrival order come in by that order instead of line by line, once,
 
 To find line numbers for `steps`, render the spec with `--to text` and count from 0.
 
-**Themes and colour.** `theme` picks a palette: `paper` (light, the default), `ink` (dark), `phosphor` (Synapse's green on near-black) or `gilt` (Our Saints' gold on black). In decks and HTML prototypes, figures are coloured by role, never for decoration: data glyphs (`█▓▒`, eighths, `■`) in the data colour, the empty part of a scale (`░`) dimmed, frames and rulers muted, problems (`fails`, `blocked`, `x missing`, `over`) in the warning colour, passes (`AA`, `AAA`, `done`, `ok`) in the success colour. In prototypes the roles come from the map's `accent`, `muted`, `danger` and `ok` tokens. A theme can also change single roles, add a ramp for density grids, or take its colours from the map's `roles` block; every colour is checked for contrast (`reference/colour.md`). The text form stays plain.
+**Themes and colour.** `theme` picks a palette: `paper` (light, the default), `ink` (dark), `phosphor` (Synapse's green on near-black) `gilt` (Our Saints' gold on black) or `halloween` (pumpkin, bruise purple and bone on near-black, with its own ramp). In decks and HTML prototypes, figures are coloured by role, never for decoration: data glyphs (`█▓▒`, eighths, `■`) in the data colour, the empty part of a scale (`░`) dimmed, frames and rulers muted, problems (`fails`, `blocked`, `x missing`, `over`) in the warning colour, passes (`AA`, `AAA`, `done`, `ok`) in the success colour. In prototypes the roles come from the map's `accent`, `muted`, `danger` and `ok` tokens. A theme can also change single roles, add a ramp for density grids, or take its colours from the map's `roles` block; every colour is checked for contrast (`reference/colour.md`). The text form stays plain.
 
 Three decks ship as examples: `export-review.json` (fictional, every type of slide), `motion-audit.json` and `usage-case.json` (real work, with the figures already published).
 

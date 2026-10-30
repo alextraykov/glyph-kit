@@ -35,6 +35,8 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 - **Your colours.** A theme is a palette name or a base plus the roles you change: `{ "base": "paper", "data": "#1f4fd6", "flag": "#b8421f" }`. Put it on a spec, report or deck as `theme`, or pass `--theme theme.json` to `render`, `export`, `deck` and `live`. Guide: `reference/colour.md`.
 - **From your design system.** A `roles` block in `design-system.map.json` points roles at your tokens. HTML and decks write the token's `var(--…)` so your CSS wins; SVG, PNG and PDF use its fallback colour. A token with no fallback is refused.
 - **Contrast is checked.** Every colour you supply is checked against the page and the panel: 4.5 to 1 for words, 3 for marks, 1.5 for lines. A refusal names the pair and a nearby colour that passes.
+- **A Halloween palette.** `--theme halloween`: pumpkin data, bruise-purple lines and bone text on near-black, with its own ramp from bruise purple to pumpkin. In every form and in the site's Colours menu.
+- **Problems and passes differ in lightness.** In every palette, problems are now the darker colour, about 2 to 1 from passes, as drawn and when red or green is seen weakly, so colour-blind readers can tell them apart. `paper` becomes oxblood and green, `ink` coral and mint, `phosphor` amber and pale green, `gilt` terracotta and bright gold; `phosphor` and `gilt` passes no longer share the data colour. `paper`'s pair also fell under 4.5 to 1 for those readers and now passes. Before and after: `docs/palette-lightness.md`.
 - **A ramp for density grids.** Four colours for `░ ▒ ▓ █` in `heatmap`, `cohort` and `calendarStrip`, drawn solid in SVG. Elsewhere shades keep the data colour, so the density ladder means the same thing.
 - **Colour in the terminal.** Text drawn to a terminal is coloured by role in the 16 standard colours: problems red, passes green, lines dim. `NO_COLOR` and `--no-color` turn it off; `--color` turns it on for a pipe. Markdown and files stay plain.
 - **Every figure on the site moves.** Moving diagrams loop side by side; every other figure arrives again on a 6-second cycle while it is in view. A figure holds still while hovered or focused, off screen or in a hidden tab, and reduced motion shows stills. Layouts now arrive in reading order too, in decks and on the site. `autoplay(…, { solo: false })` lets a page play every moving diagram in view instead of one.
@@ -57,6 +59,7 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 **Site**
 
 - **A Changelog page** at /changelog/, every release newest first.
+- **Problems and passes on the site** follow the same rule: `paper`'s pair in light mode, `ink`'s in dark.
 - **The kit against HTML/JS, measured again** on the current kit: cheaper, faster and fewer tokens written on every run, for all five deliverables tested in Claude Code.
 
 Existing specs need no changes.

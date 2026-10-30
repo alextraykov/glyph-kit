@@ -13,6 +13,8 @@ Figures are coloured by role, never for decoration, in HTML, decks, reports, SVG
 | `bg`, `panel` | the page and the surface behind figures | |
 | `ramp` | four colours for `░ ▒ ▓ █` in `heatmap`, `cohort` and `calendarStrip` only | each step further from the page; the last 3 to 1 |
 
+In every palette, problems are the darker of `flag` and `ok`, about 2 to 1 apart, and both keep 4.5 to 1 when red or green is seen weakly. So the two differ in lightness as well as hue, and a colour-blind reader can tell them apart: the darker one is the problem. A theme of your own is checked for contrast, not for this; follow it when you choose `flag` and `ok`.
+
 ## In the terminal
 
 `render --to text` and `live --to text` colour by role when the output is a terminal: problems red, passes green, lines and empty cells dim, data and words in the terminal's own colour. The 16 standard colours are used, so the terminal's palette decides the shade. A terminal that takes 24-bit colour (`COLORTERM=truecolor`) uses a theme's own colours when you pass one.
@@ -25,7 +27,7 @@ A theme colours roles. To colour one thing in a figure, the cohort column where 
 
 ## A theme
 
-A palette name (`paper`, `ink`, `phosphor`, `gilt`), or a base and the roles you change:
+A palette name (`paper`, `ink`, `phosphor`, `gilt`, `halloween`), or a base and the roles you change:
 
 ```json
 { "base": "paper", "data": "#1f4fd6", "flag": "#b8421f",
@@ -33,6 +35,8 @@ A palette name (`paper`, `ink`, `phosphor`, `gilt`), or a base and the roles you
 ```
 
 Put it on a spec, report or deck as `theme`, or pass `--theme name` or `--theme theme.json` to `render`, `export`, `deck` and `live`.
+
+`halloween` is pumpkin data, bruise-purple lines and bone text on near-black. It is the one palette with its own ramp, bruise purple to pumpkin (`#3b2a4c` `#6b3f78` `#b8572f` `#f2801f`).
 
 ## From your design system
 

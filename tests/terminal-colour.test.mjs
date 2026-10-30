@@ -56,7 +56,7 @@ test("stripped of colour, the text is exactly the plain figure", () => {
 
 test("a theme's colours are used only where the terminal takes 24-bit colour", () => {
   assert.equal(ansiCodes("ink", {}).x, "\x1b[31m");
-  assert.equal(ansiCodes("ink", { COLORTERM: "truecolor" }).x, "\x1b[38;2;239;124;86m");
+  assert.equal(ansiCodes("ink", { COLORTERM: "truecolor" }).x, "\x1b[38;2;220;115;81m");
   assert.equal(ansiCodes({ base: "paper", flag: "#9e2a12" }, { COLORTERM: "24bit" }).x, "\x1b[38;2;158;42;18m");
   assert.equal(ansiCodes(undefined, { COLORTERM: "truecolor" }).x, "\x1b[31m");
 });

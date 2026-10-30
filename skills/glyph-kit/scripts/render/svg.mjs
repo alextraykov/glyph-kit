@@ -177,7 +177,7 @@ function boxLines({ w, d: [u, r, dn, l] }, x, top, cell, row, color) {
 
 /**
  * A spec as a standalone SVG: title, the figure on a panel, the source. Options:
- * theme (paper | ink | phosphor | gilt), cell and row size in px, frame: false for the figure alone.
+ * theme (paper | ink | phosphor | gilt | halloween), cell and row size in px, frame: false for the figure alone.
  */
 export function renderSvg(spec, { theme = "paper", map, cell = 10, row = 22, frame = true } = {}) {
   const def = resolve(spec);
