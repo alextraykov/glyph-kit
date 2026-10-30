@@ -374,6 +374,12 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
   const IDLE = "Enter to build";
   const turnstileElement = document.querySelector("#try .cf-turnstile");
   const turnstileToken = () => String(document.querySelector("#try [name='cf-turnstile-response']")?.value ?? "");
+  // The check runs in the background and renews after every ask, so a quick ask can beat it. Wait for
+  // its token, up to 8 s; past that, send anyway and let the server say what went wrong.
+  const checked = async () => {
+    for (let waited = 0; turnstileElement && !turnstileToken() && waited < 8000; waited += 200) await new Promise((r) => setTimeout(r, 200));
+    return turnstileToken();
+  };
   const historyEl = out.querySelector("[data-try-history]");
   const exportEl = out.querySelector("[data-try-export]");
   const exportMenu = out.querySelector("[data-try-export-menu]");
@@ -1018,12 +1024,13 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     const timer = new AbortController();
     const timeout = setTimeout(() => timer.abort(), TIMEOUT_MS);
     try {
+      const token = await checked();
       let response;
       try {
         response = await fetch(form.action, {
           method: "POST",
           headers: { Accept: "text/event-stream, application/json", "Content-Type": "application/json" },
-          body: JSON.stringify({ ask, "cf-turnstile-response": turnstileToken(), ...(base ? { base: base.spec } : {}) }),
+          body: JSON.stringify({ ask, "cf-turnstile-response": token, ...(base ? { base: base.spec } : {}) }),
           signal: timer.signal,
         });
       } catch {

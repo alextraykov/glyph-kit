@@ -37,6 +37,8 @@ const json = (p) => JSON.parse(read(p));
 const plugin = JSON.parse(readFileSync(join(root, ".claude-plugin/plugin.json"), "utf8"));
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 const REPO = "https://github.com/alextraykov/glyph-kit";
+const X = "https://x.com/alextraykov";
+const FOLLOW = `<a href="${X}" target="_blank" rel="noopener" aria-label="Follow Alexander Traykov on X (opens in a new tab)">Follow on X</a>`;
 // Support: the Ko-fi page name (ko-fi.com/<name>), the same one .github/FUNDING.yml lists.
 // Empty hides the button until there is one.
 const KOFI = "";
@@ -46,7 +48,8 @@ const stars = await fetch("https://api.github.com/repos/alextraykov/glyph-kit", 
   .then((r) => (r.ok ? r.json() : null))
   .then((d) => (Number.isFinite(d?.stargazers_count) ? d.stargazers_count : null))
   .catch(() => null);
-const starLabel = stars !== null && stars >= 10 ? `★ Star · ${stars.toLocaleString("en")}` : "★ Star";
+// On a phone the count alone stays, so the row fits Follow on X.
+const starLabel = stars !== null && stars >= 10 ? `★ <span class="nav__long">Star · </span>${stars.toLocaleString("en")}` : "★ Star";
 // Ask for one: the drawing function runs on traykov.cc; the Turnstile site key is public.
 const DRAW_URL = process.env.GLYPH_KIT_DRAW_URL ?? "https://traykov.cc/api/glyph-kit-draw";
 const TURNSTILE_SITE_KEY = process.env.GLYPH_KIT_TURNSTILE_SITE_KEY ?? "0x4AAAAAAFbX6pR3QiTNlZ6I";
@@ -316,12 +319,12 @@ ${current === "home" && TURNSTILE_SITE_KEY ? '<script src="https://challenges.cl
 <body>
 <header class="top"><div class="shell">
   <a class="brand" href="/"><span class="mark" aria-hidden="true">░▒▓█</span>Glyph kit</a>
-  <nav class="nav" aria-label="Site"><a href="/how-to-use/"${current === "guide" ? ' aria-current="page"' : ""}>How to use</a><a href="/types/"${current === "types" ? ' aria-current="page"' : ""}>Types</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a><a href="/changelog/"${current === "changelog" ? ' aria-current="page"' : ""}>Changelog</a><a href="https://traykov.cc">traykov.cc</a><button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme">Dark</button></nav>
+  <nav class="nav" aria-label="Site"><a href="/how-to-use/"${current === "guide" ? ' aria-current="page"' : ""}>How to use</a><a href="/types/"${current === "types" ? ' aria-current="page"' : ""}>Types</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a>${FOLLOW}<a href="/changelog/"${current === "changelog" ? ' aria-current="page"' : ""}>Changelog</a><a href="https://traykov.cc">traykov.cc</a><button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme">Dark</button></nav>
 </div></header>
 <main class="shell">
 ${content}
 </main>
-<footer><div class="shell"><span>Glyph kit ${plugin.version} · <a href="/changelog/">Changelog</a> · MIT · made by <a href="https://traykov.cc">Alexander Traykov</a></span><span><a href="https://traykov.cc/notes/four-characters/">Four characters</a>, the story behind it</span></div></footer>
+<footer><div class="shell"><span>Glyph kit ${plugin.version} · <a href="/changelog/">Changelog</a> · MIT · made by <a href="https://traykov.cc">Alexander Traykov</a> · ${FOLLOW}</span><span><a href="https://traykov.cc/notes/four-characters/">Four characters</a>, the story behind it</span></div></footer>
 <script type="application/json" id="live-specs">${JSON.stringify({ ...liveSpecs, ...loopSpecs }).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="try-example">${JSON.stringify({ spec: exampleSpec, mode: "moving" }).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="showcase">${JSON.stringify(showcaseData).replace(/</g, "\\u003c")}</script>

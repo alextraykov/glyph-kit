@@ -358,9 +358,10 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
   .stat, .stat + .stat { padding: var(--space-4) 0; border-left: 0; }
   .stat + .stat { border-top: var(--hairline) solid var(--line); }
   .top .shell { flex-wrap: wrap; row-gap: 0; padding-block: var(--space-2); }
-  .nav { width: 100%; justify-content: space-between; gap: var(--space-3); font-size: .9rem; }
-  /* Four links fit a phone row evenly; Changelog and traykov.cc stay on larger screens (and the footer). */
-  .nav a[href$="/changelog/"], .nav a[href="https://traykov.cc"] { display: none; }
+  /* On the narrowest phones the row wraps rather than scroll sideways. */
+  .nav { width: 100%; flex-wrap: wrap; justify-content: space-between; gap: var(--space-1) var(--space-3); font-size: .9rem; }
+  /* Five fit a phone row evenly; Changelog and traykov.cc stay on larger screens (and the footer). */
+  .nav a[href$="/changelog/"], .nav a[href="https://traykov.cc"], .nav__long { display: none; }
   .install__hand span { display: block; margin-top: var(--space-1); }
   .grid-figure, .live, .stage { padding: var(--space-4); }
   .outputs__view { padding-inline: var(--space-4); }
