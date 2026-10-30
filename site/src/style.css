@@ -105,7 +105,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .strip__cmds .button { justify-self: start; }
 .strip__note { color: var(--text-caption); font-size: .78rem; }
 .cmd { display: inline-flex; align-items: stretch; max-width: 100%; border: var(--hairline) solid var(--line); background: var(--paper); }
-.cmd code { min-width: 0; padding: 5px var(--space-2); overflow-x: auto; white-space: pre; font: 400 .74rem/1.5 ui-monospace, Menlo, monospace; }
+.cmd code { min-width: 0; padding: 5px var(--space-2); white-space: pre-wrap; overflow-wrap: anywhere; font: 400 .74rem/1.5 ui-monospace, Menlo, monospace; }
 .cmd button { flex: none; display: grid; place-items: center; width: 30px; border: 0; border-left: var(--hairline) solid var(--line); background: transparent; color: var(--text-caption); cursor: pointer; }
 .cmd button:focus-visible { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); }
 @media (hover: hover) and (pointer: fine) { .cmd button:hover { color: var(--ink); box-shadow: inset 0 -2px 0 var(--ink); } }
@@ -131,19 +131,20 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .demo figcaption { padding: var(--space-3); border-top: var(--hairline) solid var(--line); color: var(--text-soft); font-size: .85rem; line-height: 1.55; }
 
 /* Character grids: one cell per glyph, lines join, air comes from padding. */
-.grid-figure { margin: 0; padding: var(--space-5); overflow-x: auto; background: var(--panel); color: var(--ink); font: 400 var(--px-11)/1.25 var(--pixel); font-variant-ligatures: none; letter-spacing: 0; white-space: pre; }
+.grid-figure { margin: 0; padding: var(--space-5); background: var(--panel); color: var(--ink); font: 400 var(--px-11)/1.25 var(--pixel); font-variant-ligatures: none; letter-spacing: 0; white-space: pre; }
 .live { padding: var(--space-6) var(--space-5); }
 .gk-e { opacity: .45; } .gk-m { opacity: .28; } .gk-f { color: var(--text-caption); } .gk-x { color: var(--signal-fail); } .gk-ok { color: var(--signal-ok); }
 .gl-ok { color: var(--signal-ok); } .gl-fail { color: var(--signal-fail); } .gl-mute { color: var(--text-caption); }
 /* Skeletons: the structure faint, the content as dim placeholder cells. */
 .sk { opacity: .32; } .sk-line { opacity: .5; }
 
-/* A stage holds one figure in its middle, scaled so its widest line fills the stage (each glyph is
-   0.64 em wide). --cols and --rows come from the figure; small screens keep a readable size and scroll. */
-.stage { container-type: inline-size; display: grid; place-items: center; min-width: 0; padding: var(--space-6) var(--space-5); overflow-x: auto; background: var(--panel); }
-.stage > .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: var(--px-11); }
-/* Too wide even at the smallest size: it scrolls inside the box, starting from its left edge. */
-.stage:has(> .grid-figure) { justify-items: safe center; }
+/* Nothing on the site scrolls sideways. A figure is 11px where it fits; where its widest line (--cols,
+   from the figure) is wider than its box, it shrinks to fill the box. At 11px a cell is 7px wide. */
+.stage, .kind, .guide-figure, .pair__item { container-type: inline-size; }
+:is(.kind, .guide-figure, .pair__item) .grid-figure { font-size: min(var(--px-11), (100cqi - 2 * var(--space-5)) * 11 / (7 * var(--cols))); }
+/* A stage holds one figure in its middle. */
+.stage { display: grid; place-items: center; min-width: 0; padding: var(--space-6) var(--space-5); background: var(--panel); }
+.stage > .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: min(var(--px-11), 100cqi * 11 / (7 * var(--cols))); }
 
 /* The hero showcase: the dither press covers the whole frame between views. */
 .showcase { position: relative; }
@@ -158,14 +159,42 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .stat + .stat { padding-left: var(--space-5); border-left: var(--hairline) solid var(--line); }
 .stat strong { font: 400 var(--px-33)/1.1 var(--pixel); }
 .stat > p:last-child { color: var(--text-soft); font-size: .9rem; line-height: 1.55; }
-.study { display: grid; justify-items: safe center; overflow-x: auto; padding: var(--space-6) var(--space-5); background: var(--panel); }
-.study .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: var(--px-22); line-height: 1.2; }
+/* The study table fills its panel: at 11px a cell is 7px wide, so the size that fits --cols cells is
+   100cqi × 11 / (7 × --cols), up to 22px. Below 679px the three measures side by side would go under
+   11px (97 cells × 7px), so the stacked table, one measure at a time, shows instead. */
+.study { container: study / inline-size; display: grid; justify-items: center; padding: var(--space-6) var(--space-5); background: var(--panel); }
+.study .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: min(var(--px-22), 100cqi * 11 / (7 * var(--cols))); line-height: 1.2; }
+.study__stacked { display: none; }
+@container study (width < 679px) { .study__wide { display: none; } .study__stacked { display: block; } }
 .study .win { color: var(--signal-ok); } .study .lose { color: var(--text-caption); }
 .stats-note { font: 400 var(--px-11)/1.6 var(--pixel); color: var(--text-caption); }
 
+/* Release 0.3.0: four items, each a label, kit figures and one line. */
+.release { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-5); }
+.release__item { display: grid; align-content: start; gap: var(--space-3); min-width: 0; padding-top: var(--space-4); border-top: var(--hairline) solid var(--ink); }
+.release__item > p:last-child { max-width: 56ch; color: var(--text-soft); font-size: .92rem; }
+.release figure { display: grid; gap: var(--space-1); min-width: 0; margin: 0; }
+/* A figure that fits its box: 11px while it fits, smaller only when it doesn't (a cell is 0.64 em). */
+.fit { position: relative; container-type: inline-size; display: grid; justify-items: center; min-width: 0; padding: var(--space-5); background: var(--panel); color: var(--ink); }
+/* ↺ and Copy sit in the box's corners, clear of the figure. */
+.fit .gk-replay-wrap { position: static; }
+/* On touch, Copy is always shown, so it gets its own strip below the figure. */
+@media (hover: none) { .fit.has-figure-copy { padding-bottom: calc(28px + 2 * var(--space-2)); } }
+.fit .grid-figure { padding: 0; overflow: visible; background: transparent; color: var(--ink); font-size: min(var(--px-11), 100cqi / (0.64 * (var(--cols) + 1))); }
+.fit[data-palette] .gk-d { color: var(--palette-data); }
+.palettes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-2); }
+.palettes .fit { padding: var(--space-4) var(--space-3); }
+.edit { display: grid; justify-items: stretch; gap: var(--space-2); }
+.edit .cmd { justify-self: center; }
+.edits { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-1) var(--space-4); margin: 0; padding-top: var(--space-3); border-top: var(--hairline) solid var(--line); }
+.edits dt { font: 400 var(--px-11)/1.9 var(--pixel); }
+.edits dd { margin: 0; color: var(--text-soft); font-size: .9rem; }
+
 /* Galleries */
 .gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 36rem), 1fr)); gap: var(--space-5); }
-.areas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr)); gap: var(--space-6) var(--space-5); }
+/* Two columns only at full width (2 × 576px and the gap fill the 1180px measure), so the types'
+   figures keep 11px; narrower screens get one column. */
+.areas { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 36rem), 1fr)); gap: var(--space-6) var(--space-5); }
 .switch { display: grid; gap: var(--space-4); }
 .switch__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); }
 .switch__chips button { min-height: 40px; padding: 0 var(--space-3); border: var(--hairline) solid var(--line); background: transparent; color: var(--text-soft); font: 500 .9rem/1 var(--sans); cursor: pointer; }
@@ -205,12 +234,13 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .asks { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; color: var(--text-soft); }
 .formats a { text-underline-offset: 3px; }
 .guide { display: grid; gap: var(--space-6); }
-.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--space-4); min-width: 0; }
+/* Side by side only where both fit at 11px; otherwise one above the other. */
+.pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--cols) * 7px + 2 * var(--space-5)), 1fr)); gap: var(--space-4); min-width: 0; }
 .pair__item { display: grid; align-content: start; gap: var(--space-2); min-width: 0; margin: 0; }
 .pair__item .grid-figure { max-width: 100%; }
 .guide-note { max-width: 62ch; color: var(--text-soft); }
 .guide-figure { display: grid; justify-items: start; min-width: 0; }
-.guide-figure .grid-figure { max-width: 100%; font-size: var(--px-11); }
+.guide-figure .grid-figure { max-width: 100%; }
 .guide-item { display: grid; grid-template-columns: minmax(0, 20rem) minmax(0, 1fr); gap: var(--space-5); padding-top: var(--space-5); border-top: var(--hairline) solid var(--line); scroll-margin-top: 80px; }
 .guide-item__head { display: grid; align-content: start; gap: var(--space-3); }
 .guide-item__head h3 { font-size: var(--px-22); }
@@ -224,7 +254,8 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .checks li::before { content: "■"; position: absolute; left: 0; color: var(--signal-ok); font-family: var(--pixel); }
 .checks--big { grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--space-3) var(--space-5); }
 [id] { scroll-margin-top: 80px; }
-@media (max-width: 760px) { .guide-item { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); } }
+/* Below 1000px the figure column would be narrower than the widest guide figure at 11px (616px). */
+@media (max-width: 1000px) { .guide-item { grid-template-columns: minmax(0, 1fr); gap: var(--space-3); } }
 .rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--space-5); margin: 0; padding: 0; list-style: none; }
 .rules li { display: grid; gap: var(--space-2); padding-top: var(--space-3); border-top: var(--hairline) solid var(--line); color: var(--text-soft); font-size: .92rem; }
 .rules strong { color: var(--ink); font-weight: 500; }
@@ -261,9 +292,13 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .outputs__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); }
 .outputs__panel { position: relative; display: grid; }
 .outputs__panel[hidden] { display: none; }
-.outputs__view { display: grid; justify-items: safe center; align-content: center; min-height: calc(var(--space-6) * 7); padding: var(--space-6) var(--space-5) calc(var(--space-6) + 40px); overflow-x: auto; background: var(--panel); }
-.outputs__view > .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: var(--px-22); line-height: 1.2; }
-.outputs__text { justify-self: stretch; margin: 0; font: 400 var(--px-11)/1.45 var(--pixel); white-space: pre; color: var(--ink); }
+/* Each view fits its widest line to the panel, the same way as the study table (a cell is 7px at
+   11px). Below 490px the drawing (70 cells) would go under 11px, so the narrower drawing shows. */
+.outputs__view { container: outputs / inline-size; display: grid; justify-items: center; align-content: center; min-height: calc(var(--space-6) * 7); padding: var(--space-6) var(--space-5) calc(var(--space-6) + 40px); background: var(--panel); }
+.outputs__view > .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: min(var(--px-22), 100cqi * 11 / (7 * var(--cols))); line-height: 1.2; }
+.outputs__text { justify-self: stretch; margin: 0; font: 400 min(var(--px-11), 100cqi * 11 / (7 * var(--cols)))/1.45 var(--pixel); white-space: pre; color: var(--ink); }
+.outputs__narrow { display: none; }
+@container outputs (width < 490px) { .outputs__wide { display: none; } .outputs__narrow { display: block; } }
 .outputs__svg { width: min(100%, 880px); } .outputs__svg svg { width: 100%; height: auto; }
 .outputs__copy { position: absolute; right: var(--space-4); bottom: var(--space-4); }
 .outputs__also { color: var(--text-soft); font-size: .9rem; }
@@ -305,11 +340,10 @@ footer { border-top: var(--hairline) solid var(--ink); padding-block: var(--spac
 footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); }
 
 @media (max-width: 900px) {
-  .hero__body, .note, .try { grid-template-columns: minmax(0, 1fr); }
+  .hero__body, .note, .try, .release { grid-template-columns: minmax(0, 1fr); }
   .strip__row { grid-template-columns: minmax(0, 1fr); align-items: start; }
-  .outputs__view > .grid-figure { font-size: var(--px-11); }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .study .grid-figure { font-size: var(--px-11); }
+  .study { padding-inline: var(--space-4); }
   .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stat:nth-child(3) { padding-left: 0; border-left: 0; }
   .stat:nth-child(n+3) { border-top: var(--hairline) solid var(--line); }
@@ -317,6 +351,7 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 @media (max-width: 640px) {
   .heading h2 { font-size: var(--px-22); }
   .note__copy h2 { font-size: var(--px-33); }
+  .fit { padding: var(--space-4) var(--space-3); }
   .stats { grid-template-columns: minmax(0, 1fr); }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bento__cell { grid-column: auto; }
@@ -326,11 +361,11 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
   .nav { width: 100%; justify-content: space-between; gap: var(--space-3); font-size: .9rem; }
   /* Four links fit a phone row evenly; Changelog and traykov.cc stay on larger screens (and the footer). */
   .nav a[href$="/changelog/"], .nav a[href="https://traykov.cc"] { display: none; }
-  /* Long commands wrap inside their box instead of scrolling; Copy still copies the whole line. */
-  .cmd code { white-space: pre-wrap; overflow-wrap: anywhere; }
   .install__hand span { display: block; margin-top: var(--space-1); }
   .grid-figure, .live, .stage { padding: var(--space-4); }
+  .outputs__view { padding-inline: var(--space-4); }
   .stage > .grid-figure { padding: 0; }
+  :is(.kind, .guide-figure, .pair__item) .grid-figure { font-size: min(var(--px-11), (100cqi - 2 * var(--space-4)) * 11 / (7 * var(--cols))); }
 }
 @media (prefers-reduced-motion: reduce) {
   .try__field textarea { transition: none; }
@@ -351,7 +386,6 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
 .builder__canvas { height: clamp(460px, 68vh, 640px); background: var(--panel); }
 .builder__canvas > .stage { container-type: size; height: 100%; padding: var(--space-5) var(--space-5) calc(var(--dock) + var(--space-5)); background: transparent; }
 .builder__canvas > .stage[hidden], .builder__data[hidden] { display: none; }
-.builder__canvas > .stage > .grid-figure { font-size: var(--px-11); }
 /* The Data view scrolls only in the space above the dock, so nothing sits under the prompt. */
 .builder__data { position: relative; display: grid; grid-template-columns: minmax(14rem, .9fr) minmax(0, 1.4fr); align-content: start; gap: var(--space-3) var(--space-6); height: calc(100% - var(--dock) - var(--space-5) * 2 - var(--space-3)); margin: 0; padding: var(--space-5); overflow: auto; color: var(--ink); font: 400 .92rem/1.5 var(--sans); }
 .data__about, .data__body { display: grid; align-content: start; gap: var(--space-2); min-width: 0; }
@@ -490,13 +524,12 @@ td.is-number .data__input { text-align: right; font-variant-numeric: tabular-num
 .builder > .cf-turnstile { margin-top: var(--space-3); }
 
 @media (max-width: 640px) {
-  .builder { --dock: 12rem; }
+  .builder { --dock: 14.5rem; }
   /* Tabs, title, export and the stamp don't fit one phone-width row: the bar wraps. */
   .builder__bar { flex-wrap: wrap; column-gap: var(--space-3); }
-  /* Eight chips in one row that scrolls sideways, so the prompt stays low. */
-  .chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-  .chip { flex: none; }
-  .builder__canvas { height: 480px; }
+  /* Four suggestions in two rows, so the prompt stays low. */
+  .chip:nth-child(n+5 of [data-preset]) { display: none; }
+  .builder__canvas { height: 520px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .prompt textarea[data-invalid] { animation: none; }
@@ -522,19 +555,20 @@ td.is-number .data__input { text-align: right; font-variant-numeric: tabular-num
 footer { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); }
 
 /* Playback uses the same quiet, square control as the kit toolbar. */
-/* Areas land below the sticky menu; on phones the menu is one row that scrolls sideways. */
+/* Areas land below the sticky menu. On phones the menu wraps and stays at the top of the page, so
+   it doesn't cover the screen. */
 .jump ~ .section { scroll-margin-top: calc(var(--top-h, 57px) + 72px); }
-@media (max-width: 640px) { .jump { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; white-space: nowrap; } }
+@media (max-width: 640px) { .jump { position: static; } .jump ~ .section { scroll-margin-top: calc(var(--top-h, 57px) + var(--space-3)); } }
 
 /* Touch: small controls keep their look but reach 44px to a finger. Each hit area grows only
-   where nothing sits next to it (the chips scroll in one row; the nav links have 14px between). */
+   where nothing sits next to it (rows of chips have 10px between; the nav links have 14px). */
 @media (pointer: coarse) {
   .nav a, .theme, .cmd button, .chip, .prompt__send { position: relative; }
   .nav a::after, .theme::after, .cmd button::after, .chip::after, .prompt__send::after, .figure-copy::after { content: ""; position: absolute; }
   .nav a::after { inset: -4px -6px; }
   .theme::after { inset: -4px -6px; }
   .cmd button::after { inset: -8px -7px; }
-  .chip::after { inset: -6px 0; }
+  .chip::after { inset: -5px 0; }
   .prompt__send::after { inset: -5px 0; }
   .figure-copy::after { inset: -8px 0; }
 }
