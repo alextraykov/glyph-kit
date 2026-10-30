@@ -38,6 +38,33 @@ Put it on a spec, report or deck as `theme`, or pass `--theme name` or `--theme 
 
 `halloween` is pumpkin data, bruise-purple lines and bone text on near-black. It is the one palette with its own ramp, bruise purple to pumpkin (`#3b2a4c` `#6b3f78` `#b8572f` `#f2801f`).
 
+## How a theme's colours relate
+
+Contrast says each colour reads on the page. These four rules say the colours belong together, measured in OKLCH: lightness, chroma (how colourful) and hue.
+
+1. **Data sets the hue.** The ramp is the data hue getting stronger, each step further from the page, and its last step `█` is the data colour.
+2. **Problems are opposite data and loudest.** `flag` sits 150° to 210° from the data hue and is the most colourful role. Only problems may out-shout data.
+3. **Passes read apart from problems without colour.** `ok` is at least 0.15 lighter or darker than `flag`, a different hue, and less colourful.
+4. **Neutrals belong to the theme.** `bg`, `panel`, `frame` and `muted` are the data hue at low chroma.
+
+Rules 1 and 4 need a hue to follow: with grey data, as in `paper` and `ink`, only 2 and 3 apply. A theme that breaks a rule still draws; `render`, `export`, `deck`, `live` and `check` add a note that names the pair and a nearby colour that fits:
+
+> Problems (#b8391a) and passes (#0a7a50) are 0.02 apart in lightness, so they read the same without colour. A flag of #651300 fits.
+
+`check theme.json` checks a theme file on its own; `check spec.json --theme theme.json` checks a figure with a theme. A palette name on its own is never checked: `phosphor` and `gilt` copy other products' colours, so they don't follow every rule (`docs/theme-rules.md` has each palette against the rules).
+
+## A theme from one hue
+
+Give `mixed` a hue in degrees or a colour, and every role is derived from it so that all four rules and every contrast check hold. `base` says light (`paper`) or dark (`ink`):
+
+```json
+{ "base": "ink", "mixed": "#7a5cff" }
+```
+
+Or on the command line: `--theme mixed:#7a5cff:dark`, `--theme mixed:285` (light unless `:dark`). Roles you name beside `mixed` replace the derived ones, and are checked like any other. A grey colour has no hue and is refused.
+
+Problems are opposite data, nudged toward red, so warm data hues push them round the wheel: orange data gets blue problems, red data gets green ones. Pick a cool data hue (180 to 300) to keep problems red or amber.
+
 ## From your design system
 
 Point roles at your tokens in `design-system.map.json`, and pass it with `--map`:
