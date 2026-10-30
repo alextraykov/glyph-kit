@@ -89,7 +89,7 @@ What's measured and what isn't: [benefits](docs/benefits.md). Text tokens aren't
 
 ## Colour
 
-Figures are coloured by role, never for decoration: problems, passes, data and lines. Pick one of four palettes, or your own colours and tokens; every colour is checked for contrast. In a terminal the text is coloured too, and `NO_COLOR` turns it off. Without colour, every figure reads the same. Guide: [colour](skills/glyph-kit/reference/colour.md).
+Figures are coloured by role, never for decoration: problems, passes, data and lines. Pick one of five palettes, or your own colours and tokens; every colour is checked for contrast. In a terminal the text is coloured too, and `NO_COLOR` turns it off. Without colour, every figure reads the same. Guide: [colour](skills/glyph-kit/reference/colour.md).
 
 ## Editing
 

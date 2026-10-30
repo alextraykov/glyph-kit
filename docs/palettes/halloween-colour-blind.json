@@ -1,0 +1,39 @@
+{
+  "kind": "contrast",
+  "title": "Halloween's problems and passes, colour-blind",
+  "intent": "The problem and good colours keep 4.5 to 1 on the panel when red or green is seen weakly.",
+  "source": "The halloween palette; weak views simulated (Machado 2009)",
+  "data": [
+    {
+      "label": "problem, as drawn",
+      "fg": "#ff5a8a",
+      "bg": "#1a1420"
+    },
+    {
+      "label": "problem, weak red",
+      "fg": "#7e818b",
+      "bg": "#121620"
+    },
+    {
+      "label": "problem, weak green",
+      "fg": "#a9a286",
+      "bg": "#131620"
+    },
+    {
+      "label": "good, as drawn",
+      "fg": "#d6f590",
+      "bg": "#1a1420"
+    },
+    {
+      "label": "good, weak red",
+      "fg": "#ffea88",
+      "bg": "#121620"
+    },
+    {
+      "label": "good, weak green",
+      "fg": "#fce995",
+      "bg": "#131620"
+    }
+  ],
+  "theme": "halloween"
+}

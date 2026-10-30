@@ -1,0 +1,55 @@
+{
+  "kind": "contrast",
+  "title": "Christmas problems and passes, colour-blind",
+  "intent": "The problem and good colours keep 4.5 to 1 on the panel when red or green is seen weakly.",
+  "source": "Proposed values; weak views simulated (Machado 2009)",
+  "data": [
+    {
+      "label": "problem, as drawn",
+      "fg": "#ff6490",
+      "bg": "#142019"
+    },
+    {
+      "label": "problem, weak red",
+      "fg": "#848791",
+      "bg": "#201e19"
+    },
+    {
+      "label": "problem, weak green",
+      "fg": "#aca68c",
+      "bg": "#1e1d19"
+    },
+    {
+      "label": "good, as drawn",
+      "fg": "#daf0ff",
+      "bg": "#142019"
+    },
+    {
+      "label": "good, weak red",
+      "fg": "#eaefff",
+      "bg": "#201e19"
+    },
+    {
+      "label": "good, weak green",
+      "fg": "#e4ebff",
+      "bg": "#1e1d19"
+    }
+  ],
+  "theme": {
+    "base": "ink",
+    "bg": "#0d1611",
+    "panel": "#142019",
+    "ink": "#f4f1ea",
+    "muted": "#a9b5ad",
+    "data": "#f6d466",
+    "frame": "#3e5c4a",
+    "flag": "#ff6490",
+    "ok": "#daf0ff",
+    "ramp": [
+      "#1f3b2c",
+      "#33704a",
+      "#94a940",
+      "#f6d466"
+    ]
+  }
+}

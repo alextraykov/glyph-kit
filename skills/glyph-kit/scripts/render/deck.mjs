@@ -1,6 +1,6 @@
 // Deck fidelity: specs as a presentation you'd actually give. One self-contained HTML file.
 //
-// A deck is { title, subtitle?, byline?, theme?: "paper" | "ink" | "phosphor" | "gilt", slides: [...] },
+// A deck is { title, subtitle?, byline?, theme?: "paper" | "ink" | "phosphor" | "gilt" | "halloween", slides: [...] },
 // or just a list of specs. Figures are coloured by role (render/paint.mjs) in the theme's palette.
 // A slide is either a spec (any kind) with an optional `present` block, or one of:
 //   { type: "title", title, subtitle?, byline? }   { type: "section", kicker?, title }

@@ -423,7 +423,7 @@ const GUIDE = [
     when: "A review, a research readout, a pitch: anything you present.",
     ask: "Make a ten-slide deck from the research readout, one point per slide, and a PDF to send.",
     run: ["node scripts/glyph-kit.mjs deck deck.json > deck.html", "node scripts/glyph-kit.mjs export deck.json --to pdf", "node scripts/glyph-kit.mjs export deck.json --to html --theme ink"],
-    check: ["One point per slide, with the conclusion in the title.", "Steps zoom to lines of a figure and show the line you'll say; find line numbers with --to text, counting from 0.", "Flag problem rows so they flash; keep presenter notes in notes (press N).", "For a pitch, every number has a real source: made-up numbers are stamped SAMPLE DATA on the slide.", "Themes: paper, ink, phosphor, gilt. The PDF is one 16:9 page per slide."]
+    check: ["One point per slide, with the conclusion in the title.", "Steps zoom to lines of a figure and show the line you'll say; find line numbers with --to text, counting from 0.", "Flag problem rows so they flash; keep presenter notes in notes (press N).", "For a pitch, every number has a real source: made-up numbers are stamped SAMPLE DATA on the slide.", "Themes: paper, ink, phosphor, gilt, halloween. The PDF is one 16:9 page per slide."]
   },
   {
     id: "pdf", title: "Reports and PDFs",
@@ -444,7 +444,7 @@ const GUIDE = [
     when: "A figure for Keynote, Figma, Google Slides or a post.",
     ask: "Export the funnel as an SVG for the board deck.",
     run: ["node scripts/glyph-kit.mjs export funnel.json --to svg --theme paper", "node scripts/glyph-kit.mjs export funnel.json --to png"],
-    check: ["SVG needs no font: blocks become rectangles, shades become dither patterns, lines become vectors.", "PNG is the same SVG at 2×, through a browser already on the machine.", "Pick the theme that matches the slide: paper, ink, phosphor or gilt."]
+    check: ["SVG needs no font: blocks become rectangles, shades become dither patterns, lines become vectors.", "PNG is the same SVG at 2×, through a browser already on the machine.", "Pick the theme that matches the slide: paper, ink, phosphor, gilt or halloween."]
   }
 ];
 const guideItem = (g) => `<article class="guide-item" id="${g.id}" aria-labelledby="${g.id}-title">

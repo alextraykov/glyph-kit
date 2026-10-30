@@ -1,7 +1,7 @@
 // Report fidelity: several specs as a document that reads like a finished report.
 //
 // A report is {
-//   title, subtitle?, author?, date?, theme?: "paper" | "ink" | "phosphor" | "gilt",
+//   title, subtitle?, author?, date?, theme?: "paper" | "ink" | "phosphor" | "gilt" | "halloween",
 //   summary?: ["one finding per line", …],
 //   sections: [{ title, takeaway?, text?: ["paragraph", …], figures?: [spec, …], note? }]
 // }

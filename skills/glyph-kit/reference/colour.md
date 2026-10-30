@@ -25,7 +25,7 @@ A theme colours roles. To colour one thing in a figure, the cohort column where 
 
 ## A theme
 
-A palette name (`paper`, `ink`, `phosphor`, `gilt`), or a base and the roles you change:
+A palette name (`paper`, `ink`, `phosphor`, `gilt`, `halloween`), or a base and the roles you change:
 
 ```json
 { "base": "paper", "data": "#1f4fd6", "flag": "#b8421f",
@@ -33,6 +33,8 @@ A palette name (`paper`, `ink`, `phosphor`, `gilt`), or a base and the roles you
 ```
 
 Put it on a spec, report or deck as `theme`, or pass `--theme name` or `--theme theme.json` to `render`, `export`, `deck` and `live`.
+
+`halloween` is pumpkin data, bruise-purple lines and bone text on near-black. It is the one palette with its own ramp, bruise purple to pumpkin (`#3b2a4c` `#6b3f78` `#b8572f` `#f2801f`). Its problems (`#ff5a8a`) are darker than its passes (`#d6f590`), 2.4 to 1 apart, and keep 4.5 to 1 on the panel when red or green is seen weakly, so the two stay apart for colour-blind readers too.
 
 ## From your design system
 

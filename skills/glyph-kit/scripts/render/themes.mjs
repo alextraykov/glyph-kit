@@ -1,12 +1,20 @@
 // Palettes shared by every rendered form. Each theme names colour roles, not colours:
 //   bg page, ink text, muted secondary text, data the measured thing, frame structure,
 //   flag problems, ok passes, panel a quiet surface behind figures.
-// "phosphor" is Synapse's palette; "gilt" is Our Saints'.
+// "phosphor" is Synapse's palette; "gilt" is Our Saints'. "halloween" is pumpkin, bruise purple and
+// bone on near-black: its problems are a darker red and its passes a pale green, so the two differ in
+// lightness as well as hue.
 export const PALETTES = {
   paper: { bg: "#f7f6f1", panel: "#efede6", ink: "#151513", muted: "#6b6a64", data: "#151513", frame: "#a3a199", flag: "#b8391a", ok: "#0a7a50" },
   ink: { bg: "#0d0d0c", panel: "#171715", ink: "#f2f0e8", muted: "#9a988f", data: "#f2f0e8", frame: "#5c5b56", flag: "#ef7c56", ok: "#4cc58f" },
   phosphor: { bg: "#0d1117", panel: "#151b23", ink: "#c9d1d9", muted: "#8b949e", data: "#58d68d", frame: "#3d4752", flag: "#f0883e", ok: "#58d68d" },
-  gilt: { bg: "#000000", panel: "#0f0d0a", ink: "#eee9dd", muted: "#918b80", data: "#c9a227", frame: "#4f483d", flag: "#e49a7d", ok: "#c9a227" }
+  gilt: { bg: "#000000", panel: "#0f0d0a", ink: "#eee9dd", muted: "#918b80", data: "#c9a227", frame: "#4f483d", flag: "#e49a7d", ok: "#c9a227" },
+  halloween: { bg: "#0f0c11", panel: "#1a1420", ink: "#ece3d0", muted: "#a99db0", data: "#f2801f", frame: "#5d4673", flag: "#ff5a8a", ok: "#d6f590" }
+};
+
+// A palette's own ramp for ░ ▒ ▓ █ in the density grids. Palettes without one draw the grid in data.
+export const RAMPS = {
+  halloween: ["#3b2a4c", "#6b3f78", "#b8572f", "#f2801f"]
 };
 
 export const ROLES = ["bg", "panel", "ink", "muted", "data", "frame", "flag", "ok"];
@@ -108,8 +116,8 @@ export function resolveTheme(theme, { map } = {}) {
     colors[key] = css[key] = String(value).toLowerCase();
     roles.add(key);
   }
-  const ramp = spec.ramp ? spec.ramp.map?.((c) => String(c).toLowerCase()) ?? spec.ramp : null;
-  if (roles.size || ramp) check(colors, ramp, roles);
+  const ramp = spec.ramp ? spec.ramp.map?.((c) => String(c).toLowerCase()) ?? spec.ramp : RAMPS[base] ?? null;
+  if (roles.size || spec.ramp) check(colors, ramp, roles);
   return { base, colors, css, ramp, dark: luminance(colors.bg) < 0.2 };
 }
 

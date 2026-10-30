@@ -226,7 +226,7 @@ function figureText({ spec, mode }) {
 /** A standalone SVG, laid out like the kit's own: title, intent, the figure on a panel, the source. */
 // The palette the figure is shown and exported in: the site's own colours, or one of the kit's.
 const PALETTE_KEY = "glyph-kit-palette";
-const PALETTE_NAMES = { site: "This site", paper: "Paper", ink: "Ink", phosphor: "Phosphor", gilt: "Gilt" };
+const PALETTE_NAMES = { site: "This site", paper: "Paper", ink: "Ink", phosphor: "Phosphor", gilt: "Gilt", halloween: "Halloween" };
 let currentPalette = (() => {
   try {
     const saved = localStorage.getItem(PALETTE_KEY);
