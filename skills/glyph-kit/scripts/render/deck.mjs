@@ -52,7 +52,7 @@ body{color:var(--gk-deck-ink)}
 .gk-slide--title,.gk-slide--statement{align-content:center;grid-template-rows:auto}
 .gk-slide--title h2{font-size:104px;max-width:14ch}
 .gk-slide--title .gk-lead{font-size:32px}
-.gk-ramp{margin-bottom:32px;color:var(--gk-deck-data);font:64px/1 var(--gk-mono);letter-spacing:14px}
+.gk-ramp{margin-bottom:32px;color:var(--gk-deck-data);font:66px/1 var(--gk-mono);letter-spacing:0}
 .gk-slide--section{align-content:end;grid-template-rows:auto}
 .gk-slide--section h2{font-size:88px}
 .gk-statement{margin:0;max-width:24ch;font:600 72px/1.12 var(--gk-font);letter-spacing:-.025em}

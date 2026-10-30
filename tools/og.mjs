@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// The link preview (Open Graph image) for the Glyph kit site: the four shades ░▒▓█ and the name,
-// in Departure Mono on the site's paper. 1200 × 630 at 2×.
+// The link preview (Open Graph image) for the Glyph kit site: the logo ░▒▓█ and the name, in
+// Departure Mono on the site's paper. 1200 × 630 at 2×. Sizes are multiples of 11 px, the font's own
+// size, so every pixel of the glyphs is whole and the four glyphs meet without a seam (docs/brand.md).
 // Writes site/public/og.png. Needs Chrome, Chromium or Edge, like the kit's PNG export.
 // Run after changing the figure or the words: node tools/og.mjs
 import { execFileSync } from "node:child_process";
@@ -18,8 +19,8 @@ const html = `<!doctype html><html><head><meta charset="utf-8"><style>
 @font-face { font-family: "Geist Sans"; src: url(data:font/woff2;base64,${font("geist-sans-latin-500-normal.woff2")}) format("woff2"); font-weight: 500; }
 html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #fbfbf8; color: #080808; }
 body { box-sizing: border-box; display: grid; place-content: center; justify-items: center; gap: 44px; }
-.glyphs { font: 400 230px/1 "Departure Mono"; letter-spacing: 0; white-space: pre; }
-h1 { margin: 0; font: 400 96px/1 "Departure Mono"; letter-spacing: 0; }
+.glyphs { font: 400 220px/1 "Departure Mono"; letter-spacing: 0; white-space: pre; }
+h1 { margin: 0; font: 400 88px/1 "Departure Mono"; letter-spacing: 0; }
 .url { position: absolute; right: 56px; bottom: 44px; color: rgba(8,8,8,.55); font: 500 22px/1 "Geist Sans"; }
 </style></head><body>
 <div class="glyphs">░▒▓█</div>

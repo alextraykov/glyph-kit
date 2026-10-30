@@ -1,4 +1,4 @@
-<p align="center"><img src="skills/glyph-kit/assets/icon.svg" width="72" height="72" alt=""></p>
+<p align="center"><img src="docs/readme/mark.svg" width="112" height="56" alt=""></p>
 
 # Glyph kit
 

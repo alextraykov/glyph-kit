@@ -61,7 +61,7 @@ p { margin: 0; }
 .top { position: sticky; top: 0; z-index: 2; background: var(--paper); border-bottom: var(--hairline) solid var(--ink); }
 .top .shell { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 56px; }
 .brand { display: flex; white-space: nowrap; align-items: center; gap: var(--space-2); text-decoration: none; font: 400 var(--px-22)/1 var(--pixel); }
-.brand img { width: 22px; height: 22px; }
+.brand .mark { letter-spacing: 0; } /* the logo: ░▒▓█ touching, at the 22 px the name is set in (docs/brand.md) */
 .nav { display: flex; gap: var(--space-4); font-size: .9rem; }
 .nav a { white-space: nowrap; text-decoration: none; padding-block: var(--space-1); border-bottom: 2px solid transparent; }
 .nav a[aria-current="page"] { border-bottom-color: var(--ink); }
