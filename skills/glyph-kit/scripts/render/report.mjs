@@ -40,7 +40,7 @@ body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 ui-sans-serif
 .r-mono{font-family:${MONO}}
 .r-kicker{margin:0;color:var(--muted);font:500 12px/1.4 ${MONO};letter-spacing:.08em;text-transform:uppercase}
 .r-cover{display:grid;gap:28px;padding-bottom:72px;border-bottom:1px solid color-mix(in srgb,var(--ink) 16%,transparent)}
-.r-ramp{margin:0;color:var(--data);font:56px/1 ${MONO};letter-spacing:.16em}
+.r-ramp{margin:0;color:var(--data);font:55px/1 ${MONO};letter-spacing:0}
 .r-cover h1{margin:0;max-width:18ch;font-size:clamp(40px,6vw,68px);line-height:1.02;letter-spacing:-.03em;font-weight:650}
 .r-cover .r-sub{margin:0;max-width:44ch;color:var(--muted);font-size:22px;line-height:1.45}
 .r-meta{display:flex;flex-wrap:wrap;gap:8px 28px;margin:0}

@@ -40,6 +40,7 @@ The fifth line is the reference gate. The area guides are generated from `tools/
 
 - **One change per pull request,** with one line in `CHANGELOG.md` under the coming version, written for the people who use the kit: what they can do now, or what changed for them.
 - **Copy:** plain words, sentence case, no taglines. Say "types", not "kinds". Name things by what a designer sees, not by the code.
+- **The logo** is ░▒▓█ side by side in Departure Mono, in one colour. [The logo](docs/brand.md) gives its sizes and what not to do with it.
 - **Commits** say what changed in a short first line, then why if it isn't obvious.
 
 ## How a change is reviewed

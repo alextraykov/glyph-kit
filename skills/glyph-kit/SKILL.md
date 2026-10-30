@@ -74,6 +74,8 @@ Every command is `node <skill>/scripts/glyph-kit.mjs <command>`.
 | Moving diagram: a process over time | `live spec.json --to html` (or `--to markdown` for its still) | `reference/live.md` |
 | Several layouts as one document | `export layouts.json --to html\|pdf`, a layout to a page | `reference/areas/layouts.md` |
 
+Decks and reports open with the kit's logo: ░▒▓█ side by side, in that order and in one colour. Keep it that way when you edit their HTML or draw a title card or still yourself.
+
 HTML outputs are self-contained (font, styles and, for moving pages, the player inlined): 40–200 KB. Don't read them back to check them; render the same spec `--to text` instead. PDF and PNG use a Chromium browser already on the machine; everything else needs nothing.
 
 When another agent or a later turn needs the figure, pass the spec (a few hundred bytes), not the drawing. If a drawing must go into a model's context, add `--compact` (plain ASCII, same layout).

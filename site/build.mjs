@@ -281,6 +281,7 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
 <meta name="description" content="${esc(description)}">
 <link rel="canonical" href="${SITE}${path}">
 <link rel="icon" href="/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(description)}">
 <meta property="og:url" content="${SITE}${path}">
@@ -289,7 +290,7 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
 <meta property="og:image" content="${SITE}/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="The four shades ░▒▓█ above the words Glyph kit, in Departure Mono.">
+<meta property="og:image:alt" content="The Glyph kit logo, the four shades ░▒▓█ side by side, above the name, in Departure Mono.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(description)}">
@@ -314,7 +315,7 @@ ${current === "home" && TURNSTILE_SITE_KEY ? '<script src="https://challenges.cl
 </head>
 <body>
 <header class="top"><div class="shell">
-  <a class="brand" href="/"><img src="/icon.svg" alt="" width="22" height="22">Glyph kit</a>
+  <a class="brand" href="/"><span class="mark" aria-hidden="true">░▒▓█</span>Glyph kit</a>
   <nav class="nav" aria-label="Site"><a href="/how-to-use/"${current === "guide" ? ' aria-current="page"' : ""}>How to use</a><a href="/types/"${current === "types" ? ' aria-current="page"' : ""}>Types</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a><a href="/changelog/"${current === "changelog" ? ' aria-current="page"' : ""}>Changelog</a><a href="https://traykov.cc">traykov.cc</a><button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme">Dark</button></nav>
 </div></header>
 <main class="shell">
