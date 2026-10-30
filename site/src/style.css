@@ -170,10 +170,10 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .stats-note { font: 400 var(--px-11)/1.6 var(--pixel); color: var(--text-caption); }
 
 /* Release 0.3.0: four items, each a label, kit figures and one line. */
-.release { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-5); }
-.release__item { display: grid; align-content: start; gap: var(--space-3); min-width: 0; padding-top: var(--space-4); border-top: var(--hairline) solid var(--ink); }
-.release__item > p:last-child { max-width: 56ch; color: var(--text-soft); font-size: .92rem; }
-.release figure { display: grid; gap: var(--space-1); min-width: 0; margin: 0; }
+.highlights { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-5); }
+.highlights__item { display: grid; align-content: start; gap: var(--space-3); min-width: 0; padding-top: var(--space-4); border-top: var(--hairline) solid var(--ink); }
+.highlights__item > p:last-child { max-width: 56ch; color: var(--text-soft); font-size: .92rem; }
+.highlights figure { display: grid; gap: var(--space-1); min-width: 0; margin: 0; }
 /* A figure that fits its box: 11px while it fits, smaller only when it doesn't (a cell is 0.64 em). */
 .fit { position: relative; container-type: inline-size; display: grid; justify-items: center; min-width: 0; padding: var(--space-5); background: var(--panel); color: var(--ink); }
 /* ↺ and Copy sit in the box's corners, clear of the figure. */
@@ -340,7 +340,7 @@ footer { border-top: var(--hairline) solid var(--ink); padding-block: var(--spac
 footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); }
 
 @media (max-width: 900px) {
-  .hero__body, .note, .try, .release { grid-template-columns: minmax(0, 1fr); }
+  .hero__body, .note, .try, .highlights { grid-template-columns: minmax(0, 1fr); }
   .strip__row { grid-template-columns: minmax(0, 1fr); align-items: start; }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .study { padding-inline: var(--space-4); }

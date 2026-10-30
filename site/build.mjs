@@ -27,7 +27,7 @@ const { LIVE, live, stillGrid } = await imp("scripts/live/kinds.mjs");
 const { resolve } = await imp("scripts/registry.mjs");
 const { classify } = await imp("scripts/render/paint.mjs");
 const { ARRIVE_CSS, ARRIVE_JS, arriveLines } = await imp("scripts/render/arrive.mjs");
-const { PALETTES } = await imp("scripts/render/themes.mjs");
+const { PALETTES, palette } = await imp("scripts/render/themes.mjs");
 const { readBack } = await imp("scripts/read.mjs");
 const core = await import(new URL(`file://${join(root, "site/src/showcase-core.mjs")}`).href);
 const { parseChangelog, markdownToHtml, longDate } = await import(new URL(`file://${join(root, "site/src/changelog.mjs")}`).href);
@@ -594,11 +594,12 @@ const RELEASE = (() => {
     { name: "Focus", figure: fit(cohort), line: "The text gets a ► line, so it reads without colour. On screen the focus takes its tone, the rest recedes, and it arrives last." },
     // On the page colour its contrast is measured against, in either site theme.
     { name: "Colour types", figure: fit(roles, { palette: { ...PALETTES.paper, panel: PALETTES.paper.bg } }), line: "Two new types: palette and colour roles. A swatch is drawn in its own colour; the text keeps the value, so it still reads." },
-    { name: "Your colours", figure: `<div class="palettes">${Object.keys(PALETTES).map((name) => `<figure><figcaption class="label">${esc(name[0].toUpperCase() + name.slice(1))}</figcaption>${fit(bars, { palette: PALETTES[name] })}</figure>`).join("")}</div>`, line: "Four palettes, your own colours or your design system's tokens. Every colour you supply is checked for contrast. The builder's Colours menu has all four." },
+    // The built-in palettes, then a theme from one hue (violet, on a dark page), as in the builder.
+    { name: "Your colours", figure: `<div class="palettes">${[...Object.entries(PALETTES), ["mixed", palette({ base: "ink", mixed: 285 })]].map(([name, colors]) => `<figure><figcaption class="label">${esc(name[0].toUpperCase() + name.slice(1))}</figcaption>${fit(bars, { palette: colors })}</figure>`).join("")}</div>`, line: "Five palettes, a theme from one hue, your own colours or your design system's tokens. Problems sit opposite the data and passes differ from them in lightness, so the colours mean something together. The builder's Colours menu has them all." },
     { name: "Editing", figure: `<div class="edit"><figure><figcaption class="label">Edited by hand</figcaption>${fit(qa, { text: edited, aria: "The checklist with one row changed by hand to done; the count still says 1 of 3." })}</figure>${cmd("glyph-kit read notes.md")}<figure><figcaption class="label">Read back</figcaption>${fit(after)}</figure></div>
     <dl class="edits"><dt>check</dt><dd>Every problem at once.</dd><dt>redraw</dt><dd>Draws figures again in place.</dd><dt>read</dt><dd>Turns an edited drawing back into its spec.</dd><dt>--with-spec</dt><dd>Keeps the spec beside the figure.</dd></dl>`, line: "Change the drawing and read it back, or change the spec and redraw. Only the figure changes; the rest of the file stays as it was." }
   ];
-  return `<div class="release">${items.map((it) => `<article class="release__item"><p class="label">${esc(it.name)}</p>${it.figure}<p>${esc(it.line)}</p></article>`).join("\n")}</div>`;
+  return `<div class="highlights">${items.map((it) => `<article class="highlights__item"><p class="label">${esc(it.name)}</p>${it.figure}<p>${esc(it.line)}</p></article>`).join("\n")}</div>`;
 })();
 
 // ── Home ───────────────────────────────────────────────────────────────────────────────────────
@@ -743,6 +744,7 @@ const changelog = parseChangelog(readFileSync(join(root, "CHANGELOG.md"), "utf8"
 const [latest] = changelog.releases;
 const release = (r) => `<section class="section release" id="${r.id}" aria-labelledby="${r.id}-title">
   <header class="release__head"><h2 id="${r.id}-title"><a href="#${r.id}">${esc(r.version)}</a></h2>${r.date ? `<time class="label" datetime="${r.date}">${esc(longDate(r.date))}</time>` : ""}<a class="text-link" href="${REPO}/releases/tag/v${esc(r.version)}" target="_blank" rel="noopener">Release on GitHub</a></header>
+  ${r.version === "0.3.0" ? RELEASE : ""}
   <div class="prose">${markdownToHtml(r.body)}</div>
 </section>`;
 const changes = page({

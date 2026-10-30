@@ -2,7 +2,7 @@
 
 Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor version may change the spec format; the change is listed here with what to update.
 
-## 0.3.0 — 2026-10-29
+## 0.3.0 — 2026-10-30
 
 **Open source**
 
