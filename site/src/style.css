@@ -14,8 +14,8 @@
   --edge-strong: rgba(8, 8, 8, 0.28);
   --text-soft: rgba(8, 8, 8, 0.72);
   --text-caption: rgba(8, 8, 8, 0.68);
-  --signal-ok: #04764e;
-  --signal-fail: #b8421f;
+  --signal-ok: #2f743e;
+  --signal-fail: #651b13;
   --pixel: "Departure Mono", ui-monospace, Menlo, monospace;
   --sans: "Geist Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --px-11: 11px; --px-22: 22px; --px-33: 33px; --px-44: 44px; --px-66: 66px;

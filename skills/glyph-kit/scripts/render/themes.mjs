@@ -3,9 +3,9 @@
 //   flag problems, ok passes, panel a quiet surface behind figures.
 // "phosphor" is Synapse's palette; "gilt" is Our Saints'. "halloween" is pumpkin, bruise purple and
 // bone on near-black. In every palette problems are the darker of flag and ok, about 2 to 1 apart
-// (paper 1.7) as drawn and with weak red or weak green, so the two differ in lightness as well as hue.
+// as drawn and with weak red or weak green, so the two differ in lightness as well as hue.
 export const PALETTES = {
-  paper: { bg: "#f7f6f1", panel: "#efede6", ink: "#151513", muted: "#6b6a64", data: "#151513", frame: "#a3a199", flag: "#6e2218", ok: "#2f743e" },
+  paper: { bg: "#f7f6f1", panel: "#efede6", ink: "#151513", muted: "#6b6a64", data: "#151513", frame: "#a3a199", flag: "#651b13", ok: "#2f743e" },
   ink: { bg: "#0d0d0c", panel: "#171715", ink: "#f2f0e8", muted: "#9a988f", data: "#f2f0e8", frame: "#5c5b56", flag: "#dc7351", ok: "#89f1b5" },
   phosphor: { bg: "#0d1117", panel: "#151b23", ink: "#c9d1d9", muted: "#8b949e", data: "#58d68d", frame: "#3d4752", flag: "#d47b47", ok: "#7df4ab" },
   gilt: { bg: "#000000", panel: "#0f0d0a", ink: "#eee9dd", muted: "#918b80", data: "#c9a227", frame: "#4f483d", flag: "#cb6d65", ok: "#edc23e" },

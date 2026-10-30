@@ -13,7 +13,7 @@ Figures are coloured by role, never for decoration, in HTML, decks, reports, SVG
 | `bg`, `panel` | the page and the surface behind figures | |
 | `ramp` | four colours for `░ ▒ ▓ █` in `heatmap`, `cohort` and `calendarStrip` only | each step further from the page; the last 3 to 1 |
 
-In every palette, problems are the darker of `flag` and `ok`, about 2 to 1 apart (`paper` 1.7), and both keep 4.5 to 1 when red or green is seen weakly. So the two differ in lightness as well as hue, and a colour-blind reader can tell them apart: the darker one is the problem. A theme of your own is checked for contrast, not for this; follow it when you choose `flag` and `ok`.
+In every palette, problems are the darker of `flag` and `ok`, about 2 to 1 apart, and both keep 4.5 to 1 when red or green is seen weakly. So the two differ in lightness as well as hue, and a colour-blind reader can tell them apart: the darker one is the problem. A theme of your own is checked for contrast, not for this; follow it when you choose `flag` and `ok`.
 
 ## In the terminal
 

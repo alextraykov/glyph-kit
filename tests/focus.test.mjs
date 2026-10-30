@@ -64,7 +64,7 @@ test("the focus takes its tone's colour, and only its own block recedes", () => 
 });
 
 test("every coloured form shows the focus: SVG in the flag colour, the terminal in red", () => {
-  assert.match(renderSvg(cohort), /fill="#6e2218"/);
+  assert.match(renderSvg(cohort), /fill="#651b13"/);
   assert.match(ansi(body(cohort), { spec: cohort, env: {} }), /\x1b\[31m▒▒/);
 });
 

@@ -7,7 +7,7 @@ import { seenWith } from "../tools/palette-figures.mjs";
 
 const VIEWS = { "as drawn": (c) => c, "weak red": (c) => seenWith(c, "weak red"), "weak green": (c) => seenWith(c, "weak green") };
 // On a light page both colours must be dark enough for words, so paper has less room.
-const APART = { paper: 1.7 };
+const APART = { paper: 1.85 };
 
 for (const [name, p] of Object.entries(PALETTES)) {
   test(`${name}: problems are darker than passes, and apart in lightness, in every view`, () => {
