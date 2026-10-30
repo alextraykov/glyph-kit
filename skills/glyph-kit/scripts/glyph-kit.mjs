@@ -1,19 +1,19 @@
 #!/usr/bin/env node
 // glyph-kit command line.
 //
-//   node glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map design-system.map.json] [--theme name|theme.json] [--color | --no-color]
+//   node glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map design-system.map.json] [--theme name|mixed:#hex|theme.json] [--color | --no-color]
 //                         (the file may hold one spec or a list of them)
 //   node glyph-kit.mjs deck <deck.json | a.json b.json …> [--title "Name"] [--map …]   (HTML to stdout)
 //   node glyph-kit.mjs types                                                  (lists every type by area; `kinds` works too)
 //   node glyph-kit.mjs guide <kind | deck | report | spec>                    (one kind's example spec and notes)
-//   node glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme name|theme.json]   (a moving diagram)
+//   node glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme name|mixed:#hex|theme.json]   (a moving diagram)
 //
 //   node glyph-kit.mjs say "An email field. A Send button." [--to json]       (plain words to a screen spec)
-//   node glyph-kit.mjs check <spec.json | file.md>                           (every problem at once; exits 1 on a problem)
+//   node glyph-kit.mjs check <spec.json | deck.json | theme.json | file.md> [--theme …]   (every problem at once; exits 1 on a problem)
 //   node glyph-kit.mjs redraw <file.md> [--check]                             (draw figures again from the specs kept beside them)
 //   node glyph-kit.mjs read <file.md> [--check]                               (read edited drawings back into their specs)
 //
-//   node glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme name|theme.json] [--map map.json]
+//   node glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme name|mixed:#hex|theme.json] [--map map.json]
 //                         [--mdx component]   (the file may be a spec, a list of specs, a deck or a report)
 //
 // A spec is { "kind", "title"?, "intent"?, "source"?, "data", "options"? }. See reference/spec.md.
@@ -26,6 +26,7 @@ import { basename, dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadData } from "./data.mjs";
 import { cutLog } from "./text.mjs";
+import { themeLog } from "./render/themes.mjs";
 
 const args = process.argv.slice(2);
 const flag = (name) => {
@@ -53,7 +54,7 @@ try {
   const to = flag("--to") ?? "text";
   const out = flag("--out");
   const themeArg = flag("--theme");
-  // A palette name, or a theme file: { base?, <role>: "#hex", ramp? } (reference/colour.md).
+  // A palette name, "mixed:#7a5cff" or "mixed:#7a5cff:dark", or a theme file: { base?, mixed?, <role>: "#hex", ramp? } (reference/colour.md).
   const theme = themeArg?.endsWith(".json") ? read(themeArg) : themeArg;
   const mdxMode = flag("--mdx") ?? "static";
   const mapFile = flag("--map");
@@ -119,7 +120,7 @@ try {
     // Every problem at once: the data, the drawing and the text. Exits 1 when there is a problem.
     const { checkDoc, checkMarkdown, report } = await import("./check.mjs");
     const md = /\.(md|markdown)$/i.test(files[0]);
-    const problems = md ? checkMarkdown(readFileSync(files[0], "utf8"), files[0]) : checkDoc(read(files[0]));
+    const problems = md ? checkMarkdown(readFileSync(files[0], "utf8"), files[0]) : checkDoc(read(files[0]), { theme });
     if (problems.length) console.log(report(problems));
     else console.log("No problems.");
     process.exitCode = problems.some((p) => p.level === "error") ? 1 : 0;
@@ -197,11 +198,13 @@ try {
     const deck = loaded.length === 1 && !Array.isArray(loaded[0]) && loaded[0].slides ? loaded[0] : loaded.flat();
     process.stdout.write(renderDeck(deck, { title, map, theme }));
   } else {
-    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt|theme.json] [--map map.json]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json] [--theme name|theme.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme paper|ink|phosphor|gilt|theme.json]\n  glyph-kit.mjs say \"An email field. A Send button.\" [--to json]\n  glyph-kit.mjs check <spec.json | file.md>\n  glyph-kit.mjs redraw <file.md> [--check]\n  glyph-kit.mjs read <file.md> [--check]\n  glyph-kit.mjs kinds\n  glyph-kit.mjs guide <kind | deck | report | spec>");
+    console.error("Usage:\n  glyph-kit.mjs render <spec.json | -> [--to text|markdown|html] [--compact] [--map map.json] [--theme name|mixed:#hex|theme.json]\n  glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme name|mixed:#hex|theme.json] [--map map.json]\n  glyph-kit.mjs deck <deck.json | spec.json…> [--title name] [--map map.json] [--theme name|mixed:#hex|theme.json]\n  glyph-kit.mjs live <spec.json> [--to html|text|markdown] [--theme name|mixed:#hex|theme.json]\n  glyph-kit.mjs say \"An email field. A Send button.\" [--to json]\n  glyph-kit.mjs check <spec.json | deck.json | theme.json | file.md> [--theme …]\n  glyph-kit.mjs redraw <file.md> [--check]\n  glyph-kit.mjs read <file.md> [--check]\n  glyph-kit.mjs kinds\n  glyph-kit.mjs guide <kind | deck | report | spec>");
     process.exit(1);
   }
   if (cutLog.size)
     console.error(`Cut to fit, shown with "…" in the figure. Shorten these to the cells given:\n${[...cutLog].map(([text, cells]) => `  ${cells} cells: ${JSON.stringify(text)}`).join("\n")}`);
+  // How the theme's colours relate: notes, not refusals (check lists them itself).
+  if (themeLog.size && command !== "check") console.error(`Notes on the theme's colours:\n${[...themeLog].map((w) => `  ${w}`).join("\n")}`);
 } catch (error) {
   console.error(error.message);
   process.exit(1);

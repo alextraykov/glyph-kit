@@ -226,17 +226,19 @@ function figureText({ spec, mode }) {
 /** A standalone SVG, laid out like the kit's own: title, intent, the figure on a panel, the source. */
 // The palette the figure is shown and exported in: the site's own colours, or one of the kit's.
 const PALETTE_KEY = "glyph-kit-palette";
-const PALETTE_NAMES = { site: "This site", paper: "Paper", ink: "Ink", phosphor: "Phosphor", gilt: "Gilt" };
+const PALETTE_NAMES = { site: "This site", paper: "Paper", ink: "Ink", phosphor: "Phosphor", gilt: "Gilt", mixed: "Mixed" };
+// "Mixed" is every role from one hue, on a dark page (reference/colour.md).
+const paletteColors = (name) => PALETTES[name] ?? (name === "mixed" ? palette({ base: "ink", mixed: 285 }) : null);
 let currentPalette = (() => {
   try {
     const saved = localStorage.getItem(PALETTE_KEY);
-    return PALETTES[saved] ? saved : "site";
+    return paletteColors(saved) ? saved : "site";
   } catch {
     return "site";
   }
 })();
 function figureImage(spec, text) {
-  const c = palette(currentPalette === "site" ? "paper" : currentPalette);
+  const c = paletteColors(currentPalette) ?? PALETTES.paper;
   const padX = SPACING.figurePadX;
   const padY = SPACING.figurePadY;
   const titleH = spec.title ? 48 : 0;
@@ -777,7 +779,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
   // Four cells in the palette's own colours, on its page: data, problems, passes, lines. The site's
   // own palette uses the site's tokens, so every name in the menu starts at the same place.
   const swatchFor = (name) => {
-    const c = PALETTES[name];
+    const c = paletteColors(name);
     const swatch = el("span", "palette__swatch");
     swatch.setAttribute("aria-hidden", "true");
     swatch.style.background = c ? c.bg : "var(--paper)";
@@ -790,7 +792,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
   };
   const applyPalette = (name) => {
     currentPalette = name;
-    const c = PALETTES[name];
+    const c = paletteColors(name);
     const vars = c ? { "--paper": c.bg, "--panel": c.panel, "--ink": c.ink, "--text-caption": c.frame, "--signal-fail": c.flag, "--signal-ok": c.ok, "--palette-data": c.data } : {};
     for (const prop of ["--paper", "--panel", "--ink", "--text-caption", "--signal-fail", "--signal-ok", "--palette-data"]) {
       if (vars[prop]) stage.style.setProperty(prop, vars[prop]);

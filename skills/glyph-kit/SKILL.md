@@ -70,7 +70,7 @@ Every command is `node <skill>/scripts/glyph-kit.mjs <command>`.
 | MDX, SVG, PNG, PDF of anything | `export <file> --to md\|mdx\|html\|svg\|png\|pdf` | `reference/export.md` |
 | Every problem with a spec at once | `check spec.json` or `check notes.md` | nothing |
 | A figure that stays editable in Markdown | `render spec.json --to markdown --with-spec`, then `redraw notes.md` after a spec change or `read notes.md` after a drawing edit | `reference/editing.md` |
-| Your colours, or a palette | `--theme ink` or `--theme theme.json`; roles from your tokens with `--map` | `reference/colour.md` |
+| Your colours, or a palette | `--theme ink`, `--theme theme.json` or `--theme mixed:#7a5cff`; roles from your tokens with `--map` | `reference/colour.md` |
 | Moving diagram: a process over time | `live spec.json --to html` (or `--to markdown` for its still) | `reference/live.md` |
 | Several layouts as one document | `export layouts.json --to html\|pdf`, a layout to a page | `reference/areas/layouts.md` |
 

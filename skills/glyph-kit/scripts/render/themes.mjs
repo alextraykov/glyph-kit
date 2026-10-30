@@ -2,6 +2,8 @@
 //   bg page, ink text, muted secondary text, data the measured thing, frame structure,
 //   flag problems, ok passes, panel a quiet surface behind figures.
 // "phosphor" is Synapse's palette; "gilt" is Our Saints'.
+import { distance, hexOf, hueGap, maxChroma, oklch } from "./oklch.mjs";
+
 export const PALETTES = {
   paper: { bg: "#f7f6f1", panel: "#efede6", ink: "#151513", muted: "#6b6a64", data: "#151513", frame: "#a3a199", flag: "#b8391a", ok: "#0a7a50" },
   ink: { bg: "#0d0d0c", panel: "#171715", ink: "#f2f0e8", muted: "#9a988f", data: "#f2f0e8", frame: "#5c5b56", flag: "#ef7c56", ok: "#4cc58f" },
@@ -76,21 +78,209 @@ function check(colors, ramp, roles) {
   }
 }
 
+// ── How a theme's colours relate ────────────────────────────────────────────────────────────────
+// Four rules, measured in OKLCH (reference/colour.md). They warn rather than refuse: a theme that
+// breaks one still reads, because every role also has a word or a glyph.
+const HUED = 0.04; // chroma under this has no hue worth matching
+const TINTED = 0.01; // a neutral under this is grey, and fits any theme
+const RULE = { rampHue: 25, rampEnd: 0.05, opposite: 150, apart: 0.15, okHue: 30, neutralHue: 30, neutralChroma: 0.06 };
+const NEUTRALS = ["bg", "panel", "frame", "muted"];
+const NAMES = { bg: "page", panel: "panel", ink: "ink", muted: "muted", frame: "frame", data: "data" };
+const RED = 27, GREEN = 145;
+
+const and = (items) => (items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`);
+const deg = (d) => `${Math.round(d)}°`;
+const need = (role) => NEEDS[role]?.[0] ?? 0;
+const article = (role) => (/^[aeiou]/.test(role) ? "An" : "A");
+
+/** OKLCH lightness, chroma and hue as hex, stepped away from the page until it reaches `min` on every surface. */
+function fit(L, C, H, min, surfaces, dark) {
+  for (let l = L; l >= 0 && l <= 1; l += dark ? 0.005 : -0.005) {
+    const hex = hexOf(l, C, H);
+    if (surfaces.every((s) => contrastRatio(hex, s) >= min)) return hex;
+  }
+  return dark ? "#ffffff" : "#000000";
+}
+
+/** The hue in the arc from `from`, `width` degrees round, nearest to `target`. */
+function nearestIn(target, from, width) {
+  const d = (((target - from) % 360) + 360) % 360;
+  if (d <= width) return target;
+  return (d - width < 360 - d ? from + width : from) % 360;
+}
+
 /**
- * A theme ready to draw with. theme: a palette name, or { base?, <role>: "#hex", ramp?: [4 hex] }.
+ * Where a theme's colours break the four rules: [message], each naming the pair and a colour that fits.
+ *   1. Data sets the hue: the ramp is the data hue getting stronger, and its last step is the data colour.
+ *   2. Problems sit opposite data (150° to 210° away) and are the most colourful role.
+ *   3. Passes are 0.15 or more apart from problems in lightness, apart in hue, and quieter.
+ *   4. The page, panel, frame and muted colours are the data hue at low chroma.
+ * The hue parts skip a grey data colour, which has no hue to follow.
+ */
+export function relations(colors, ramp = null) {
+  const o = Object.fromEntries(ROLES.map((r) => [r, oklch(colors[r])]));
+  const surfaces = [colors.bg, colors.panel];
+  const dark = luminance(colors.bg) < 0.2;
+  const hued = o.data.c >= HUED;
+  const H = o.data.h;
+  const out = [];
+
+  // 1. The ramp follows the data hue and ends on the data colour.
+  if (ramp && hued) {
+    const off = ramp.map((hex, i) => ({ hex, i, ...oklch(hex) })).filter((s) => s.c >= HUED && hueGap(s.h, H) > RULE.rampHue);
+    if (off.length) {
+      const one = off.length === 1;
+      out.push(`Ramp step${one ? "" : "s"} ${and(off.map((s) => s.i + 1))} (${off.map((s) => s.hex).join(", ")}) ${one ? "is" : "are"} ${and(off.map((s) => deg(hueGap(s.h, H))))} off the data hue, so the grid reads as more than one colour. ${and(off.map((s) => hexOf(s.l, s.c, H)))} ${one ? "fits" : "fit"}.`);
+    }
+  }
+  if (ramp && distance(ramp[3], colors.data) > RULE.rampEnd)
+    out.push(`The ramp's strongest step ${ramp[3]} isn't the data colour ${colors.data}, so █ in a grid and █ in a bar mean different things. ${colors.data} fits.`);
+
+  // 2. Problems sit opposite data, and nothing else is as colourful.
+  if (hued && o.flag.c >= HUED && hueGap(o.flag.h, H) < RULE.opposite) {
+    const side = (((o.flag.h - H) % 360) + 360) % 360 < 180 ? H + RULE.opposite : H + 360 - RULE.opposite;
+    const loudest = Math.max(...ROLES.filter((r) => r !== "flag").map((r) => o[r].c));
+    out.push(`Problems (${colors.flag}) are ${deg(hueGap(o.flag.h, H))} from data (${colors.data}) round the colour wheel, so they don't stand apart from it. Opposite data is 150° to 210° away. A flag of ${fit(o.flag.l, Math.max(o.flag.c, loudest + 0.02), side % 360, need("flag"), surfaces, dark)} fits.`);
+  }
+  for (const role of ["data", "ink", "muted", "frame", "bg", "panel"]) {
+    if (o[role].c < o.flag.c) continue;
+    const name = role === "data" ? "Data" : `The ${NAMES[role]} colour`;
+    out.push(`${name} (${colors[role]}) is as colourful as problems (${colors.flag}) or more, so it draws the eye first. Only problems may out-shout data. ${article(role)} ${role} of ${fit(o[role].l, o.flag.c * 0.8, o[role].h, need(role), surfaces, dark)} fits.`);
+  }
+  // Only problems may out-shout a coloured data: passes, words and neutrals stay at or under it.
+  if (hued)
+    for (const role of ["ok", "ink", "muted", "frame", "bg", "panel"]) {
+      if (o[role].c <= o.data.c + 0.005 || o[role].c >= o.flag.c) continue;
+      const name = role === "ok" ? "Passes" : `The ${NAMES[role]} colour`;
+      out.push(`${name} (${colors[role]}) ${role === "ok" ? "are" : "is"} more colourful than data (${colors.data}), so ${role === "ok" ? "they draw" : "it draws"} the eye before it. Only problems may out-shout data. ${article(role)} ${role} of ${fit(o[role].l, o.data.c, o[role].h, need(role), surfaces, dark)} fits.`);
+    }
+  if (ramp && o.data.c < o.flag.c) {
+    const loud = ramp.map((hex, i) => ({ hex, i, ...oklch(hex) })).filter((s) => s.c >= o.flag.c);
+    if (loud.length) {
+      const top = loud.at(-1);
+      out.push(`Ramp step ${top.i + 1} (${top.hex}) is as colourful as problems (${colors.flag}) or more, so the grid draws the eye before they do. ${hexOf(top.l, o.flag.c * 0.8, top.h)} fits.`);
+    }
+  }
+
+  // 3. Passes read apart from problems without colour, and are quieter. One ok fixes all three.
+  const near = Math.abs(o.ok.l - o.flag.l) < RULE.apart;
+  const sameHue = o.ok.c >= HUED && o.flag.c >= HUED && hueGap(o.ok.h, o.flag.h) < RULE.okHue;
+  const loudOk = o.ok.c >= o.flag.c;
+  if (near || sameHue || loudOk) {
+    const h = sameHue ? (o.flag.h + ((((o.ok.h - o.flag.h) % 360) + 360) % 360 < 180 ? 60 : 300)) % 360 : o.ok.h;
+    const c = Math.min(o.ok.c, o.flag.c * 0.75);
+    const gap = RULE.apart + 0.03;
+    // Problems are the darker of the two (docs/palette-lightness.md): a lighter pass, else a darker
+    // problem, else the other way round. Moving problems can't fix a pass's hue or loudness.
+    const tries = near
+      ? [["ok", hexOf(o.flag.l + gap, c, h)], ...(sameHue || loudOk ? [] : [["flag", hexOf(o.ok.l - gap, o.flag.c, o.flag.h)]]), ["ok", hexOf(o.flag.l - gap, c, h)]]
+      : [["ok", fit(o.ok.l, c, h, need("ok"), surfaces, dark)]];
+    const fits = ([role, hex]) => oklch(hex).l <= 0.92 && surfaces.every((s) => contrastRatio(hex, s) >= need(role)) && Math.abs(oklch(hex).l - (role === "ok" ? o.flag.l : o.ok.l)) >= RULE.apart;
+    const [role, hex] = tries.find(fits) ?? tries[0];
+    const fix = `${article(role)} ${role} of ${hex} fits.`;
+    const pair = `Problems (${colors.flag}) and passes (${colors.ok})`;
+    if (near) out.push(`${pair} are ${Math.abs(o.ok.l - o.flag.l).toFixed(2)} apart in lightness, so they read the same without colour. ${fix}`);
+    if (sameHue) out.push(`${pair} are ${deg(hueGap(o.ok.h, o.flag.h))} apart in hue, so colour doesn't tell them apart. ${fix}`);
+    if (loudOk) out.push(`Passes (${colors.ok}) are as colourful as problems (${colors.flag}) or more, so a pass catches the eye like a problem. ${fix}`);
+  }
+
+  // 4. The neutrals are the data hue at low chroma.
+  const stray = NEUTRALS.map((role) => {
+    const n = o[role];
+    const why = [n.c > RULE.neutralChroma && "too colourful", hued && n.c >= TINTED && hueGap(n.h, H) > RULE.neutralHue && `${deg(hueGap(n.h, H))} off`].filter(Boolean);
+    return why.length && { role, why, fix: fit(n.l, Math.min(n.c, 0.03), hued ? H : n.h, need(role), surfaces, dark) };
+  }).filter(Boolean);
+  if (stray.length) {
+    const one = stray.length === 1;
+    out.push(`The ${and(stray.map((s) => NAMES[s.role]))} colour${one ? " isn't" : "s aren't"} the data hue at low chroma (${stray.map((s) => `${colors[s.role]} is ${and(s.why)}`).join(", ")}), so ${one ? "it looks" : "they look"} borrowed from another theme. ${and(stray.map((s) => s.fix))} ${one ? "fits" : "fit"}.`);
+  }
+  return out;
+}
+
+/**
+ * Every role from one data hue, on a light or dark page, so the four rules and every contrast check
+ * hold: neutrals are the hue barely tinted, problems take the opposite hue nearest red and the most
+ * chroma the screen allows, passes the hue nearest green that stays clear of both, lighter and quieter
+ * than problems, and the ramp climbs to the data colour in even steps of contrast.
+ * Returns { colors, ramp }.
+ */
+export function mixedTheme(hue, dark) {
+  const H = ((hue % 360) + 360) % 360;
+  const tone = dark ? { bg: [0.17, 0.035], panel: [0.215, 0.04], ink: [0.95, 0.015] } : { bg: [0.975, 0.01], panel: [0.945, 0.018], ink: [0.22, 0.02] };
+  const c = Object.fromEntries(Object.entries(tone).map(([role, [L, C]]) => [role, hexOf(L, C, H)]));
+  const surfaces = [c.bg, c.panel];
+  const reach = (L, C, h, min) => fit(L, C, h, min, surfaces, dark);
+  const near = dark ? 0.3 : 0.9;
+  c.muted = reach(near, 0.035, H, 4.8);
+  c.frame = reach(near, 0.04, H, 1.7);
+  // 5° inside the 150°–210° arc, so rounding to hex can't land a problem on its edge.
+  const flagHue = nearestIn(RED, H + RULE.opposite + 5, 350 - 2 * RULE.opposite);
+  let okHue = GREEN;
+  for (let d = 0; d <= 180; d++) {
+    const hit = [GREEN - d, GREEN + d].map((h) => (h + 360) % 360).find((h) => hueGap(h, flagHue) >= 60 && hueGap(h, H) >= 30);
+    if (hit != null) {
+      okHue = hit;
+      break;
+    }
+  }
+  const gap = RULE.apart + 0.03;
+  let flagL, okL;
+  if (dark) {
+    // As dark as words allow, or lighter if that buys chroma, leaving room for a pass that still
+    // reads as a colour rather than as the text.
+    const low = oklch(reach(0.3, 0.4, flagHue, 4.8)).l;
+    flagL = low;
+    for (let l = low; l <= 0.9 - gap; l += 0.01) if (maxChroma(l, flagHue) > maxChroma(flagL, flagHue) + 0.005) flagL = l;
+    okL = flagL + gap;
+  } else {
+    // Passes as light as words allow; problems darker by the gap, or darker still if that buys chroma.
+    okL = oklch(reach(near, 0.08, okHue, 4.8)).l;
+    flagL = okL - gap;
+    for (let l = flagL; l >= 0.2; l -= 0.01) if (maxChroma(l, flagHue) > maxChroma(flagL, flagHue) + 0.005) flagL = l;
+  }
+  const flagC = maxChroma(flagL, flagHue);
+  c.flag = dark ? reach(flagL, flagC, flagHue, 4.8) : hexOf(flagL, flagC, flagHue);
+  const f = oklch(c.flag);
+  c.data = reach(near, f.c * 0.9, H, 4.5);
+  const d = oklch(c.data);
+  const okC = Math.min(maxChroma(okL, okHue), f.c * 0.7, d.c);
+  c.ok = reach(okL, okC, okHue, 4.8);
+  if (Math.abs(oklch(c.ok).l - f.l) < RULE.apart) c.ok = hexOf(f.l + (dark ? gap : -gap), okC, okHue);
+  const strongest = contrastRatio(c.data, c.bg);
+  const ramp = [1, 2, 3].map((i) => fit(tone.bg[0], d.c * (0.3 + 0.175 * i), H, strongest ** (i / 4), [c.bg], dark)).concat(c.data);
+  return { colors: c, ramp };
+}
+
+/** The hue of a mixed theme's colour: a hex colour or degrees. */
+function mixedHue(value) {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (!HEX.test(String(value))) throw new Error(`A mixed theme starts from one colour, like "#7a5cff", or a hue in degrees, like 290, not ${value}.`);
+  const { c, h } = oklch(String(value));
+  if (c < HUED) throw new Error(`${value} is grey, so it has no hue to build a mixed theme from. Give a colour, or a hue in degrees like 290.`);
+  return h;
+}
+
+/** Theme notes from the colours given since the log was last cleared, so the command line can list them. */
+export const themeLog = new Set();
+
+/**
+ * A theme ready to draw with. theme: a palette name, or { base?, mixed?, <role>: "#hex", ramp?: [4 hex] }.
+ * mixed: one colour or hue that every role is derived from (mixedTheme); base then only says light or dark.
  * map: a design-system map whose `roles` block points roles at its tokens; those colours are written
  * as the token's var() in CSS (so the user's own CSS wins) and as its hex fallback everywhere else.
  * Every supplied colour is checked for contrast; a failure names the pair and a colour that passes.
- * Returns { base, colors (hex), css (CSS values), ramp (hex or null), dark }.
+ * How the colours relate is checked too (relations), as warnings, which also go to themeLog.
+ * Returns { base, colors (hex), css (CSS values), ramp (hex or null), dark, warnings }.
  */
 export function resolveTheme(theme, { map } = {}) {
-  const spec = theme == null ? {} : typeof theme === "string" ? { base: theme } : theme;
+  const spec = theme == null ? {} : typeof theme === "string" ? fromName(theme) : theme;
   if (typeof spec !== "object" || Array.isArray(spec)) throw new Error("A theme is a palette name or an object of role colours.");
   const base = spec.base ?? "paper";
   if (!PALETTES[base]) throw new Error(`There is no theme called ${base}. Use ${Object.keys(PALETTES).join(", ")}, or a theme file.`);
-  const colors = { ...PALETTES[base] };
+  const mixed = spec.mixed != null ? mixedTheme(mixedHue(spec.mixed), luminance(PALETTES[base].bg) < 0.2) : null;
+  const colors = { ...PALETTES[base], ...mixed?.colors };
   const css = { ...colors };
-  const roles = new Set();
+  const roles = new Set(mixed ? ROLES : []);
   for (const [role, token] of Object.entries(map?.roles ?? {})) {
     if (!ROLES.includes(role)) throw new Error(`The map's roles block names ${role}, which isn't a role. Roles: ${ROLES.join(", ")}.`);
     const value = map.tokens?.[token];
@@ -102,15 +292,25 @@ export function resolveTheme(theme, { map } = {}) {
     roles.add(role);
   }
   for (const [key, value] of Object.entries(spec)) {
-    if (key === "base" || key === "ramp") continue;
+    if (key === "base" || key === "ramp" || key === "mixed") continue;
     if (!ROLES.includes(key)) throw new Error(`A theme has no role called ${key}. Roles: ${ROLES.join(", ")}, and ramp.`);
     if (!HEX.test(String(value))) throw new Error(`Write the ${key} colour as a hex value like #1f4fd6, not ${value}.`);
     colors[key] = css[key] = String(value).toLowerCase();
     roles.add(key);
   }
-  const ramp = spec.ramp ? spec.ramp.map?.((c) => String(c).toLowerCase()) ?? spec.ramp : null;
+  const ramp = spec.ramp ? spec.ramp.map?.((c) => String(c).toLowerCase()) ?? spec.ramp : mixed?.ramp ?? null;
   if (roles.size || ramp) check(colors, ramp, roles);
-  return { base, colors, css, ramp, dark: luminance(colors.bg) < 0.2 };
+  // The rules look at colours you chose; the built-in palettes are measured in reference/colour.md.
+  const warnings = roles.size || ramp ? relations(colors, ramp) : [];
+  for (const w of warnings) themeLog.add(w);
+  return { base, colors, css, ramp, dark: luminance(colors.bg) < 0.2, warnings };
+}
+
+/** A theme by name: a palette, or "mixed:#7a5cff" (on paper) and "mixed:#7a5cff:dark" (on ink). */
+function fromName(name) {
+  const m = name.match(/^mixed:([^:]+)(?::(dark|light))?$/);
+  if (!m) return { base: name };
+  return { base: m[2] === "dark" ? "ink" : "paper", mixed: /^\d+(\.\d+)?$/.test(m[1]) ? Number(m[1]) : m[1] };
 }
 
 /** A palette's hex colours, by name or theme object. Defaults to paper. */

@@ -7,6 +7,20 @@ import { lintBlock } from "./lint.mjs";
 import { cutLog } from "./text.mjs";
 import { figures, specOf } from "./markdown.mjs";
 import { compact as toAscii } from "./tokens.mjs";
+import { ROLES, resolveTheme } from "./render/themes.mjs";
+
+/** Problems with a theme: a contrast refusal is a problem; a rule of how its colours relate is a note. */
+export function checkTheme(theme) {
+  try {
+    return resolveTheme(theme).warnings.map((message) => ({ level: "warn", message }));
+  } catch (e) {
+    return [{ level: "error", message: e.message }];
+  }
+}
+
+const THEME_KEYS = new Set([...ROLES, "base", "mixed", "ramp"]);
+/** A file that holds only a theme: { base?, mixed?, <role>?, ramp? }. */
+const isTheme = (doc) => doc && typeof doc === "object" && !Array.isArray(doc) && !doc.kind && Object.keys(doc).length > 0 && Object.keys(doc).every((k) => THEME_KEYS.has(k));
 
 /** Problems with one spec: [{ level: "error" | "warn", message }]. `lint: false` skips the figure's text. */
 export function checkSpec(spec, { lint = true } = {}) {
@@ -29,6 +43,7 @@ export function checkSpec(spec, { lint = true } = {}) {
     checked = [e.message];
   }
   checked.forEach(error);
+  if (spec.theme != null) problems.push(...checkTheme(spec.theme).map((p) => ({ ...p, message: `Its theme: ${p.message}` })));
   if (checked.length) return problems;
   cutLog.clear();
   let text;
@@ -43,13 +58,21 @@ export function checkSpec(spec, { lint = true } = {}) {
   return problems;
 }
 
-/** Problems with a spec or a list of specs, each named by its title or its place in the list. */
-export function checkDoc(doc) {
+/** Problems with a spec or a list of specs, each named by its title or its place in the list; with a
+ *  deck's or report's figures and theme; or with a theme file on its own. `theme` checks one more. */
+export function checkDoc(doc, { theme } = {}) {
+  const extra = theme != null ? checkTheme(theme).map((p) => ({ ...p, where: "The theme" })) : [];
+  if (isTheme(doc)) return [...checkTheme(doc).map((p) => ({ ...p, where: "The theme" })), ...extra];
+  if (doc?.slides || doc?.sections) {
+    const figures = doc.slides ? doc.slides.filter((s) => s?.kind) : doc.sections.flatMap((s) => s.figures ?? []);
+    const own = doc.theme != null ? checkTheme(doc.theme).map((p) => ({ ...p, where: `The ${doc.slides ? "deck" : "report"}'s theme` })) : [];
+    return [...own, ...extra, ...(figures.length ? checkDoc(figures) : [])];
+  }
   const specs = [doc].flat();
   return specs.flatMap((spec, i) => {
     const where = spec?.title ? `"${spec.title}"` : specs.length > 1 ? `Spec ${i + 1}` : "The spec";
     return checkSpec(spec).map((p) => ({ ...p, where }));
-  });
+  }).concat(extra);
 }
 
 /** Problems with every figure in a Markdown file that keeps its spec, and with every text block. */

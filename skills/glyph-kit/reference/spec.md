@@ -62,7 +62,7 @@ Or import the renderers (`render/text.mjs`, `render/html.mjs`, `render/deck.mjs`
 
 ## Presenting: decks
 
-A deck file is `{ "title", "subtitle"?, "byline"?, "theme"?: "paper" | "ink" | "phosphor" | "gilt" | { base, <role>, ramp }, "slides": [...] }`. A slide is any spec, or one of `{ "type": "title", "title", "subtitle"?, "byline"? }`, `{ "type": "section", "kicker"?, "title" }` and `{ "type": "statement", "kicker"?, "text" }`. Any spec can carry a `present` block:
+A deck file is `{ "title", "subtitle"?, "byline"?, "theme"?: "paper" | "ink" | "phosphor" | "gilt" | { base, <role>, ramp } | { base, mixed }, "slides": [...] }`. A slide is any spec, or one of `{ "type": "title", "title", "subtitle"?, "byline"? }`, `{ "type": "section", "kicker"?, "title" }` and `{ "type": "statement", "kicker"?, "text" }`. Any spec can carry a `present` block:
 
 ```json
 "present": {
