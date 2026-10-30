@@ -1,0 +1,99 @@
+{
+  "kind": "compare",
+  "title": "Problems against passes, in lightness",
+  "intent": "Empty is 1 to 1, the two the same lightness; full is 3 to 1. The goal is about 2 to 1 in every view.",
+  "source": "Kit palettes, now and proposed; weak views simulated (Machado 2009)",
+  "data": [
+    {
+      "label": "paper, as drawn",
+      "a": 0.037699605691580595,
+      "aText": "1.1 to 1",
+      "b": 0.4681323672432206,
+      "bText": "1.9 to 1"
+    },
+    {
+      "label": "paper, weak red",
+      "a": 0.26378600540287134,
+      "aText": "1.5 to 1",
+      "b": 0.6897077448824689,
+      "bText": "2.4 to 1"
+    },
+    {
+      "label": "paper, weak green",
+      "a": 0.06899030784852345,
+      "aText": "1.1 to 1",
+      "b": 0.35023661201785805,
+      "bText": "1.7 to 1"
+    },
+    {
+      "label": "ink, as drawn",
+      "a": 0.13026544256240835,
+      "aText": "1.3 to 1",
+      "b": 0.6575807996326868,
+      "bText": "2.3 to 1"
+    },
+    {
+      "label": "ink, weak red",
+      "a": 0.3282818961675392,
+      "aText": "1.7 to 1",
+      "b": 0.9929245519750753,
+      "bText": "3.0 to 1"
+    },
+    {
+      "label": "ink, weak green",
+      "a": 0.032765555696031234,
+      "aText": "1.1 to 1",
+      "b": 0.5016114604213529,
+      "bText": "2.0 to 1"
+    },
+    {
+      "label": "phosphor, as drawn",
+      "a": 0.18815120159143028,
+      "aText": "1.4 to 1",
+      "b": 0.6452473010905324,
+      "bText": "2.3 to 1"
+    },
+    {
+      "label": "phosphor, weak red",
+      "a": 0.38745014373011777,
+      "aText": "1.8 to 1",
+      "b": 0.9323784164527167,
+      "bText": "2.9 to 1"
+    },
+    {
+      "label": "phosphor, weak green",
+      "a": 0.08722616802019434,
+      "aText": "1.2 to 1",
+      "b": 0.5007675097870317,
+      "bText": "2.0 to 1"
+    },
+    {
+      "label": "gilt, as drawn",
+      "a": 0.030886086891214415,
+      "aText": "1.1 to 1",
+      "b": 0.5471564557057214,
+      "bText": "2.1 to 1"
+    },
+    {
+      "label": "gilt, weak red",
+      "a": 0.013156088313118985,
+      "aText": "1.0 to 1",
+      "b": 0.641689416883163,
+      "bText": "2.3 to 1"
+    },
+    {
+      "label": "gilt, weak green",
+      "a": 0.042517120226684635,
+      "aText": "1.1 to 1",
+      "b": 0.5017691804005258,
+      "bText": "2.0 to 1"
+    }
+  ],
+  "options": {
+    "headers": [
+      "PALETTE, VIEW",
+      "NOW",
+      "PROPOSED"
+    ]
+  }
+}
