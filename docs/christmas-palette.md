@@ -94,4 +94,4 @@ The same steps `halloween` took:
 - **Gold data or cranberry data?** Gold keeps red for problems only. Cranberry bars would look more like Christmas, but then a red bar and a red problem mean different things.
 - **Dark only, or a light version too?** Every built-in palette is one page colour. A light Christmas (snow page, pine text) would be the first palette with two, and the theme format has no pairing for that yet.
 - **How long it stays.** Seasonal palettes could ship and stay, like `halloween`, or the site's Colours menu could show them only near the date. Specs that name `christmas` must keep working either way.
-- **Should the kit check colour-blind contrast for everyone's themes?** Only the seasonal palettes are tested in the weak views today. `paper`'s problem and pass colours are 1.1 to 1 apart in lightness, so they differ by hue alone.
+- **Should the kit check colour-blind contrast for everyone's themes?** Every built-in palette is tested in the weak views (`tests/problems-and-passes.test.mjs`), and these values pass that test: problems darker, 2 to 1 or more from passes. A user's own theme is not checked.

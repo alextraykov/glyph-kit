@@ -1,7 +1,7 @@
 // Writes two figures for each seasonal palette into docs/palettes/: <name>.json, a palette figure of
 // every colour faintest to strongest on its panel, and <name>-colour-blind.json, a contrast figure of
 // the problem and good colours on the panel as drawn and as seen with weak red or weak green cones.
-// Also three for the lightness proposal: lightness-gap.json and lightness-words-{now,proposed}.json.
+// Also three for the problem and pass change in 0.3.0: lightness-gap.json and lightness-words-{before,after}.json.
 // The views use Machado, Oliveira and Fernandes (2009) at full strength, applied in linear RGB.
 // Run after changing a palette: node tools/palette-figures.mjs
 import { writeFileSync } from "node:fs";
@@ -28,12 +28,12 @@ export const CHRISTMAS = {
   ramp: ["#1f3b2c", "#33704a", "#94a940", "#f6d466"]
 };
 
-// Proposed problem and good colours for the other palettes (docs/palette-lightness.md), not shipped.
-export const LIGHTNESS = {
-  paper: { flag: "#6e2218", ok: "#2f743e" },
-  ink: { flag: "#dc7351", ok: "#89f1b5" },
-  phosphor: { flag: "#d47b47", ok: "#7df4ab" },
-  gilt: { flag: "#cb6d65", ok: "#edc23e" }
+// Problem and good colours before 0.3.0 made them differ in lightness (docs/palette-lightness.md).
+export const BEFORE = {
+  paper: { flag: "#b8391a", ok: "#0a7a50" },
+  ink: { flag: "#ef7c56", ok: "#4cc58f" },
+  phosphor: { flag: "#f0883e", ok: "#58d68d" },
+  gilt: { flag: "#e49a7d", ok: "#c9a227" }
 };
 
 const NAMES = { frame: "lines", flag: "problem", muted: "secondary text", ok: "good", ink: "text" };
@@ -52,7 +52,7 @@ export function gapFigure(title, before, after, source) {
     intent: "Empty is 1 to 1, the two the same lightness; full is 3 to 1. The goal is about 2 to 1 in every view.",
     source,
     data,
-    options: { headers: ["PALETTE, VIEW", "NOW", "PROPOSED"] }
+    options: { headers: ["PALETTE, VIEW", "BEFORE", "AFTER"] }
   };
 }
 
@@ -94,10 +94,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   write("halloween", { ...paletteFigure("Halloween on its panel", halloween, "Glyph kit's halloween palette, scripts/render/themes.mjs"), theme: "halloween" });
   write("halloween-colour-blind", { ...colourBlindFigure("Halloween's problems and passes, colour-blind", halloween, `The halloween palette; ${sim}`), theme: "halloween" });
   write("christmas", { ...paletteFigure("Christmas, proposed, on its panel", CHRISTMAS, "Proposed values in docs/christmas-palette.md"), theme: xmasTheme });
-  const now = Object.fromEntries(Object.keys(LIGHTNESS).map((name) => [name, PALETTES[name]]));
-  const proposed = Object.fromEntries(Object.keys(LIGHTNESS).map((name) => [name, { ...PALETTES[name], ...LIGHTNESS[name] }]));
-  write("lightness-gap", gapFigure("Problems against passes, in lightness", now, proposed, `Kit palettes, now and proposed; ${sim}`));
-  write("lightness-words-now", weakestFigure("Problems and passes as words, now", now, `Glyph kit's palettes; ${sim}`));
-  write("lightness-words-proposed", weakestFigure("Problems and passes as words, proposed", proposed, `Proposed values; ${sim}`));
+  const before = Object.fromEntries(Object.keys(BEFORE).map((name) => [name, { ...PALETTES[name], ...BEFORE[name] }]));
+  const after = Object.fromEntries(Object.keys(BEFORE).map((name) => [name, PALETTES[name]]));
+  write("lightness-gap", gapFigure("Problems against passes, in lightness", before, after, `Kit palettes before and after 0.3.0; ${sim}`));
+  write("lightness-words-before", weakestFigure("Problems and passes as words, before", before, `Kit palettes before 0.3.0; ${sim}`));
+  write("lightness-words-after", weakestFigure("Problems and passes as words, after", after, `Glyph kit's palettes; ${sim}`));
   write("christmas-colour-blind", { ...colourBlindFigure("Christmas problems and passes, colour-blind", CHRISTMAS, `Proposed values; ${sim}`), theme: xmasTheme });
 }

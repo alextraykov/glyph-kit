@@ -30,14 +30,14 @@
     color-scheme: dark;
     --ink: #f4f2ea; --paper: #0c0c0b; --panel: rgba(244, 242, 234, 0.06); --line: rgba(244, 242, 234, 0.24);
     --edge-strong: rgba(244, 242, 234, 0.34); --text-soft: rgba(244, 242, 234, 0.78); --text-caption: rgba(244, 242, 234, 0.74);
-    --signal-ok: #4cc58f; --signal-fail: #ef7c56;
+    --signal-ok: #89f1b5; --signal-fail: #dc7351;
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
   --ink: #f4f2ea; --paper: #0c0c0b; --panel: rgba(244, 242, 234, 0.06); --line: rgba(244, 242, 234, 0.24);
   --edge-strong: rgba(244, 242, 234, 0.34); --text-soft: rgba(244, 242, 234, 0.78); --text-caption: rgba(244, 242, 234, 0.74);
-  --signal-ok: #4cc58f; --signal-fail: #ef7c56;
+  --signal-ok: #89f1b5; --signal-fail: #dc7351;
 }
 
 * { box-sizing: border-box; }

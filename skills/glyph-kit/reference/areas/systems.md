@@ -207,8 +207,8 @@ Contrast on the page, #ffffff. ▲ first step that reads as words: 4.5 to 1.
 role       token       light #f7f6f1     dark #0d0d0c
 words      --gk-ink    ██ #151513 16.9   ██ #f2f0e8 17.0   AAA
 secondary  --gk-muted  ██ #6b6a64  5.0   ██ #9a988f  6.7   AA
-problems   --gk-flag   ██ #b8391a  5.3   ██ #ef7c56  7.1   AA
-passes     --gk-ok     ██ #0a7a50  5.0   ██ #4cc58f  9.0   AA
+problems   --gk-flag   ██ #6e2218 10.2   ██ #dc7351  6.1   AA
+passes     --gk-ok     ██ #2f743e  5.3   ██ #89f1b5 14.2   AA
 data       --gk-data   ██ #151513 16.9   ██ #f2f0e8 17.0   ok
 lines      --gk-frame  ██ #a3a199  2.4   ██ #5c5b56  2.9   ok
 
@@ -239,15 +239,15 @@ Words need 4.5 to 1 (7 for AAA), marks 3, lines 1.5.
       {
         "role": "problems",
         "token": "--gk-flag",
-        "light": "#b8391a",
-        "dark": "#ef7c56",
+        "light": "#6e2218",
+        "dark": "#dc7351",
         "use": "words"
       },
       {
         "role": "passes",
         "token": "--gk-ok",
-        "light": "#0a7a50",
-        "dark": "#4cc58f",
+        "light": "#2f743e",
+        "dark": "#89f1b5",
         "use": "words"
       },
       {

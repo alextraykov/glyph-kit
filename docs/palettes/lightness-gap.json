@@ -2,7 +2,7 @@
   "kind": "compare",
   "title": "Problems against passes, in lightness",
   "intent": "Empty is 1 to 1, the two the same lightness; full is 3 to 1. The goal is about 2 to 1 in every view.",
-  "source": "Kit palettes, now and proposed; weak views simulated (Machado 2009)",
+  "source": "Kit palettes before and after 0.3.0; weak views simulated (Machado 2009)",
   "data": [
     {
       "label": "paper, as drawn",
@@ -92,8 +92,8 @@
   "options": {
     "headers": [
       "PALETTE, VIEW",
-      "NOW",
-      "PROPOSED"
+      "BEFORE",
+      "AFTER"
     ]
   }
 }

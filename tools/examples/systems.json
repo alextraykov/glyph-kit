@@ -294,15 +294,15 @@
         {
           "role": "problems",
           "token": "--gk-flag",
-          "light": "#b8391a",
-          "dark": "#ef7c56",
+          "light": "#6e2218",
+          "dark": "#dc7351",
           "use": "words"
         },
         {
           "role": "passes",
           "token": "--gk-ok",
-          "light": "#0a7a50",
-          "dark": "#4cc58f",
+          "light": "#2f743e",
+          "dark": "#89f1b5",
           "use": "words"
         },
         {
