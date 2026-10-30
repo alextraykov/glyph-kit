@@ -15,28 +15,28 @@
       "paper",
       "no ramp",
       "ok",
-      "fails (0.02 apart)",
+      "fails (louder)",
       "grey data"
     ],
     [
       "ink",
       "no ramp",
       "ok",
-      "fails (0.03 apart)",
+      "ok",
       "grey data"
     ],
     [
       "phosphor",
       "no ramp",
-      "fails (102° from data, data louder)",
-      "fails (0.06 apart, louder)",
+      "fails (106° from data, data louder)",
+      "fails (louder)",
       "fails (off the data hue)"
     ],
     [
       "gilt",
       "no ramp",
-      "fails (48° from data, data louder)",
-      "fails (0.02 apart, louder)",
+      "fails (64° from data, data louder)",
+      "fails (louder)",
       "ok"
     ],
     [

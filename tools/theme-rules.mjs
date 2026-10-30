@@ -1,6 +1,6 @@
 // Writes two figures into docs/theme-rules/ and prints them as text, with every note behind them:
 //   palettes.json  the four rules of how a theme's colours relate, on each built-in palette and on
-//                  Halloween (branch claude/halloween-palette-f90dc0, not on this branch yet);
+//                  Halloween;
 //   mixed.json     cut D's mixed theme before and after, role by role, in OKLCH.
 // Run after changing a palette or the rules: node tools/theme-rules.mjs
 import { mkdirSync, writeFileSync } from "node:fs";

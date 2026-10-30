@@ -9,22 +9,20 @@ The kit now checks four rules on every theme you give it, measured in OKLCH, and
 
 ## The palettes against the rules
 
-`paper` and `ink` have grey data, so rules 1 and 4 have no hue to follow; none of the four built-ins has its own ramp (the kit draws grids with `░▒▓█` in the data colour). Halloween is on `claude/halloween-palette-f90dc0`, not on this branch yet.
+`paper` and `ink` have grey data, so rules 1 and 4 have no hue to follow; none of the four built-ins has its own ramp (the kit draws grids with `░▒▓█` in the data colour).
 
 <!-- glyph-kit: theme-rules/palettes.json -->
 ```text
 ┌───────────┬───────────────┬────────────────┬────────────────┬────────────────┐
 │ PALETTE   │ RAMP          │ PROBLEMS       │ PASSES         │ NEUTRALS       │
 ├───────────┼───────────────┼────────────────┼────────────────┼────────────────┤
-│ paper     │ no ramp       │ ok             │ fails (0.02    │ grey data      │
-│           │               │                │ apart)         │                │
-│ ink       │ no ramp       │ ok             │ fails (0.03    │ grey data      │
-│           │               │                │ apart)         │                │
-│ phosphor  │ no ramp       │ fails (102°    │ fails (0.06    │ fails (off the │
-│           │               │ from data,     │ apart, louder) │ data hue)      │
+│ paper     │ no ramp       │ ok             │ fails (louder) │ grey data      │
+│ ink       │ no ramp       │ ok             │ ok             │ grey data      │
+│ phosphor  │ no ramp       │ fails (106°    │ fails (louder) │ fails (off the │
+│           │               │ from data,     │                │ data hue)      │
 │           │               │ data louder)   │                │                │
-│ gilt      │ no ramp       │ fails (48°     │ fails (0.02    │ ok             │
-│           │               │ from data,     │ apart, louder) │                │
+│ gilt      │ no ramp       │ fails (64°     │ fails (louder) │ ok             │
+│           │               │ from data,     │                │                │
 │           │               │ data louder)   │                │                │
 │ halloween │ fails (hue    │ fails (48°     │ ok             │ fails (off the │
 │           │ drifts)       │ from data)     │                │ data hue)      │
@@ -33,12 +31,12 @@ The kit now checks four rules on every theme you give it, measured in OKLCH, and
 
 What each one would take:
 
-- **`paper`, `ink`: rule 3 only.** Problems and passes differ by hue alone, 0.02 and 0.03 apart in lightness. This is what `docs/palette-lightness.md` on `claude/halloween-palette-f90dc0` proposes to fix, and the rules agree with it: problems the darker of the two. Its `ink` pair (`#dc7351`, `#89f1b5`) passes every rule. Its `paper` pair (`#6e2218`, `#2f743e`) is 0.13 apart, just short of 0.15; a flag of `#5f130a`, a shade deeper than its oxblood, fits.
+- **`paper`: rule 3, by a little.** Since the lightness change (`docs/palette-lightness.md`), problems are the darker colour and well apart from passes, but its green passes are a touch more colourful than its oxblood problems. `ink` passes every rule.
 - **`phosphor`: rules 2, 3 and 4.** Orange problems are 102° from green data, the green data is more colourful than the problems, the passes are the data colour, and the page and lines are GitHub's blue-grey. Fixing all three would make it a different palette: pink problems, green-grey neutrals.
 - **`gilt`: rules 2 and 3.** Gold data and peach problems are 48° apart, and passes are the data colour. Problems opposite gold are violet (`#bd97ff`), which changes what the palette is.
 - **Halloween: rules 1, 2 and 4.** The ramp starts purple and ends orange (108° and 96° off the data hue), pink problems are 48° from orange data, and the purple page and lines are 100° off. That purple is the point of the palette.
 
-No built-in palette changes here. `phosphor` and `gilt` copy other products and Halloween's clash is its look, so the rules report them and leave them; `paper` and `ink` wait for the lightness proposal, whose values the rules check above.
+No built-in palette changes here. `phosphor` and `gilt` copy other products and Halloween's clash is its look, so the rules report them and leave them; `paper` and `ink` took the lightness proposal's values.
 
 ## Cut D's mixed theme, before and after
 
