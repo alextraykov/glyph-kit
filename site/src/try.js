@@ -16,7 +16,8 @@ import { LIVE } from "./kit/live/kinds.mjs";
 import { animate as animateSpec, stillGrid } from "./kit/motion.mjs";
 import { KINDS } from "./kit/registry.mjs";
 import { autoplay } from "./kit/live/play.mjs";
-import { cellsFromGrid, cellsFromText, fillFrame, planBuild, shimmerFrame, skeleton, toHtml } from "./showcase-core.mjs";
+import { arriveLines } from "./kit/render/arrive.mjs";
+import { cellsFromGrid, cellsFromText, shimmerFrame, skeleton, toHtml } from "./showcase-core.mjs";
 import { figureSvg } from "./kit/render/svg.mjs";
 import { PALETTES, SPACING, palette } from "./kit/render/themes.mjs";
 
@@ -74,28 +75,43 @@ function editableData(spec, edit, error) {
     input.value = cellText(value);
     input.setAttribute("aria-label", label);
     if (typeof value === "number") input.inputMode = "decimal";
+    // A refusal marks the field that caused it; the next good value clears every mark.
+    const report = (message) => {
+      if (!message) error.closest(".data__body")?.querySelectorAll("[aria-invalid='true']").forEach((f) => f.setAttribute("aria-invalid", "false"));
+      input.setAttribute("aria-invalid", String(Boolean(message)));
+      error.textContent = message;
+    };
     let timer = 0;
     input.addEventListener("input", () => {
       clearTimeout(timer);
       timer = setTimeout(() => {
         const read = parseLike(value, input.value);
-        if (read.error) return (error.textContent = read.error);
+        if (read.error) return report(read.error);
         onValue(read.value);
-        error.textContent = edit.preview(structuredClone(working));
+        report(edit.preview(structuredClone(working)));
       }, 120);
     });
     input.addEventListener("change", () => {
       clearTimeout(timer);
       const read = parseLike(value, input.value);
-      if (read.error) return (error.textContent = read.error);
+      if (read.error) return report(read.error);
       onValue(read.value);
-      error.textContent = edit.commit(structuredClone(working));
+      report(edit.commit(structuredClone(working)));
     });
     return input;
   };
-  const wrap = el("div", "data__group");
-  if (isRecords(working.data)) {
-    const rows = working.data;
+  // A list of rows becomes a table with an add and a remove; a list of words, a field each.
+  const editor = (holder, key, name) => {
+    const value = holder[key];
+    if (isRecords(value)) return records(value, name);
+    if (isWords(value)) {
+      const list = el("div", "data__group");
+      value.forEach((v, i) => list.append(field(v, (next) => (value[i] = next), `${name ? `${name}, item` : "Item"} ${i + 1}`)));
+      return list;
+    }
+    return null;
+  };
+  const records = (rows, name) => {
     const keys = [...new Set(rows.flatMap((row) => Object.keys(row)))];
     const table = el("table", "data__table");
     const head = table.createTHead().insertRow();
@@ -108,14 +124,14 @@ function editableData(spec, edit, error) {
         const v = row[k];
         const td = el("td", typeof v === "number" ? "is-number" : "");
         if (v !== null && typeof v === "object") td.textContent = cellText(v);
-        else td.append(field(v ?? "", (next) => (row[k] = next), `${words(k)}, row ${i + 1}`));
+        else td.append(field(v ?? "", (next) => (row[k] = next), `${name ? `${name}, ` : ""}${words(k)}, row ${i + 1}`));
         tr.append(td);
       });
       const cell = el("td", "");
       if (rows.length > 1) {
         const remove = el("button", "data__row-remove", "×");
         remove.type = "button";
-        remove.setAttribute("aria-label", `Remove row ${i + 1}`);
+        remove.setAttribute("aria-label", `Remove ${name ? `${name} ` : ""}row ${i + 1}`);
         remove.addEventListener("click", () => {
           rows.splice(i, 1);
           error.textContent = edit.commit(structuredClone(working), { rerender: true });
@@ -130,13 +146,25 @@ function editableData(spec, edit, error) {
       rows.push(structuredClone(rows.at(-1)));
       error.textContent = edit.commit(structuredClone(working), { rerender: true });
     });
-    wrap.append(table, add);
-  } else if (isWords(working.data)) {
-    const list = el("div", "data__group");
-    working.data.forEach((v, i) => list.append(field(v, (next) => (working.data[i] = next), `Item ${i + 1}`)));
-    wrap.append(list);
-  } else return null;
-  return wrap;
+    const box = el("div", "data__group");
+    box.append(table, add);
+    return box;
+  };
+  const top = editor(working, "data");
+  if (top) return top;
+  // An object of named parts (a funnel's steps, a board's columns): each part that is rows or words
+  // can be edited; the rest shows as it is.
+  if (!working.data || typeof working.data !== "object" || Array.isArray(working.data)) return null;
+  const wrap = el("div", "data__group");
+  let any = false;
+  for (const key of Object.keys(working.data)) {
+    const part = el("section", "data__part");
+    const edits = editor(working.data, key, words(key));
+    any ||= Boolean(edits);
+    part.append(el("h4", "label", words(key)), edits ?? dataValue(working.data[key]));
+    wrap.append(part);
+  }
+  return any ? wrap : null;
 }
 function renderData(target, spec, edit) {
   const meta = el("dl", "data__meta");
@@ -156,7 +184,7 @@ function renderData(target, spec, edit) {
     setTimeout(() => (copy.textContent = "Copy as JSON"), 1600);
   });
   const about = el("div", "data__about");
-  about.append(meta);
+  about.append(meta, copy);
   const body = el("div", "data__body");
   const error = el("p", "data__error");
   error.setAttribute("aria-live", "polite");
@@ -165,7 +193,7 @@ function renderData(target, spec, edit) {
   if (editable) body.append(el("p", "data__note", "Change any value: the figure redraws here, without asking the model."), editable, error);
   else body.append(dataValue(spec.data));
   if (spec.options && Object.keys(spec.options).length) body.append(el("h4", "label", "Options"), dataValue(spec.options));
-  target.replaceChildren(copy, about, body);
+  target.replaceChildren(about, body);
 }
 const emptyData = (target, text) => target.replaceChildren(el("p", "data__empty", text));
 
@@ -354,7 +382,11 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
   // The figure the next ask changes. Each change sends only this figure and the new ask, never a
   // transcript: the server treats it as data (cleanBase) and returns the whole updated figure.
   let editing = null;
+  // The suggestion whose skeleton is on show, so a failed build can put it back.
+  let previewing = null;
 
+  // The stamp keeps its place in the bar whether it shows or not, so Colours and Export never move.
+  const setStamp = (on) => stamp.toggleAttribute("data-off", !on);
   const setStatus = (text, state = "idle") => {
     status.textContent = text || IDLE;
     status.dataset.state = state;
@@ -391,6 +423,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
   field.addEventListener("input", () => {
     field.removeAttribute("data-invalid");
     pressChip(null); // edited: no longer the suggestion as given
+    previewing = null;
   });
 
   // The chip in use stays pressed until the ask is edited.
@@ -474,12 +507,17 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     }
     const text = body(spec);
     const opts = paintOptions(spec, text);
-    return { cells: cellsFromText(text, (line, row) => classify(line, { ...opts, row })), aria: label(spec), play: null };
+    // The kit's own arrival, for the types that have an order; the rest are simply there.
+    let arrived = null;
+    try {
+      arrived = arriveLines(spec, text)?.join("\n") ?? null;
+    } catch {}
+    return { cells: cellsFromText(text, (line, row) => classify(line, { ...opts, row })), aria: label(spec), play: null, arrived };
   };
 
   const describe = (spec, heading) => {
     title.textContent = heading ?? spec.title ?? "Your figure";
-    stamp.textContent = /^(illustrative|sample)/i.test(spec.source ?? "") ? "Sample data" : "";
+    setStamp(/^(illustrative|sample)/i.test(spec.source ?? ""));
     renderData(specOut, spec, dataEdits);
     caption.textContent = spec.intent ?? spec.title ?? "";
   };
@@ -798,7 +836,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     }
     stage.toggleAttribute("data-palette", Boolean(c));
     // The summary keeps one width: the chosen palette shows as its swatch, not as a longer label.
-    paletteEl.querySelector("summary").replaceChildren(swatchFor(name), "Colours");
+    paletteEl.querySelector("summary").replaceChildren(swatchFor(name), el("span", "palette__name", "Colours"));
     paletteEl.querySelector("summary").setAttribute("aria-label", `Colours: ${PALETTE_NAMES[name]}`);
     paletteMenu.querySelectorAll("[data-palette]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.palette === name)));
   };
@@ -824,46 +862,39 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     if (paletteEl?.open && !paletteEl.contains(event.target)) paletteEl.open = false;
   });
 
-  /** Draw a result: it builds in over its own skeleton, then a moving one plays. */
+  /** Draw a result. A moving one plays; a still one arrives the kit's way (░ → ▒ → final in 40ms
+   *  steps, settled by 600ms) and arrives again on a 6s cycle, like every figure on the site. */
   const show = (result, heading, { build = true } = {}) => {
     const drawn = prepare(result); // may throw: nothing on screen has changed yet
     halt();
-    const pre = mount(build && !reduce.matches ? skeleton(drawn.cells) : drawn.cells, drawn.aria);
+    const pre = mount(drawn.cells, drawn.aria);
     stage.dataset.state = "figure";
     describe(result.spec, heading);
     shown = { result, heading };
+    previewing = null;
     syncExport();
-    const done = () => {
-      pre.innerHTML = toHtml(drawn.cells);
-      if (drawn.play) stopMoving = drawn.play(pre);
+    if (drawn.play) {
+      stopMoving = drawn.play(pre);
+      return;
+    }
+    if (!drawn.arrived || reduce.matches) return;
+    pre.innerHTML = drawn.arrived;
+    const arrive = () => {
+      pre.classList.remove("is-arriving");
+      void pre.offsetWidth; // restart the arrival
+      pre.classList.add("is-arriving");
+      rebuild = setTimeout(again, 6000);
     };
-    const skel = skeleton(drawn.cells);
-    const plan = planBuild(drawn.cells, { lang: result.spec.lang });
-    const buildIn = () => animate((t) => {
-      if (t >= plan.total) {
-        done();
-        if (!drawn.play) rebuild = setTimeout(again, Math.max(0, 6000 - plan.total));
-        return true;
-      }
-      pre.innerHTML = toHtml(fillFrame(drawn.cells, plan, t, skel));
-      return false;
-    });
     // Held while someone is using the builder, looking at it closely, or has the tab hidden.
     const again = () => {
       const held = busy || document.hidden || out.matches(":focus-within") || (matchMedia("(hover: hover) and (pointer: fine)").matches && stage.matches(":hover"));
       if (reduce.matches || !pre.isConnected) return;
       if (held || stage.getBoundingClientRect().bottom < 0 || stage.getBoundingClientRect().top > innerHeight) rebuild = setTimeout(again, 6000);
-      else buildIn();
+      else arrive();
     };
-    if (reduce.matches) return done();
-    if (!build) {
-      done();
-      if (!drawn.play) rebuild = setTimeout(again, 6000);
-      return;
-    }
-    buildIn();
+    if (build) arrive();
+    else rebuild = setTimeout(again, 6000);
   };
-;
   const restore = () => {
     if (shown) return show(shown.result, shown.heading, { build: false });
     // Nothing built yet: put the example back so the preview isn't left as a skeleton.
@@ -894,13 +925,17 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
       field.removeAttribute("data-invalid");
       setEditing(null);
       pressChip(button);
-      field.focus();
+      // The ask reads from its first line, not scrolled to its last.
+      field.focus({ preventScroll: true });
+      field.setSelectionRange(0, 0);
+      field.scrollTop = 0;
       if (busy) return;
       const skel = await skeletonFor(button.dataset.skeleton);
       if (!skel || busy) return;
       showSkeleton(skel);
+      previewing = { skel, short: button.dataset.short };
       title.textContent = `Preview · ${button.dataset.short}`;
-      stamp.textContent = "";
+      setStamp(false);
       caption.textContent = "Press Build to make it.";
       emptyData(specOut, "Press Build to make it. Its data shows here.");
       setStatus("");
@@ -976,7 +1011,7 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
     } else if (pressed && stage.dataset.state === "skeleton" && current) showSkeleton(skeleton(cellsFromText(current.textContent, () => [])), { shimmer: true });
     else showSkeleton(skeleton(cellsFromText(GENERIC, () => [])), { shimmer: true });
     title.textContent = "Building";
-    stamp.textContent = "";
+    setStamp(false);
     emptyData(specOut, "Building. Its data shows here when it's done.");
     const timer = new AbortController();
     const timeout = setTimeout(() => timer.abort(), TIMEOUT_MS);
@@ -1026,7 +1061,12 @@ if (form instanceof HTMLFormElement && out instanceof HTMLElement) {
       setEditing(result);
       field.value = "";
     } catch (error) {
-      restore();
+      // A suggestion that couldn't be built keeps its skeleton, so the chip and the figure agree.
+      if (previewing && pressed && !base) {
+        showSkeleton(previewing.skel);
+        title.textContent = `Preview · ${previewing.short}`;
+        emptyData(specOut, "Press Build to make it. Its data shows here.");
+      } else restore();
       setStatus(error instanceof Error ? error.message : PAUSED, "error");
       say({ who: "fail", text: error instanceof Error ? error.message : PAUSED });
       if (!thread.versions.length) leaveSplit();
