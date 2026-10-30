@@ -1,0 +1,69 @@
+{
+  "kind": "palette",
+  "title": "Christmas, proposed, on its panel",
+  "intent": "Every colour, faintest to strongest, on the surface figures sit on. Words start at ▲.",
+  "source": "Proposed values in docs/christmas-palette.md",
+  "data": {
+    "page": "#142019",
+    "hues": [
+      {
+        "name": "On the panel",
+        "steps": [
+          {
+            "name": "ramp 1",
+            "value": "#1f3b2c"
+          },
+          {
+            "name": "lines",
+            "value": "#3e5c4a"
+          },
+          {
+            "name": "ramp 2",
+            "value": "#33704a"
+          },
+          {
+            "name": "problem",
+            "value": "#ff6490"
+          },
+          {
+            "name": "ramp 3",
+            "value": "#94a940"
+          },
+          {
+            "name": "secondary text",
+            "value": "#a9b5ad"
+          },
+          {
+            "name": "data, ramp 4",
+            "value": "#f6d466"
+          },
+          {
+            "name": "good",
+            "value": "#daf0ff"
+          },
+          {
+            "name": "text",
+            "value": "#f4f1ea"
+          }
+        ]
+      }
+    ]
+  },
+  "theme": {
+    "base": "ink",
+    "bg": "#0d1611",
+    "panel": "#142019",
+    "ink": "#f4f1ea",
+    "muted": "#a9b5ad",
+    "data": "#f6d466",
+    "frame": "#3e5c4a",
+    "flag": "#ff6490",
+    "ok": "#daf0ff",
+    "ramp": [
+      "#1f3b2c",
+      "#33704a",
+      "#94a940",
+      "#f6d466"
+    ]
+  }
+}

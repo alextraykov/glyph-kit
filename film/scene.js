@@ -152,7 +152,6 @@ if (SCALE !== 1) {
   canvas.width = canvas.height = SIZE * SCALE;
   canvas.style.width = canvas.style.height = `${SIZE * SCALE}px`;
 }
-let LOGO = null;
 const colour = (cls) =>
   ({ "gk-e": "rgba(8,8,8,0.45)", "gk-f": C.caption, "gk-x": C.fail, "gk-ok": C.ok, "gl-ok": C.ok, "gl-fail": C.fail, "gl-mute": C.caption, "gk-bg": C.caption })[cls] ?? C.ink;
 
@@ -228,7 +227,8 @@ function counted(value, decimals, t, t0, t1) {
 }
 
 function footer() {
-  if (LOGO) ctx.drawImage(LOGO, M, FOOT, 46, 46 * (908.79 / 873.71));
+  // The kit's logo, ░▒▓█ side by side in Departure Mono, on the address's baseline (docs/brand.md).
+  text("░▒▓█", M, FOOT + 32, 22, C.ink);
   text("glyph-kit.traykov.cc", SIZE - M, FOOT + 32, 22, C.caption, "right");
 }
 
@@ -917,12 +917,6 @@ export const STORYBOARD = [
 const params = new URLSearchParams(location.search);
 if (params.has("render")) document.body.classList.add("render");
 await document.fonts.load(`33px ${FONT}`);
-LOGO = await new Promise((ok) => {
-  const img = new Image();
-  img.onload = () => ok(img);
-  img.onerror = () => ok(null);
-  img.src = "assets/logo.svg";
-});
 await prepare();
 window.DUR = DUR;
 window.seek = (t) => draw(Math.max(0, Math.min(DUR, t)));

@@ -19,5 +19,7 @@ jobs:
         run: node skills/glyph-kit/scripts/lint.mjs skills/glyph-kit/SKILL.md skills/glyph-kit/README.md skills/glyph-kit/reference/*.md skills/glyph-kit/reference/areas/*.md
       - name: Versions agree
         run: node scripts/check-version.mjs
+      - name: Guides match the code
+        run: node tools/build-reference.mjs && git diff --exit-code skills/glyph-kit/reference
       - name: Site builds
         run: node site/build.mjs

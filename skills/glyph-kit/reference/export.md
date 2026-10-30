@@ -3,7 +3,7 @@
 One command writes any form. The input can be a spec, a list of specs, a deck or a report; the command works out which.
 
 ```bash
-node scripts/glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt]
+node scripts/glyph-kit.mjs export <file> --to md|mdx|html|svg|png|pdf [--out path] [--theme paper|ink|phosphor|gilt|halloween]
 ```
 
 | `--to` | Spec or list | Deck | Report | Needs |
@@ -78,5 +78,5 @@ A browser that fails or hangs is skipped after 30 seconds. If none works, the er
 
 ## Themes and spacing
 
-- **Themes:** `paper`, `ink`, `phosphor` and `gilt` are defined once in `scripts/render/themes.mjs`, as roles rather than colours: background, panel, ink, muted, data, frame, flag (problems) and ok (passes).
+- **Themes:** `paper`, `ink`, `phosphor`, `gilt` and `halloween` are defined once in `scripts/render/themes.mjs`, as roles rather than colours: background, panel, ink, muted, data, frame, flag (problems) and ok (passes).
 - **Spacing:** figure padding, row gap, section gap and text measure are tokens in the same file. Change them there and every form follows.

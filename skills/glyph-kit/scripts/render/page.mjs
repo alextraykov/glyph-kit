@@ -5,7 +5,8 @@
 // Several layouts make one document, one layout to a page.
 import { FONT_CSS } from "./font.mjs";
 import { figureSvg } from "./svg.mjs";
-import { SPACING, palette } from "./themes.mjs";
+import { SPACING, resolveTheme, themeCss } from "./themes.mjs";
+import { paintOptions } from "./paint.mjs";
 import { isSample } from "../guard.mjs";
 import { resolve } from "../registry.mjs";
 import { compose } from "../areas/layouts.mjs";
@@ -16,8 +17,8 @@ const CELL = 9;
 const ROW = 21;
 const MARK = { number: (i) => String(i + 1), arrow: () => "→", dot: () => "·", cross: () => "x" };
 
-const CSS = (p) => `
-:root{--bg:${p.bg};--panel:${p.panel};--ink:${p.ink};--muted:${p.muted};--data:${p.data};--frame:${p.frame};--flag:${p.flag};--ok:${p.ok};--mono:"Departure Mono",Menlo,"DejaVu Sans Mono",Consolas,monospace}
+const CSS = (t) => `
+:root{${themeCss(t, "--")};--mono:"Departure Mono",Menlo,"DejaVu Sans Mono",Consolas,monospace}
 *,*::before,*::after{box-sizing:border-box}
 html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 var(--mono);-webkit-font-smoothing:antialiased;font-variant-ligatures:none}
@@ -43,13 +44,13 @@ body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.6 var(--mono);-w
 .p-foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 24px;padding-top:20px;border-top:1px solid var(--frame);color:var(--muted);font-size:12px}
 .p-foot summary{cursor:pointer}
 .p-foot pre{margin:12px 0 0;padding:16px;overflow-x:auto;background:var(--panel);color:var(--ink);font:12px/${SPACING.figureLine} var(--mono)}
-@page{size:A4;margin:16mm 14mm;background:${p.bg}}
+@page{size:A4;margin:16mm 14mm;background:${t.colors.bg}}
 @media (max-width:700px){.p{padding:40px 16px 56px}}
 @media print{body{font-size:9.5pt;background:var(--bg)}.p{max-width:none;padding:0;gap:22px}.p + .p{border:0;break-before:page}.p-foot details{display:none}}
 `;
 
 function figureHtml(it, ctx) {
-  const fig = figureSvg(it.lines.join("\n"), { colors: ctx.colors, cell: CELL, row: ROW });
+  const fig = figureSvg(it.lines.join("\n"), { colors: ctx.colors, cell: CELL, row: ROW, rampCells: paintOptions(it.spec).ramp, ramp: ctx.ramp, focus: paintOptions(it.spec, it.lines.join("\n")) });
   const name = label({ ...it.spec, source: it.spec.source ?? ctx.source });
   return `<svg viewBox="0 0 ${fig.width} ${fig.height}" width="${fig.width}" height="${fig.height}" role="img" aria-label="${esc(name)}"><defs>${fig.defs}</defs><g font-family="'Departure Mono', Menlo, 'DejaVu Sans Mono', monospace" font-size="${ROW * 0.66}">${fig.svg}</g></svg>`;
 }
@@ -69,11 +70,11 @@ function blockHtml(b, ctx) {
 }
 
 /** One layout as a section of the document. */
-function layoutHtml(spec, colors) {
+function layoutHtml(spec, t) {
   const def = resolve(spec);
   const lang = spec.lang ?? "en";
   const blocks = compose(spec.kind, def.data, { source: spec.source, lang: spec.lang, draw: drawInside });
-  const ctx = { lang, source: spec.source, colors };
+  const ctx = { lang, source: spec.source, colors: t.colors, ramp: t.ramp };
   const sections = [];
   let open = null;
   for (const b of blocks) {
@@ -96,20 +97,21 @@ ${body}
 }
 
 /** Document layouts as one self-contained HTML document, one layout to a page when printed.
- *  theme: paper | ink | phosphor | gilt; title names the document (default: the first layout's). */
-export function renderLayoutPages(specs, { theme, title } = {}) {
+ *  theme: a palette name or theme object (themes.mjs); map: a design-system map with a roles block;
+ *  title names the document (default: the first layout's). */
+export function renderLayoutPages(specs, { theme, title, map } = {}) {
   const list = [specs].flat();
-  const p = palette(theme ?? list[0]?.theme);
+  const t = resolveTheme(theme ?? list[0]?.theme, { map });
   return `<!doctype html>
 <html lang="${esc(list[0]?.lang ?? "en")}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title ?? list[0]?.title ?? "Glyph kit")}</title>
-<style>${FONT_CSS()}${CSS(p)}</style>
+<style>${FONT_CSS()}${CSS(t)}</style>
 </head>
 <body>
-${list.map((spec) => layoutHtml(spec, p)).join("\n")}
+${list.map((spec) => layoutHtml(spec, t)).join("\n")}
 </body>
 </html>
 `;

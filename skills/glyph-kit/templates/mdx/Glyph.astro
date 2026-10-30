@@ -6,7 +6,7 @@ import { renderSvg } from "../../scripts/render/svg.mjs"; // ← adjust to your 
 
 interface Props {
   spec: Record<string, unknown>;
-  theme?: "paper" | "ink" | "phosphor" | "gilt";
+  theme?: "paper" | "ink" | "phosphor" | "gilt" | "halloween" | Record<string, unknown>; // a palette name or a theme object
   frame?: boolean;
 }
 const { spec, theme = "paper", frame = true } = Astro.props;

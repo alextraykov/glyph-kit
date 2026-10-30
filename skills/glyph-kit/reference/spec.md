@@ -26,8 +26,23 @@ Every artifact the kit makes is described by one JSON object:
 | `options` | no | Layout settings: widths, scales, column labels. |
 | `motion` | no | For a `funnel`: `true` plays it as people moving through the steps. The six processes always move; every other type arrives once in HTML pages and decks, then stays still. |
 | `lang` | no | A BCP 47 language tag, such as `de` or `tr`, for numbers, casing and export language. |
+| `focus` | no | What the figure wants you to look at: `{ "on": [...], "tone": "problem" \| "good" \| "plain", "say": "..." }`. See "Focus" below. |
 
 Each type also checks its own data and refuses what can't be true, in plain words: a funnel that grows, a value outside its range, a test result outside its interval, a timeline that ends before it starts, dates out of order, a moving state machine whose path skips a transition.
+
+### Focus
+
+When an ask wants something highlighted, called out or emphasised (the drop-off in a cohort, the slowest step, the one failing pair), add `focus` instead of a colour. It works the same way on every type:
+
+```json
+"focus": { "on": ["M2"], "tone": "problem", "say": "Every cohort halves between M1 and M2." }
+```
+
+- **`on`** names things as they are drawn: a row's label (`"Mar"`), a column's heading (`"M2"`), or any words in the figure (`"empty state"`). A row and a column together mean the cells where they cross. A name that isn't in the figure is refused.
+- **`tone`**: `problem` paints the focus in the flag colour, `good` in the passing colour, `plain` (the default) in the data colour at full strength.
+- **`say`** is the line printed under the figure, after `►`. Without it, the line lists the names.
+
+Every form does the same thing with it. The text gets the `►` line, so the point reads without colour. HTML, decks, SVG, PNG, PDF and the terminal colour the focus by its tone and let the rest of its block recede; a key or a note below a blank line keeps its colour. In HTML and decks the focus arrives last and lands with the inverted flash, and the figure still settles within 600ms.
 
 A file may hold one spec or a list of them. Keep specs next to the document that uses them (`docs/specs/*.json`), so the figure, its data and its text change in one commit.
 
@@ -47,7 +62,7 @@ Or import the renderers (`render/text.mjs`, `render/html.mjs`, `render/deck.mjs`
 
 ## Presenting: decks
 
-A deck file is `{ "title", "subtitle"?, "byline"?, "theme"?: "paper" | "ink" | "phosphor" | "gilt", "slides": [...] }`. A slide is any spec, or one of `{ "type": "title", "title", "subtitle"?, "byline"? }`, `{ "type": "section", "kicker"?, "title" }` and `{ "type": "statement", "kicker"?, "text" }`. Any spec can carry a `present` block:
+A deck file is `{ "title", "subtitle"?, "byline"?, "theme"?: "paper" | "ink" | "phosphor" | "gilt" | "halloween" | { base, <role>, ramp } | { base, mixed }, "slides": [...] }`. A slide is any spec, or one of `{ "type": "title", "title", "subtitle"?, "byline"? }`, `{ "type": "section", "kicker"?, "title" }` and `{ "type": "statement", "kicker"?, "text" }`. Any spec can carry a `present` block:
 
 ```json
 "present": {
@@ -73,7 +88,7 @@ Types with an arrival order come in by that order instead of line by line, once,
 
 To find line numbers for `steps`, render the spec with `--to text` and count from 0.
 
-**Themes and colour.** `theme` picks a palette: `paper` (light, the default), `ink` (dark), `phosphor` (Synapse's green on near-black) or `gilt` (Our Saints' gold on black). In decks and HTML prototypes, figures are coloured by role, never for decoration: data glyphs (`█▓▒`, eighths, `■`) in the data colour, the empty part of a scale (`░`) dimmed, frames and rulers muted, problems (`fails`, `blocked`, `x missing`, `over`) in the warning colour, passes (`AA`, `AAA`, `done`, `ok`) in the success colour. In prototypes the roles come from the map's `accent`, `muted`, `danger` and `ok` tokens. The text form stays plain.
+**Themes and colour.** `theme` picks a palette: `paper` (light, the default), `ink` (dark), `phosphor` (Synapse's green on near-black) `gilt` (Our Saints' gold on black) or `halloween` (pumpkin, bruise purple and bone on near-black, with its own ramp). In decks and HTML prototypes, figures are coloured by role, never for decoration: data glyphs (`█▓▒`, eighths, `■`) in the data colour, the empty part of a scale (`░`) dimmed, frames and rulers muted, problems (`fails`, `blocked`, `x missing`, `over`) in the warning colour, passes (`AA`, `AAA`, `done`, `ok`) in the success colour. In prototypes the roles come from the map's `accent`, `muted`, `danger` and `ok` tokens. A theme can also change single roles, add a ramp for density grids, or take its colours from the map's `roles` block; every colour is checked for contrast (`reference/colour.md`). The text form stays plain.
 
 Three decks ship as examples: `export-review.json` (fictional, every type of slide), `motion-audit.json` and `usage-case.json` (real work, with the figures already published).
 
@@ -84,6 +99,7 @@ Three decks ship as examples: `export-review.json` (fictional, every type of sli
 | Section | Used by | What it maps |
 |---|---|---|
 | `tokens` | HTML prototypes and decks | Roles (`ink`, `surface`, `panel`, `muted`, `line`, `accent`, `onAccent`, `danger`, `space`, `radius`, `font`, `mono`, `durationBase`, `easingBase`) to your tokens. |
+| `roles` | Every rendered form, with `--map` | The kit's colour roles (`data`, `flag`, `ok`, `frame`, `bg`…) to your token names, checked for contrast (`reference/colour.md`). |
 | `components` | HTML (as `data-component`) and the product step | Wireframe primitives (`button`, `input`, `search`, `select`, `checkbox`, `radio`, `toggle`, `tabs`, `list`, `table`, `dialog`, `skeleton`, `emptyState`, `image`, `heading`, `text`) to your component names, imports and props. |
 | `motion` | Motion demos and the product step | Duration and easing tokens, and how your project handles reduced motion. |
 | `stylesheet` | HTML and decks | Optional URL of your design system's CSS, loaded before the kit's own styles. |

@@ -8,7 +8,7 @@ export const AREA_DOCS = {
   flows: "Agree on paths, states and journeys before anyone designs a screen. Text flows are quick to change in review and easy for an agent to turn into routes and state.",
   planning: "Roadmaps, priorities, ownership and decisions in a form that lives next to the work and diffs when plans change.",
   wireframes: "Screens built from a small set of primitives. The same primitive names map to real components in the design-system map, which is what lets a text wireframe become a prototype and then production code without reinterpretation.",
-  systems: "Document the design system as data: scales, contrast, component states, layers and tokens. Contrast is computed, not eyeballed.",
+  systems: "Document the design system as data: scales, colour, contrast, component states, layers and tokens. Contrast is computed, not eyeballed.",
   handoff: "Measurements and checklists for handing work to engineering and checking what came back.",
   layouts: "Whole deliverables on one page: a readout, a dashboard, a PR summary, a design review or a status update. Fill the slots with a sentence, short lists and ordinary specs; code places everything within 80 cells, putting narrow figures side by side and stacking the rest. Figures without their own source use the layout's. Export to HTML or PDF for a finished page in the kit's type; a file holding a list of layouts exports as one document, a layout to a page. Pick by the ask: a write-up or one-pager is a readout; weekly numbers a dashboard; what a PR changed a prSummary; choosing between options a designReview; where work stands a statusUpdate. When unsure, use a readout.",
   motion: "Write motion down as a decision before anyone animates it: why it moves, what starts it, how long, which curve, and what reduced motion shows instead. The HTML form plays it."
@@ -61,6 +61,8 @@ export const KIND_DOCS = {
   statusUpdate: { when: "Where work stands: the period, progress figures, done, next and blocked lists.", traps: "Each blocked item says why in words." },
   spacingScale: { when: "Documenting spacing tokens.", traps: "State the unit per cell under the chart." },
   typeScale: { when: "Documenting type sizes and line heights.", traps: "Sizes in one unit; bars compare size, not weight." },
+  palette: { when: "Showing a tonal scale: every step of each hue, with its contrast on the page.", traps: "Steps must get steadily lighter or darker. Four hues fit in 80 cells; split a bigger palette into figures by family." },
+  colourRoles: { when: "Saying what each colour is for, with its light and dark values and a contrast verdict.", traps: "Say the use: words need 4.5 to 1, marks 3, lines 1.5. A colour that passes on light can fail on dark." },
   contrast: { when: "Checking colour pairs against WCAG 2 thresholds.", traps: "AA needs 4.5:1 for body text and 3:1 for large text and UI parts." },
   stateMatrix: { when: "Which component states exist, are in progress or missing.", traps: "Blank means the state doesn't apply; missing is ░." },
   layerStack: { when: "z-index and surface order.", traps: "Name what each layer is for, not just its number." },

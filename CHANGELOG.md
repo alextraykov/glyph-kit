@@ -2,6 +2,51 @@
 
 Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor version may change the spec format; the change is listed here with what to update.
 
+## 0.3.0 — 2026-10-30
+
+**Open source**
+
+- **Using it in your own work:** what the MIT licence allows and how to credit the kit if you want to, in the README.
+- **`CONTRIBUTING.md`:** what's welcome, the rules every change keeps and the checks to run. **`docs/adding-a-type.md`** walks through adding a type end to end, using `palette`.
+- **Issue templates** for a new type and for something that's wrong, and a pull request checklist. CI now also checks that the guides match the code.
+
+**Editing**
+
+- **Plain words to a screen.** `scripts/say.mjs` reads lines such as "An email field. A Send button." into a `screen` spec (`glyph-kit say "…"`), from one closed list of names for each part, and says which words it couldn't place.
+- **`check` lists every problem at once:** a missing source, a colour on one row, the type's own data checks, labels that will be cut and frames that don't close. Problems exit 1; notes don't. Works on a spec, a list of specs or a Markdown file.
+- **A figure keeps its spec beside it.** `--with-spec` on `render --to markdown` and `export --to md` writes the spec after the figure in a folded `<details>` block; a figure can also name a spec file on the line above it.
+- **`redraw` draws figures again in place.** Only each figure's text and description change; the rest of the file stays as it was. `redraw --check` lists stale figures and exits 1, for CI or a pre-commit hook.
+- **`read` turns an edited drawing back into its spec** for tables, token tables, decision logs, QA checklists, now/next/later boards and colour roles. Columns don't have to line up; nothing is written when an edit can't be read exactly. Guide: `reference/editing.md`.
+
+**Focus**
+
+- **Call something out on any type.** `"focus": { "on": ["M2"], "tone": "problem", "say": "Every cohort halves between M1 and M2." }` names what to look at as it is drawn: a row label, a column heading, both, or any words in the figure. Instead of a colour on one row, which is still refused.
+- **The same in every form.** The text gets a `►` line with the point, so it reads without colour. HTML, decks, SVG, PNG, PDF and the terminal paint the focus in its tone (problem, good or plain) and let the rest of its block recede. In a heatmap, cohort or calendar strip the receded cells keep their ramp colour, dimmed, and a plain focus keeps its own. In HTML and decks the focus arrives last and lands with the inverted flash, and the figure still settles within 600ms.
+- **A name that isn't drawn is refused,** in plain words, and `check` lists it with everything else.
+
+**Colour types**
+
+- **`palette`: a tonal scale.** One column per hue, one row per step, each step's contrast on the page; ▲ marks the first step that reads as words. Steps out of order are named. Four hues fit in 80 cells.
+- **`colourRoles`: what each colour is for.** Role, token, light and dark values, each on its own page, and a verdict by use: words need 4.5 to 1 (7 for AAA), marks 3, lines 1.5, the same rule as the theme check.
+- **Swatches in their own colour.** In both types a swatch is `██` followed by its value. HTML, SVG, PNG, PDF and 24-bit terminals draw it in that colour; the text keeps the value, so it still reads.
+
+**Colour by role**
+
+- **Your colours.** A theme is a palette name or a base plus the roles you change: `{ "base": "paper", "data": "#1f4fd6", "flag": "#b8421f" }`. Put it on a spec, report or deck as `theme`, or pass `--theme theme.json` to `render`, `export`, `deck` and `live`. Guide: `reference/colour.md`.
+- **From your design system.** A `roles` block in `design-system.map.json` points roles at your tokens. HTML and decks write the token's `var(--…)` so your CSS wins; SVG, PNG and PDF use its fallback colour. A token with no fallback is refused.
+- **Contrast is checked.** Every colour you supply is checked against the page and the panel: 4.5 to 1 for words, 3 for marks, 1.5 for lines. A refusal names the pair and a nearby colour that passes.
+- **A Halloween palette.** `--theme halloween`: pumpkin data, bruise-purple lines and bone text on near-black, with its own ramp from bruise purple to pumpkin. In every form and in the site's Colours menu.
+- **Problems and passes differ in lightness.** In every palette, problems are now the darker colour, about 2 to 1 from passes, as drawn and when red or green is seen weakly, so colour-blind readers can tell them apart. `paper` becomes oxblood and green, `ink` coral and mint, `phosphor` amber and pale green, `gilt` terracotta and bright gold; `phosphor` and `gilt` passes no longer share the data colour. `paper`'s pair also fell under 4.5 to 1 for those readers and now passes. Before and after: `docs/palette-lightness.md`.
+- **How a theme's colours relate.** Four rules, measured in OKLCH: the ramp follows the data hue, problems sit opposite data and are loudest, passes differ from problems in lightness as well as hue, and the neutrals carry the data hue. A theme that breaks one still draws, with a note that names the pair and a nearby colour that fits; `check theme.json` and `check spec.json --theme theme.json` list them. `docs/theme-rules.md` has each palette against the rules.
+- **A theme from one hue.** `{ "base": "ink", "mixed": "#7a5cff" }` or `--theme mixed:#7a5cff:dark` derives every role from one hue so that the four rules and every contrast check hold, light or dark. The builder's Colours menu has it as Mixed.
+- **A ramp for density grids.** Four colours for `░ ▒ ▓ █` in `heatmap`, `cohort` and `calendarStrip`, drawn solid in SVG. Elsewhere shades keep the data colour, so the density ladder means the same thing.
+- **Colour in the terminal.** Text drawn to a terminal is coloured by role in the 16 standard colours: problems red, passes green, lines dim. `NO_COLOR` and `--no-color` turn it off; `--color` turns it on for a pipe. Markdown and files stay plain.
+- **Every figure on the site moves.** Moving diagrams loop side by side; every other figure arrives again on a 6-second cycle while it is in view. A figure holds still while hovered or focused, off screen or in a hidden tab, and reduced motion shows stills. Layouts now arrive in reading order too, in decks and on the site. `autoplay(…, { solo: false })` lets a page play every moving diagram in view instead of one.
+- **Pick the colours on the site.** The builder has a Colours menu with the four palettes; exports use the one you pick.
+- **Colour follows meaning.** `color` on a node, bar or row is refused.
+- **Paper passes its own rule.** Its problem colour is darker (`#c4401c` to `#b8391a`) and its secondary text a touch darker (`#6d6c66` to `#6b6a64`), so both reach 4.5 to 1 on the panel.
+- Existing specs need no changes. The text form is unchanged.
+
 ## 0.2.1 — 2026-10-26
 
 **Fixes**
@@ -16,6 +61,7 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 **Site**
 
 - **A Changelog page** at /changelog/, every release newest first.
+- **Problems and passes on the site** follow the same rule: `paper`'s pair in light mode, `ink`'s in dark.
 - **The kit against HTML/JS, measured again** on the current kit: cheaper, faster and fewer tokens written on every run, for all five deliverables tested in Claude Code.
 
 Existing specs need no changes.

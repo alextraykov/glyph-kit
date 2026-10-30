@@ -1,0 +1,48 @@
+{
+  "kind": "contrast",
+  "title": "Problems and passes as words, before",
+  "intent": "Problems and passes are words, so each needs 4.5 to 1 on the panel in every view.",
+  "source": "Kit palettes before 0.3.0; weak views simulated (Machado 2009)",
+  "data": [
+    {
+      "label": "paper problem",
+      "fg": "#7e7012",
+      "bg": "#efede6"
+    },
+    {
+      "label": "paper good",
+      "fg": "#78704d",
+      "bg": "#efede6"
+    },
+    {
+      "label": "ink problem",
+      "fg": "#9a8d52",
+      "bg": "#171715"
+    },
+    {
+      "label": "ink good",
+      "fg": "#b2ab92",
+      "bg": "#171715"
+    },
+    {
+      "label": "phosphor problem",
+      "fg": "#a69435",
+      "bg": "#181b23"
+    },
+    {
+      "label": "phosphor good",
+      "fg": "#c4ba92",
+      "bg": "#171a23"
+    },
+    {
+      "label": "gilt problem",
+      "fg": "#ada27b",
+      "bg": "#0e0d0a"
+    },
+    {
+      "label": "gilt good",
+      "fg": "#b6a006",
+      "bg": "#0e0d0a"
+    }
+  ]
+}

@@ -20,6 +20,23 @@ export function hasNumbers(value) {
   return false;
 }
 
+/** Where a spec gives one thing its own colour: "color" or "colour" on a node, bar or row. */
+export function ownColour(value, path = "data") {
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      const found = ownColour(value[i], `${path}[${i}]`);
+      if (found) return found;
+    }
+  } else if (value && typeof value === "object") {
+    for (const [key, v] of Object.entries(value)) {
+      if (key === "color" || key === "colour") return `${path}.${key}`;
+      const found = ownColour(v, `${path}.${key}`);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 const name = (spec, fallback) => (spec.title ? `"${spec.title}"` : `This ${fallback ?? spec.kind}`);
 
 /**
@@ -33,6 +50,9 @@ export function guard(spec, { check, label, layout, wireframe } = {}) {
   // layout's. A screen layout's numbers are sizes, not data.
   if (!layout && !wireframe && hasNumbers(spec.data) && !String(spec.source ?? "").trim())
     throw new Error(`${name(spec, label)} has numbers but no source. Say where they came from in "source", or start it with "Illustrative" if they're made up.`);
+  const coloured = ownColour(spec.data);
+  if (coloured)
+    throw new Error(`${name(spec, label)} sets its own colour at ${coloured}. Colour follows meaning, not decoration: use the theme's roles (reference/colour.md) and take the colour out.`);
   const problems = check ? check(spec.data).filter(Boolean) : [];
   if (problems.length) throw new Error(`${name(spec, label)}: ${problems.join(" ")}`);
 }

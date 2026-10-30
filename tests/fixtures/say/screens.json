@@ -1,0 +1,1921 @@
+{
+  "status": "synthetic-authored",
+  "note": "Fifty authored screen descriptions with literal expected specs; includes popovers, settings, list overlays and no recorded speech.",
+  "cases": [
+    {
+      "sentence": "a popover called “Choose environment”. a heading called “Where should this run?”. a name field. two radio options, staging and production. a Save button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Choose environment",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Where should this run?"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "radio",
+            "options": [
+              "Staging",
+              "Production"
+            ],
+            "selected": "Staging"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a popover called “Deployment target”. a heading called “Where should this run?”. a name field. two radio options, staging and production. a Save button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Deployment target",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Where should this run?"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "radio",
+            "options": [
+              "Staging",
+              "Production"
+            ],
+            "selected": "Staging"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a popover called “Service region”. a heading called “Where should this run?”. a name field. two radio options, staging and production. a Save button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Service region",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Where should this run?"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "radio",
+            "options": [
+              "Staging",
+              "Production"
+            ],
+            "selected": "Staging"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a popover called “Workspace location”. a heading called “Where should this run?”. a name field. two radio options, staging and production. a Save button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Workspace location",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Where should this run?"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "radio",
+            "options": [
+              "Staging",
+              "Production"
+            ],
+            "selected": "Staging"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a popover called “Team default”. a heading called “Where should this run?”. a name field. two radio options, staging and production. a Save button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Team default",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Where should this run?"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "radio",
+            "options": [
+              "Staging",
+              "Production"
+            ],
+            "selected": "Staging"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Notification settings”. tabs for Profile, Notifications, Billing; Notifications selected. some space. switch for weekly summary, off. dropdown, Digest day, set to Monday. Cancel and Save buttons, Save is primary.",
+      "expected": {
+        "kind": "screen",
+        "title": "Notification settings",
+        "rows": [
+          {
+            "type": "tabs",
+            "items": [
+              "Profile",
+              "Notifications",
+              "Billing"
+            ],
+            "selected": "Notifications"
+          },
+          {
+            "type": "space"
+          },
+          {
+            "type": "toggle",
+            "label": "Weekly summary",
+            "on": false
+          },
+          {
+            "type": "select",
+            "label": "Digest day",
+            "value": "Monday"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Save",
+                "primary": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Email preferences”. tabs for Profile, Notifications, Billing; Notifications selected. some space. switch for weekly summary, off. dropdown, Digest day, set to Monday. Cancel and Save buttons, Save is primary.",
+      "expected": {
+        "kind": "screen",
+        "title": "Email preferences",
+        "rows": [
+          {
+            "type": "tabs",
+            "items": [
+              "Profile",
+              "Notifications",
+              "Billing"
+            ],
+            "selected": "Notifications"
+          },
+          {
+            "type": "space"
+          },
+          {
+            "type": "toggle",
+            "label": "Weekly summary",
+            "on": false
+          },
+          {
+            "type": "select",
+            "label": "Digest day",
+            "value": "Monday"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Save",
+                "primary": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Weekly digest”. tabs for Profile, Notifications, Billing; Notifications selected. some space. switch for weekly summary, off. dropdown, Digest day, set to Monday. Cancel and Save buttons, Save is primary.",
+      "expected": {
+        "kind": "screen",
+        "title": "Weekly digest",
+        "rows": [
+          {
+            "type": "tabs",
+            "items": [
+              "Profile",
+              "Notifications",
+              "Billing"
+            ],
+            "selected": "Notifications"
+          },
+          {
+            "type": "space"
+          },
+          {
+            "type": "toggle",
+            "label": "Weekly summary",
+            "on": false
+          },
+          {
+            "type": "select",
+            "label": "Digest day",
+            "value": "Monday"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Save",
+                "primary": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Alert settings”. tabs for Profile, Notifications, Billing; Notifications selected. some space. switch for weekly summary, off. dropdown, Digest day, set to Monday. Cancel and Save buttons, Save is primary.",
+      "expected": {
+        "kind": "screen",
+        "title": "Alert settings",
+        "rows": [
+          {
+            "type": "tabs",
+            "items": [
+              "Profile",
+              "Notifications",
+              "Billing"
+            ],
+            "selected": "Notifications"
+          },
+          {
+            "type": "space"
+          },
+          {
+            "type": "toggle",
+            "label": "Weekly summary",
+            "on": false
+          },
+          {
+            "type": "select",
+            "label": "Digest day",
+            "value": "Monday"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Save",
+                "primary": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Message delivery”. tabs for Profile, Notifications, Billing; Notifications selected. some space. switch for weekly summary, off. dropdown, Digest day, set to Monday. Cancel and Save buttons, Save is primary.",
+      "expected": {
+        "kind": "screen",
+        "title": "Message delivery",
+        "rows": [
+          {
+            "type": "tabs",
+            "items": [
+              "Profile",
+              "Notifications",
+              "Billing"
+            ],
+            "selected": "Notifications"
+          },
+          {
+            "type": "space"
+          },
+          {
+            "type": "toggle",
+            "label": "Weekly summary",
+            "on": false
+          },
+          {
+            "type": "select",
+            "label": "Digest day",
+            "value": "Monday"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Save",
+                "primary": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a page called “Projects”. a heading called “Projects”. search for projects. a list of North, Atlas, Research. a New project button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Projects",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Projects"
+          },
+          {
+            "type": "search",
+            "placeholder": "Search projects"
+          },
+          {
+            "type": "list",
+            "items": [
+              "North",
+              "Atlas",
+              "Research"
+            ]
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "New project"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a page called “Your work”. a heading called “Projects”. search for projects. a list of North, Atlas, Research. a New project button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Your work",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Projects"
+          },
+          {
+            "type": "search",
+            "placeholder": "Search projects"
+          },
+          {
+            "type": "list",
+            "items": [
+              "North",
+              "Atlas",
+              "Research"
+            ]
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "New project"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a page called “Open projects”. a heading called “Projects”. search for projects. a list of North, Atlas, Research. a New project button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Open projects",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Projects"
+          },
+          {
+            "type": "search",
+            "placeholder": "Search projects"
+          },
+          {
+            "type": "list",
+            "items": [
+              "North",
+              "Atlas",
+              "Research"
+            ]
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "New project"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a page called “Project archive”. a heading called “Projects”. search for projects. a list of North, Atlas, Research. a New project button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Project archive",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Projects"
+          },
+          {
+            "type": "search",
+            "placeholder": "Search projects"
+          },
+          {
+            "type": "list",
+            "items": [
+              "North",
+              "Atlas",
+              "Research"
+            ]
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "New project"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a page called “Team projects”. a heading called “Projects”. search for projects. a list of North, Atlas, Research. a New project button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Team projects",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Projects"
+          },
+          {
+            "type": "search",
+            "placeholder": "Search projects"
+          },
+          {
+            "type": "list",
+            "items": [
+              "North",
+              "Atlas",
+              "Research"
+            ]
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "New project"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Product details”. a heading called “Studio plan”. text saying “For teams that need shared work.”. a picture of “Plan preview”. a divider. Compare and Continue buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Product details",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Studio plan"
+          },
+          {
+            "type": "text",
+            "text": "For teams that need shared work."
+          },
+          {
+            "type": "image",
+            "label": "Plan preview"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Compare"
+              },
+              {
+                "label": "Continue"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Plan overview”. a heading called “Studio plan”. text saying “For teams that need shared work.”. a picture of “Plan preview”. a divider. Compare and Continue buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Plan overview",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Studio plan"
+          },
+          {
+            "type": "text",
+            "text": "For teams that need shared work."
+          },
+          {
+            "type": "image",
+            "label": "Plan preview"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Compare"
+              },
+              {
+                "label": "Continue"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Workspace summary”. a heading called “Studio plan”. text saying “For teams that need shared work.”. a picture of “Plan preview”. a divider. Compare and Continue buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Workspace summary",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Studio plan"
+          },
+          {
+            "type": "text",
+            "text": "For teams that need shared work."
+          },
+          {
+            "type": "image",
+            "label": "Plan preview"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Compare"
+              },
+              {
+                "label": "Continue"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Account overview”. a heading called “Studio plan”. text saying “For teams that need shared work.”. a picture of “Plan preview”. a divider. Compare and Continue buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Account overview",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Studio plan"
+          },
+          {
+            "type": "text",
+            "text": "For teams that need shared work."
+          },
+          {
+            "type": "image",
+            "label": "Plan preview"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Compare"
+              },
+              {
+                "label": "Continue"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Service information”. a heading called “Studio plan”. text saying “For teams that need shared work.”. a picture of “Plan preview”. a divider. Compare and Continue buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Service information",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Studio plan"
+          },
+          {
+            "type": "text",
+            "text": "For teams that need shared work."
+          },
+          {
+            "type": "image",
+            "label": "Plan preview"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Compare"
+              },
+              {
+                "label": "Continue"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a dialog called “Create account”. a heading called “Create your account”. a name field. email field with placeholder “you@example.com”. checkbox: Send me product updates. a Create account button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Create account",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Create your account"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "input",
+            "label": "Email",
+            "placeholder": "you@example.com"
+          },
+          {
+            "type": "checkbox",
+            "label": "Send me product updates"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Create account"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a dialog called “Join the team”. a heading called “Create your account”. a name field. email field with placeholder “you@example.com”. checkbox: Send me product updates. a Create account button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Join the team",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Create your account"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "input",
+            "label": "Email",
+            "placeholder": "you@example.com"
+          },
+          {
+            "type": "checkbox",
+            "label": "Send me product updates"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Create account"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a dialog called “Invite a teammate”. a heading called “Create your account”. a name field. email field with placeholder “you@example.com”. checkbox: Send me product updates. a Create account button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Invite a teammate",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Create your account"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "input",
+            "label": "Email",
+            "placeholder": "you@example.com"
+          },
+          {
+            "type": "checkbox",
+            "label": "Send me product updates"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Create account"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a dialog called “New member”. a heading called “Create your account”. a name field. email field with placeholder “you@example.com”. checkbox: Send me product updates. a Create account button.",
+      "expected": {
+        "kind": "screen",
+        "title": "New member",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Create your account"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "input",
+            "label": "Email",
+            "placeholder": "you@example.com"
+          },
+          {
+            "type": "checkbox",
+            "label": "Send me product updates"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Create account"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a dialog called “Add a person”. a heading called “Create your account”. a name field. email field with placeholder “you@example.com”. checkbox: Send me product updates. a Create account button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Add a person",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Create your account"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "input",
+            "label": "Email",
+            "placeholder": "you@example.com"
+          },
+          {
+            "type": "checkbox",
+            "label": "Send me product updates"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Create account"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Saved views”. a heading called “Saved views”. empty state: No saved views yet. muted caption “Save a filter to find it here.”. a Save view button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Saved views",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Saved views"
+          },
+          {
+            "type": "empty",
+            "text": "No saved views yet"
+          },
+          {
+            "type": "muted",
+            "text": "Save a filter to find it here."
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save view"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Recent searches”. a heading called “Saved views”. empty state: No saved views yet. muted caption “Save a filter to find it here.”. a Save view button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Recent searches",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Saved views"
+          },
+          {
+            "type": "empty",
+            "text": "No saved views yet"
+          },
+          {
+            "type": "muted",
+            "text": "Save a filter to find it here."
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save view"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Pinned items”. a heading called “Saved views”. empty state: No saved views yet. muted caption “Save a filter to find it here.”. a Save view button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Pinned items",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Saved views"
+          },
+          {
+            "type": "empty",
+            "text": "No saved views yet"
+          },
+          {
+            "type": "muted",
+            "text": "Save a filter to find it here."
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save view"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “My collections”. a heading called “Saved views”. empty state: No saved views yet. muted caption “Save a filter to find it here.”. a Save view button.",
+      "expected": {
+        "kind": "screen",
+        "title": "My collections",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Saved views"
+          },
+          {
+            "type": "empty",
+            "text": "No saved views yet"
+          },
+          {
+            "type": "muted",
+            "text": "Save a filter to find it here."
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save view"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Bookmarks”. a heading called “Saved views”. empty state: No saved views yet. muted caption “Save a filter to find it here.”. a Save view button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Bookmarks",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Saved views"
+          },
+          {
+            "type": "empty",
+            "text": "No saved views yet"
+          },
+          {
+            "type": "muted",
+            "text": "Save a filter to find it here."
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save view"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a page called “Team directory”. a heading called “People”. search box labelled “Find a person”. table with columns Name, Role, Status and row “Rae, Editor, Active”. a divider. Invite and Export buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Team directory",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "People"
+          },
+          {
+            "type": "search",
+            "placeholder": "Find a person"
+          },
+          {
+            "type": "table",
+            "columns": [
+              "Name",
+              "Role",
+              "Status"
+            ],
+            "rows": [
+              [
+                "Rae",
+                "Editor",
+                "Active"
+              ]
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Invite"
+              },
+              {
+                "label": "Export"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a page called “People”. a heading called “People”. search box labelled “Find a person”. table with columns Name, Role, Status and row “Rae, Editor, Active”. a divider. Invite and Export buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "People",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "People"
+          },
+          {
+            "type": "search",
+            "placeholder": "Find a person"
+          },
+          {
+            "type": "table",
+            "columns": [
+              "Name",
+              "Role",
+              "Status"
+            ],
+            "rows": [
+              [
+                "Rae",
+                "Editor",
+                "Active"
+              ]
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Invite"
+              },
+              {
+                "label": "Export"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a page called “Workspace members”. a heading called “People”. search box labelled “Find a person”. table with columns Name, Role, Status and row “Rae, Editor, Active”. a divider. Invite and Export buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Workspace members",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "People"
+          },
+          {
+            "type": "search",
+            "placeholder": "Find a person"
+          },
+          {
+            "type": "table",
+            "columns": [
+              "Name",
+              "Role",
+              "Status"
+            ],
+            "rows": [
+              [
+                "Rae",
+                "Editor",
+                "Active"
+              ]
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Invite"
+              },
+              {
+                "label": "Export"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a page called “Access list”. a heading called “People”. search box labelled “Find a person”. table with columns Name, Role, Status and row “Rae, Editor, Active”. a divider. Invite and Export buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Access list",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "People"
+          },
+          {
+            "type": "search",
+            "placeholder": "Find a person"
+          },
+          {
+            "type": "table",
+            "columns": [
+              "Name",
+              "Role",
+              "Status"
+            ],
+            "rows": [
+              [
+                "Rae",
+                "Editor",
+                "Active"
+              ]
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Invite"
+              },
+              {
+                "label": "Export"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a page called “Collaborators”. a heading called “People”. search box labelled “Find a person”. table with columns Name, Role, Status and row “Rae, Editor, Active”. a divider. Invite and Export buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Collaborators",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "People"
+          },
+          {
+            "type": "search",
+            "placeholder": "Find a person"
+          },
+          {
+            "type": "table",
+            "columns": [
+              "Name",
+              "Role",
+              "Status"
+            ],
+            "rows": [
+              [
+                "Rae",
+                "Editor",
+                "Active"
+              ]
+            ]
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Invite"
+              },
+              {
+                "label": "Export"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Privacy”. a heading called “Privacy choices”. checkbox “Public profile”, not checked. toggle “Show activity”, on. small print: “Only workspace members can see these settings.”. a Save button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Privacy",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Privacy choices"
+          },
+          {
+            "type": "checkbox",
+            "label": "Public profile",
+            "checked": false
+          },
+          {
+            "type": "toggle",
+            "label": "Show activity",
+            "on": true
+          },
+          {
+            "type": "muted",
+            "text": "Only workspace members can see these settings."
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Data controls”. a heading called “Privacy choices”. checkbox “Public profile”, not checked. toggle “Show activity”, on. small print: “Only workspace members can see these settings.”. a Save button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Data controls",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Privacy choices"
+          },
+          {
+            "type": "checkbox",
+            "label": "Public profile",
+            "checked": false
+          },
+          {
+            "type": "toggle",
+            "label": "Show activity",
+            "on": true
+          },
+          {
+            "type": "muted",
+            "text": "Only workspace members can see these settings."
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Sharing settings”. a heading called “Privacy choices”. checkbox “Public profile”, not checked. toggle “Show activity”, on. small print: “Only workspace members can see these settings.”. a Save button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Sharing settings",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Privacy choices"
+          },
+          {
+            "type": "checkbox",
+            "label": "Public profile",
+            "checked": false
+          },
+          {
+            "type": "toggle",
+            "label": "Show activity",
+            "on": true
+          },
+          {
+            "type": "muted",
+            "text": "Only workspace members can see these settings."
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Profile visibility”. a heading called “Privacy choices”. checkbox “Public profile”, not checked. toggle “Show activity”, on. small print: “Only workspace members can see these settings.”. a Save button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Profile visibility",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Privacy choices"
+          },
+          {
+            "type": "checkbox",
+            "label": "Public profile",
+            "checked": false
+          },
+          {
+            "type": "toggle",
+            "label": "Show activity",
+            "on": true
+          },
+          {
+            "type": "muted",
+            "text": "Only workspace members can see these settings."
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Account safety”. a heading called “Privacy choices”. checkbox “Public profile”, not checked. toggle “Show activity”, on. small print: “Only workspace members can see these settings.”. a Save button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Account safety",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Privacy choices"
+          },
+          {
+            "type": "checkbox",
+            "label": "Public profile",
+            "checked": false
+          },
+          {
+            "type": "toggle",
+            "label": "Show activity",
+            "on": true
+          },
+          {
+            "type": "muted",
+            "text": "Only workspace members can see these settings."
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Save"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Billing”. tabs for Plan, Payment, Invoices; Payment selected. a heading called “Payment method”. a text box for the name. a dropdown labelled “Country”, set to Canada. a divider. Cancel and Update buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Billing",
+        "rows": [
+          {
+            "type": "tabs",
+            "items": [
+              "Plan",
+              "Payment",
+              "Invoices"
+            ],
+            "selected": "Payment"
+          },
+          {
+            "type": "heading",
+            "text": "Payment method"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "select",
+            "label": "Country",
+            "value": "Canada"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Update"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Payment method”. tabs for Plan, Payment, Invoices; Payment selected. a heading called “Payment method”. a text box for the name. a dropdown labelled “Country”, set to Canada. a divider. Cancel and Update buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Payment method",
+        "rows": [
+          {
+            "type": "tabs",
+            "items": [
+              "Plan",
+              "Payment",
+              "Invoices"
+            ],
+            "selected": "Payment"
+          },
+          {
+            "type": "heading",
+            "text": "Payment method"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "select",
+            "label": "Country",
+            "value": "Canada"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Update"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Invoices”. tabs for Plan, Payment, Invoices; Payment selected. a heading called “Payment method”. a text box for the name. a dropdown labelled “Country”, set to Canada. a divider. Cancel and Update buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Invoices",
+        "rows": [
+          {
+            "type": "tabs",
+            "items": [
+              "Plan",
+              "Payment",
+              "Invoices"
+            ],
+            "selected": "Payment"
+          },
+          {
+            "type": "heading",
+            "text": "Payment method"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "select",
+            "label": "Country",
+            "value": "Canada"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Update"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Plan and payment”. tabs for Plan, Payment, Invoices; Payment selected. a heading called “Payment method”. a text box for the name. a dropdown labelled “Country”, set to Canada. a divider. Cancel and Update buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Plan and payment",
+        "rows": [
+          {
+            "type": "tabs",
+            "items": [
+              "Plan",
+              "Payment",
+              "Invoices"
+            ],
+            "selected": "Payment"
+          },
+          {
+            "type": "heading",
+            "text": "Payment method"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "select",
+            "label": "Country",
+            "value": "Canada"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Update"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Usage and billing”. tabs for Plan, Payment, Invoices; Payment selected. a heading called “Payment method”. a text box for the name. a dropdown labelled “Country”, set to Canada. a divider. Cancel and Update buttons.",
+      "expected": {
+        "kind": "screen",
+        "title": "Usage and billing",
+        "rows": [
+          {
+            "type": "tabs",
+            "items": [
+              "Plan",
+              "Payment",
+              "Invoices"
+            ],
+            "selected": "Payment"
+          },
+          {
+            "type": "heading",
+            "text": "Payment method"
+          },
+          {
+            "type": "input",
+            "label": "Name"
+          },
+          {
+            "type": "select",
+            "label": "Country",
+            "value": "Canada"
+          },
+          {
+            "type": "divider"
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Cancel"
+              },
+              {
+                "label": "Update"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sentence": "a screen called “Invite someone”. a heading called “Project members”. a list of Alex, Sam, Lee. a Search button. a divider. a dialog called “Invite someone” over the screen. email field with placeholder “name@example.com”. a Send invitation button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Invite someone",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Project members"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Alex",
+              "Sam",
+              "Lee"
+            ]
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Search"
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          }
+        ],
+        "overlay": {
+          "title": "Invite someone",
+          "rows": [
+            {
+              "type": "input",
+              "label": "Email",
+              "placeholder": "name@example.com"
+            },
+            {
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Send invitation"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "a screen called “New invitation”. a heading called “Project members”. a list of Alex, Sam, Lee. a Search button. a divider. a dialog called “Invite someone” over the screen. email field with placeholder “name@example.com”. a Send invitation button.",
+      "expected": {
+        "kind": "screen",
+        "title": "New invitation",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Project members"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Alex",
+              "Sam",
+              "Lee"
+            ]
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Search"
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          }
+        ],
+        "overlay": {
+          "title": "Invite someone",
+          "rows": [
+            {
+              "type": "input",
+              "label": "Email",
+              "placeholder": "name@example.com"
+            },
+            {
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Send invitation"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "a screen called “Add member”. a heading called “Project members”. a list of Alex, Sam, Lee. a Search button. a divider. a dialog called “Invite someone” over the screen. email field with placeholder “name@example.com”. a Send invitation button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Add member",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Project members"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Alex",
+              "Sam",
+              "Lee"
+            ]
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Search"
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          }
+        ],
+        "overlay": {
+          "title": "Invite someone",
+          "rows": [
+            {
+              "type": "input",
+              "label": "Email",
+              "placeholder": "name@example.com"
+            },
+            {
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Send invitation"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "a screen called “Share project”. a heading called “Project members”. a list of Alex, Sam, Lee. a Search button. a divider. a dialog called “Invite someone” over the screen. email field with placeholder “name@example.com”. a Send invitation button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Share project",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Project members"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Alex",
+              "Sam",
+              "Lee"
+            ]
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Search"
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          }
+        ],
+        "overlay": {
+          "title": "Invite someone",
+          "rows": [
+            {
+              "type": "input",
+              "label": "Email",
+              "placeholder": "name@example.com"
+            },
+            {
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Send invitation"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "sentence": "a screen called “Send an invite”. a heading called “Project members”. a list of Alex, Sam, Lee. a Search button. a divider. a dialog called “Invite someone” over the screen. email field with placeholder “name@example.com”. a Send invitation button.",
+      "expected": {
+        "kind": "screen",
+        "title": "Send an invite",
+        "rows": [
+          {
+            "type": "heading",
+            "text": "Project members"
+          },
+          {
+            "type": "list",
+            "items": [
+              "Alex",
+              "Sam",
+              "Lee"
+            ]
+          },
+          {
+            "type": "buttons",
+            "items": [
+              {
+                "label": "Search"
+              }
+            ]
+          },
+          {
+            "type": "divider"
+          }
+        ],
+        "overlay": {
+          "title": "Invite someone",
+          "rows": [
+            {
+              "type": "input",
+              "label": "Email",
+              "placeholder": "name@example.com"
+            },
+            {
+              "type": "buttons",
+              "items": [
+                {
+                  "label": "Send invitation"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

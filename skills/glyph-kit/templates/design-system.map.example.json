@@ -1,6 +1,6 @@
 {
   "name": "Your design system",
-  "about": "Copy this file into your project as design-system.map.json and replace the right-hand sides with your own names. Glyph kit uses the tokens to style HTML prototypes and decks; agents use the components and motion entries to build production code with your real parts. Give every token a fallback, var(--your-token, #value), so prototypes also render outside your project. Set \"stylesheet\" to load your design system's CSS into prototypes and decks.",
+  "about": "Copy this file into your project as design-system.map.json and replace the right-hand sides with your own names. Glyph kit uses the tokens to style HTML prototypes and decks; agents use the components and motion entries to build production code with your real parts. Give every token a fallback, var(--your-token, #value), so prototypes also render outside your project. Set \"stylesheet\" to load your design system's CSS into prototypes and decks. \"roles\" points the kit's colour roles (bg, panel, ink, muted, data, frame, flag, ok) at your tokens, so figures in HTML, decks, SVG and PDF use your colours; each one is checked for contrast.",
   "stylesheet": "",
   "tokens": {
     "ink": "var(--color-text, #111110)",
@@ -18,6 +18,11 @@
     "durationBase": "var(--duration-base, 200ms)",
     "easingBase": "var(--ease-standard, cubic-bezier(0.2, 0, 0, 1))",
     "ok": "var(--color-success, #0a7a50)"
+  },
+  "roles": {
+    "data": "accent",
+    "flag": "danger",
+    "ok": "ok"
   },
   "components": {
     "button": {

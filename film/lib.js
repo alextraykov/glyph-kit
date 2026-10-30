@@ -18,7 +18,6 @@ export const beat = (n) => n * B;
 
 export const canvas = document.getElementById("c");
 export const ctx = canvas.getContext("2d");
-let LOGO = null;
 
 const colour = (cls) =>
   ({ "gk-e": "rgba(8,8,8,0.45)", "gk-f": C.caption, "gk-x": C.fail, "gk-ok": C.ok, "gl-ok": C.ok, "gl-fail": C.fail, "gl-mute": C.caption })[cls] ?? C.ink;
@@ -72,7 +71,8 @@ export function counted(value, t, t0, t1) {
 }
 
 export function footer() {
-  if (LOGO) ctx.drawImage(LOGO, M, FOOT, 46, 46 * (908.79 / 873.71));
+  // The kit's logo, ░▒▓█ side by side in Departure Mono, on the address's baseline (docs/brand.md).
+  text("░▒▓█", M, FOOT + 32, 22, C.ink);
   text("traykov.cc/glyph-kit", SIZE - M, FOOT + 32, 22, C.caption, "right");
 }
 
@@ -150,12 +150,6 @@ export const endCardCues = (t0) => [{ t: +(t0 + beat(0.5)).toFixed(4), type: "ty
 export async function wire({ dur, draw, cues, storyboard, prepare }) {
   if (new URLSearchParams(location.search).has("render")) document.body.classList.add("render");
   await document.fonts.load(`33px ${FONT}`);
-  LOGO = await new Promise((ok) => {
-    const img = new Image();
-    img.onload = () => ok(img);
-    img.onerror = () => ok(null);
-    img.src = "assets/logo.svg";
-  });
   await prepare?.();
   const frame = (t) => {
     ctx.fillStyle = C.paper;

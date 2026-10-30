@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Try a figure in the browser
+    url: https://glyph-kit.traykov.cc
+    about: The builder draws a figure from a description, with nothing to install.

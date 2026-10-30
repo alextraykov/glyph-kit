@@ -4,9 +4,9 @@
 // stands for, notes pinned to the elements they describe. Motion specs play, with a still for reduced motion.
 import { FONT_CSS } from "./font.mjs";
 import { resolve } from "../registry.mjs";
-import { SPACING } from "./themes.mjs";
+import { SPACING, resolveTheme } from "./themes.mjs";
 import { isSample } from "../guard.mjs";
-import { PAINT_CSS, paint } from "./paint.mjs";
+import { PAINT_CSS, paint, paintOptions } from "./paint.mjs";
 import { ARRIVE_CSS, ARRIVE_JS, arriveLines } from "./arrive.mjs";
 import { staggerStarts } from "../areas/motion.mjs";
 import { body, label } from "./text.mjs";
@@ -266,7 +266,7 @@ export function fragment(spec, { map, notes = true } = {}) {
   if (spec.motion && moves(spec.kind)) return `<pre lang="${esc(spec.lang ?? "en")}" class="gk-figure" data-moving role="img" aria-label="${esc(label(spec))}">${esc(stillText(spec))}</pre><template data-motion-spec>${esc(JSON.stringify(spec))}</template>`;
   const text = body(spec);
   const arrived = arriveLines(spec, text);
-  const figure = `<pre lang="${esc(spec.lang ?? "en")}" class="gk-figure"${arrived ? " data-arrive" : ""} role="img" aria-label="${esc(label(spec))}">${arrived ? arrived.join("\n") : paint(text)}</pre>`;
+  const figure = `<pre lang="${esc(spec.lang ?? "en")}" class="gk-figure"${arrived ? " data-arrive" : ""} role="img" aria-label="${esc(label(spec))}">${arrived ? arrived.join("\n") : paint(text, paintOptions(spec, text))}</pre>`;
   const demo = motionDemo(spec);
   if (!demo) return figure;
   // Every demo rule starts with .gk-stage; scope it to this stage so several demos can share a page.
@@ -281,14 +281,25 @@ document.querySelectorAll(".gk-tabs").forEach((t)=>t.addEventListener("click",(e
 document.querySelectorAll("[data-screen]").forEach((screen)=>{const wake=()=>screen.querySelectorAll("[data-until-change]").forEach((b)=>b.disabled=false);screen.addEventListener("input",wake);screen.addEventListener("change",wake);const d=screen.querySelector("[data-dialog]");if(!d)return;d.querySelectorAll("[data-close]").forEach((b)=>b.addEventListener("click",()=>{d.hidden=true;screen.querySelector("[data-reopen]")?.removeAttribute("hidden")}));addEventListener("keydown",(e)=>{if(e.key==="Escape")d.hidden=true});screen.querySelector(".gk-list")?.addEventListener("click",()=>{d.hidden=false})});
 `;
 
-const page = ({ title, intent, source, content, text, map, moving = false, lang = "en" }) => `<!doctype html>
+/** Figure colours from a theme, or from the map's roles block: only what was asked for, so the map's
+ *  own tokens (accent, muted, danger) still colour everything else. */
+const roleCss = (theme, map) => {
+  if (theme == null && !map?.roles) return "";
+  const t = resolveTheme(theme, { map });
+  const roles = ["data", "frame", "flag", "ok"].filter((r) => theme != null || r in map.roles);
+  const vars = roles.map((r) => `--gk-${r}:${t.css[r]}`);
+  if (t.ramp) vars.push(...t.ramp.map((c, i) => `--gk-ramp${i + 1}:${c}`), "--gk-ramp-o:1");
+  return vars.length ? `:root{${vars.join(";")}}` : "";
+};
+
+const page = ({ title, intent, source, content, text, map, theme, moving = false, lang = "en" }) => `<!doctype html>
 <html lang="${esc(lang)}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title>
 ${map?.stylesheet ? `<link rel="stylesheet" href="${esc(map.stylesheet)}">` : ""}
-<style>${FONT_CSS()}${tokensCss(map)}${BASE_CSS}</style>
+<style>${FONT_CSS()}${tokensCss(map)}${BASE_CSS}${roleCss(theme, map)}</style>
 </head>
 <body>
 <header class="gk-top"><span class="gk-chip">Prototype</span><h1>${esc(title)}</h1>${intent ? `<p>${esc(intent)}</p>` : ""}</header>
@@ -306,14 +317,14 @@ ${moving ? `<script>${inlineMotion(moving)}\ndocument.querySelectorAll('[data-mo
 const playing = (specs) => { const kinds = specs.filter((s) => s.motion && moves(s.kind)).map((s) => s.kind); return kinds.length ? kinds : false; };
 
 /** A whole self-contained page for one spec, or for a list of specs one after another. */
-export function renderHtml(spec, { map, title: pageTitle } = {}) {
-  if (!Array.isArray(spec) && spec.motion && moves(spec.kind)) return renderLiveHtml(spec);
-  if (!Array.isArray(spec) && isLayout(spec)) return renderLayoutPage(spec);
+export function renderHtml(spec, { map, theme, title: pageTitle } = {}) {
+  if (!Array.isArray(spec) && spec.motion && moves(spec.kind)) return renderLiveHtml(spec, { theme: theme ?? spec.theme ?? "paper", map });
+  if (!Array.isArray(spec) && isLayout(spec)) return renderLayoutPage(spec, { theme, map });
   if (Array.isArray(spec)) {
     const content = `<div style="display:grid;gap:56px;justify-items:center;width:100%">${spec
       .map((s) => `<section style="display:grid;gap:16px;justify-items:center;width:100%"><h2 style="margin:0;font-size:16px">${esc(s.title ?? resolve(s).label)}</h2>${fragment(s, { map })}</section>`)
       .join("")}</div>`;
-    return page({ lang: spec[0]?.lang, title: pageTitle ?? "Glyph kit", content, map, moving: playing(spec) });
+    return page({ lang: spec[0]?.lang, title: pageTitle ?? "Glyph kit", content, map, theme, moving: playing(spec) });
   }
   const def = resolve(spec);
   const isScreen = spec.kind === "screen" || spec.kind === "responsive";
@@ -324,7 +335,8 @@ export function renderHtml(spec, { map, title: pageTitle } = {}) {
     source: spec.source,
     content: fragment(spec, { map }),
     text: isScreen ? body(spec) : "",
-    map
+    map,
+    theme: theme ?? spec.theme
   });
 }
 

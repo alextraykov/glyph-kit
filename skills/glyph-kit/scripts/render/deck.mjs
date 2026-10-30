@@ -1,6 +1,6 @@
 // Deck fidelity: specs as a presentation you'd actually give. One self-contained HTML file.
 //
-// A deck is { title, subtitle?, byline?, theme?: "paper" | "ink" | "phosphor" | "gilt", slides: [...] },
+// A deck is { title, subtitle?, byline?, theme?: "paper" | "ink" | "phosphor" | "gilt" | "halloween", slides: [...] },
 // or just a list of specs. Figures are coloured by role (render/paint.mjs) in the theme's palette.
 // A slide is either a spec (any kind) with an optional `present` block, or one of:
 //   { type: "title", title, subtitle?, byline? }   { type: "section", kicker?, title }
@@ -20,8 +20,8 @@
 import { FONT_CSS } from "./font.mjs";
 import { resolve } from "../registry.mjs";
 import { BASE_CSS, PLAY_JS, esc, fragment, tokensCss } from "./html.mjs";
-import { PAINT_CSS, paintLine } from "./paint.mjs";
-import { PALETTES, SPACING } from "./themes.mjs";
+import { PAINT_CSS, paintLine, paintOptions } from "./paint.mjs";
+import { PALETTES, SPACING, resolveTheme, themeCss } from "./themes.mjs";
 import { body, label } from "./text.mjs";
 import { ARRIVE_CSS, arriveLines } from "./arrive.mjs";
 import { moves, stillText } from "../motion.mjs";
@@ -52,7 +52,7 @@ body{color:var(--gk-deck-ink)}
 .gk-slide--title,.gk-slide--statement{align-content:center;grid-template-rows:auto}
 .gk-slide--title h2{font-size:104px;max-width:14ch}
 .gk-slide--title .gk-lead{font-size:32px}
-.gk-ramp{margin-bottom:32px;color:var(--gk-deck-data);font:64px/1 var(--gk-mono);letter-spacing:14px}
+.gk-ramp{margin-bottom:32px;color:var(--gk-deck-data);font:66px/1 var(--gk-mono);letter-spacing:0}
 .gk-slide--section{align-content:end;grid-template-rows:auto}
 .gk-slide--section h2{font-size:88px}
 .gk-statement{margin:0;max-width:24ch;font:600 72px/1.12 var(--gk-font);letter-spacing:-.025em}
@@ -91,7 +91,7 @@ ${ARRIVE_CSS}
 }
 `;
 
-// Deck palettes come from themes.mjs, renamed to the deck's custom properties.
+// The built-in palettes under the deck's custom property names, for pages that lay out a deck themselves.
 export const THEMES = Object.fromEntries(
   Object.entries(PALETTES).map(([name, p]) => [
     name,
@@ -100,8 +100,8 @@ export const THEMES = Object.fromEntries(
 );
 
 // A type with an arrival order comes in by its own order; any other prints line by line.
-const lines = (text, arrived) =>
-  text.split("\n").map((l, i) => `<span class="gk-ln" data-l="${i}">${(arrived ? arrived[i] : paintLine(l)) || " "}</span>`).join("");
+const lines = (text, arrived, opts) =>
+  text.split("\n").map((l, i) => `<span class="gk-ln" data-l="${i}">${(arrived ? arrived[i] : paintLine(l, { ...opts, row: i })) || " "}</span>`).join("");
 
 function figureSlide(spec, i, total, map, kicker) {
   const def = resolve(spec);
@@ -112,7 +112,7 @@ function figureSlide(spec, i, total, map, kicker) {
   const arrived = !screen && !moving ? arriveLines(spec, text) : null;
   const fig = screen
     ? `<div class="gk-proto">${fragment(spec, { map })}</div>`
-    : `<pre lang="${esc(spec.lang ?? "en")}" class="gk-fig${arrived ? " gk-fig--arrive" : ""}" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(text, arrived)}</pre>`;
+    : `<pre lang="${esc(spec.lang ?? "en")}" class="gk-fig${arrived ? " gk-fig--arrive" : ""}" role="img" aria-label="${esc(label(spec))}">${p.command ? `<span class="gk-cmd">$ <b>${esc(p.command)}</b></span>` : ""}${lines(text, arrived, paintOptions(spec, text))}</pre>`;
   return `<section class="gk-slide" data-steps="${esc(JSON.stringify(p.steps ?? []))}" data-flag="${esc(p.flag ?? "")}" aria-roledescription="slide" aria-label="${i + 1} of ${total}">
 <header><p class="gk-kicker">${esc(kicker || def.label)}</p><h2 class="gk-title">${esc(spec.title ?? def.label)}</h2>${spec.intent ? `<p class="gk-lead">${esc(spec.intent)}</p>` : ""}</header>
 <div class="gk-view"><div class="gk-world">${fig}</div></div>
@@ -286,10 +286,11 @@ function runtime(motionApi) {
   (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => render(true));
 }
 
-/** deck: { title, subtitle?, byline?, theme?, slides } or a list of specs. Returns one HTML file. */
-export function renderDeck(deck, { title: titleOverride, map } = {}) {
+/** deck: { title, subtitle?, byline?, theme?, slides } or a list of specs. Returns one HTML file.
+ *  theme: a palette name or theme object, overriding the deck's; map: a design-system map (tokens, roles). */
+export function renderDeck(deck, { title: titleOverride, map, theme: themeOverride } = {}) {
   const d = Array.isArray(deck) ? { title: titleOverride ?? "Deck", slides: deck } : { ...deck, title: titleOverride ?? deck.title };
-  const theme = THEMES[d.theme ?? "paper"] ?? THEMES.paper;
+  const theme = resolveTheme(themeOverride ?? d.theme, { map });
   const total = d.slides.length;
   const moving = d.slides.some((s) => s.motion && moves(s.kind));
   let section = "";
@@ -306,7 +307,7 @@ export function renderDeck(deck, { title: titleOverride, map } = {}) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(d.title)}</title>
 ${map?.stylesheet ? `<link rel="stylesheet" href="${esc(map.stylesheet)}">` : ""}
-<style>${FONT_CSS()}${tokensCss(map)}:root{${Object.entries(theme).map(([k, v]) => `--gk-${k}:${v}`).join(";")}}${BASE_CSS}${DECK_CSS}${PAINT_CSS("--gk-deck-")}</style>
+<style>${FONT_CSS()}${tokensCss(map)}:root{${themeCss(theme, "--gk-deck-")}}${BASE_CSS}${DECK_CSS}${PAINT_CSS("--gk-deck-")}</style>
 </head>
 <body>
 <main class="gk-deck"><div class="gk-stagebox">

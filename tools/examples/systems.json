@@ -77,6 +77,253 @@
     ]
   },
   {
+    "kind": "palette",
+    "title": "A tonal scale",
+    "source": "Sample data, made up for this example",
+    "data": {
+      "page": "#ffffff",
+      "hues": [
+        {
+          "name": "Blue",
+          "steps": [
+            {
+              "name": "50",
+              "value": "#eef3ff"
+            },
+            {
+              "name": "100",
+              "value": "#dbe6ff"
+            },
+            {
+              "name": "200",
+              "value": "#b7ccfb"
+            },
+            {
+              "name": "300",
+              "value": "#8eaaf2"
+            },
+            {
+              "name": "400",
+              "value": "#6487e6"
+            },
+            {
+              "name": "500",
+              "value": "#4269d6"
+            },
+            {
+              "name": "600",
+              "value": "#3152b8"
+            },
+            {
+              "name": "700",
+              "value": "#263f8f"
+            },
+            {
+              "name": "800",
+              "value": "#1c2d66"
+            },
+            {
+              "name": "900",
+              "value": "#121c40"
+            }
+          ]
+        },
+        {
+          "name": "Red",
+          "steps": [
+            {
+              "name": "50",
+              "value": "#fff1ee"
+            },
+            {
+              "name": "100",
+              "value": "#ffdfd8"
+            },
+            {
+              "name": "200",
+              "value": "#fbbcae"
+            },
+            {
+              "name": "300",
+              "value": "#f2917c"
+            },
+            {
+              "name": "400",
+              "value": "#e2664c"
+            },
+            {
+              "name": "500",
+              "value": "#c94a30"
+            },
+            {
+              "name": "600",
+              "value": "#a83a24"
+            },
+            {
+              "name": "700",
+              "value": "#842d1c"
+            },
+            {
+              "name": "800",
+              "value": "#5e2014"
+            },
+            {
+              "name": "900",
+              "value": "#3b140c"
+            }
+          ]
+        },
+        {
+          "name": "Green",
+          "steps": [
+            {
+              "name": "50",
+              "value": "#ecf8f1"
+            },
+            {
+              "name": "100",
+              "value": "#d3f0df"
+            },
+            {
+              "name": "200",
+              "value": "#a6dfbf"
+            },
+            {
+              "name": "300",
+              "value": "#6fc799"
+            },
+            {
+              "name": "400",
+              "value": "#3fa875"
+            },
+            {
+              "name": "500",
+              "value": "#24895b"
+            },
+            {
+              "name": "600",
+              "value": "#1b6e49"
+            },
+            {
+              "name": "700",
+              "value": "#155538"
+            },
+            {
+              "name": "800",
+              "value": "#0f3c28"
+            },
+            {
+              "name": "900",
+              "value": "#092519"
+            }
+          ]
+        },
+        {
+          "name": "Grey",
+          "steps": [
+            {
+              "name": "50",
+              "value": "#f7f6f1"
+            },
+            {
+              "name": "100",
+              "value": "#efede6"
+            },
+            {
+              "name": "200",
+              "value": "#dcdad2"
+            },
+            {
+              "name": "300",
+              "value": "#c2c0b7"
+            },
+            {
+              "name": "400",
+              "value": "#a3a199"
+            },
+            {
+              "name": "500",
+              "value": "#85837b"
+            },
+            {
+              "name": "600",
+              "value": "#6b6a64"
+            },
+            {
+              "name": "700",
+              "value": "#504f4a"
+            },
+            {
+              "name": "800",
+              "value": "#33332f"
+            },
+            {
+              "name": "900",
+              "value": "#151513"
+            }
+          ]
+        }
+      ]
+    },
+    "intent": "Which step of each hue is dark enough for words on a white page."
+  },
+  {
+    "kind": "colourRoles",
+    "title": "The kit's own colours",
+    "source": "Glyph kit's own palettes, render/themes.mjs",
+    "data": {
+      "page": {
+        "light": "#f7f6f1",
+        "dark": "#0d0d0c"
+      },
+      "roles": [
+        {
+          "role": "words",
+          "token": "--gk-ink",
+          "light": "#151513",
+          "dark": "#f2f0e8",
+          "use": "words"
+        },
+        {
+          "role": "secondary",
+          "token": "--gk-muted",
+          "light": "#6b6a64",
+          "dark": "#9a988f",
+          "use": "words"
+        },
+        {
+          "role": "problems",
+          "token": "--gk-flag",
+          "light": "#651b13",
+          "dark": "#dc7351",
+          "use": "words"
+        },
+        {
+          "role": "passes",
+          "token": "--gk-ok",
+          "light": "#2f743e",
+          "dark": "#89f1b5",
+          "use": "words"
+        },
+        {
+          "role": "data",
+          "token": "--gk-data",
+          "light": "#151513",
+          "dark": "#f2f0e8",
+          "use": "marks"
+        },
+        {
+          "role": "lines",
+          "token": "--gk-frame",
+          "light": "#a3a199",
+          "dark": "#5c5b56",
+          "use": "lines"
+        }
+      ]
+    },
+    "intent": "What each colour in the paper and ink palettes is for, and whether it passes on its page."
+  },
+  {
     "kind": "stateMatrix",
     "title": "Button states",
     "source": "Sample data, made up for this example",

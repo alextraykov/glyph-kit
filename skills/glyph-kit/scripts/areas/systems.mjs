@@ -1,8 +1,12 @@
-// Design system docs: scales, contrast, component states, layers, token tables.
+// Design system docs: scales, contrast, colour, component states, layers, token tables.
 import { checks } from "../guard.mjs";
 import { bar, clamp, cut, join, len, padEnd, padStart, place, table } from "../core.mjs";
 import { LAYOUT, capRows, fitLabels } from "../layout.mjs";
 import { readingOrder } from "../arrive.mjs";
+import { contrastRatio, luminance } from "../render/themes.mjs";
+
+/** WCAG contrast ratio between two hex colours (shared with the theme check). */
+export { contrastRatio };
 
 /** Spacing tokens drawn to scale, one cell per `unit` pixels. tokens: [{ name, value }] */
 export function spacingScale(tokens, { unit = 4, maxWidth = LAYOUT.maxWidth } = {}) {
@@ -31,22 +35,6 @@ export function typeScale(steps, { width: preferred = 28, maxWidth = LAYOUT.maxW
   const width = Math.max(4, Math.min(preferred, maxWidth - nameW - suffixW - 4));
   const lines = steps.map((s, i) => `${padEnd(labels[i], nameW)}  ${bar(s.size, top, { width })}  ${s.size}/${s.lineHeight ?? Math.round(s.size * 1.4)}`);
   return join(capped.note ? [...lines, capped.note] : lines);
-}
-
-const channel = (c) => {
-  const v = c / 255;
-  return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
-};
-const luminance = (hex) => {
-  const h = hex.replace("#", "");
-  const full = h.length === 3 ? [...h].map((c) => c + c).join("") : h;
-  const [r, g, b] = [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16));
-  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
-};
-/** WCAG contrast ratio between two hex colours. */
-export function contrastRatio(fg, bg) {
-  const [a, b] = [luminance(fg), luminance(bg)].sort((x, y) => y - x);
-  return (a + 0.05) / (b + 0.05);
 }
 
 /**
@@ -83,6 +71,98 @@ export function contrast(pairs, { width: preferred = 42, maxWidth = LAYOUT.maxWi
   });
   return join([marks, ...rows, ...(capped.note ? [capped.note] : [])]);
 }
+
+const HEX6 = /^#[0-9a-f]{6}$/i;
+const ratioText = (r) => padStart(r.toFixed(1), 4);
+// A swatch is ██ followed by its own value; every rendered form draws it in that colour.
+const swatch = (hex) => `██ ${hex.toLowerCase()}`;
+
+/**
+ * A tonal scale: one column per hue, one row per step, each step's contrast on the page.
+ * { hues: [{ name, steps: [{ name, value: "#rrggbb" }] }], page: "#rrggbb" }
+ * ▲ marks the first step in each hue that reads as words on the page (4.5 to 1).
+ */
+export function palette({ hues, page = "#ffffff" }, { maxWidth = LAYOUT.maxWidth } = {}) {
+  const stepNames = [...new Set(hues.flatMap((h) => h.steps.map((s) => String(s.name))))];
+  const capped = capRows(stepNames, LAYOUT.rowsMax, "steps");
+  const nameW = Math.max(4, ...capped.rows.map(len));
+  const colW = len(`▲ ${swatch("#000000")} 21.0`);
+  const fits = Math.floor((maxWidth - nameW - 2 + 2) / (colW + 2));
+  if (hues.length > fits) throw new Error(`A palette fits ${fits} hues at ${maxWidth} cells; this one has ${hues.length}. Split it into two figures.`);
+  const heads = fitLabels(hues.map((h) => h.name), colW - 2);
+  // Hue names sit over the swatches, past the ▲ column.
+  const head = `${" ".repeat(nameW + 4)}${heads.map((h) => padEnd(h, colW)).join("  ")}`.trimEnd();
+  const marked = hues.map((h) => h.steps.find((s) => contrastRatio(s.value, page) >= 4.5)?.name);
+  const rows = capped.rows.map((step) => {
+    const cells = hues.map((h, i) => {
+      const s = h.steps.find((x) => String(x.name) === step);
+      if (!s) return " ".repeat(colW);
+      return `${String(marked[i]) === step ? "▲" : " "} ${swatch(s.value)} ${ratioText(contrastRatio(s.value, page))}`;
+    });
+    return `${padEnd(step, nameW)}  ${cells.join("  ")}`.trimEnd();
+  });
+  return join([head, ...rows, ...(capped.note ? [capped.note] : []), "", `Contrast on the page, ${page.toLowerCase()}. ▲ first step that reads as words: 4.5 to 1.`]);
+}
+
+const NEEDS = { words: 4.5, marks: 3, lines: 1.5 };
+const verdict = (use, ratios) => {
+  const worst = Math.min(...ratios);
+  if (use === "words") return worst >= 7 ? "AAA" : worst >= 4.5 ? "AA" : "fails";
+  return worst >= NEEDS[use] ? "ok" : "fails";
+};
+
+/**
+ * What each colour is for: role, token, its light and dark values, each on its page, and a verdict.
+ * { page: { light: "#rrggbb", dark?: "#rrggbb" }, roles: [{ role, token, light, dark?, use: "words" | "marks" | "lines" }] }
+ * Words need 4.5 to 1 (7 for AAA), marks 3 and lines 1.5, the same as the theme check.
+ */
+export function colourRoles({ page, roles }, { maxWidth = LAYOUT.maxWidth } = {}) {
+  const capped = capRows(roles);
+  const rows = capped.rows;
+  const dark = Boolean(page.dark) && rows.some((r) => r.dark);
+  const cell = (hex, bg) => (hex ? `${swatch(hex)} ${ratioText(contrastRatio(hex, bg))}` : "");
+  const colW = len(cell("#000000", "#ffffff"));
+  const fixed = 2 + 2 + colW + (dark ? 3 + colW : 0) + 3 + len("fails");
+  const roleW = Math.min(Math.max(4, ...rows.map((r) => len(r.role))), 14);
+  const tokenW = Math.max(5, Math.min(Math.max(5, ...rows.map((r) => len(r.token ?? ""))), maxWidth - roleW - 2 - fixed));
+  const roleL = fitLabels(rows.map((r) => r.role), roleW);
+  const line = (role, token, light, darkCol, last) =>
+    `${padEnd(role, roleW)}  ${padEnd(token, tokenW)}  ${padEnd(light, colW)}${dark ? `   ${padEnd(darkCol, colW)}` : ""}   ${last}`.trimEnd();
+  const head = line("role", "token", `light ${page.light.toLowerCase()}`, `dark ${page.dark?.toLowerCase()}`, "");
+  const lines = rows.map((r, i) => {
+    const ratios = [contrastRatio(r.light, page.light), ...(dark && r.dark ? [contrastRatio(r.dark, page.dark)] : [])];
+    return line(roleL[i], cut(r.token ?? "", tokenW), cell(r.light, page.light), dark ? cell(r.dark, page.dark) : "", verdict(r.use ?? "words", ratios));
+  });
+  return join([head.trimEnd(), ...lines, ...(capped.note ? [capped.note] : []), "", "Words need 4.5 to 1 (7 for AAA), marks 3, lines 1.5."]);
+}
+
+const colourChecks = {
+  palette: (d) => {
+    const problems = [];
+    if (!d?.hues?.length) problems.push("A palette needs hues: [{ name, steps: [{ name, value }] }].");
+    for (const h of d?.hues ?? []) {
+      for (const s of h.steps ?? []) if (!HEX6.test(String(s.value))) problems.push(`${h.name} ${s.name}: write the colour as a hex value like #1f4fd6, not ${s.value}.`);
+      const lums = (h.steps ?? []).filter((s) => HEX6.test(String(s.value))).map((s) => luminance(s.value));
+      const dir = Math.sign((lums.at(-1) ?? 0) - (lums[0] ?? 0));
+      const breaks = lums.findIndex((l, i) => i > 0 && Math.sign(l - lums[i - 1]) !== dir && l !== lums[i - 1]);
+      if (dir && breaks > 0) problems.push(`${h.name} ${h.steps[breaks].name} is ${dir < 0 ? "lighter" : "darker"} than ${h.steps[breaks - 1].name}; a scale's steps get steadily ${dir < 0 ? "darker" : "lighter"}.`);
+    }
+    if (d?.page && !HEX6.test(String(d.page))) problems.push(`Write the page colour as a hex value like #ffffff, not ${d.page}.`);
+    return problems;
+  },
+  colourRoles: (d) => {
+    const problems = [];
+    if (!HEX6.test(String(d?.page?.light))) problems.push('Colour roles need the page colours: { "page": { "light": "#ffffff", "dark": "#0d0d0c" } }.');
+    if (d?.page?.dark && !HEX6.test(String(d.page.dark))) problems.push(`Write the dark page colour as a hex value, not ${d.page.dark}.`);
+    for (const r of d?.roles ?? []) {
+      for (const k of ["light", "dark"]) if (r[k] != null && !HEX6.test(String(r[k]))) problems.push(`${r.role} ${k}: write the colour as a hex value like #1f4fd6, not ${r[k]}.`);
+      if (r.light == null) problems.push(`${r.role} needs its light colour.`);
+      if (r.use && !NEEDS[r.use]) problems.push(`${r.role}: use is words, marks or lines, not ${r.use}.`);
+    }
+    if (!d?.roles?.length) problems.push("Colour roles need roles: [{ role, token, light, dark, use }].");
+    return problems;
+  }
+};
 
 /**
  * Which component states are designed, built or missing.
@@ -136,6 +216,23 @@ export const kinds = {
     label: "Contrast check",
     render: contrast,
     summary: (p) => p.map((x) => `${x.label}: ${contrastRatio(x.fg, x.bg).toFixed(1)} to 1`).join(". ")
+  },
+  palette: {
+    label: "Palette",
+    check: colourChecks.palette,
+    render: palette,
+    arrive: readingOrder,
+    summary: (d) => d.hues.map((h) => `${h.name}: ${h.steps.length} steps, words from ${h.steps.find((s) => contrastRatio(s.value, d.page ?? "#ffffff") >= 4.5)?.name ?? "no step"}`).join(". ") + "."
+  },
+  colourRoles: {
+    label: "Colour roles",
+    check: colourChecks.colourRoles,
+    render: colourRoles,
+    arrive: readingOrder,
+    summary: (d) => {
+      const failing = d.roles.filter((r) => verdict(r.use ?? "words", [contrastRatio(r.light, d.page.light), ...(d.page.dark && r.dark ? [contrastRatio(r.dark, d.page.dark)] : [])]) === "fails");
+      return `${d.roles.length} colour roles${failing.length ? `; ${failing.map((r) => r.role).join(", ")} ${failing.length === 1 ? "fails" : "fail"} contrast` : ", all passing contrast"}.`;
+    }
   },
   stateMatrix: {
     label: "Component states",

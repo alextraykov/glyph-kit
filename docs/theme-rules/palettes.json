@@ -1,0 +1,50 @@
+{
+  "kind": "table",
+  "title": "How each palette's colours relate",
+  "intent": "The four rules: the ramp follows the data hue, problems sit opposite data and are loudest, passes read apart from problems without colour, neutrals carry the data hue.",
+  "source": "Glyph kit's palettes, measured in OKLCH by the theme rules (reference/colour.md)",
+  "data": [
+    [
+      "PALETTE",
+      "RAMP",
+      "PROBLEMS",
+      "PASSES",
+      "NEUTRALS"
+    ],
+    [
+      "paper",
+      "no ramp",
+      "ok",
+      "fails (louder)",
+      "grey data"
+    ],
+    [
+      "ink",
+      "no ramp",
+      "ok",
+      "ok",
+      "grey data"
+    ],
+    [
+      "phosphor",
+      "no ramp",
+      "fails (106° from data, data louder)",
+      "fails (louder)",
+      "fails (off the data hue)"
+    ],
+    [
+      "gilt",
+      "no ramp",
+      "fails (64° from data, data louder)",
+      "fails (louder)",
+      "ok"
+    ],
+    [
+      "halloween",
+      "fails (hue drifts)",
+      "fails (48° from data)",
+      "ok",
+      "fails (off the data hue)"
+    ]
+  ]
+}
