@@ -9,8 +9,10 @@ import { resolveTheme } from "./themes.mjs";
 import { cellWidth, graphemes } from "../text.mjs";
 
 const RESET = "\x1b[0m";
-const BASIC = { d: "", m: "\x1b[2m", e: "\x1b[2m", f: "\x1b[2m", x: "\x1b[31m", ok: "\x1b[32m", r1: "\x1b[2m", r2: "", r3: "", r4: "\x1b[1m" };
-const ROLE = { d: "data", e: "data", f: "frame", x: "flag", ok: "ok" };
+// Receded cells (m, and m1…m4 for ramp steps) are dim: in 24-bit colour, dim in their own colour.
+const DIM = "\x1b[2m";
+const BASIC = { d: "", m: DIM, e: DIM, f: DIM, x: "\x1b[31m", ok: "\x1b[32m", r1: DIM, r2: "", r3: "", r4: "\x1b[1m", m1: DIM, m2: DIM, m3: DIM, m4: DIM };
+const ROLE = { d: "data", e: "data", m: "data", f: "frame", x: "flag", ok: "ok" };
 
 const rgb = (hex) => {
   const n = parseInt(hex.slice(1), 16);
@@ -22,7 +24,8 @@ export function ansiCodes(theme, env = process.env) {
   if (theme == null || !/^(truecolor|24bit)$/i.test(env.COLORTERM ?? "")) return BASIC;
   const t = resolveTheme(theme);
   const codes = { ...BASIC };
-  for (const [role, name] of Object.entries(ROLE)) codes[role] = (role === "e" ? "\x1b[2m" : "") + rgb(t.colors[name]);
+  for (const [role, name] of Object.entries(ROLE)) codes[role] = (role === "e" || role === "m" ? DIM : "") + rgb(t.colors[name]);
+  for (let i = 1; i <= 4; i++) codes[`m${i}`] = DIM + rgb(t.ramp?.[i - 1] ?? t.colors.data);
   if (t.ramp) t.ramp.forEach((hex, i) => (codes[`r${i + 1}`] = rgb(hex)));
   return codes;
 }

@@ -39,7 +39,7 @@ document.querySelectorAll("pre[data-arrive]").forEach((pre) => loops.observe(pre
 // left out, so the copy is exactly the figure.
 const figureText = (pre) => {
   const copy = pre.cloneNode(true);
-  copy.querySelectorAll(".gk-s0, .gk-s1, .gk-s2, [aria-hidden='true']").forEach((el) => el.remove());
+  copy.querySelectorAll(".gk-s0, .gk-s1, .gk-s2, .gk-s3, [aria-hidden='true']").forEach((el) => el.remove());
   return copy.textContent;
 };
 document.querySelectorAll("pre.grid-figure:not(.live)").forEach((pre) => {

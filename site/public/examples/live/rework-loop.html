@@ -1369,6 +1369,9 @@ const { cellWidth, graphemes } = __glyph[3];
 
 const ARRIVE_STEP = 40; // ms, the site's step
 const ARRIVE_MAX = 600; // a figure settles within this
+// Block cells don't snap: in HTML they step blank → ░ → ▒ → final, so they land two steps after their delay.
+const STEPPED = /[█▓▒■▁▂▃▄▅▆▇▏▎▍▌▋▊▉]/u;
+const STEPPED_LAND = 2 * ARRIVE_STEP;
 
 const BOX = "─│┌┐└┘├┤┬┴┼━┃┏┓┗┛┣┫┳┻╋═║╔╗╚╝╠╣╦╩╬┄┆";
 const snap = (ms) => Math.round(ms / ARRIVE_STEP) * ARRIVE_STEP;
@@ -1504,25 +1507,28 @@ function speedOverTime(lines, { ms = 500 } = {}) {
   });
 }
 
-return { ARRIVE_STEP, ARRIVE_MAX, stagger, cellsOf, readingOrder, byColumns, barsFill, timeline, rulerFill, framesAtTime, speedOverTime };
+return { ARRIVE_STEP, ARRIVE_MAX, STEPPED, STEPPED_LAND, stagger, cellsOf, readingOrder, byColumns, barsFill, timeline, rulerFill, framesAtTime, speedOverTime };
 })();
 __glyph[9] = (() => {
 // Arrival orders for the types whose renderer doesn't carry its own. Each is the order the per-type
 // motion review settled on: what the reader must see, in the order that shows it. Orders work in
 // abstract steps; `scaled` maps them onto the 40ms clock within the budget, so a figure arrives
 // within about 600ms and a diagram that grows along its lines within about 1.1s.
-const { ARRIVE_MAX, ARRIVE_STEP, barsFill, cellsOf, readingOrder } = __glyph[10];
+const { ARRIVE_MAX, ARRIVE_STEP, STEPPED, STEPPED_LAND, barsFill, cellsOf, readingOrder } = __glyph[10];
 
 const BOX = "─│┌┐└┘├┤┬┴┼━┃┏┓┗┛┣┫┳┻╋═║╔╗╚╝╠╣╦╩╬┄┆";
 const BLOCK = /[█▓▒░■▏▎▍▌▋▊▉▁▂▃▄▅▆▇]/u;
 const grid = (lines) => lines.map((l) => [...l]);
 
-/** Map an order in abstract steps onto milliseconds, whole 40ms steps, within `budget`. */
+/** Map an order in abstract steps onto milliseconds, whole 40ms steps, within `budget`: every cell,
+ *  a block cell's two steps included, has landed by `budget` plus the first step. */
 function scaled(lines, units, { budget = ARRIVE_MAX - 2 * ARRIVE_STEP, under } = {}) {
   const g = grid(lines);
-  let max = 0;
-  g.forEach((row, r) => row.forEach((ch, c) => { if (ch !== " ") max = Math.max(max, units(r, c, ch, g) || 0); }));
-  const per = max ? Math.min(ARRIVE_STEP, budget / max) : 0;
+  let per = ARRIVE_STEP;
+  g.forEach((row, r) => row.forEach((ch, c) => {
+    const u = ch === " " ? 0 : units(r, c, ch, g) || 0;
+    if (u) per = Math.min(per, (budget - (STEPPED.test(ch) ? STEPPED_LAND : 0)) / u);
+  }));
   const fn = (r, c, ch) => {
     const u = units(r, c, ch, g) || 0;
     return u ? ARRIVE_STEP + Math.round((u * per) / ARRIVE_STEP) * ARRIVE_STEP : 0;
@@ -1629,10 +1635,11 @@ const ORDERS = {
   // Densest cells first, down to the lightest.
   heatmap: (lines) => scaled(lines, (r, c, ch) => ({ "█": 1, "▓": 3, "▒": 5, "░": 7 })[ch] ?? 0),
   // Day by day in date order; the count lands at the end.
-  calendarStrip: (lines) => scaled(lines, (r, c, ch, g) => {
-    const b = g[r].findIndex((x) => x === "■" || x === "·");
+  calendarStrip: (lines, data, { hit = "■", miss = "·" } = {}) => scaled(lines, (r, c, ch, g) => {
+    const day = (x) => x === hit || x === miss;
+    const b = g[r].findIndex(day);
     if (b < 0) return 0;
-    const end = g[r].findLastIndex((x) => x === "■" || x === "·");
+    const end = g[r].findLastIndex(day);
     return c <= end ? 1 + (c - b) / 2 : 1 + (end - b) / 2 + 2;
   }),
   // Period by period, every cohort at once.

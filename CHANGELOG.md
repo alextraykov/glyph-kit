@@ -21,7 +21,7 @@ Glyph kit follows [semantic versioning](https://semver.org). Before 1.0, a minor
 **Focus**
 
 - **Call something out on any type.** `"focus": { "on": ["M2"], "tone": "problem", "say": "Every cohort halves between M1 and M2." }` names what to look at as it is drawn: a row label, a column heading, both, or any words in the figure. Instead of a colour on one row, which is still refused.
-- **The same in every form.** The text gets a `►` line with the point, so it reads without colour. HTML, decks, SVG, PNG, PDF and the terminal paint the focus in its tone (problem, good or plain) and let the rest of its block recede. In HTML and decks the focus arrives last and lands with the inverted flash, and the figure still settles within 600ms.
+- **The same in every form.** The text gets a `►` line with the point, so it reads without colour. HTML, decks, SVG, PNG, PDF and the terminal paint the focus in its tone (problem, good or plain) and let the rest of its block recede. In a heatmap, cohort or calendar strip the receded cells keep their ramp colour, dimmed, and a plain focus keeps its own. In HTML and decks the focus arrives last and lands with the inverted flash, and the figure still settles within 600ms.
 - **A name that isn't drawn is refused,** in plain words, and `check` lists it with everything else.
 
 **Colour types**

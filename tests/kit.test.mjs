@@ -270,7 +270,7 @@ test("arrival: types with an order arrive in HTML and decks, and end on the exac
     const page = renderHtml(spec);
     const pre = page.match(/<pre [^>]*class="gk-figure" data-arrive[^>]*>([\s\S]*?)<\/pre>/);
     assert.ok(pre, `${spec.kind} arrives in HTML`);
-    const noLayers = (h) => h.replace(/<span class="gk-s[012]" aria-hidden="true"[^>]*>(?:<span[^>]*>[^<]*<\/span>|[^<])*<\/span>/g, "");
+    const noLayers = (h) => h.replace(/<span class="gk-s[0-3]" aria-hidden="true"[^>]*>(?:<span[^>]*>[^<]*<\/span>|[^<])*<\/span>/g, "");
     assert.equal(strip(noLayers(pre[1])), text, `${spec.kind}: arriving keeps the text`);
     const delays = [...pre[1].matchAll(/--d:(\d+)ms/g)].map((m) => Number(m[1]));
     // Motion types play at their real timing; everything else steps on the 40ms clock.
@@ -318,7 +318,56 @@ test("arrival: types with an order arrive in HTML and decks, and end on the exac
   assert.ok(fill(0, ends[0] + 3) > fill(0, ends[0]), "the value lands after its bar");
   const html = renderHtml(bars);
   assert.match(html, /<span class="gk-s"><span class="gk-s1" aria-hidden="true" style="--d:\d+ms">/);
-  assert.match(html, /\.gk-s1,\.gk-s2\{position:absolute;left:0;top:0;visibility:hidden/);
+  assert.match(html, /\.gk-s1,\.gk-s2,\.gk-s3\{position:absolute;left:0;top:0;visibility:hidden/);
+});
+
+test("arrival: the landing flash reads on every shade, in the cells' own shape, for one 120ms step", () => {
+  const css = renderHtml(examples.metrics.find((s) => s.kind === "barChart"));
+  assert.match(css, /\.is-arriving \.gk-s3\{visibility:visible;animation:gk-wait calc\(var\(--base,0ms\) \+ var\(--d\)\) steps\(1,end\),gk-gone 1ms steps\(1,end\) calc\(var\(--base,0ms\) \+ var\(--d\) \+ 120ms\) forwards\}/);
+  // No background on a whole run: the old flash painted the gaps between cells into bars.
+  assert.doesNotMatch(css, /gk-land|\.gk-a \.gk-x/);
+  const layer = (html) => [...html.matchAll(/<span class="gk-s3" aria-hidden="true" style="--d:(\d+)ms">((?:<span[^>]*>[^<]*<\/span>|[^<])*)<\/span><span class="gk-a" style="--d:(\d+)ms">/g)];
+  const shown = (h) => h.replace(/<span class="gk-(\w+)">([^<]*)<\/span>/g, (_, c, t) => (c === "hole" ? "_" : c === "inv" ? t : "#".repeat([...t].length)));
+  const cohortSpec = { kind: "cohort", source: "Sample data", options: { periods: ["M0", "M1", "M2", "M3"] }, data: [{ label: "Jan", size: 120, values: [1, 0.82, 0.46, 0.41] }, { label: "Feb", size: 140, values: [1, 0.85, 0.44, 0.2] }] };
+  for (const [tone, glyph] of [["problem", "▒"], ["plain", "▒"], ["good", "░"]]) {
+    const spec = { ...cohortSpec, focus: { on: [glyph === "░" ? "M3" : "M2"], tone } };
+    const flashes = layer(arriveLines(spec, body(spec)).join("\n"));
+    assert.ok(flashes.length > 0, `${tone}: the focus flashes`);
+    for (const [, at, cells, lands] of flashes) {
+      // A light shade turns solid: two cells, nothing in the gaps beside them.
+      assert.equal(at, lands, `${tone}: the flash starts as the cell lands`);
+      assert.match(shown(cells), /^##\s*$/, `${tone}: ${cells}`);
+    }
+  }
+  // A dark cell turns to paper, and a verdict word turns paper on ink, letter by letter.
+  const heat = { kind: "heatmap", source: "Sample data", options: { rowLabels: ["Mon"], colLabels: "a b" }, data: [[1, 0.8]], focus: { on: ["Mon"], tone: "problem" } };
+  assert.ok(layer(arriveLines(heat, body(heat)).join("\n")).some(([, , cells]) => /^_+/.test(shown(cells))), "█ and ▓ flash to paper");
+  const verdict = examples.systems.find((s) => s.kind === "contrast");
+  assert.ok(layer(arriveLines(verdict, body(verdict)).join("\n")).some(([, , cells]) => /class="gk-inv">f</.test(cells)), "a verdict flashes letter by letter");
+});
+
+// When the last cell has landed: a block cell's final glyph comes after its two shade steps.
+const settles = (spec) => Math.max(0, ...[...arriveLines(spec, body(spec)).join("").matchAll(/class="gk-a" style="--d:(\d+)ms"/g)].map((m) => Number(m[1])));
+
+test("arrival: every figure settles within 600ms, block cells' shade steps included", () => {
+  // Diagrams that grow along their lines tell a sequence, and have about 1.1s.
+  const sequences = ["branchFlow", "emotionCurve", "flow", "stateMachine", "swimlane"];
+  const specs = Object.values(examples).flat().filter((s) => KINDS[s.kind].arrive && !KINDS[s.kind].layout && s.kind !== "screen" && s.kind !== "responsive" && !sequences.includes(s.kind));
+  for (const spec of specs) if (!arriveLines(spec, body(spec)).exact) assert.ok(settles(spec) <= 600, `${spec.kind} settles at ${settles(spec)}ms`);
+});
+
+test("arrival: a calendar strip arrives day by day with its own glyphs, within 600ms", () => {
+  const days = [1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 1];
+  for (const options of [{}, { hit: "█", miss: "░" }, { hit: "x", miss: "-" }]) {
+    const spec = { kind: "calendarStrip", source: "Sample data", data: days, options };
+    const text = body(spec);
+    const order = KINDS.calendarStrip.arrive(text.split("\n"), resolve(spec).data, options);
+    const row = [...text.split("\n")[0]];
+    const at = row.map((ch, c) => (ch === " " ? null : order(0, c, ch))).filter((d) => d != null);
+    assert.ok(at.every((d, i) => d > 0 && (i === 0 || d >= at[i - 1])), `${options.hit ?? "■"}: day by day`);
+    assert.ok(at.at(-1) > at[0], `${options.hit ?? "■"}: the days don't all arrive at once`);
+    assert.ok(settles(spec) <= 600, `${options.hit ?? "■"}: settles at ${settles(spec)}ms`);
+  }
 });
 
 test("lint: catches a broken frame and an unmeasured glyph", () => {
