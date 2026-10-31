@@ -179,9 +179,23 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 /* ↺ and Copy sit in the box's corners, clear of the figure. */
 .fit .gk-replay-wrap { position: static; }
 /* On touch, Copy is always shown, so it gets its own strip below the figure. */
-@media (hover: none) { .fit.has-figure-copy { padding-bottom: calc(28px + 2 * var(--space-2)); } }
+@media (hover: none) { .fit.has-figure-copy, .guide-figure.has-figure-copy { padding-bottom: calc(28px + 2 * var(--space-2)); } }
 .fit .grid-figure { padding: 0; overflow: visible; background: transparent; color: var(--ink); font-size: min(var(--px-11), 100cqi / (0.64 * (var(--cols) + 1))); }
 .fit[data-palette] .gk-d { color: var(--palette-data); }
+/* Uses: four things people share, each a label, a kit figure, the ask and where it goes. */
+.uses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-5); }
+.uses__item { display: grid; align-content: start; gap: var(--space-3); min-width: 0; padding-top: var(--space-4); border-top: var(--hairline) solid var(--ink); }
+.uses__item h3 { font-size: var(--px-22); line-height: 1.2; }
+.uses__item h3 a { color: inherit; text-decoration: none; }
+@media (hover: hover) and (pointer: fine) { .uses__item h3 a:hover { text-decoration: underline; text-underline-offset: 4px; } }
+.uses__item .fit { align-content: center; min-height: 12rem; }
+@media (max-width: 900px) { .uses__item .fit { min-height: 0; } }
+.uses__to { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); color: var(--text-soft); font-size: .92rem; }
+/* A deck the kit made, running in a slide-shaped frame. */
+/* Narrow frames draw the deck at twice the size and scale it down, so its own controls fit the slide. */
+.deck-frame { position: relative; container-type: inline-size; aspect-ratio: 16 / 9; min-width: 0; overflow: hidden; border: var(--hairline) solid var(--ink); background: var(--panel); }
+.deck-frame iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; transform-origin: 0 0; }
+@container (max-width: 640px) { .deck-frame iframe { width: 200%; height: 200%; transform: scale(.5); } }
 .palettes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-2); }
 .palettes .fit { padding: var(--space-4) var(--space-3); }
 .edit { display: grid; justify-items: stretch; gap: var(--space-2); }
@@ -227,12 +241,12 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 @media (hover: hover) and (pointer: fine) { .jump a:hover { text-decoration: underline; } }
 
 /* Guardrails and formats */
-/* How to use: three steps on the home page; on the guide, one block per format. */
-.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--space-5); margin: 0; padding: 0; list-style: none; }
-.steps > li { display: grid; align-content: start; justify-items: start; gap: var(--space-3); padding-top: var(--space-4); border-top: var(--hairline) solid var(--line); }
-.steps > li > p:not(.label) { color: var(--text-soft); }
-.asks { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; color: var(--text-soft); }
-.formats a { text-underline-offset: 3px; }
+/* How to use: one block per thing you'd make, each format with the command that makes it. */
+.exports { display: grid; gap: var(--space-2); margin: 0; min-width: 0; }
+.exports > div { display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); align-items: center; gap: var(--space-1) var(--space-3); min-width: 0; }
+.exports dt { color: var(--text-soft); font-size: .92rem; }
+.exports dd { min-width: 0; margin: 0; }
+@media (max-width: 640px) { .exports > div { grid-template-columns: minmax(0, 1fr); } }
 .guide { display: grid; gap: var(--space-6); }
 /* Side by side only where both fit at 11px; otherwise one above the other. */
 .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--cols) * 7px + 2 * var(--space-5)), 1fr)); gap: var(--space-4); min-width: 0; }
@@ -340,7 +354,7 @@ footer { border-top: var(--hairline) solid var(--ink); padding-block: var(--spac
 footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); }
 
 @media (max-width: 900px) {
-  .hero__body, .note, .try, .highlights { grid-template-columns: minmax(0, 1fr); }
+  .hero__body, .note, .try, .highlights, .uses { grid-template-columns: minmax(0, 1fr); }
   .strip__row { grid-template-columns: minmax(0, 1fr); align-items: start; }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .study { padding-inline: var(--space-4); }
@@ -594,8 +608,10 @@ footer { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); }
 /* Playback uses the same quiet, square control as the kit toolbar. */
 /* Areas land below the sticky menu. On phones the menu wraps and stays at the top of the page, so
    it doesn't cover the screen. */
-.jump ~ .section { scroll-margin-top: calc(var(--top-h, 57px) + 72px); }
-@media (max-width: 640px) { .jump { position: static; } .jump ~ .section { scroll-margin-top: calc(var(--top-h, 57px) + var(--space-3)); } }
+.jump ~ .section { scroll-margin-top: calc(var(--top-h, 57px) + 104px); }
+/* Jump links can run to two rows, so a section lands below both. */
+.jump ~ .section .guide-item { scroll-margin-top: calc(var(--top-h, 57px) + 104px); }
+@media (max-width: 640px) { .jump { position: static; } .jump ~ .section, .jump ~ .section .guide-item { scroll-margin-top: calc(var(--top-h, 57px) + var(--space-3)); } }
 
 /* Touch: small controls keep their look but reach 44px to a finger. Each hit area grows only
    where nothing sits next to it (rows of chips have 10px between; the nav links have 14px). */
