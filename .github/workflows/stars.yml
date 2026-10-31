@@ -1,0 +1,30 @@
+name: Stars
+
+# The site reads the star count when it builds, so visitors' browsers never call GitHub. A new star
+# rebuilds it through a Vercel deploy hook; the daily run also catches stars taken away.
+on:
+  watch:
+    types: [started]
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+# A burst of stars needs one rebuild, not one each.
+concurrency:
+  group: stars
+  cancel-in-progress: true
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rebuild the site
+        env:
+          HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$HOOK" ]; then
+            echo "::notice::No VERCEL_DEPLOY_HOOK secret yet, so the site wasn't rebuilt."
+            exit 0
+          fi
+          curl --fail --silent --show-error --max-time 20 -X POST "$HOOK" > /dev/null
+          echo "Asked Vercel to rebuild the site."
