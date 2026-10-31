@@ -62,13 +62,46 @@ p { margin: 0; }
 .top .shell { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); min-height: 56px; }
 .brand { display: flex; white-space: nowrap; align-items: center; gap: var(--space-2); text-decoration: none; font: 400 var(--px-22)/1 var(--pixel); }
 .brand .mark { letter-spacing: 0; } /* the logo: ░▒▓█ touching, at the 22 px the name is set in (docs/brand.md) */
-.nav { display: flex; gap: var(--space-4); font-size: .9rem; }
+.nav { display: flex; gap: var(--space-4); margin-left: auto; font-size: .9rem; }
 .nav a { white-space: nowrap; text-decoration: none; padding-block: var(--space-1); border-bottom: 2px solid transparent; }
 .nav a[aria-current="page"] { border-bottom-color: var(--ink); }
 @media (hover: hover) and (pointer: fine) { .nav a:hover { border-bottom-color: var(--ink); } }
-/* The theme switch sits with the links and looks like one: it names the theme it switches to. */
-.theme { padding: var(--space-1) 0; border: 0; border-bottom: 2px solid transparent; background: none; color: inherit; font: inherit; cursor: pointer; white-space: nowrap; }
-@media (hover: hover) and (pointer: fine) { .theme:hover { border-bottom-color: var(--ink); } }
+/* Theme and feedback: square buttons on a hairline, their icons drawn on the logo's pixel grid. The
+   hit area reaches 40 px to a mouse and 44 px to a finger; 14 px between keeps the two apart. */
+.tools { display: flex; gap: var(--space-3); }
+.icon-button { position: relative; flex: none; display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: var(--hairline) solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); cursor: pointer; }
+.icon-button::after { content: ""; position: absolute; inset: -4px; }
+.icon-button--small { width: 28px; height: 28px; }
+.icon-button--small::after { inset: -6px; }
+@media (hover: hover) and (pointer: fine) { .icon-button:hover { background: var(--ink); color: var(--paper); } }
+.pixel-icon { display: block; }
+.glyph-icon { display: block; font: 400 var(--px-11)/14px var(--pixel); letter-spacing: 0; }
+/* A footer link that opens something rather than going somewhere. */
+.link-button { padding: 0; border: 0; background: none; color: inherit; font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+
+/* Feedback: one dialog, opened from the header and the footer. It appears at once, like a step. */
+.feedback { width: min(520px, 100% - 2 * var(--space-4)); max-height: calc(100dvh - 2 * var(--space-4)); padding: 0; overflow: auto; overscroll-behavior: contain; border: var(--hairline) solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); }
+.feedback::backdrop { background: rgba(8, 8, 8, 0.45); }
+.feedback__form { display: grid; gap: var(--space-4); padding: var(--space-5); }
+.feedback__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+.feedback h2 { font-size: var(--px-22); line-height: 1.2; }
+.feedback__fields { display: grid; gap: var(--space-4); }
+.field { display: grid; gap: var(--space-1); }
+.field > span { color: var(--text-caption); font: 400 var(--px-11)/1.4 var(--pixel); text-transform: uppercase; }
+.field textarea, .field input { width: 100%; padding: var(--space-2) var(--space-3); border: var(--hairline) solid var(--ink); border-radius: 0; background: var(--paper); color: var(--ink); font: 400 16px/1.5 var(--sans); }
+.field textarea { min-height: 7.5em; resize: vertical; }
+.field :is(textarea, input):focus-visible { outline-offset: 0; }
+.feedback__trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.feedback__status:empty { display: none; }
+/* The anti-spam check takes no room until it needs a click. */
+.feedback__check:not([data-asking]) { height: 0; margin-top: calc(-1 * var(--space-4)); overflow: hidden; }
+.feedback__status { font-size: .9rem; }
+.feedback__status[data-tone="problem"] { color: var(--signal-fail); }
+.feedback__status[data-tone="good"] { color: var(--signal-ok); }
+.feedback__actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-5); }
+.feedback__done { display: none; }
+.feedback__form[data-state="sent"] :is(.feedback__fields, .feedback__actions) { display: none; }
+.feedback__form[data-state="sent"] .feedback__done { display: block; }
 
 /* Sections */
 main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7); padding-block: var(--space-6) var(--space-7); }
@@ -357,11 +390,14 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
   .bento__cell { grid-column: auto; }
   .stat, .stat + .stat { padding: var(--space-4) 0; border-left: 0; }
   .stat + .stat { border-top: var(--hairline) solid var(--line); }
-  .top .shell { flex-wrap: wrap; row-gap: 0; padding-block: var(--space-2); }
-  /* On the narrowest phones the row wraps rather than scroll sideways. */
-  .nav { width: 100%; flex-wrap: wrap; justify-content: space-between; gap: var(--space-1) var(--space-3); font-size: .9rem; }
-  /* Five fit a phone row evenly; Changelog and traykov.cc stay on larger screens (and the footer). */
-  .nav a[href$="/changelog/"], .nav a[href="https://traykov.cc"], .nav__long { display: none; }
+  .top .shell { flex-wrap: wrap; gap: 0 var(--space-2); padding-block: var(--space-2); }
+  /* The two buttons sit beside the name; the links take the row below, and wrap rather than scroll
+     sideways on the narrowest phones. */
+  .tools { margin-left: auto; }
+  .nav { order: 1; width: 100%; margin-left: 0; flex-wrap: wrap; justify-content: space-between; gap: var(--space-1) var(--space-3); font-size: .9rem; }
+  /* Four fit a phone row evenly; Changelog stays on larger screens (and the footer). */
+  .nav a[href$="/changelog/"], .nav__long { display: none; }
+  .feedback__form { padding: var(--space-4); }
   .install__hand span { display: block; margin-top: var(--space-1); }
   .grid-figure, .live, .stage { padding: var(--space-4); }
   .outputs__view { padding-inline: var(--space-4); }
@@ -600,10 +636,11 @@ footer { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); }
 /* Touch: small controls keep their look but reach 44px to a finger. Each hit area grows only
    where nothing sits next to it (rows of chips have 10px between; the nav links have 14px). */
 @media (pointer: coarse) {
-  .nav a, .theme, .cmd button, .chip, .prompt__send { position: relative; }
-  .nav a::after, .theme::after, .cmd button::after, .chip::after, .prompt__send::after, .figure-copy::after { content: ""; position: absolute; }
+  .nav a, .cmd button, .chip, .prompt__send { position: relative; }
+  .nav a::after, .cmd button::after, .chip::after, .prompt__send::after, .figure-copy::after { content: ""; position: absolute; }
   .nav a::after { inset: -4px -6px; }
-  .theme::after { inset: -4px -6px; }
+  .icon-button::after { inset: -6px; }
+  .icon-button--small::after { inset: -8px; }
   .cmd button::after { inset: -8px -7px; }
   .chip::after { inset: -5px 0; }
   .prompt__send::after { inset: -5px 0; }

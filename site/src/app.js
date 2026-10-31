@@ -83,12 +83,12 @@ document.querySelectorAll("[data-copy], [data-copy-figure]").forEach((button) =>
 import "./showcase.js";
 import "./try.js";
 import "./parallax.js";
+import "./feedback.js";
 
 // The theme switch: light by default, dark when chosen, remembered on this device.
 const themeButton = document.querySelector("[data-theme-toggle]");
 const showTheme = () => {
   const dark = document.documentElement.dataset.theme === "dark";
-  themeButton.textContent = dark ? "Light" : "Dark";
   themeButton.setAttribute("aria-label", dark ? "Switch to light theme" : "Switch to dark theme");
   // Keep the phone's status bar the same colour as the page.
   const bar = document.querySelector('meta[name="theme-color"]');

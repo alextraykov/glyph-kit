@@ -39,6 +39,19 @@ const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<
 const REPO = "https://github.com/alextraykov/glyph-kit";
 const X = "https://x.com/alextraykov";
 const FOLLOW = `<a href="${X}" target="_blank" rel="noopener" aria-label="Follow Alexander Traykov on X (opens in a new tab)">Follow on X</a>`;
+// Icons in the kit's own pixels: 1 px strokes, as Departure Mono draws at 11 px. The theme icon is
+// the font's █ and ░ side by side, a 14 px square; the others are drawn to match. "#" is ink, and
+// each row's runs become one rectangle.
+const pixels = (rows, cls) => {
+  const rects = rows.flatMap((row, y) => [...row.matchAll(/#+/g)].map((m) => `<rect x="${m.index}" y="${y}" width="${m[0].length}" height="1"/>`));
+  return `<svg class="pixel-icon ${cls}" viewBox="0 0 ${rows[0].length} ${rows.length}" width="${rows[0].length}" height="${rows.length}" fill="currentColor" shape-rendering="crispEdges" aria-hidden="true">${rects.join("")}</svg>`;
+};
+const THEME_ICON = `<span class="glyph-icon" aria-hidden="true">█░</span>`;
+const FEEDBACK_ICON = pixels([".###########.", "#...........#", "#...........#", "#..#..#..#..#", "#..#..#..#..#", "#...........#", "#...........#", "#.##########.", "##...........", "#............"], "pixel-icon--feedback");
+const CLOSE_ICON = pixels(["#.......#", ".#.....#.", "..#...#..", "...#.#...", "....#....", "...#.#...", "..#...#..", ".#.....#.", "#.......#"], "pixel-icon--close");
+// Feedback is emailed to Alexander by a function on traykov.cc, behind the same anti-spam check.
+const FEEDBACK_URL = process.env.GLYPH_KIT_FEEDBACK_URL ?? "https://traykov.cc/api/glyph-kit-feedback";
+const FEEDBACK_LINK = `<button class="link-button" type="button" data-feedback>Feedback</button>`;
 // Support: the Ko-fi page name (ko-fi.com/<name>), the same one .github/FUNDING.yml lists.
 // Empty hides the button until there is one.
 const KOFI = "";
@@ -319,12 +332,28 @@ ${current === "home" && TURNSTILE_SITE_KEY ? '<script src="https://challenges.cl
 <body>
 <header class="top"><div class="shell">
   <a class="brand" href="/"><span class="mark" aria-hidden="true">░▒▓█</span>Glyph kit</a>
-  <nav class="nav" aria-label="Site"><a href="/how-to-use/"${current === "guide" ? ' aria-current="page"' : ""}>How to use</a><a href="/types/"${current === "types" ? ' aria-current="page"' : ""}>Types</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a>${FOLLOW}<a href="/changelog/"${current === "changelog" ? ' aria-current="page"' : ""}>Changelog</a><a href="https://traykov.cc">traykov.cc</a><button class="theme" type="button" data-theme-toggle aria-label="Switch to dark theme">Dark</button></nav>
+  <nav class="nav" aria-label="Site"><a href="/how-to-use/"${current === "guide" ? ' aria-current="page"' : ""}>How to use</a><a href="/types/"${current === "types" ? ' aria-current="page"' : ""}>Types</a><a href="${REPO}" target="_blank" rel="noopener" aria-label="Star Glyph kit on GitHub (opens in a new tab)">${starLabel}</a>${FOLLOW}<a href="/changelog/"${current === "changelog" ? ' aria-current="page"' : ""}>Changelog</a></nav>
+  <div class="tools"><button class="icon-button" type="button" data-theme-toggle aria-label="Switch to dark theme" title="Theme">${THEME_ICON}</button><button class="icon-button" type="button" data-feedback aria-haspopup="dialog" aria-label="Send feedback" title="Feedback">${FEEDBACK_ICON}</button></div>
 </div></header>
 <main class="shell">
 ${content}
 </main>
-<footer><div class="shell"><span>Glyph kit ${plugin.version} · <a href="/changelog/">Changelog</a> · MIT · made by <a href="https://traykov.cc">Alexander Traykov</a> · ${FOLLOW}</span><span><a href="https://traykov.cc/notes/four-characters/">Four characters</a>, the story behind it</span></div></footer>
+<footer><div class="shell"><span>Glyph kit ${plugin.version} · <a href="/changelog/">Changelog</a> · MIT · made by <a href="https://traykov.cc">Alexander Traykov</a> · ${FOLLOW} · ${FEEDBACK_LINK}</span><span><a href="https://traykov.cc/notes/four-characters/">Four characters</a>, the story behind it</span></div></footer>
+<dialog class="feedback" aria-labelledby="feedback-title" data-feedback-dialog>
+  <form class="feedback__form" action="${FEEDBACK_URL}" method="post" novalidate data-feedback-form${TURNSTILE_SITE_KEY ? ` data-sitekey="${TURNSTILE_SITE_KEY}"` : ""}>
+    <div class="feedback__head"><p class="label">Feedback</p><button class="icon-button icon-button--small" type="button" data-feedback-close aria-label="Close">${CLOSE_ICON}</button></div>
+    <h2 id="feedback-title">What broke, what you made.</h2>
+    <div class="feedback__fields">
+      <label class="field"><span>Message</span><textarea name="message" rows="5" maxlength="4000" required></textarea></label>
+      <label class="field"><span>Email, if you'd like a reply</span><input name="email" type="email" autocomplete="email" maxlength="254" spellcheck="false" autocapitalize="none"></label>
+      <label class="feedback__trap" aria-hidden="true">Website<input name="website" tabindex="-1" autocomplete="off"></label>
+      <div class="feedback__check" data-feedback-check></div>
+    </div>
+    <p class="feedback__status" role="status" data-feedback-status></p>
+    <div class="feedback__actions"><button class="button" type="submit" data-feedback-send>Send</button><a class="text-link" href="${REPO}/issues/new" target="_blank" rel="noopener">Open an issue on GitHub</a></div>
+    <div class="feedback__done"><button class="button button--quiet" type="button" data-feedback-close>Close</button></div>
+  </form>
+</dialog>
 <script type="application/json" id="live-specs">${JSON.stringify({ ...liveSpecs, ...loopSpecs }).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="try-example">${JSON.stringify({ spec: exampleSpec, mode: "moving" }).replace(/</g, "\\u003c")}</script>
 <script type="application/json" id="showcase">${JSON.stringify(showcaseData).replace(/</g, "\\u003c")}</script>
@@ -780,7 +809,7 @@ writeFileSync(join(out, "how-to-use/index.html"), based(guide));
 mkdirSync(join(out, "changelog"), { recursive: true });
 writeFileSync(join(out, "changelog/index.html"), based(changes));
 cpSync(join(root, "site/src/style.css"), join(out, "style.css"));
-for (const f of ["app.js", "showcase.js", "showcase-core.mjs", "try.js", "parallax.js", "guide-motion.js"]) cpSync(join(root, "site/src", f), join(out, f));
+for (const f of ["app.js", "showcase.js", "showcase-core.mjs", "try.js", "parallax.js", "guide-motion.js", "feedback.js"]) cpSync(join(root, "site/src", f), join(out, f));
 writeFileSync(join(out, "showcase-core.mjs"), readFileSync(join(root, "site/src/showcase-core.mjs"), "utf8").replaceAll("../../skills/glyph-kit/scripts/", "./kit/"));
 cpSync(join(root, "site/src/fonts"), join(out, "fonts"), { recursive: true });
 cpSync(join(root, "site/public"), out, { recursive: true });
