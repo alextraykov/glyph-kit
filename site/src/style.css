@@ -121,7 +121,10 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .hero__field { animation: field-breathe 7s steps(14, end) infinite; }
 @media (prefers-reduced-motion: reduce) { .hero__field { animation: none; } }
 .hero__field { position: absolute; top: calc(var(--space-6) * -1); left: calc(50% - 50vw); width: 100vw; z-index: -1; margin: 0; overflow: hidden; color: var(--ink); opacity: .07; font: 400 22px/1 var(--pixel); letter-spacing: 0; white-space: pre; pointer-events: none; }
-.hero h1 { font-size: calc(min(var(--measure), 100vw - 2 * var(--space-4)) / 6.5); line-height: .9; white-space: nowrap; }
+/* Departure Mono draws G one pixel (1/11 em) in from its box, and y and p hang .18em below the
+   baseline, which a .9 line box cuts off by .1em: pull the ink to the column edge, and give the
+   descenders their room so they clear the lead. */
+.hero h1 { margin-inline-start: -.0909em; padding-bottom: .1em; font-size: calc(min(var(--measure), 100vw - 2 * var(--space-4)) / 6.5); line-height: .9; white-space: nowrap; }
 .hero__body { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); grid-template-rows: auto 1fr; gap: var(--space-5) var(--space-6); align-items: start; }
 @media (min-width: 901px) {
   .hero__body > .lead { grid-area: 1 / 1; }
@@ -130,7 +133,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 }
 .hero__inner { display: grid; gap: var(--space-4); }
 .prompt--hero textarea { min-height: 84px; }
-.lead { max-width: 52ch; text-wrap: pretty; font-size: clamp(1.25rem, 2.2vw, 1.75rem); line-height: 1.3; letter-spacing: -.01em; }
+.lead { max-width: 52ch; text-wrap: pretty; font-size: clamp(1.125rem, 1.5vw, 1.375rem); line-height: 1.35; letter-spacing: -.01em; }
 
 /* Install: a full-width strip under the hero, its columns aligned with the page. */
 .strip { position: relative; z-index: 1; display: grid; width: 100vw; margin-inline: calc(50% - 50vw); padding-inline: max(var(--space-4), (100vw - var(--measure)) / 2); border-block: var(--hairline) solid var(--ink); background: color-mix(in srgb, var(--ink) 3.5%, var(--paper)); }
