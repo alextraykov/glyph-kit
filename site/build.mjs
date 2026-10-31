@@ -98,18 +98,6 @@ for (const [area, list] of Object.entries(examples)) for (const s of list) {
   loopIds[s.kind] = `kind-${s.kind}`;
   loopSpecs[`kind-${s.kind}`] = { ...s, motion: true };
 }
-const m = JSON.parse(readFileSync(join(root, "docs/measurements.json"), "utf8")).rows;
-const med = (xs) => [...xs].sort((a, b) => a - b)[Math.floor(xs.length / 2)];
-const stats = {
-  count: m.length,
-  us: med(m.map((r) => r.us)).toFixed(1),
-  text: med(m.map((r) => r.textBytes)),
-  png: (med(m.map((r) => r.pngBytes)) / 1024).toFixed(1),
-  ratio: med(m.map((r) => r.pngBytes / r.textBytes)).toFixed(0),
-  tokens: med(m.map((r) => r.imageTokens)),
-  tokensLow: Math.min(...m.map((r) => r.imageTokens)),
-  tokensHigh: Math.max(...m.map((r) => r.imageTokens))
-};
 // The cost study: the kit against text drawn by hand and HTML/JS, in Claude Code and through the API.
 const study = JSON.parse(readFileSync(join(root, "docs/cost-study.json"), "utf8"));
 const usd = (n) => `$${n.toFixed(2)}`;
@@ -251,14 +239,14 @@ const deckFrame = `<div class="deck-frame"><iframe src="${DECK}#4" title="The ex
 
 // ── The hero showcase: views of the kit in one box, swapped with the dither press ───────────────
 const ex = (area, kind) => examples[area].find((sp) => sp.kind === kind);
-// Things people share, still or moving. Each caption says what it's for, then what it shows.
+// Things people share, still or moving, the decision first. Each caption names who sees it, then what it shows.
 const showcaseViews = [
-  { spec: { ...USE_SPECS.chart, options: { width: 40 } }, title: "Chart", caption: "A chart for a research doc. How many people finished each task." },
-  { spec: USE_SPECS.comparison, title: "Comparison", caption: "A comparison for a decision. Three export options side by side." },
-  { spec: USE_SPECS.pr, title: "Before and after", caption: "A figure for a PR. Signup before and after the change." },
-  { live: "signup-funnel", title: "Funnel as people", caption: "A funnel for a review. Signup to paid, as people." },
-  { spec: USE_SPECS.test, title: "Test result", caption: "A test result for deciding whether to ship. The intervals don't overlap." },
-  { live: "rework-loop", title: "Rework loop", caption: "A process for a slide. About one in three pieces of work comes back from QA." }
+  { spec: USE_SPECS.comparison, title: "Comparison", caption: "For a decision meeting. Three export options side by side." },
+  { live: "signup-funnel", title: "Funnel as people", caption: "For a review. Signup to paid, as people." },
+  { spec: { ...USE_SPECS.chart, options: { width: 40 } }, title: "Chart", caption: "For a research doc. How many people finished each task." },
+  { spec: USE_SPECS.pr, title: "Before and after", caption: "For PR reviewers. Signup before and after the change." },
+  { spec: USE_SPECS.test, title: "Test result", caption: "For deciding whether to ship. The intervals don't overlap." },
+  { live: "rework-loop", title: "Rework loop", caption: "For a planning slide. About one in three pieces of work comes back from QA." }
 ].map((v) => {
   if (v.live) {
     const { make, still, summary } = live(liveSpecs[v.live]);
@@ -313,6 +301,7 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
 <meta name="twitter:description" content="${esc(description)}">
 <meta name="twitter:image" content="${SITE}/og.png">
 <link rel="preload" href="/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/geist-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <script>
   // Light unless the visitor chose dark here; set before paint so the page never flashes.
   try { document.documentElement.dataset.theme = localStorage.getItem("glyph-kit-theme") === "dark" ? "dark" : "light"; }
@@ -353,15 +342,18 @@ ${current === "guide" ? '<script type="module" src="/guide-motion.js"></script>'
 
 const COPY_ICON = `<svg class="icon icon--copy" viewBox="0 0 16 16" aria-hidden="true"><path d="M5.5 5.5h7v7h-7z M3.5 10.5v-7h7" fill="none" stroke="currentColor" stroke-width="1.2"/></svg><svg class="icon icon--done" viewBox="0 0 16 16" aria-hidden="true"><path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>`;
 const cmd = (text) => `<div class="cmd"><code>${esc(text)}</code><button type="button" data-copy="${esc(text)}" aria-label="Copy: ${esc(text)}" title="Copy" hidden>${COPY_ICON}</button></div>`;
+// One command to start; the plugin and the zip are a click away.
 const install = `<div class="install" id="get" aria-label="Get the kit">
   <p class="label">Any agent</p>
   ${cmd("npx skills add alextraykov/glyph-kit")}
-  <p class="install__hand"><a class="text-link" href="https://www.skills.sh/?q=glyph-kit" target="_blank" rel="noopener">On skills.sh</a> <span>The open directory of agent skills.</span></p>
-  <p class="label">Claude Code plugin</p>
-  ${cmd("/plugin marketplace add alextraykov/glyph-kit")}
-  ${cmd("/plugin install glyph-kit@traykov")}
-  <p class="install__hand"><a class="text-link" href="${REPO}/releases/latest/download/glyph-kit.zip">Download the kit · ${zipSize}</a> <span>Unzip into ~/.claude/skills or ~/.agents/skills.</span></p>
-  <p class="install__hand">Best in <a class="text-link" href="https://departuremono.com">Departure Mono</a>. Shoutout to <a class="text-link" href="https://helenazhang.com">Helena Zhang</a>, who made it.</p>
+  <details class="install__more">
+    <summary>Other ways to install</summary>
+    <p class="install__hand"><a class="text-link" href="https://www.skills.sh/?q=glyph-kit" target="_blank" rel="noopener">On skills.sh</a> <span>The open directory of agent skills.</span></p>
+    <p class="label">Claude Code plugin</p>
+    ${cmd("/plugin marketplace add alextraykov/glyph-kit")}
+    ${cmd("/plugin install glyph-kit@traykov")}
+    <p class="install__hand"><a class="text-link" href="${REPO}/releases/latest/download/glyph-kit.zip">Download the kit · ${zipSize}</a> <span>Unzip into ~/.claude/skills or ~/.agents/skills.</span></p>
+  </details>
 </div>`;
 
 const exampleSpec = liveSpecs["signup-funnel"];
@@ -581,7 +573,7 @@ const guide = page({
     <li><strong>Say the point in words.</strong> One sentence next to the figure states the conclusion; the figure backs it up.</li>
     <li><strong>One meaning per glyph.</strong> █ measured or done, ░ projected or empty, the same across the whole document.</li>
     <li><strong>About 80 columns.</strong> Wider figures wrap on small screens; split them instead.</li>
-    <li><strong>Departure Mono for text.</strong> Any monospace font with block characters works; Departure Mono lines up exactly. SVG needs no font.</li>
+    <li><strong>Departure Mono for text.</strong> Any monospace font with block characters works; <a class="text-link" href="https://departuremono.com">Departure Mono</a> lines up exactly. It's free, made by <a class="text-link" href="https://helenazhang.com">Helena Zhang</a>. SVG needs no font.</li>
     <li><strong>Pass specs, not drawings.</strong> Between agents and steps, the spec is a few hundred bytes. Draw only when a person will look.</li>
   </ul>
 </section>
@@ -667,19 +659,17 @@ const USES = `<div class="uses">${[
 const home = page({
   path: "/",
   current: "home",
-  title: "Glyph kit · charts, comparisons and decks from your agent",
-  description: "A skill for Claude Code, Codex and other agents. Ask in words for a chart, a comparison, a deck or a figure for a PR. Paste it as text, or export SVG, PNG, PDF or a deck.",
+  title: "Glyph kit · charts, comparisons and decks to share",
+  description: "A skill for Claude Code, Codex and other agents. Ask in words for a chart, a comparison or a deck, and share it in a doc, a PR, a review or a slide.",
   content: `
 <section class="hero" aria-labelledby="title">
   <div class="hero__inner">
     <p class="kicker">Free · MIT · ${kindCount} types · v${plugin.version}</p>
     <h1 id="title">Glyph kit.</h1>
     <div class="hero__body">
-      <div class="hero__copy">
-        <p class="lead">Charts, comparisons, decks and figures for docs, PRs and slides. Ask Claude Code or Codex in words. Paste the result as text, or export it as SVG, PNG, PDF or a deck.</p>
-        ${install}
-      </div>
+      <p class="lead">Charts, comparisons and decks for the people you work with. Ask Claude Code or Codex in words, then put the result in a doc, a PR, a review or a slide.</p>
       ${showcase}
+      ${install}
     </div>
   </div>
 </section>
@@ -695,11 +685,11 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="formats">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">03 Output</p><h2 id="formats">Copy it as text. Export the rest.</h2><p>Every figure is plain text first, ready to paste into a PR, a ticket, Slack, an email or a model's context as it is. The same figure exports to Markdown, MDX, SVG, HTML, decks and PDF.</p></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">03 Output</p><h2 id="formats">Copy it as text. Export the rest.</h2><p>Every figure is plain text first, ready to paste into a PR, a ticket, Slack or an email as it is. The same figure exports to Markdown, MDX, SVG, HTML, decks and PDF.</p></header>
   <div class="outputs" data-outputs>
     <div class="outputs__bar">
       <div class="switch__chips" role="tablist" aria-label="Formats">${FORMATS.map((f, i) => `<button type="button" role="tab" id="out-${f.id}" aria-controls="out-${f.id}-panel" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ""}>${esc(f.name)}</button>`).join("")}</div>
-      <span class="label">${esc(AUDIT_SPEC.title)} · from the Pave motion audit</span>
+      <span class="label">${esc(AUDIT_SPEC.title)} · from a motion audit</span>
     </div>
     ${FORMATS.map((f, i) => `<div class="outputs__panel" role="tabpanel" id="out-${f.id}-panel" aria-labelledby="out-${f.id}"${i ? " hidden" : ""}>
       <div class="outputs__view">${f.view(f.copy)}</div>
@@ -709,38 +699,17 @@ const home = page({
   <p class="outputs__also">Whole documents too: <a class="text-link" href="/examples/motion-audit/motion-audit.html">the report</a> · <a class="text-link" href="/examples/motion-audit/motion-audit.pdf">as a PDF</a> · <a class="text-link" href="/examples/decks/motion-audit">as a deck</a> · <a class="text-link" href="/examples/product/settings">a prototype from a text wireframe</a> · <a class="text-link" href="/examples/live/review-queue">a moving diagram on its own</a></p>
 </section>
 
-<section class="section" aria-labelledby="cheap">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Against HTML/JS</p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>Claude Code got the same brief twice for each of five deliverables: once with the kit, once as hand-written HTML/JS. Like for like: a still flow against a still SVG flow, a working prototype against a working prototype, a moving diagram against an animated one.</p></header>
-  <div class="stats">
-    <article class="stat"><p class="label">Faster</p><strong>${times(mv.html.s / mv.kit.s)}</strong><p>A moving diagram took ${secs(mv.kit.s)} against ${secs(mv.html.s)}. Faster on every run, for all five.</p></article>
-    <article class="stat"><p class="label">Cheaper</p><strong>${times(mv.html.usd / mv.kit.usd)}</strong><p>${usd(mv.kit.usd)} against ${usd(mv.html.usd)} for a moving diagram. Cheaper on every run, for all five.</p></article>
-    <article class="stat"><p class="label">Right first time</p><strong>${study.correct.kit} of ${study.correct.runs}</strong><p>Every kit run. HTML/JS: ${study.correct.html} of ${study.correct.runs}. Drawn by hand: ${study.correct.byHand}.</p></article>
-    <article class="stat"><p class="label">Fewer tokens written</p><strong>${times(study.outputVsHtml.moving)}</strong><p>For a moving diagram; ${Math.round(study.outputVsHtml.funnel)}× for a funnel. Fewer on every run. A figure draws in ${stats.us} μs.</p></article>
-  </div>
-  <div class="study">${STUDY_TABLE}</div>
-  <p class="stats-note">${study.model} in Claude Code · ${study.runsEach} runs per figure and approach · medians · ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · published prices · more testing is planned, with other models and more figures</p>
-</section>
-
 <section class="section" aria-labelledby="guard">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Trust</p><h2 id="guard">Sample data is stamped.</h2></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Trust</p><h2 id="guard">No source, no numbers. Sample data is stamped.</h2></header>
   <ul class="rules">
-    <li><strong>No source, no numbers.</strong> A figure with numbers waits until it says where they came from.</li>
-    <li><strong>Sample data is stamped.</strong> Made-up numbers carry SAMPLE DATA in every format.</li>
     <li><strong>Numbers from your files.</strong> Point a figure at a CSV or JSON file.</li>
     <li><strong>Impossible data is refused.</strong> A funnel that grows, dates out of order.</li>
     <li><strong>Ask, don't invent.</strong> The agent asks for missing numbers.</li>
-    <li><strong>Data between agents.</strong> Drawings for people.</li>
   </ul>
 </section>
 
-<section class="section" aria-labelledby="release">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">06 Release 0.3.0</p><h2 id="release">Colour by role. Focus on any type.</h2><a class="text-link" href="/changelog/#v0-3-0">Everything in 0.3.0</a></header>
-  ${RELEASE}
-  <p class="outputs__also">Also new: <a class="text-link" href="${REPO}/blob/main/CONTRIBUTING.md">How to contribute</a> · <a class="text-link" href="${REPO}/blob/main/docs/adding-a-type.md">Adding a type</a></p>
-</section>
-
 <section class="section" aria-labelledby="areas">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">07 Coverage</p><h2 id="areas">${kindCount} types. ${areaCount} areas.</h2><a class="text-link" href="/types/">Every type</a></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">05 Coverage</p><h2 id="areas">${kindCount} types. ${areaCount} areas.</h2><a class="text-link" href="/types/">Every type</a></header>
   <div class="bento">${Object.entries(AREAS).map(([id, area]) => {
     const n = Object.keys(area.kinds).length;
     return `<article class="bento__cell"><header class="bento__head"><h3><a href="/types/#${id}">${esc(area.label)}</a></h3><span class="label">${n} ${n === 1 ? "type" : "types"}</span></header>${NEW_AREAS[id] ? `<span class="new">${esc(NEW_AREAS[id])}</span>` : ""}<div class="bento__peek" aria-hidden="true">${paint(body(examples[id][0]))}</div></article>`;
@@ -748,16 +717,33 @@ const home = page({
 </section>
 
 <section class="section" aria-labelledby="moving">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">08 Motion</p><h2 id="moving">Six keep moving. Every type arrives.</h2></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">06 Motion</p><h2 id="moving">Six keep moving. Every type arrives.</h2></header>
   <div class="switch" data-switch style="--rows:${Math.max(...moving.slice(0, 6).map((mv) => mv.rows))}">
     <div class="switch__chips" role="tablist" aria-label="Moving diagrams">${moving.slice(0, 6).map((mv, i) => `<button type="button" role="tab" id="mv-${mv.id}" aria-controls="mv-${mv.id}-panel" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ""}>${esc(mv.spec.title)}</button>`).join("")}</div>
     ${moving.slice(0, 6).map((mv, i) => `<div role="tabpanel" id="mv-${mv.id}-panel" aria-labelledby="mv-${mv.id}"${i ? " hidden" : ""}>${liveFigure(mv)}</div>`).join("\n    ")}
   </div>
 </section>
 
+<section class="section" aria-labelledby="cheap">
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">07 Measured</p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>Claude Code got the same brief twice for each of five deliverables: once with the kit, once as hand-written HTML/JS. Like for like: a still flow against a still SVG flow, a working prototype against a working prototype, a moving diagram against an animated one.</p></header>
+  <div class="stats">
+    <article class="stat"><p class="label">Faster</p><strong>${times(mv.html.s / mv.kit.s)}</strong><p>A moving diagram took ${secs(mv.kit.s)} against ${secs(mv.html.s)}. Faster on every run, for all five.</p></article>
+    <article class="stat"><p class="label">Cheaper</p><strong>${times(mv.html.usd / mv.kit.usd)}</strong><p>${usd(mv.kit.usd)} against ${usd(mv.html.usd)} for a moving diagram. Cheaper on every run, for all five.</p></article>
+    <article class="stat"><p class="label">Right first time</p><strong>${study.correct.kit} of ${study.correct.runs}</strong><p>Every kit run. HTML/JS: ${study.correct.html} of ${study.correct.runs}. Drawn by hand: ${study.correct.byHand}.</p></article>
+  </div>
+  <div class="study">${STUDY_TABLE}</div>
+  <p class="stats-note">${study.model} in Claude Code · ${study.runsEach} runs per figure and approach · medians · ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · published prices · more testing is planned, with other models and more figures</p>
+</section>
+
+<section class="section release-line" aria-labelledby="release">
+  <p class="kicker">08 Release</p>
+  <p id="release"><a class="text-link" href="/changelog/#v0-3-0">New in 0.3.0: colour by role, focus on any type</a></p>
+</section>
+
 <section class="section support" aria-labelledby="support">
   <header class="heading"><p class="kicker">09 Support</p><h2 id="support">Free. MIT.</h2></header>
   <div class="actions"><a class="button" href="${REPO}" target="_blank" rel="noopener">★ Star on GitHub</a>${SUPPORT_URL ? `<a class="button button--quiet" href="${esc(SUPPORT_URL)}">Buy me a coffee</a>` : ""}</div>
+  <p class="outputs__also">Help make it: <a class="text-link" href="${REPO}/blob/main/CONTRIBUTING.md">How to contribute</a> · <a class="text-link" href="${REPO}/blob/main/docs/adding-a-type.md">Adding a type</a></p>
 </section>
 
 <aside class="note" aria-labelledby="note">

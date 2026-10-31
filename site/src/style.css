@@ -51,7 +51,7 @@ body { margin: 0; overflow-x: clip; background: var(--paper); color: var(--ink);
 a { color: inherit; text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 img { display: block; max-width: 100%; height: auto; }
-h1, h2, h3 { margin: 0; font-family: var(--pixel); font-weight: 400; }
+h1, h2, h3 { margin: 0; font-family: var(--pixel); font-weight: 400; text-wrap: balance; }
 p { margin: 0; }
 
 .shell { width: min(var(--measure), 100% - 2 * var(--space-4)); margin: 0 auto; }
@@ -89,11 +89,15 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 @media (prefers-reduced-motion: reduce) { .hero__field { animation: none; } }
 .hero__field { position: absolute; top: calc(var(--space-6) * -1); left: calc(50% - 50vw); width: 100vw; z-index: -1; margin: 0; overflow: hidden; color: var(--ink); opacity: .07; font: 400 22px/1 var(--pixel); letter-spacing: 0; white-space: pre; pointer-events: none; }
 .hero h1 { font-size: calc(min(var(--measure), 100vw - 2 * var(--space-4)) / 6.5); line-height: .9; white-space: nowrap; }
-.hero__body { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); gap: var(--space-6); align-items: center; }
+.hero__body { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); grid-template-rows: auto 1fr; gap: var(--space-5) var(--space-6); align-items: start; }
+@media (min-width: 901px) {
+  .hero__body > .lead { grid-area: 1 / 1; }
+  .hero__body > .showcase { grid-area: 1 / 2 / span 2; }
+  .hero__body > .install { grid-area: 2 / 1; }
+}
 .hero__inner { display: grid; gap: var(--space-4); }
-.hero__copy { display: grid; justify-items: stretch; align-content: center; gap: var(--space-5); }
 .prompt--hero textarea { min-height: 84px; }
-.lead { max-width: 52ch; font-size: clamp(1.25rem, 2.2vw, 1.75rem); line-height: 1.3; letter-spacing: -.01em; }
+.lead { max-width: 52ch; text-wrap: pretty; font-size: clamp(1.25rem, 2.2vw, 1.75rem); line-height: 1.3; letter-spacing: -.01em; }
 
 /* Install: a full-width strip under the hero, its columns aligned with the page. */
 .strip { position: relative; z-index: 1; display: grid; width: 100vw; margin-inline: calc(50% - 50vw); padding-inline: max(var(--space-4), (100vw - var(--measure)) / 2); border-block: var(--hairline) solid var(--ink); background: color-mix(in srgb, var(--ink) 3.5%, var(--paper)); }
@@ -151,10 +155,11 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .showcase figcaption { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
 .showcase figcaption .label { flex: none; line-height: 1; }
 [data-showcase-state="pending"] [data-showcase-grid] { visibility: hidden; }
+.showcase .stage > .grid-figure { font-size: min(var(--px-22), 100cqi * 11 / (7 * var(--cols))); }
 .showcase__press { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 
 /* Measured readings */
-.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: var(--hairline) solid var(--ink); }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: var(--hairline) solid var(--ink); }
 .stat { display: grid; align-content: start; gap: var(--space-3); padding: var(--space-5) var(--space-5) var(--space-5) 0; }
 .stat + .stat { padding-left: var(--space-5); border-left: var(--hairline) solid var(--line); }
 .stat strong { font: 400 var(--px-33)/1.1 var(--pixel); }
@@ -186,8 +191,8 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .uses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-5); }
 .uses__item { display: grid; align-content: start; gap: var(--space-3); min-width: 0; padding-top: var(--space-4); border-top: var(--hairline) solid var(--ink); }
 .uses__item h3 { font-size: var(--px-22); line-height: 1.2; }
-.uses__item h3 a { color: inherit; text-decoration: none; }
-@media (hover: hover) and (pointer: fine) { .uses__item h3 a:hover { text-decoration: underline; text-underline-offset: 4px; } }
+.uses__item h3 a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+@media (hover: hover) and (pointer: fine) { .uses__item h3 a:hover { text-decoration-thickness: 2px; } }
 .uses__item .fit { align-content: center; min-height: 12rem; }
 @media (max-width: 900px) { .uses__item .fit { min-height: 0; } }
 .uses__to { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); color: var(--text-soft); font-size: .92rem; }
@@ -358,14 +363,12 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
   .strip__row { grid-template-columns: minmax(0, 1fr); align-items: start; }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .study { padding-inline: var(--space-4); }
-  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .stat:nth-child(3) { padding-left: 0; border-left: 0; }
-  .stat:nth-child(n+3) { border-top: var(--hairline) solid var(--line); }
 }
 @media (max-width: 640px) {
   .heading h2 { font-size: var(--px-22); }
   .note__copy h2 { font-size: var(--px-33); }
   .fit { padding: var(--space-4) var(--space-3); }
+  .fit:has(.gk-replay) { padding-top: calc(24px + 2 * 6px); }
   .stats { grid-template-columns: minmax(0, 1fr); }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bento__cell { grid-column: auto; }
@@ -595,8 +598,13 @@ td.is-number .data__input { text-align: right; font-variant-numeric: tabular-num
 .install .cmd { max-width: 100%; }
 .install__hand { margin-top: var(--space-3); color: var(--text-caption); font-size: .78rem; }
 .install__hand .text-link { margin-right: var(--space-2); color: var(--ink); font-size: .9rem; }
-.hero__body { align-items: start; }
-.hero__copy { align-content: start; }
+.install__more { display: grid; justify-items: start; gap: var(--space-1); margin-top: var(--space-2); }
+.install__more > summary { padding-block: var(--space-1); color: var(--text-soft); font-size: .9rem; list-style: none; cursor: pointer; }
+.install__more > summary::-webkit-details-marker { display: none; }
+.install__more > summary::before { content: "+ "; font-family: var(--pixel); }
+.install__more[open] > summary::before { content: "− "; }
+@media (hover: hover) and (pointer: fine) { .install__more > summary:hover { color: var(--ink); } }
+.install__more .install__hand:first-of-type { margin-top: var(--space-1); }
 .hero .showcase { margin-top: var(--space-2); }
 
 /* iPhone safe areas: with the page under the status bar (viewport-fit=cover), keep content clear of
