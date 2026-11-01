@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Builds traykov.cc/glyph-kit into site/dist with the kit's own renderers. No dependencies:
+// Builds glyph-kit.traykov.cc into site/dist with the kit's own renderers. No dependencies:
 // every figure on the site is drawn by the same code the skill runs.
 // Usage: node site/build.mjs
 import { execFileSync } from "node:child_process";
@@ -9,11 +9,10 @@ import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const kit = join(root, "skills/glyph-kit");
-// The site lives at traykov.cc/glyph-kit: the portfolio's Vercel project passes that path through
-// to this project, so every page and file is built under BASE.
-const BASE = "/glyph-kit";
+// The site lives at glyph-kit.traykov.cc, so every page and file is built at the root.
+// traykov.cc/glyph-kit sends visitors here (the portfolio's vercel.json).
 const dist = join(root, "site/dist");
-const out = join(dist, BASE.slice(1));
+const out = dist;
 const imp = (p) => import(new URL(`file://${join(kit, p)}`).href);
 
 const { AREAS, KINDS } = await imp("scripts/registry.mjs");
@@ -85,7 +84,28 @@ const SUGGESTIONS = [
   { short: "Content width", kind: "Redline", key: "redline", from: { area: "handoff" },
     ask: "Redline the content width on mobile: 16 padding, 320 content, 16 padding." }
 ];
-const SITE = `https://traykov.cc${BASE}`;
+const SITE = "https://glyph-kit.traykov.cc";
+// What search engines read about the kit: the name as people type it, run together or hyphenated.
+const STRUCTURED_DATA = JSON.stringify({
+  "@context": "https://schema.org",
+  "@graph": [
+    { "@type": "WebSite", "@id": `${SITE}/#website`, url: `${SITE}/`, name: "Glyph kit", alternateName: ["glyphkit", "glyph-kit"] },
+    {
+      "@type": "SoftwareApplication",
+      name: "Glyph kit",
+      alternateName: ["glyphkit", "glyph-kit"],
+      url: `${SITE}/`,
+      description: "A skill for Claude Code and Codex that draws product-design docs and diagrams as plain text.",
+      applicationCategory: "DeveloperApplication",
+      operatingSystem: "macOS, Linux, Windows",
+      softwareVersion: plugin.version,
+      license: "https://opensource.org/licenses/MIT",
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      author: { "@type": "Person", name: "Alexander Traykov", url: "https://traykov.cc" },
+      sameAs: [REPO]
+    }
+  ]
+}).replace(/</g, "\\u003c");
 
 // ── Data ───────────────────────────────────────────────────────────────────────────────────────
 const examples = Object.fromEntries(Object.keys(AREAS).map((a) => [a, JSON.parse(readFileSync(join(root, "tools/examples", `${a}.json`), "utf8"))]));
@@ -311,6 +331,7 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
 <meta name="twitter:title" content="${esc(title)}">
 <meta name="twitter:description" content="${esc(description)}">
 <meta name="twitter:image" content="${SITE}/og.png">
+${current === "home" ? `<script type="application/ld+json">${STRUCTURED_DATA}</script>` : ""}
 <link rel="preload" href="/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
 <script>
   // Light unless the visitor chose dark here; set before paint so the page never flashes.
@@ -790,8 +811,6 @@ const changes = page({
 ${changelog.releases.map(release).join("\n")}`
 });
 
-/** Root-relative links in a page, moved under BASE. External links are left alone. */
-const based = (html) => html.replace(/(href|src)="\/(?!\/|_vercel\/)/g, `$1="${BASE}/`); // Vercel's own paths stay at the root
 
 // Refresh standalone examples through the CLI, from the same specs as the gallery.
 for (const id of Object.keys(liveSpecs)) {
@@ -802,12 +821,12 @@ for (const id of Object.keys(liveSpecs)) {
 // ── Write ──────────────────────────────────────────────────────────────────────────────────────
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(join(out, "types"), { recursive: true });
-writeFileSync(join(out, "index.html"), based(home));
-writeFileSync(join(out, "types/index.html"), based(kinds));
+writeFileSync(join(out, "index.html"), home);
+writeFileSync(join(out, "types/index.html"), kinds);
 mkdirSync(join(out, "how-to-use"), { recursive: true });
-writeFileSync(join(out, "how-to-use/index.html"), based(guide));
+writeFileSync(join(out, "how-to-use/index.html"), guide);
 mkdirSync(join(out, "changelog"), { recursive: true });
-writeFileSync(join(out, "changelog/index.html"), based(changes));
+writeFileSync(join(out, "changelog/index.html"), changes);
 cpSync(join(root, "site/src/style.css"), join(out, "style.css"));
 for (const f of ["app.js", "showcase.js", "showcase-core.mjs", "try.js", "parallax.js", "guide-motion.js", "feedback.js"]) cpSync(join(root, "site/src", f), join(out, f));
 writeFileSync(join(out, "showcase-core.mjs"), readFileSync(join(root, "site/src/showcase-core.mjs"), "utf8").replaceAll("../../skills/glyph-kit/scripts/", "./kit/"));
@@ -836,4 +855,12 @@ for (const spec of Object.values(liveSpecs)) {
   skeletons[`moving:${spec.kind}`] = stillGrid(make, still).toText();
 }
 writeFileSync(join(out, "skeletons.json"), JSON.stringify(skeletons));
+// For search engines: every page, and where the list lives.
+const PAGES = ["/", "/how-to-use/", "/types/", "/changelog/"];
+writeFileSync(join(out, "sitemap.xml"), `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${PAGES.map((p) => `  <url><loc>${SITE}${p}</loc></url>`).join("\n")}
+</urlset>
+`);
+writeFileSync(join(out, "robots.txt"), `User-agent: *\nAllow: /\n\nSitemap: ${SITE}/sitemap.xml\n`);
 console.log(`site/dist: ${readdirSync(out).length} entries, ${moving.length} moving diagrams, ${kindCount} types, ${changelog.releases.length} releases`);

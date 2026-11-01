@@ -68,7 +68,7 @@ Then ask for what you need, the way you'd ask a colleague: "chart these usabilit
 | Processes | Rework loops, queues, rollouts, loading sequences, state machines |
 | Moving diagrams | Rework loop, funnel, state machine, work queue, staged rollout, loading sequence |
 
-See every one at **[traykov.cc/glyph-kit](https://traykov.cc/glyph-kit)**.
+See every one at **[glyph-kit.traykov.cc/types](https://glyph-kit.traykov.cc/types/)**.
 
 ## Why text
 

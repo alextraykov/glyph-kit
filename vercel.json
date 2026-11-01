@@ -7,79 +7,24 @@
   "cleanUrls": true,
   "redirects": [
     {
+      "source": "/glyph-kit/kinds{/}?",
+      "destination": "/types/",
+      "permanent": true
+    },
+    {
       "source": "/kinds{/}?",
       "destination": "/types/",
       "permanent": true
     },
     {
-      "source": "/glyph-kit/kinds{/}?",
-      "destination": "/glyph-kit/types/",
+      "source": "/glyph-kit",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/",
-      "missing": [
-        {
-          "type": "host",
-          "value": "glyph-kit.traykov.cc"
-        }
-      ],
-      "destination": "/glyph-kit/",
-      "permanent": false
-    },
-    {
-      "source": "/glyph-kit",
-      "has": [
-        {
-          "type": "host",
-          "value": "glyph-kit.traykov.cc"
-        }
-      ],
-      "destination": "/",
-      "permanent": false
-    },
-    {
-      "source": "/glyph-kit/:path([^.]*)",
-      "has": [
-        {
-          "type": "host",
-          "value": "glyph-kit.traykov.cc"
-        }
-      ],
+      "source": "/glyph-kit/:path(.*)",
       "destination": "/:path",
-      "permanent": false
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/",
-      "has": [
-        {
-          "type": "host",
-          "value": "glyph-kit.traykov.cc"
-        }
-      ],
-      "destination": "/glyph-kit/"
-    },
-    {
-      "source": "/:path(.+)/",
-      "has": [
-        {
-          "type": "host",
-          "value": "glyph-kit.traykov.cc"
-        }
-      ],
-      "destination": "/glyph-kit/:path"
-    },
-    {
-      "source": "/:path*",
-      "has": [
-        {
-          "type": "host",
-          "value": "glyph-kit.traykov.cc"
-        }
-      ],
-      "destination": "/glyph-kit/:path*"
+      "permanent": true
     }
   ]
 }

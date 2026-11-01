@@ -44,7 +44,7 @@ A report is the format to use when the output has to read like a finished docume
 - **Figures:** numbered, drawn as the kit's own text in Departure Mono and coloured by role, with intent and source.
 - **Print:** A4 with a full-bleed background, the cover on its own page, and figures never split across pages.
 
-`examples/reports/motion-audit.json` is a full example. Run the commands above on it to make each format; a copy of every export is at https://traykov.cc/glyph-kit/examples/motion-audit/.
+`examples/reports/motion-audit.json` is a full example. Run the commands above on it to make each format; a copy of every export is at https://glyph-kit.traykov.cc/examples/motion-audit/.
 
 ## SVG and PNG
 
