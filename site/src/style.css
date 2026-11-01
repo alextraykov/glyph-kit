@@ -186,13 +186,27 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .stage { display: grid; place-items: center; min-width: 0; padding: var(--space-6) var(--space-5); background: var(--panel); }
 .stage > .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: min(var(--px-11), 100cqi * 11 / (7 * var(--cols))); }
 
-/* The hero showcase: the dither press covers the whole frame between views. */
+/* The hero showcase: a bar with the view's name and the stepper, the frame, and its caption. The dither
+   press covers the frame and caption between views. */
 .showcase { position: relative; }
+.showcase__bar { align-items: center; padding-block: 0; padding-right: 0; }
+.showcase__bar > .label { padding-block: var(--space-3); }
+.showcase__step { display: flex; align-items: center; }
+.showcase__step[hidden] { display: none; }
+.showcase__step .label { align-self: stretch; display: grid; place-items: center; min-width: 8ch; border-left: var(--hairline) solid var(--line); color: var(--ink); }
+.showcase__step button { display: grid; place-items: center; width: var(--tap); height: var(--tap); padding: 0; border: 0; border-left: var(--hairline) solid var(--line); background: transparent; color: var(--text-soft); font: 400 var(--px-22)/1 var(--pixel); cursor: pointer; }
+@media (hover: hover) and (pointer: fine) { .showcase__step button:hover { background: var(--ink); color: var(--paper); } }
 .showcase figcaption { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
 .showcase figcaption .label { flex: none; line-height: 1; }
 [data-showcase-state="pending"] [data-showcase-grid] { visibility: hidden; }
-.showcase .stage > .grid-figure { font-size: min(var(--px-22), 100cqi * 11 / (7 * var(--cols))); }
-.showcase__press { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/* The frame keeps one height: its tallest view (--cols × --rows) at the size its width allows. Each
+   view (--vcols × --vrows) then fills it by width or by height, whichever runs out first. */
+.showcase .stage { --frame: min(var(--px-22), 100cqi * 11 / (7 * var(--cols))); padding: var(--space-5); }
+.showcase__fit { display: grid; place-items: center; width: 100%; min-height: calc(var(--rows) * 1.25 * var(--frame)); }
+.showcase__fit > .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: min(var(--px-22), 100cqi * 11 / (7 * var(--vcols, var(--cols))), var(--frame) * var(--rows) / var(--vrows, var(--rows))); }
+.showcase__fit > .grid-figure:focus-visible { outline-offset: var(--space-2); }
+.showcase__press { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+@media (max-width: 640px) { .showcase .stage { padding: var(--space-4) var(--space-3); } }
 
 /* Measured readings */
 .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: var(--hairline) solid var(--ink); }

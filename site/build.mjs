@@ -250,42 +250,56 @@ const USE_SPECS = {
 const DECK = "/examples/decks/export-review.html";
 const deckFrame = `<div class="deck-frame"><iframe src="${DECK}#4" title="The export review deck, made by the kit, on its themes slide" loading="lazy"></iframe></div>`;
 
-// ── The hero showcase: views of the kit in one box, swapped with the dither press ───────────────
+// ── The hero showcase: views of the kit in one frame, stepped through or swapped with the dither press
 const ex = (area, kind) => examples[area].find((sp) => sp.kind === kind);
-// Things people share, still or moving, the decision first. Each caption names who sees it, then what it shows.
+// Things people share, still or moving, the decision first. Each caption names who sees it, then what
+// it shows. `narrow` redraws a still view for phones, with these options.
 const showcaseViews = [
-  { spec: USE_SPECS.comparison, title: "Comparison", caption: "For a decision meeting. Three export options side by side." },
+  { spec: USE_SPECS.comparison, narrow: { maxWidth: 44 }, title: "Comparison", caption: "For a decision meeting. Three export options side by side." },
   { live: "signup-funnel", title: "Funnel as people", caption: "For a review. Signup to paid, as people." },
-  { spec: { ...USE_SPECS.chart, options: { width: 40 } }, title: "Chart", caption: "For a research doc. How many people finished each task." },
-  { spec: USE_SPECS.pr, title: "Before and after", caption: "For PR reviewers. Signup before and after the change." },
-  { spec: USE_SPECS.test, title: "Test result", caption: "For deciding whether to ship. The intervals don't overlap." },
+  { spec: { ...USE_SPECS.chart, options: { width: 40 } }, narrow: { width: 20 }, title: "Chart", caption: "For a research doc. How many people finished each task." },
+  { spec: USE_SPECS.pr, narrow: { maxWidth: 44 }, title: "Before and after", caption: "For PR reviewers. Signup before and after the change." },
+  { spec: USE_SPECS.test, narrow: { width: 16 }, title: "Test result", caption: "For deciding whether to ship. The intervals don't overlap." },
   { live: "rework-loop", title: "Rework loop", caption: "For a planning slide. About one in three pieces of work comes back from QA." }
-].map((v) => {
-  if (v.live) {
-    const { make, still, summary } = live(liveSpecs[v.live]);
-    // The columns this view's ink ever uses, sampled across its motion, so it centres on the drawing.
-    const frame = make();
-    const samples = [];
-    for (let step = 0; step < 900; step++) {
-      const g = frame(step, 0);
-      if (step % 3 === 0) (g.toText(), samples.push(core.cellsFromGrid(g)));
+];
+// Two sets of views, each with its frame (columns × rows): the wide set, and on phones the views that
+// can be drawn narrower. Moving views can't be, and would read at about 7 px, so phones leave them out.
+const showcaseSet = (narrow) => {
+  const views = showcaseViews.filter((v) => !narrow || v.narrow).map(({ spec, narrow: options, ...v }) => {
+    if (v.live) {
+      const { make, still, summary } = live(liveSpecs[v.live]);
+      // The columns and rows this view's ink ever uses, sampled across its motion, so it fills the frame.
+      const frame = make();
+      const samples = [];
+      for (let step = 0; step < 900; step++) {
+        const g = frame(step, 0);
+        if (step % 3 === 0) (g.toText(), samples.push(core.cellsFromGrid(g)));
+      }
+      const crop = core.inkBounds(samples);
+      const rows = core.inkRows(samples);
+      const g = stillGrid(make, still);
+      g.toText();
+      const box = core.crop(core.cellsFromGrid(g), crop, rows);
+      return { ...v, label: summary, crop, rows, size: core.size(box), box };
     }
-    const bounds = core.inkBounds(samples);
-    const g = stillGrid(make, still);
-    g.toText();
-    return { ...v, label: summary, crop: bounds, cells: core.crop(core.cellsFromGrid(g), bounds) };
-  }
-  const text = resolve(v.spec).render(v.spec.data, v.spec.options ?? {});
-  return { ...v, text, label: label(v.spec), cells: core.cellsFromText(text, classify) };
-});
-const box = {
-  H: Math.max(...showcaseViews.map((v) => core.size(v.cells).rows)),
-  W: Math.max(...showcaseViews.map((v) => core.size(v.cells).cols))
+    const sp = narrow ? { ...spec, options: { ...spec.options, ...options } } : spec;
+    const text = resolve(sp).render(sp.data, sp.options ?? {});
+    const cells = core.cellsFromText(text, classify);
+    const size = core.size(cells);
+    return { ...v, label: label(spec), text, size, box: core.centre(cells, size.rows, size.cols) };
+  });
+  if (!views.length) return null;
+  // The frame takes the tallest view's shape; a view wider than that fits by its width instead.
+  const H = Math.max(...views.map((v) => v.size.rows));
+  return { H, W: views.find((v) => v.size.rows === H).size.cols, views };
 };
-const showcaseData = { ...box, views: showcaseViews.map(({ cells, spec, ...v }) => v) };
+const showcaseSets = { wide: showcaseSet(false), narrow: showcaseSet(true) };
+const showcaseData = Object.fromEntries(Object.entries(showcaseSets).map(([k, set]) => [k, set && { ...set, views: set.views.map(({ box, size, ...v }) => v) }]));
+const first = showcaseSets.wide.views[0];
 const showcase = `<figure class="demo showcase" data-showcase>
-  ${stage(box.W, box.H, `<pre class="grid-figure live" role="img" aria-label="${esc(showcaseViews[0].label)}" data-showcase-grid>${core.toHtml(core.centre(showcaseViews[0].cells, box.H, box.W))}</pre>`)}
-  <figcaption><span data-showcase-caption>${esc(showcaseViews[0].caption)}</span><span class="label">Sample data</span></figcaption>
+  <div class="demo__bar showcase__bar"><span class="label" data-showcase-title>${esc(first.title)}</span><div class="showcase__step" data-showcase-step hidden><button type="button" data-showcase-prev aria-label="Previous figure">←</button><span class="label" data-showcase-count>1 / ${showcaseSets.wide.views.length}</span><button type="button" data-showcase-next aria-label="Next figure">→</button></div></div>
+  <div class="stage" style="--cols:${showcaseSets.wide.W};--rows:${showcaseSets.wide.H}"><div class="showcase__fit"><pre class="grid-figure live" style="--vcols:${first.size.cols};--vrows:${first.size.rows}" role="img" aria-label="${esc(first.label)}" data-showcase-grid>${core.toHtml(first.box)}</pre></div></div>
+  <figcaption><span data-showcase-caption>${esc(first.caption)}</span><span class="label">Sample data</span></figcaption>
 </figure>`;
 
 // ── Page shell ─────────────────────────────────────────────────────────────────────────────────
@@ -321,12 +335,10 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
   catch { document.documentElement.dataset.theme = "light"; }
   // The phone's status bar takes the page's paper colour, in either theme.
   document.querySelector('meta[name="theme-color"]').content = document.documentElement.dataset.theme === "dark" ? "#0c0c0b" : "#fbfbf8";
-  // The hero's first view builds in. Hide it until the script takes over; never for reduced motion,
-  // and never for long: if the script fails, the finished view shows after two seconds.
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    document.documentElement.dataset.showcaseState = "pending";
-    setTimeout(() => { if (document.documentElement.dataset.showcaseState === "pending") document.documentElement.dataset.showcaseState = "ready"; }, 2000);
-  }
+  // The hero's first view builds in, or on a phone is drawn narrower. Hide it until the script takes
+  // over, and never for long: if the script fails, the first view shows after two seconds.
+  document.documentElement.dataset.showcaseState = "pending";
+  setTimeout(() => { if (document.documentElement.dataset.showcaseState === "pending") document.documentElement.dataset.showcaseState = "ready"; }, 2000);
 </script>
 <link rel="stylesheet" href="/style.css">
 <style>${ARRIVE_CSS}.grid-figure{--gk-arrive-ink:var(--ink);--gk-arrive-paper:var(--paper)}</style>
