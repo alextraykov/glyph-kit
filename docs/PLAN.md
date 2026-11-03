@@ -20,6 +20,10 @@
 
 Colour by role ships, in every form and in the terminal; two colour types, `palette` and `colourRoles`; figures that are easier to edit (`check`, redraw in place, read back); and clear guidelines for open source. Boards and the canvas stay out. Plan: `docs/handover/0.3.0-plan.md`. It takes items 3 and 8 below.
 
+## 0.4.0 to 0.6.0
+
+Glyph kit becomes something other people use to show their work to the people they answer to. 0.4.0 sends it (a link that carries the page, images that paste anywhere, pasted numbers, pages in the builder, the point first). 0.5.0 makes it in minutes (stakeholder templates, an `ask` type, a team's name and colour, editing any figure in place, use from Claude or ChatGPT). 0.6.0 keeps it current (one link kept up to date, what changed since last time, readers answer back, present from the link). The UI system and the canvas move to after 0.6.0. Plan: `docs/handover/0.4.0-0.6.0-plan.md`.
+
 ## Next
 
 1. **Measure text tokens.** Run `ANTHROPIC_API_KEY=… node scripts/measure.mjs --write` and publish the numbers, whichever way they fall.
