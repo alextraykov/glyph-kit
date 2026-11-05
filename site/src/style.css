@@ -198,6 +198,10 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 @media (hover: hover) and (pointer: fine) { .showcase__step button:hover { background: var(--ink); color: var(--paper); } }
 .showcase figcaption { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
 .showcase figcaption .label { flex: none; line-height: 1; }
+/* Every caption sits in one cell, the hidden ones holding it at the longest, so the box never changes height. */
+.showcase__caption { display: grid; }
+.showcase__caption > * { grid-area: 1 / 1; }
+.showcase__caption > [aria-hidden] { visibility: hidden; }
 [data-showcase-state="pending"] [data-showcase-grid] { visibility: hidden; }
 /* The frame keeps one height: its tallest view (--cols × --rows) at the size its width allows. Each
    view (--vcols × --vrows) then fills it by width or by height, whichever runs out first. */
@@ -209,7 +213,7 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 @media (max-width: 640px) { .showcase .stage { padding: var(--space-4) var(--space-3); } }
 
 /* Measured readings */
-.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: var(--hairline) solid var(--ink); }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: var(--hairline) solid var(--ink); }
 .stat { display: grid; align-content: start; gap: var(--space-3); padding: var(--space-5) var(--space-5) var(--space-5) 0; }
 .stat + .stat { padding-left: var(--space-5); border-left: var(--hairline) solid var(--line); }
 .stat strong { font: 400 var(--px-33)/1.1 var(--pixel); }
@@ -413,6 +417,9 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
   .strip__row { grid-template-columns: minmax(0, 1fr); align-items: start; }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .study { padding-inline: var(--space-4); }
+  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stat:nth-child(3) { padding-left: 0; border-left: 0; }
+  .stat:nth-child(n+3) { border-top: var(--hairline) solid var(--line); }
 }
 @media (max-width: 640px) {
   .heading h2 { font-size: var(--px-22); }
@@ -651,14 +658,7 @@ td.is-number .data__input { text-align: right; font-variant-numeric: tabular-num
 .install .cmd { max-width: 100%; }
 .install__hand { margin-top: var(--space-3); color: var(--text-caption); font-size: .78rem; }
 .install__hand .text-link { margin-right: var(--space-2); color: var(--ink); font-size: .9rem; }
-.install__more { display: grid; justify-items: start; gap: var(--space-1); margin-top: var(--space-2); }
-.install__more > summary { padding-block: var(--space-1); color: var(--text-soft); font-size: .9rem; list-style: none; cursor: pointer; }
-.install__more > summary::-webkit-details-marker { display: none; }
-.install__more > summary::before { content: "+ "; font-family: var(--pixel); }
-.install__more[open] > summary::before { content: "− "; }
-@media (hover: hover) and (pointer: fine) { .install__more > summary:hover { color: var(--ink); } }
-.install__more .install__hand:first-of-type { margin-top: var(--space-1); }
-.hero .showcase { margin-top: var(--space-2); }
+@media (hover: hover) and (pointer: fine) { .hero .showcase { margin-top: var(--space-2); }
 
 /* iPhone safe areas: with the page under the status bar (viewport-fit=cover), keep content clear of
    the notch in landscape and the home indicator. The status bar itself takes the paper colour. */

@@ -6,13 +6,12 @@
 // up, bars grow. The first view builds when the hero first comes on screen; each later one builds
 // while the press reveals it. Moving views start moving once built.
 // ← and → step through the views with a quicker press. Once someone steps, the views stop changing on
-// their own. On a phone the frame shows the views that can be drawn narrower, when there are any.
+// their own. The frame keeps one height, and each view fills it as far as its shape allows.
 // It only runs on screen and pauses while pointed at or focused. With reduced motion nothing moves:
 // it stays on the first view, a step swaps at once, and moving views show their still frame.
 import { STEP_MS } from "./kit/live/grid.mjs";
 import { live } from "./kit/live/kinds.mjs";
-import { classify } from "./kit/render/paint.mjs";
-import { blank, buildFrame, cellsFromGrid, cellsFromText, centre, crop, planBuild, size, toHtml } from "./showcase-core.mjs";
+import { blank, buildFrame, cellsFromGrid, crop, planBuild, toHtml } from "./showcase-core.mjs";
 
 const HOLD_MS = 4200; // a still view
 const HOLD_LIVE_MS = 6000; // a moving view, long enough to see it move
@@ -23,7 +22,6 @@ const QUICK = { spread: 100, step: 30 }; // a step someone asked for, about 0.4 
 const COVER = [2, 4, 6, 8];
 const REVEAL = [6, 4, 2, 0];
 const BAYER = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
-const NARROW_PX = 9; // below this the wide views are too small to read, so the narrow ones show
 const curve = (x) => (1 - Math.pow(2, -8 * x)) / (1 - Math.pow(2, -8));
 
 const root = document.querySelector("[data-showcase]");
@@ -33,21 +31,14 @@ const motion = !matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 if (root && data) {
   const grid = root.querySelector("[data-showcase-grid]");
-  const fit = grid.parentElement;
-  const stage = fit.parentElement;
+  const stage = grid.closest(".stage");
   const caption = root.querySelector("[data-showcase-caption]");
   const title = root.querySelector("[data-showcase-title]");
   const count = root.querySelector("[data-showcase-count]");
   const stepper = root.querySelector("[data-showcase-step]");
 
-  // Each view knows how to give its current box. Moving views keep their own clock.
-  const prepare = (set) => set.views.map((v) => {
-    if (!v.live) {
-      const cells = cellsFromText(v.text, classify);
-      const { rows, cols } = size(cells);
-      const box = centre(cells, rows, cols);
-      return { ...v, size: { rows, cols }, box: () => box, reset() {}, advance() {} };
-    }
+  // Each view gives its current box, cut to the ink it ever uses, and keeps its own clock.
+  const views = data.views.map((v) => {
     const { make, still } = live(specs[v.live]);
     let frame;
     let pos;
@@ -72,12 +63,7 @@ if (root && data) {
     view.reset();
     return view;
   });
-  const sets = Object.fromEntries(Object.entries(data).filter(([, set]) => set).map(([k, set]) => [k, { ...set, views: prepare(set) }]));
-  // The narrow set, if there is one, when the wide frame's figure would be too small to read.
-  const pick = () => (sets.narrow && Math.min(22, (fit.clientWidth * 11) / (7 * sets.wide.W)) < NARROW_PX ? "narrow" : "wide");
 
-  let setName = "";
-  let views = [];
   let i = 0;
   let manual = false; // someone took over: no more changing on its own
   let paused = false;
@@ -189,7 +175,7 @@ if (root && data) {
     build();
     draw(buildFrame(building.box, building.plan, 0));
   };
-  // Straight to view k: with reduced motion, off screen, or when the set changes.
+  // Straight to view k: with reduced motion, or off screen.
   const jump = (k) => {
     i = k;
     building = null;
@@ -250,18 +236,9 @@ if (root && data) {
     else startPress(k, QUICK);
   };
 
-  const useSet = (name) => {
-    if (name === setName) return;
-    const was = views[i]?.title;
-    setName = name;
-    views = sets[name].views;
-    stage.style.setProperty("--cols", sets[name].W);
-    stage.style.setProperty("--rows", sets[name].H);
-    jump(Math.max(0, views.findIndex((v) => v.title === was)));
-    if (motion && !started) draw(blank(views[i].box())); // the first view builds in from an empty frame
-  };
-  useSet(pick());
-  new ResizeObserver(() => useSet(pick())).observe(fit);
+  label();
+  // The first view builds in, so start from an empty frame of its size (the page keeps its height).
+  draw(motion ? blank(views[0].box()) : views[0].box());
   stepper.hidden = false;
   document.documentElement.dataset.showcaseState = "ready";
 
