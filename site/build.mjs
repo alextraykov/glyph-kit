@@ -268,42 +268,54 @@ const liveFigure = (mv) => `<figure class="demo">
   <figcaption>${esc(mv.spec.intent)}</figcaption>
 </figure>`;
 
-// ── The hero showcase: views of the kit in one box, swapped with the dither press ───────────────
-const ex = (area, kind) => examples[area].find((sp) => sp.kind === kind);
-// Every view moves: the six moving kinds, one after another.
-const showcaseViews = [
-  { live: "rework-loop", title: "Rework loop", caption: "Where the week goes: about one in three pieces of work comes back from QA." },
-  { live: "report-loading", title: "Loading a screen", caption: "What someone sees in the first two seconds: a skeleton, then the text, then the image." },
-  { live: "signup-funnel", title: "Funnel as people", caption: "Signup to paid: each person falls to the next step or drifts out." },
-  { live: "save-states", title: "State machine", caption: "Every state of saving a draft, including the failure and the retry." },
-  { live: "review-queue", title: "Work queue", caption: "Review takes two at a time, so everything before it waits." },
-  { live: "staged-rollout", title: "Staged rollout", caption: "The stages, the guard, and what happens when it trips." }
-].map((v) => {
-  if (v.live) {
-    const { make, still, summary } = live(liveSpecs[v.live]);
-    // The columns this view's ink ever uses, sampled across its motion, so it centres on the drawing.
-    const frame = make();
-    const samples = [];
-    for (let step = 0; step < 900; step++) {
-      const g = frame(step, 0);
-      if (step % 3 === 0) (g.toText(), samples.push(core.cellsFromGrid(g)));
-    }
-    const bounds = core.inkBounds(samples);
-    const g = stillGrid(make, still);
-    g.toText();
-    return { ...v, label: summary, crop: bounds, cells: core.crop(core.cellsFromGrid(g), bounds) };
-  }
-  const text = resolve(v.spec).render(v.spec.data, v.spec.options ?? {});
-  return { ...v, text, label: label(v.spec), cells: core.cellsFromText(text, classify) };
-});
-const box = {
-  H: Math.max(...showcaseViews.map((v) => core.size(v.cells).rows)),
-  W: Math.max(...showcaseViews.map((v) => core.size(v.cells).cols))
+// ── What people make with it ───────────────────────────────────────────────────────────────────
+// The things people share, drawn from one set of specs: the hero cycles through them, the home page's
+// Uses section shows four, and the guide opens on the same four.
+const MADE_UP = "Sample data, made up for this example";
+const USE_SPECS = {
+  chart: { kind: "barChart", title: "Task success", source: MADE_UP, data: [{ label: "find export", value: 92, text: "92%" }, { label: "pick a format", value: 71, text: "71%" }, { label: "fix the dates", value: 38, text: "38%" }], options: { width: 24 } },
+  comparison: { kind: "table", title: "Export options", source: MADE_UP, data: [["Option", "Effort", "Asked for by", "Risk"], ["CSV export", "█░░ low", "8 of 10", "dates break"], ["Copy to Sheets", "██░ medium", "5 of 10", "needs sign-in"], ["PDF export", "███ high", "2 of 10", "layout drift"]] },
+  pr: { kind: "compare", title: "Signup, before and after", source: MADE_UP, data: [{ label: "steps", a: 1, aText: "4", b: 0.75, bText: "3" }, { label: "finish rate", a: 0.41, aText: "41%", b: 0.63, bText: "63%" }, { label: "time to finish", a: 1, aText: "2m 40s", b: 0.55, bText: "1m 28s" }], options: { headers: ["MEASURE", "BEFORE", "AFTER"] } },
+  test: { kind: "abResult", title: "New empty state", source: MADE_UP, data: [{ label: "control", value: 4.1, low: 3.6, high: 4.6 }, { label: "new empty state", value: 5.3, low: 4.8, high: 5.9 }], options: { min: 3, max: 7, width: 24 } }
 };
-const showcaseData = { ...box, views: showcaseViews.map(({ cells, spec, ...v }) => v) };
+// The deck the kit made for the export review, opened on its themes slide.
+const DECK = "/examples/decks/export-review.html";
+const deckFrame = `<div class="deck-frame"><iframe src="${DECK}#4" title="The export review deck, made by the kit, on its themes slide" loading="lazy"></iframe></div>`;
+
+// ── The hero showcase: views of the kit in one frame, stepped through or swapped with the dither press
+const ex = (area, kind) => examples[area].find((sp) => sp.kind === kind);
+// Every view moves: the six moving kinds, one after another. Each caption names who sees it, then what it shows.
+const showcaseViews = [
+  { live: "rework-loop", title: "Rework loop", caption: "For a planning slide. About one in three pieces of work comes back from QA." },
+  { live: "signup-funnel", title: "Funnel as people", caption: "For a review. Signup to paid, as people." },
+  { live: "review-queue", title: "Work queue", caption: "For a retro. Review takes two at a time, so everything before it waits." },
+  { live: "staged-rollout", title: "Staged rollout", caption: "For a launch doc. The stages, the guard, and what happens when it trips." },
+  { live: "save-states", title: "State machine", caption: "For a design review. Every state of saving a draft, including the failure." },
+  { live: "report-loading", title: "Loading a screen", caption: "For a handover. What someone sees in the first two seconds." }
+].map((v) => {
+  const { make, still, summary } = live(liveSpecs[v.live]);
+  // The columns and rows this view's ink ever uses, sampled across its motion, so it fills the frame.
+  const frame = make();
+  const samples = [];
+  for (let step = 0; step < 900; step++) {
+    const g = frame(step, 0);
+    if (step % 3 === 0) (g.toText(), samples.push(core.cellsFromGrid(g)));
+  }
+  const crop = core.inkBounds(samples);
+  const rows = core.inkRows(samples);
+  const g = stillGrid(make, still);
+  g.toText();
+  const box = core.crop(core.cellsFromGrid(g), crop, rows);
+  return { ...v, label: summary, crop, rows, size: core.size(box), box };
+});
+// The frame takes the tallest view's shape; a view wider than that fits by its width instead.
+const showcaseH = Math.max(...showcaseViews.map((v) => v.size.rows));
+const showcaseData = { H: showcaseH, W: showcaseViews.find((v) => v.size.rows === showcaseH).size.cols, views: showcaseViews.map(({ box, size, ...v }) => v) };
+const first = showcaseViews[0];
 const showcase = `<figure class="demo showcase" data-showcase>
-  ${stage(box.W, box.H, `<pre class="grid-figure live" role="img" aria-label="${esc(showcaseViews[0].label)}" data-showcase-grid>${core.toHtml(core.centre(showcaseViews[0].cells, box.H, box.W))}</pre>`)}
-  <figcaption><span data-showcase-caption>${esc(showcaseViews[0].caption)}</span><span class="label">Sample data</span></figcaption>
+  <div class="demo__bar showcase__bar"><span class="label" data-showcase-title>${esc(first.title)}</span><div class="showcase__step" data-showcase-step hidden><button type="button" data-showcase-prev aria-label="Previous figure">←</button><span class="label" data-showcase-count>1 / ${showcaseViews.length}</span><button type="button" data-showcase-next aria-label="Next figure">→</button></div></div>
+  <div class="stage" style="--cols:${showcaseData.W};--rows:${showcaseData.H}"><div class="showcase__fit"><pre class="grid-figure live" style="--vcols:${first.size.cols};--vrows:${first.size.rows}" role="img" aria-label="${esc(first.label)}" data-showcase-grid>${core.toHtml(first.box)}</pre></div></div>
+  <figcaption><span class="showcase__caption"><span data-showcase-caption>${esc(first.caption)}</span>${showcaseViews.map((v) => `<span aria-hidden="true">${esc(v.caption)}</span>`).join("")}</span><span class="label">Sample data</span></figcaption>
 </figure>`;
 
 // ── Page shell ─────────────────────────────────────────────────────────────────────────────────
@@ -333,18 +345,17 @@ const page = ({ path, title, description, content, current }) => `<!doctype html
 <meta name="twitter:image" content="${SITE}/og.png">
 ${current === "home" ? `<script type="application/ld+json">${STRUCTURED_DATA}</script>` : ""}
 <link rel="preload" href="/fonts/DepartureMono-Regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/geist-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <script>
   // Light unless the visitor chose dark here; set before paint so the page never flashes.
   try { document.documentElement.dataset.theme = localStorage.getItem("glyph-kit-theme") === "dark" ? "dark" : "light"; }
   catch { document.documentElement.dataset.theme = "light"; }
   // The phone's status bar takes the page's paper colour, in either theme.
   document.querySelector('meta[name="theme-color"]').content = document.documentElement.dataset.theme === "dark" ? "#0c0c0b" : "#fbfbf8";
-  // The hero's first view builds in. Hide it until the script takes over; never for reduced motion,
-  // and never for long: if the script fails, the finished view shows after two seconds.
-  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    document.documentElement.dataset.showcaseState = "pending";
-    setTimeout(() => { if (document.documentElement.dataset.showcaseState === "pending") document.documentElement.dataset.showcaseState = "ready"; }, 2000);
-  }
+  // The hero's first view builds in. Hide it until the script takes over, and never for long: if the
+  // script fails, the first view shows after two seconds.
+  document.documentElement.dataset.showcaseState = "pending";
+  setTimeout(() => { if (document.documentElement.dataset.showcaseState === "pending") document.documentElement.dataset.showcaseState = "ready"; }, 2000);
 </script>
 <link rel="stylesheet" href="/style.css">
 <style>${ARRIVE_CSS}.grid-figure{--gk-arrive-ink:var(--ink);--gk-arrive-paper:var(--paper)}</style>
@@ -440,24 +451,14 @@ const builder = `<section class="builder" id="try" aria-label="Builder" data-lay
 </section>`;
 
 // ── How to use ─────────────────────────────────────────────────────────────────────────────────
-const USE_ASKS = [
-  "Chart these usability results for the PR. The data is in results.csv.",
-  "A wireframe for the notification settings, then a clickable prototype.",
-  "Turn the research readout into a ten-slide deck, one point per slide."
-];
-const USE_FORMATS = [["Markdown", "markdown"], ["MDX", "mdx"], ["HTML", "html"], ["Animation", "animation"], ["Deck", "deck"], ["PDF", "pdf"], ["SVG and PNG", "svg"]];
-// Every section's figure is drawn by the kit itself, from a spec, the way a user's would be.
+// Organised by what you're making. Every section's figure is drawn by the kit itself, from a spec,
+// the way a user's would be.
 const SAMPLE = "Illustrative: sample numbers for this guide";
 const GUIDE_FIGS = {
   start: { kind: "flow", data: ["ask in words", "agent writes spec", "code draws", "any format"] },
   glyphs: { kind: "table", data: [["Glyph", "Means, in every figure"], ["███", "measured or done"], ["", ""], ["▓▓▓", "current"], ["", ""], ["░░░", "projected, or the empty part of a scale"], ["", ""], ["···", "an empty cell"]] },
-  markdown: { kind: "barChart", source: SAMPLE, data: [{ label: "task 1", value: 92, text: "92%" }, { label: "task 2", value: 71, text: "71%" }, { label: "task 3", value: 38, text: "38%" }], options: { width: 24 } },
   mdx: { kind: "flow", data: ["funnel.json", "<Glyph spec={funnel} />", "SVG at build time"] },
   html: examples.wireframes.find((sp) => sp.kind === "screen"),
-  deck: { kind: "flow", data: ["title", "section", "figure, in steps", "statement", "PDF, 16:9"] },
-  pdf: { kind: "flow", data: ["cover", "summary", "sections", "figures", "A4 PDF"] },
-  layouts: { kind: "flow", data: ["readout.json", "slots", "one page", "HTML, PDF"] },
-  svg: { kind: "flow", data: ["████ 12.4k", "rectangles, lines, dither", "funnel.svg"] },
   handover: { kind: "qaChecklist", data: [
     { text: "The lint passes", status: "todo" },
     { text: "Numbers have a real source, or the stamp", status: "todo" },
@@ -473,80 +474,124 @@ const GUIDE_FIGS = {
     { label: "ready to send" }
   ] }
 };
+const PR_SPEC = { kind: "prSummary", title: "Shorter signup", source: MADE_UP, data: {
+  change: "Signup drops from four steps to three.",
+  before: { kind: "flow", data: ["Email", "Password", "Team", "Done"] },
+  after: { kind: "flow", data: ["Email", "Team", "Done"] },
+  risks: ["People set a password from the welcome email instead."]
+} };
+// Where each format goes, as a kit table rather than a list.
+const FORMATS_SPEC = { kind: "table", title: "Where each format goes", data: [
+  ["Format", "Where it goes", "Ask for"],
+  ["Text, Markdown", "PRs, docs, tickets, Slack", "as Markdown"],
+  ["SVG", "Figma, Keynote, Google Slides", "an SVG"],
+  ["PNG", "posts, chat, email", "a PNG"],
+  ["PDF", "a report or deck to send", "a PDF"],
+  ["Deck", "a review you present", "a deck"],
+  ["HTML page", "a prototype to click through", "a prototype"],
+  ["MDX", "a docs site or blog", "as MDX"]
+] };
 // A kit figure that acts out its section (site/src/guide-motion.js); without scripts it stays as drawn.
 const moved = (key) => `<div class="guide-figure">${figure(GUIDE_FIGS[key], { arrive: false }).replace('<pre class="grid-figure"', `<pre class="grid-figure" data-guide-motion="${key}"`)}</div>`;
+// A kit figure that arrives the way the kit's HTML does.
+const drawn = (spec) => `<div class="guide-figure">${figure(spec)}</div>`;
 // Animations: the same diagram twice, its still beside it moving, to show the still makes the same point.
 const stillAndMoving = (mv) => `<div class="pair" style="--cols:${mv.cols}">
   <figure class="pair__item"><figcaption class="label">Still · reduced motion, print, docs</figcaption><pre class="grid-figure" role="img" aria-label="${esc(mv.summary)}">${mv.html}</pre></figure>
   <figure class="pair__item"><figcaption class="label">Moving · on screen</figcaption><pre class="grid-figure live" role="img" aria-label="${esc(mv.summary)}" data-live="${mv.id}">${mv.html}</pre></figure>
 </div>`;
-const guideFigure = (key) => key === "animation" ? stillAndMoving(moving.find((mv) => mv.id === "rework-loop")) : moved(key);
+const run = (args) => `node scripts/glyph-kit.mjs ${args}`;
 
-// One entry per deliverable: when to use it, what to ask, what the agent runs, what to check.
+// One entry per thing you'd make: when, the figure, what to ask, the formats it exports to with the
+// command for each, and what to check.
 const GUIDE = [
   {
-    id: "markdown", title: "ASCII and Markdown",
-    when: "Docs, pull requests, tickets, READMEs, Slack, and a model's own context. The figure is text, so it diffs, copies and pastes anywhere.",
-    ask: "Chart these usability results for the PR. The data is in results.csv.",
-    run: ["node scripts/glyph-kit.mjs render results.json --to markdown", "node scripts/lint.mjs README.md", "node scripts/glyph-kit.mjs render results.json --compact"],
-    check: ["The lint passes: frames close, every glyph is one cell, no text touches its box.", "Every figure with numbers names its source.", "The sentence next to the figure states the point; the figure supports it.", "About 80 columns at most, so it doesn't wrap.", "--compact (plain ASCII, same layout) only when the figure goes into a model's context."]
+    id: "chart", nav: "Chart", title: "A chart for a doc",
+    when: "A research doc, a ticket, a README, Slack. The chart is text, so it diffs, copies and pastes anywhere.",
+    figure: () => drawn(USE_SPECS.chart),
+    ask: "Chart the task success rates in results.csv for the research doc.",
+    to: [["Markdown", run("render results.json --to markdown")], ["SVG", run("export results.json --to svg --theme paper")], ["PNG", run("export results.json --to png")]],
+    check: ["The lint passes (node scripts/lint.mjs doc.md): frames close, every glyph is one cell, no text touches its box.", "Every chart with numbers names its source.", "The sentence next to the chart states the point; the chart backs it up.", "About 80 columns at most, so it doesn't wrap.", "--compact (plain ASCII, same layout) only when the chart goes into a model's context."]
   },
   {
-    id: "mdx", title: "MDX",
-    when: "Docs sites and blogs built with Astro, Next.js or Docusaurus.",
-    ask: "Add the signup funnel to our docs page as MDX.",
-    run: ["node scripts/glyph-kit.mjs export funnel.json --to mdx", "node scripts/glyph-kit.mjs export funnel.json --to mdx --mdx component"],
-    check: ["Static MDX works in any setup: each figure is a text block with its description.", "Component mode writes <Glyph spec={…} />: copy templates/mdx/Glyph.astro or Glyph.jsx next to your MDX and point it at scripts/render/svg.mjs.", "Components render to SVG at build time, so readers need no special font."]
+    id: "comparison", nav: "Comparison", title: "A comparison for a decision",
+    when: "Picking between options. For an A/B test, ask for a test result. For a backlog, ask for impact and effort.",
+    figure: () => drawn(USE_SPECS.comparison),
+    ask: "Compare the three export options on effort, who asked for it and risk.",
+    to: [["Markdown", run("render options.json --to markdown")], ["SVG", run("export options.json --to svg --theme paper")]],
+    check: ["One row per option, one column for each thing you're weighing.", "Write the word beside a █░░ scale, so the row reads without the bars.", "A test result draws each interval and says whether they overlap; put the decision in the sentence next to it.", "Every number names its source."]
   },
   {
-    id: "html", title: "HTML pages and prototypes",
-    when: "A figure on its own page, or a wireframe that should click like the product.",
-    ask: "Turn the settings wireframe into a clickable prototype with our design system.",
-    run: ["node scripts/glyph-kit.mjs render settings.json --to html --map design-system.map.json", "node scripts/glyph-kit.mjs export settings.json --to html"],
-    check: ["The map names only components and tokens you really have; start from templates/design-system.map.example.json.", "Notes on the wireframe become behaviour in the prototype.", "Where the map has no entry, the agent asks instead of inventing one.", "For production code, the agent reads reference/fidelity.md first."]
-  },
-  {
-    id: "animation", title: "Animations",
-    when: "A process over time: work coming back, people leaving a funnel, a queue backing up, a rollout and its guard, a state machine, a loading sequence.",
-    ask: "Show how work comes back from QA as a moving diagram.",
-    run: ["node scripts/glyph-kit.mjs live loop.json --to html", "node scripts/glyph-kit.mjs live loop.json --to markdown"],
-    check: ["Every type moves on a page or in a deck. Six keep moving: loop, funnel, states, queue, rollout, loading.", "Every other type arrives once, in the order that carries its point, then stays still. The ↺ in its corner plays it again.", "The still frame makes the same point; it's what reduced motion, print and docs show.", "One sentence next to it says what the motion shows.", "Motion specs say what reduced motion shows."]
-  },
-  {
-    id: "deck", title: "Presentations and pitch decks",
-    when: "A review, a research readout, a pitch: anything you present.",
-    ask: "Make a ten-slide deck from the research readout, one point per slide, and a PDF to send.",
-    run: ["node scripts/glyph-kit.mjs deck deck.json > deck.html", "node scripts/glyph-kit.mjs export deck.json --to pdf", "node scripts/glyph-kit.mjs export deck.json --to html --theme ink"],
+    id: "deck", nav: "Deck", title: "A deck for a review",
+    when: "A design review, a research readout, a pitch: anything you present.",
+    figure: () => `${deckFrame}<a class="text-link" href="${DECK}">Open the deck full screen</a>`,
+    ask: "Turn the export research into a ten-slide deck for Thursday's review, and a PDF to send.",
+    to: [["HTML deck", run("deck deck.json > deck.html")], ["PDF", run("export deck.json --to pdf")], ["HTML deck, ink theme", run("export deck.json --to html --theme ink")]],
     check: ["One point per slide, with the conclusion in the title.", "Steps zoom to lines of a figure and show the line you'll say; find line numbers with --to text, counting from 0.", "Flag problem rows so they flash; keep presenter notes in notes (press N).", "For a pitch, every number has a real source: made-up numbers are stamped SAMPLE DATA on the slide.", "Themes: paper, ink, phosphor, gilt, halloween. The PDF is one 16:9 page per slide."]
   },
   {
-    id: "pdf", title: "Reports and PDFs",
-    when: "When it has to read like a finished document: a research readout, an audit, a design review.",
+    id: "pr", nav: "PR figure", title: "A figure for a PR",
+    when: "A pull request description or a review comment.",
+    figure: () => drawn(PR_SPEC),
+    ask: "Summarise this PR for reviewers, with the signup flow before and after.",
+    to: [["Markdown", run("render pr.json --to markdown")]],
+    check: ["The first line says what changed, in one sentence.", "Before and after are the same type of figure, so they compare.", "Risks are named, not left for review to find.", "About 80 columns, so it fits the PR description without wrapping."]
+  },
+  {
+    id: "report", nav: "Report", title: "A report to send",
+    when: "A research readout, an audit, a design review that has to read like a finished document.",
+    figure: () => drawn(AUDIT_SPEC),
     ask: "Write the motion audit up as a report and export a PDF.",
-    run: ["node scripts/glyph-kit.mjs export report.json --to pdf", "node scripts/glyph-kit.mjs export report.json --to html", "node scripts/glyph-kit.mjs export report.json --to md"],
+    to: [["PDF", run("export report.json --to pdf")], ["HTML", run("export report.json --to html")], ["Markdown", run("export report.json --to md")]],
     check: ["A cover, a summary, numbered sections, numbered figures.", "Each takeaway is the conclusion, not the topic.", "PDF uses Chrome, Chromium or Edge already on the machine (or CHROME_PATH). With none, export HTML and print it."]
   },
   {
-    id: "layouts", title: "One-page layouts",
-    when: "A whole deliverable on one page: a research readout, a dashboard, a PR summary, a design review, a status update.",
+    id: "one-page", nav: "One page", title: "A one-page readout",
+    when: "A week's findings, a status update, a dashboard, a design review: a whole deliverable on one page.",
+    figure: () => drawn(examples.layouts.find((sp) => sp.kind === "readout")),
     ask: "Put this week's research findings on one page with the funnel and the top quotes.",
-    run: ["node scripts/glyph-kit.mjs render readout.json --to markdown", "node scripts/glyph-kit.mjs export readout.json --to pdf", "node scripts/glyph-kit.mjs export week.json --to pdf"],
+    to: [["Markdown", run("render readout.json --to markdown")], ["PDF", run("export readout.json --to pdf")]],
     check: ["Each layout has fixed slots: one sentence, short lists and ordinary figure specs.", "Code places everything within 80 cells; figures share a row only when they fit.", "Figures without a source use the layout's.", "A list of layouts exports as one document, a layout to a page."]
   },
   {
-    id: "svg", title: "SVG and PNG",
-    when: "A figure for Keynote, Figma, Google Slides or a post.",
+    id: "image", nav: "Slide image", title: "An image for a slide or a post",
+    when: "Keynote, Figma, Google Slides, a post.",
+    figure: () => `<div class="outputs__svg">${renderSvg(ex("metrics", "funnel"), { theme: "paper" })}</div>`,
     ask: "Export the funnel as an SVG for the board deck.",
-    run: ["node scripts/glyph-kit.mjs export funnel.json --to svg --theme paper", "node scripts/glyph-kit.mjs export funnel.json --to png"],
+    to: [["SVG", run("export funnel.json --to svg --theme paper")], ["PNG", run("export funnel.json --to png")]],
     check: ["SVG needs no font: blocks become rectangles, shades become dither patterns, lines become vectors.", "PNG is the same SVG at 2×, through a browser already on the machine.", "Pick the theme that matches the slide: paper, ink, phosphor, gilt or halloween."]
+  },
+  {
+    id: "prototype", nav: "Prototype", title: "A wireframe to click through",
+    when: "A screen that should click like the product.",
+    figure: () => moved("html"),
+    ask: "Turn the settings wireframe into a clickable prototype with our design system.",
+    to: [["HTML page, your design system", run("render settings.json --to html --map design-system.map.json")], ["HTML page", run("export settings.json --to html")]],
+    check: ["The map names only components and tokens you really have; start from templates/design-system.map.example.json.", "Notes on the wireframe become behaviour in the prototype.", "Where the map has no entry, the agent asks instead of inventing one.", "For production code, the agent reads reference/fidelity.md first."]
+  },
+  {
+    id: "animation", nav: "Moving diagram", title: "A process that moves",
+    when: "A process over time: work coming back, people leaving a funnel, a queue backing up, a rollout and its guard, a state machine, a loading sequence.",
+    figure: () => stillAndMoving(moving.find((mv) => mv.id === "rework-loop")),
+    ask: "Show how work comes back from QA as a moving diagram.",
+    to: [["HTML", run("live loop.json --to html")], ["Markdown, the still", run("live loop.json --to markdown")]],
+    check: ["Every type moves on a page or in a deck. Six keep moving: loop, funnel, states, queue, rollout, loading.", "Every other type arrives once, in the order that carries its point, then stays still. The ↺ in its corner plays it again.", "The still frame makes the same point; it's what reduced motion, print and docs show.", "One sentence next to it says what the motion shows.", "Motion specs say what reduced motion shows."]
+  },
+  {
+    id: "docs", nav: "Docs site", title: "A docs page",
+    when: "Docs sites and blogs built with Astro, Next.js or Docusaurus.",
+    figure: () => moved("mdx"),
+    ask: "Add the signup funnel to our docs page as MDX.",
+    to: [["MDX", run("export funnel.json --to mdx")], ["MDX, as a component", run("export funnel.json --to mdx --mdx component")]],
+    check: ["Static MDX works in any setup: each figure is a text block with its description.", "Component mode writes <Glyph spec={…} />: copy templates/mdx/Glyph.astro or Glyph.jsx next to your MDX and point it at scripts/render/svg.mjs.", "Components render to SVG at build time, so readers need no special font."]
   }
 ];
 const guideItem = (g) => `<article class="guide-item" id="${g.id}" aria-labelledby="${g.id}-title">
   <div class="guide-item__head"><h3 id="${g.id}-title">${esc(g.title)}</h3><p>${esc(g.when)}</p></div>
   <div class="guide-item__body">
-    <p class="label">What you get</p>${guideFigure(g.id)}
+    <p class="label">What you get</p>${g.figure()}
     <p class="label">Ask</p><blockquote class="ask-line">“${esc(g.ask)}”</blockquote>
-    <p class="label">The agent runs</p><div class="cmds">${g.run.map(cmd).join("")}</div>
+    <p class="label">Exports to</p><dl class="exports">${g.to.map(([name, c]) => `<div><dt>${esc(name)}</dt><dd>${cmd(c)}</dd></div>`).join("")}</dl>
     <p class="label">Before you send it</p><ul class="checks">${g.check.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>
   </div>
 </article>`;
@@ -554,16 +599,25 @@ const guide = page({
   path: "/how-to-use/",
   current: "guide",
   title: "How to use · Glyph kit",
-  description: "How to get the best Markdown, MDX, HTML, animations, decks, reports and images out of Glyph kit.",
+  description: "What to ask for a chart, a comparison, a deck or a figure for a PR, and where each one can go.",
   content: `
-<header class="heading"><p class="kicker">How to use</p><h2>Ask in words. Pick a format.</h2><p>How to get the best Markdown, MDX, HTML, animations, decks, reports and images out of Glyph kit. Your agent runs the commands; they're here so you know what it does, and so you can run them yourself with Node 18 or later.</p></header>
-<nav class="jump" aria-label="Formats"><a href="#start">Start</a><a href="#rules">Quality</a>${GUIDE.map((g) => `<a href="#${g.id}">${esc(g.title)}</a>`).join("")}<a href="#handover">Before you hand over</a><a href="#wrong">When it looks wrong</a></nav>
+<header class="heading"><p class="kicker">How to use</p><h2>Say what it's for. Pick where it goes.</h2><p>Start from what you're making. Each section shows a figure the kit drew, the ask that made it, and the formats it exports to. Your agent runs the commands. They're here so you can see what it does, or run them yourself with Node 18 or later.</p></header>
+<nav class="jump" aria-label="What you're making"><a href="#start">Start</a>${GUIDE.map((g) => `<a href="#${g.id}">${esc(g.nav)}</a>`).join("")}<a href="#formats">Formats</a><a href="#rules">Quality</a><a href="#handover">Before you send</a><a href="#wrong">When it looks wrong</a></nav>
 
 <section class="section" id="start" aria-labelledby="start-title">
   <header class="heading"><h2 id="start-title">Start</h2><p>Install once, then ask the way you'd ask a colleague. The agent picks the type of figure, writes the data as a small spec, and code draws it.</p></header>
   ${moved("start")}
   ${install}
-  <ul class="asks">${USE_ASKS.map((a) => `<li>“${esc(a)}”</li>`).join("")}</ul>
+</section>
+
+<section class="section" aria-labelledby="making-title">
+  <header class="heading"><h2 id="making-title">What you're making</h2></header>
+  <div class="guide">${GUIDE.map(guideItem).join("\n")}</div>
+</section>
+
+<section class="section" id="formats" aria-labelledby="formats-title">
+  <header class="heading"><h2 id="formats-title">Where each format goes</h2></header>
+  ${drawn(FORMATS_SPEC)}
 </section>
 
 <section class="section" id="rules" aria-labelledby="rules-title">
@@ -577,11 +631,6 @@ const guide = page({
     <li><strong>Departure Mono for text.</strong> Any monospace font with block characters works; Departure Mono lines up exactly. SVG needs no font.</li>
     <li><strong>Pass specs, not drawings.</strong> Between agents and steps, the spec is a few hundred bytes. Draw only when a person will look.</li>
   </ul>
-</section>
-
-<section class="section" aria-labelledby="formats-title">
-  <header class="heading"><h2 id="formats-title">Format by format</h2></header>
-  <div class="guide">${GUIDE.map(guideItem).join("\n")}</div>
 </section>
 
 <section class="section" id="handover" aria-labelledby="handover-title">
@@ -610,7 +659,6 @@ const guide = page({
 const paletteVars = (c) => `;--paper:${c.bg};--panel:${c.panel};--ink:${c.ink};--text-caption:${c.frame};--signal-fail:${c.flag};--signal-ok:${c.ok};--palette-data:${c.data}`;
 const fit = (spec, { palette, ...opts } = {}) =>
   `<div class="fit"${palette ? " data-palette" : ""} style="--cols:${widest(opts.text ?? body(spec))}${palette ? paletteVars(palette) : ""}">${figure(spec, opts)}</div>`;
-const MADE_UP = "Sample data, made up for this example";
 const RELEASE = (() => {
   const cohort = {
     kind: "cohort", title: "Monthly retention", source: MADE_UP,
@@ -656,56 +704,60 @@ const RELEASE = (() => {
 })();
 
 // ── Home ───────────────────────────────────────────────────────────────────────────────────────
+// Uses: four things people share, each with its figure, the ask that made it and where it goes.
+const USES = `<div class="uses">${[
+  { id: "chart", name: "Chart", title: "A chart for a doc", figure: fit(USE_SPECS.chart), ask: "Chart the task success rates in results.csv for the research doc.", to: ["Markdown", "SVG", "PNG"] },
+  { id: "comparison", name: "Comparison", title: "A comparison for a decision", figure: fit(USE_SPECS.comparison), ask: "Compare the three export options on effort, who asked for it and risk.", to: ["Markdown", "SVG", "PNG"] },
+  { id: "deck", name: "Deck", title: "A deck for a review", figure: deckFrame, ask: "Turn the export research into a ten-slide deck for Thursday's review, and a PDF to send.", to: ["HTML deck", "PDF"] },
+  { id: "pr", name: "PR figure", title: "A figure for a PR", figure: fit(USE_SPECS.pr), ask: "Add a before and after of the signup change to the PR description.", to: ["Markdown"] }
+].map((u) => `<article class="uses__item"><p class="label">${esc(u.name)}</p><h3><a href="/how-to-use/#${u.id}">${esc(u.title)}</a></h3>${u.figure}<blockquote class="ask-line">“${esc(u.ask)}”</blockquote><p class="uses__to"><span class="label">Exports to</span> ${u.to.map(esc).join(" · ")}</p></article>`).join("\n")}</div>`;
 const home = page({
   path: "/",
   current: "home",
-  title: "Glyph kit: docs and diagrams as text",
-  description: "A skill for Claude Code and Codex. Lightweight docs and diagrams that people and AI can both read.",
+  title: "Glyph kit · charts, comparisons and decks to share",
+  description: "A skill for Claude Code, Codex and other agents. Ask in words for a chart, a comparison or a deck, and share it in a doc, a PR, a review or a slide.",
   content: `
 <section class="hero" aria-labelledby="title">
   <div class="hero__inner">
     <p class="kicker">Free · MIT · ${kindCount} types · v${plugin.version}</p>
     <h1 id="title">Glyph kit.</h1>
     <div class="hero__body">
-      <div class="hero__copy">
-        <p class="lead">A skill for Claude Code and Codex. Lightweight docs and diagrams that people and AI can both read.</p>
-        ${install}
-      </div>
+      <p class="lead">Charts, comparisons and decks for the people you work with. Ask Claude Code or Codex in words, then put the result in a doc, a PR, a review or a slide.</p>
       ${showcase}
+      ${install}
     </div>
   </div>
 </section>
 
 <section class="section builder-section" aria-label="Builder">
-  <header class="heading"><p class="kicker">01 Builder <span class="new">New: Colours</span></p></header>
+  <header class="heading"><p class="kicker">01 Builder <span class="new">New: Colours</span></p><h2>Try one here. Nothing to install.</h2></header>
   ${builder}
 </section>
 
+<section class="section" aria-labelledby="uses">
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Uses</p><h2 id="uses">Charts for docs. Decks for reviews.</h2><a class="text-link" href="/how-to-use/">How to use, by what you're making</a></header>
+  ${USES}
+</section>
+
 <section class="section" aria-labelledby="release">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">02 Release 0.3.0</p><h2 id="release">Colour by role. Focus on any type.</h2><a class="text-link" href="/changelog/#v0-3-0">Everything in 0.3.0</a></header>
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">03 Release 0.3.0</p><h2 id="release">Colour by role. Focus on any type.</h2><a class="text-link" href="/changelog/#v0-3-0">Everything in 0.3.0</a></header>
   ${RELEASE}
   <p class="outputs__also">Also new: <a class="text-link" href="${REPO}/blob/main/CONTRIBUTING.md">How to contribute</a> · <a class="text-link" href="${REPO}/blob/main/docs/adding-a-type.md">Adding a type</a></p>
 </section>
 
-<section class="section" aria-labelledby="cheap">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">03 Against HTML/JS</p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>Claude Code got the same brief twice for each of five deliverables: once with the kit, once as hand-written HTML/JS. Like for like: a still flow against a still SVG flow, a working prototype against a working prototype, a moving diagram against an animated one.</p></header>
-  <div class="stats">
-    <article class="stat"><p class="label">Faster</p><strong>${times(mv.html.s / mv.kit.s)}</strong><p>A moving diagram took ${secs(mv.kit.s)} against ${secs(mv.html.s)}. Faster on every run, for all five.</p></article>
-    <article class="stat"><p class="label">Cheaper</p><strong>${times(mv.html.usd / mv.kit.usd)}</strong><p>${usd(mv.kit.usd)} against ${usd(mv.html.usd)} for a moving diagram. Cheaper on every run, for all five.</p></article>
-    <article class="stat"><p class="label">Right first time</p><strong>${study.correct.kit} of ${study.correct.runs}</strong><p>Every kit run. HTML/JS: ${study.correct.html} of ${study.correct.runs}. Drawn by hand: ${study.correct.byHand}.</p></article>
-    <article class="stat"><p class="label">Fewer tokens written</p><strong>${times(study.outputVsHtml.moving)}</strong><p>For a moving diagram; ${Math.round(study.outputVsHtml.funnel)}× for a funnel. Fewer on every run. A figure draws in ${stats.us} μs.</p></article>
+<section class="section" aria-labelledby="formats">
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 Output</p><h2 id="formats">Copy it as text. Export the rest.</h2><p>Every figure is plain text first, ready to paste into a PR, a ticket, Slack or an email as it is. The same figure exports to Markdown, MDX, SVG, HTML, decks and PDF.</p></header>
+  <div class="outputs" data-outputs>
+    <div class="outputs__bar">
+      <div class="switch__chips" role="tablist" aria-label="Formats">${FORMATS.map((f, i) => `<button type="button" role="tab" id="out-${f.id}" aria-controls="out-${f.id}-panel" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ""}>${esc(f.name)}</button>`).join("")}</div>
+      <span class="label">${esc(AUDIT_SPEC.title)} · from a motion audit</span>
+    </div>
+    ${FORMATS.map((f, i) => `<div class="outputs__panel" role="tabpanel" id="out-${f.id}-panel" aria-labelledby="out-${f.id}"${i ? " hidden" : ""}>
+      <div class="outputs__view">${f.view(f.copy)}</div>
+      <button type="button" class="button outputs__copy" data-copy="${esc(f.copy)}" aria-label="Copy the ${esc(f.name)}" hidden>Copy ${f.id === "text" ? "as text" : esc(f.name)}</button>
+    </div>`).join("\n    ")}
   </div>
-  <div class="study">${STUDY_TABLE}</div>
-  <p class="stats-note">${study.model} in Claude Code · ${study.runsEach} runs per figure and approach · medians · ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · published prices · more testing is planned, with other models and more figures</p>
-</section>
-
-<section class="section" aria-labelledby="use">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">04 How to use</p><h2 id="use">Ask in words. Pick a format.</h2><a class="text-link" href="/how-to-use/">Read the guide</a></header>
-  <ol class="steps">
-    <li><p class="label">1 · Install</p>${cmd("npx skills add alextraykov/glyph-kit")}<p>Or as a Claude Code plugin, or from the zip.</p></li>
-    <li><p class="label">2 · Ask in words</p><ul class="asks">${USE_ASKS.map((a) => `<li>“${esc(a)}”</li>`).join("")}</ul></li>
-    <li><p class="label">3 · Pick a format</p><p class="formats">${USE_FORMATS.map(([name, id]) => `<a href="/how-to-use/#${id}">${esc(name)}</a>`).join(" · ")}</p><p>The agent writes the data; code draws the figure, in any of them.</p></li>
-  </ol>
+  <p class="outputs__also">Whole documents too: <a class="text-link" href="/examples/motion-audit/motion-audit.html">the report</a> · <a class="text-link" href="/examples/motion-audit/motion-audit.pdf">as a PDF</a> · <a class="text-link" href="/examples/decks/motion-audit">as a deck</a> · <a class="text-link" href="/examples/product/settings">a prototype from a text wireframe</a> · <a class="text-link" href="/examples/live/review-queue">a moving diagram on its own</a></p>
 </section>
 
 <section class="section" aria-labelledby="moving">
@@ -732,23 +784,19 @@ const home = page({
     <li><strong>Numbers from your files.</strong> Point a figure at a CSV or JSON file.</li>
     <li><strong>Impossible data is refused.</strong> A funnel that grows, dates out of order.</li>
     <li><strong>Ask, don't invent.</strong> The agent asks for missing numbers.</li>
-    <li><strong>Data between agents.</strong> Drawings for people.</li>
   </ul>
 </section>
 
-<section class="section" aria-labelledby="formats">
-  <header class="heading" data-depth="0.22" data-settle><p class="kicker">08 Output</p><h2 id="formats">Copy it as text. Export the rest.</h2><p>Every figure is plain text first, ready to paste into a PR, a ticket, Slack, an email or a model's context as it is. The same spec exports to Markdown, MDX, SVG, HTML, decks and PDF.</p></header>
-  <div class="outputs" data-outputs>
-    <div class="outputs__bar">
-      <div class="switch__chips" role="tablist" aria-label="Formats">${FORMATS.map((f, i) => `<button type="button" role="tab" id="out-${f.id}" aria-controls="out-${f.id}-panel" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ""}>${esc(f.name)}</button>`).join("")}</div>
-      <span class="label">${esc(AUDIT_SPEC.title)} · from the Pave motion audit</span>
-    </div>
-    ${FORMATS.map((f, i) => `<div class="outputs__panel" role="tabpanel" id="out-${f.id}-panel" aria-labelledby="out-${f.id}"${i ? " hidden" : ""}>
-      <div class="outputs__view">${f.view(f.copy)}</div>
-      <button type="button" class="button outputs__copy" data-copy="${esc(f.copy)}" aria-label="Copy the ${esc(f.name)}" hidden>Copy ${f.id === "text" ? "as text" : esc(f.name)}</button>
-    </div>`).join("\n    ")}
+<section class="section" aria-labelledby="cheap">
+  <header class="heading" data-depth="0.22" data-settle><p class="kicker">08 Against HTML/JS</p><h2 id="cheap">Faster to make. Cheaper to run.</h2><p>Claude Code got the same brief twice for each of five deliverables: once with the kit, once as hand-written HTML/JS. Like for like: a still flow against a still SVG flow, a working prototype against a working prototype, a moving diagram against an animated one.</p></header>
+  <div class="stats">
+    <article class="stat"><p class="label">Faster</p><strong>${times(mv.html.s / mv.kit.s)}</strong><p>A moving diagram took ${secs(mv.kit.s)} against ${secs(mv.html.s)}. Faster on every run, for all five.</p></article>
+    <article class="stat"><p class="label">Cheaper</p><strong>${times(mv.html.usd / mv.kit.usd)}</strong><p>${usd(mv.kit.usd)} against ${usd(mv.html.usd)} for a moving diagram. Cheaper on every run, for all five.</p></article>
+    <article class="stat"><p class="label">Right first time</p><strong>${study.correct.kit} of ${study.correct.runs}</strong><p>Every kit run. HTML/JS: ${study.correct.html} of ${study.correct.runs}. Drawn by hand: ${study.correct.byHand}.</p></article>
+    <article class="stat"><p class="label">Fewer tokens written</p><strong>${times(study.outputVsHtml.moving)}</strong><p>For a moving diagram; ${Math.round(study.outputVsHtml.funnel)}× for a funnel. Fewer on every run. A figure draws in ${stats.us} μs.</p></article>
   </div>
-  <p class="outputs__also">Whole documents too: <a class="text-link" href="/examples/motion-audit/motion-audit.html">the report</a> · <a class="text-link" href="/examples/motion-audit/motion-audit.pdf">as a PDF</a> · <a class="text-link" href="/examples/decks/motion-audit">as a deck</a> · <a class="text-link" href="/examples/product/settings">a prototype from a text wireframe</a> · <a class="text-link" href="/examples/live/review-queue">a moving diagram on its own</a></p>
+  <div class="study">${STUDY_TABLE}</div>
+  <p class="stats-note">${study.model} in Claude Code · ${study.runsEach} runs per figure and approach · medians · ${new Date(study.measured).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · published prices · more testing is planned, with other models and more figures</p>
 </section>
 
 <section class="section support" aria-labelledby="support">

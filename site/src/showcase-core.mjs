@@ -1,5 +1,5 @@
 import { cells as textCells, width as textWidth } from "../../skills/glyph-kit/scripts/text.mjs";
-// The hero showcase: views of the kit centred in one fixed character box. Pure functions, shared
+// The hero showcase: views of the kit, each sized to fill one fixed frame. Pure functions, shared
 // by the build (the first view is in the page) and the browser (showcase.js).
 //
 // A view is a grid of cells: { ch: string[][], cl: string[][] } (characters and class names).
@@ -227,5 +227,20 @@ export function inkBounds(boxes) {
   return Number.isFinite(left) ? [left, right] : [0, 0];
 }
 
-/** The same box, cut to columns [left, right). */
-export const crop = ({ ch, cl }, [left, right]) => ({ ch: ch.map((r) => r.slice(left, right)), cl: cl.map((r) => r.slice(left, right)) });
+/** The first and last-plus-one rows with ink, over every box given. */
+export function inkRows(boxes) {
+  let top = Infinity;
+  let bottom = 0;
+  for (const { ch } of boxes) ch.forEach((row, r) => {
+    if (row.every((c) => c === " " || c === "")) return;
+    top = Math.min(top, r);
+    bottom = Math.max(bottom, r + 1);
+  });
+  return Number.isFinite(top) ? [top, bottom] : [0, 0];
+}
+
+/** The same box, cut to columns [left, right) and, given them, rows [top, bottom). */
+export const crop = ({ ch, cl }, [left, right], [top, bottom] = [0, ch.length]) => ({
+  ch: ch.slice(top, bottom).map((r) => r.slice(left, right)),
+  cl: cl.slice(top, bottom).map((r) => r.slice(left, right))
+});

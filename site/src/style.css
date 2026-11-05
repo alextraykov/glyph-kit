@@ -51,7 +51,7 @@ body { margin: 0; overflow-x: clip; background: var(--paper); color: var(--ink);
 a { color: inherit; text-underline-offset: 3px; }
 :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
 img { display: block; max-width: 100%; height: auto; }
-h1, h2, h3 { margin: 0; font-family: var(--pixel); font-weight: 400; }
+h1, h2, h3 { margin: 0; font-family: var(--pixel); font-weight: 400; text-wrap: balance; }
 p { margin: 0; }
 
 .shell { width: min(var(--measure), 100% - 2 * var(--space-4)); margin: 0 auto; }
@@ -121,12 +121,19 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .hero__field { animation: field-breathe 7s steps(14, end) infinite; }
 @media (prefers-reduced-motion: reduce) { .hero__field { animation: none; } }
 .hero__field { position: absolute; top: calc(var(--space-6) * -1); left: calc(50% - 50vw); width: 100vw; z-index: -1; margin: 0; overflow: hidden; color: var(--ink); opacity: .07; font: 400 22px/1 var(--pixel); letter-spacing: 0; white-space: pre; pointer-events: none; }
-.hero h1 { font-size: calc(min(var(--measure), 100vw - 2 * var(--space-4)) / 6.5); line-height: .9; white-space: nowrap; }
-.hero__body { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); gap: var(--space-6); align-items: center; }
+/* Departure Mono draws G one pixel (1/11 em) in from its box, and y and p hang .18em below the
+   baseline, which a .9 line box cuts off by .1em: pull the ink to the column edge, and give the
+   descenders their room so they clear the lead. */
+.hero h1 { margin-inline-start: -.0909em; padding-bottom: .1em; font-size: calc(min(var(--measure), 100vw - 2 * var(--space-4)) / 6.5); line-height: .9; white-space: nowrap; }
+.hero__body { display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, 1.25fr); grid-template-rows: auto 1fr; gap: var(--space-5) var(--space-6); align-items: start; }
+@media (min-width: 901px) {
+  .hero__body > .lead { grid-area: 1 / 1; }
+  .hero__body > .showcase { grid-area: 1 / 2 / span 2; }
+  .hero__body > .install { grid-area: 2 / 1; }
+}
 .hero__inner { display: grid; gap: var(--space-4); }
-.hero__copy { display: grid; justify-items: stretch; align-content: center; gap: var(--space-5); }
 .prompt--hero textarea { min-height: 84px; }
-.lead { max-width: 52ch; font-size: clamp(1.25rem, 2.2vw, 1.75rem); line-height: 1.3; letter-spacing: -.01em; }
+.lead { max-width: 52ch; text-wrap: pretty; font-size: clamp(1.125rem, 1.5vw, 1.375rem); line-height: 1.35; letter-spacing: -.01em; }
 
 /* Install: a full-width strip under the hero, its columns aligned with the page. */
 .strip { position: relative; z-index: 1; display: grid; width: 100vw; margin-inline: calc(50% - 50vw); padding-inline: max(var(--space-4), (100vw - var(--measure)) / 2); border-block: var(--hairline) solid var(--ink); background: color-mix(in srgb, var(--ink) 3.5%, var(--paper)); }
@@ -179,12 +186,31 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 .stage { display: grid; place-items: center; min-width: 0; padding: var(--space-6) var(--space-5); background: var(--panel); }
 .stage > .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: min(var(--px-11), 100cqi * 11 / (7 * var(--cols))); }
 
-/* The hero showcase: the dither press covers the whole frame between views. */
+/* The hero showcase: a bar with the view's name and the stepper, the frame, and its caption. The dither
+   press covers the frame and caption between views. */
 .showcase { position: relative; }
+.showcase__bar { align-items: center; padding-block: 0; padding-right: 0; }
+.showcase__bar > .label { padding-block: var(--space-3); }
+.showcase__step { display: flex; align-items: center; }
+.showcase__step[hidden] { display: none; }
+.showcase__step .label { align-self: stretch; display: grid; place-items: center; min-width: 8ch; border-left: var(--hairline) solid var(--line); color: var(--ink); }
+.showcase__step button { display: grid; place-items: center; width: var(--tap); height: var(--tap); padding: 0; border: 0; border-left: var(--hairline) solid var(--line); background: transparent; color: var(--text-soft); font: 400 var(--px-22)/1 var(--pixel); cursor: pointer; }
+@media (hover: hover) and (pointer: fine) { .showcase__step button:hover { background: var(--ink); color: var(--paper); } }
 .showcase figcaption { display: flex; justify-content: space-between; align-items: center; gap: var(--space-3); }
 .showcase figcaption .label { flex: none; line-height: 1; }
+/* Every caption sits in one cell, the hidden ones holding it at the longest, so the box never changes height. */
+.showcase__caption { display: grid; }
+.showcase__caption > * { grid-area: 1 / 1; }
+.showcase__caption > [aria-hidden] { visibility: hidden; }
 [data-showcase-state="pending"] [data-showcase-grid] { visibility: hidden; }
-.showcase__press { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+/* The frame keeps one height: its tallest view (--cols × --rows) at the size its width allows. Each
+   view (--vcols × --vrows) then fills it by width or by height, whichever runs out first. */
+.showcase .stage { --frame: min(var(--px-22), 100cqi * 11 / (7 * var(--cols))); padding: var(--space-5); }
+.showcase__fit { display: grid; place-items: center; width: 100%; min-height: calc(var(--rows) * 1.25 * var(--frame)); }
+.showcase__fit > .grid-figure { padding: 0; overflow: visible; background: transparent; font-size: min(var(--px-22), 100cqi * 11 / (7 * var(--vcols, var(--cols))), var(--frame) * var(--rows) / var(--vrows, var(--rows))); }
+.showcase__fit > .grid-figure:focus-visible { outline-offset: var(--space-2); }
+.showcase__press { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+@media (max-width: 640px) { .showcase .stage { padding: var(--space-4) var(--space-3); } }
 
 /* Measured readings */
 .stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: var(--hairline) solid var(--ink); }
@@ -212,9 +238,23 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 /* ↺ and Copy sit in the box's corners, clear of the figure. */
 .fit .gk-replay-wrap { position: static; }
 /* On touch, Copy is always shown, so it gets its own strip below the figure. */
-@media (hover: none) { .fit.has-figure-copy { padding-bottom: calc(28px + 2 * var(--space-2)); } }
+@media (hover: none) { .fit.has-figure-copy, .guide-figure.has-figure-copy { padding-bottom: calc(28px + 2 * var(--space-2)); } }
 .fit .grid-figure { padding: 0; overflow: visible; background: transparent; color: var(--ink); font-size: min(var(--px-11), 100cqi / (0.64 * (var(--cols) + 1))); }
 .fit[data-palette] .gk-d { color: var(--palette-data); }
+/* Uses: four things people share, each a label, a kit figure, the ask and where it goes. */
+.uses { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-5); }
+.uses__item { display: grid; align-content: start; gap: var(--space-3); min-width: 0; padding-top: var(--space-4); border-top: var(--hairline) solid var(--ink); }
+.uses__item h3 { font-size: var(--px-22); line-height: 1.2; }
+.uses__item h3 a { color: inherit; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 5px; }
+@media (hover: hover) and (pointer: fine) { .uses__item h3 a:hover { text-decoration-thickness: 2px; } }
+.uses__item .fit { align-content: center; min-height: 12rem; }
+@media (max-width: 900px) { .uses__item .fit { min-height: 0; } }
+.uses__to { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2); color: var(--text-soft); font-size: .92rem; }
+/* A deck the kit made, running in a slide-shaped frame. */
+/* Narrow frames draw the deck at twice the size and scale it down, so its own controls fit the slide. */
+.deck-frame { position: relative; container-type: inline-size; aspect-ratio: 16 / 9; min-width: 0; overflow: hidden; border: var(--hairline) solid var(--ink); background: var(--panel); }
+.deck-frame iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; transform-origin: 0 0; }
+@container (max-width: 640px) { .deck-frame iframe { width: 200%; height: 200%; transform: scale(.5); } }
 .palettes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3) var(--space-2); }
 .palettes .fit { padding: var(--space-4) var(--space-3); }
 .edit { display: grid; justify-items: stretch; gap: var(--space-2); }
@@ -260,12 +300,12 @@ main { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-7)
 @media (hover: hover) and (pointer: fine) { .jump a:hover { text-decoration: underline; } }
 
 /* Guardrails and formats */
-/* How to use: three steps on the home page; on the guide, one block per format. */
-.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: var(--space-5); margin: 0; padding: 0; list-style: none; }
-.steps > li { display: grid; align-content: start; justify-items: start; gap: var(--space-3); padding-top: var(--space-4); border-top: var(--hairline) solid var(--line); }
-.steps > li > p:not(.label) { color: var(--text-soft); }
-.asks { display: grid; gap: var(--space-2); margin: 0; padding: 0; list-style: none; color: var(--text-soft); }
-.formats a { text-underline-offset: 3px; }
+/* How to use: one block per thing you'd make, each format with the command that makes it. */
+.exports { display: grid; gap: var(--space-2); margin: 0; min-width: 0; }
+.exports > div { display: grid; grid-template-columns: minmax(0, 12rem) minmax(0, 1fr); align-items: center; gap: var(--space-1) var(--space-3); min-width: 0; }
+.exports dt { color: var(--text-soft); font-size: .92rem; }
+.exports dd { min-width: 0; margin: 0; }
+@media (max-width: 640px) { .exports > div { grid-template-columns: minmax(0, 1fr); } }
 .guide { display: grid; gap: var(--space-6); }
 /* Side by side only where both fit at 11px; otherwise one above the other. */
 .pair { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--cols) * 7px + 2 * var(--space-5)), 1fr)); gap: var(--space-4); min-width: 0; }
@@ -373,7 +413,7 @@ footer { border-top: var(--hairline) solid var(--ink); padding-block: var(--spac
 footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-3); }
 
 @media (max-width: 900px) {
-  .hero__body, .note, .try, .highlights { grid-template-columns: minmax(0, 1fr); }
+  .hero__body, .note, .try, .highlights, .uses { grid-template-columns: minmax(0, 1fr); }
   .strip__row { grid-template-columns: minmax(0, 1fr); align-items: start; }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .study { padding-inline: var(--space-4); }
@@ -385,6 +425,7 @@ footer .shell { display: flex; flex-wrap: wrap; justify-content: space-between; 
   .heading h2 { font-size: var(--px-22); }
   .note__copy h2 { font-size: var(--px-33); }
   .fit { padding: var(--space-4) var(--space-3); }
+  .fit:has(.gk-replay) { padding-top: calc(24px + 2 * 6px); }
   .stats { grid-template-columns: minmax(0, 1fr); }
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .bento__cell { grid-column: auto; }
@@ -617,9 +658,7 @@ td.is-number .data__input { text-align: right; font-variant-numeric: tabular-num
 .install .cmd { max-width: 100%; }
 .install__hand { margin-top: var(--space-3); color: var(--text-caption); font-size: .78rem; }
 .install__hand .text-link { margin-right: var(--space-2); color: var(--ink); font-size: .9rem; }
-.hero__body { align-items: start; }
-.hero__copy { align-content: start; }
-.hero .showcase { margin-top: var(--space-2); }
+@media (hover: hover) and (pointer: fine) { .hero .showcase { margin-top: var(--space-2); }
 
 /* iPhone safe areas: with the page under the status bar (viewport-fit=cover), keep content clear of
    the notch in landscape and the home indicator. The status bar itself takes the paper colour. */
@@ -630,8 +669,10 @@ footer { padding-bottom: calc(var(--space-5) + env(safe-area-inset-bottom)); }
 /* Playback uses the same quiet, square control as the kit toolbar. */
 /* Areas land below the sticky menu. On phones the menu wraps and stays at the top of the page, so
    it doesn't cover the screen. */
-.jump ~ .section { scroll-margin-top: calc(var(--top-h, 57px) + 72px); }
-@media (max-width: 640px) { .jump { position: static; } .jump ~ .section { scroll-margin-top: calc(var(--top-h, 57px) + var(--space-3)); } }
+.jump ~ .section { scroll-margin-top: calc(var(--top-h, 57px) + 104px); }
+/* Jump links can run to two rows, so a section lands below both. */
+.jump ~ .section .guide-item { scroll-margin-top: calc(var(--top-h, 57px) + 104px); }
+@media (max-width: 640px) { .jump { position: static; } .jump ~ .section, .jump ~ .section .guide-item { scroll-margin-top: calc(var(--top-h, 57px) + var(--space-3)); } }
 
 /* Touch: small controls keep their look but reach 44px to a finger. Each hit area grows only
    where nothing sits next to it (rows of chips have 10px between; the nav links have 14px). */
